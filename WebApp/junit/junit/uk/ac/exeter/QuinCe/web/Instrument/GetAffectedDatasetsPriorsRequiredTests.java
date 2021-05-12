@@ -48,7 +48,6 @@ public class GetAffectedDatasetsPriorsRequiredTests
   @ParameterizedTest
   @MethodSource("getLines")
   public void getAffectedDatasetsTest(TestSetLine line) throws Exception {
-
     runTest(line);
   }
 

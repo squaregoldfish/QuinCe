@@ -51,14 +51,6 @@ public class ExternalStandard extends Calibration {
     buildValueNames();
   }
 
-  private void buildValueNames() {
-    // The value names are all the sensor type names that have internal
-    // calibrations
-    valueNames = instrument.getSensorAssignments().keySet().stream()
-      .filter(st -> st.hasInternalCalibration()).map(st -> st.getShortName())
-      .sorted().collect(Collectors.toList());
-  }
-
   /**
    * Construct a complete external standard object with all data
    *
@@ -78,6 +70,7 @@ public class ExternalStandard extends Calibration {
     throws ParameterException {
     super(id, instrument, ExternalStandardDB.EXTERNAL_STANDARD_CALIBRATION_TYPE,
       target);
+    buildValueNames();
 
     if (null != target) {
       setDeploymentDate(deploymentDate);
@@ -87,6 +80,14 @@ public class ExternalStandard extends Calibration {
           "Calibration deployment is invalid");
       }
     }
+  }
+
+  private void buildValueNames() {
+    // The value names are all the sensor type names that have internal
+    // calibrations
+    valueNames = instrument.getSensorAssignments().keySet().stream()
+      .filter(st -> st.hasInternalCalibration()).map(st -> st.getShortName())
+      .sorted().collect(Collectors.toList());
   }
 
   @Override
