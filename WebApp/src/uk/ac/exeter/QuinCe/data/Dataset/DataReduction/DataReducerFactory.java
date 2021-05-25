@@ -36,9 +36,14 @@ public class DataReducerFactory {
     reducers.put("Pro Oceanus CO₂ Atmosphere",
       ProOceanusAtmosphericCO2Reducer.class);
     reducers.put("SAMI CO₂", SamiPco2DataReducer.class);
+    reducers.put("SAMI CO₂", SamiPco2DataReducer.class);
+    reducers.put("Underway Marine pCO₂ from ¹²CO₂/¹³CO₂",
+      UnderwayMarine12_13Pco2Reducer.class);
+    reducers.put("Underway Atmospheric pCO₂ from ¹²CO₂/¹³CO₂",
+      UnderwayAtmospheric12_13Pco2Reducer.class);
     reducers.put("ASVCO₂ Water", ASVCO2WaterReducer.class);
     reducers.put("ASVCO₂ Atmosphere", ASVCO2AtmosphereReducer.class);
-  }
+ }
 
   /**
    * Get the Data Reducer for a given variable and initialise it

@@ -12,15 +12,12 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 public class XCO2MeasurementValueCalculator extends MeasurementValueCalculator {
 
-  private final SensorType xco2SensorType;
-
   private final SensorType xh2oSensorType;
 
   public XCO2MeasurementValueCalculator() throws SensorTypeNotFoundException {
     SensorsConfiguration sensorConfig = ResourceManager.getInstance()
       .getSensorsConfiguration();
 
-    this.xco2SensorType = sensorConfig.getSensorType("xCO₂ (with standards)");
     this.xh2oSensorType = sensorConfig.getSensorType("xH₂O (with standards)");
   }
 
@@ -35,14 +32,14 @@ public class XCO2MeasurementValueCalculator extends MeasurementValueCalculator {
     // Get the xCO2 as a simple value. Because it's a core sensor it will only
     // contain one
     MeasurementValue xCO2 = new DefaultMeasurementValueCalculator().calculate(
-      instrument, measurement, xco2SensorType, allMeasurements, allSensorValues,
+      instrument, measurement, sensorType, allMeasurements, allSensorValues,
       conn);
 
     if (xCO2.getMemberCount() == 0) {
       // The CO2 value is missing, or in flushing. So we don't do anything
       result = xCO2;
     } else {
-      if (!dryingRequired(instrument)) {
+      if (!dryingRequired(instrument, sensorType)) {
         result = xCO2;
       } else {
 
@@ -50,7 +47,7 @@ public class XCO2MeasurementValueCalculator extends MeasurementValueCalculator {
           .calculate(instrument, measurement, xh2oSensorType, allMeasurements,
             allSensorValues, conn);
 
-        result = new MeasurementValue(xco2SensorType);
+        result = new MeasurementValue(sensorType);
         result.addSensorValues(xCO2, allSensorValues, true);
         result.addSensorValues(xH2O, allSensorValues, false);
 
@@ -62,11 +59,11 @@ public class XCO2MeasurementValueCalculator extends MeasurementValueCalculator {
     return result;
   }
 
-  private boolean dryingRequired(Instrument instrument)
+  private boolean dryingRequired(Instrument instrument, SensorType sensorType)
     throws MeasurementValueCalculatorException {
 
     TreeSet<SensorAssignment> co2Assignments = instrument.getSensorAssignments()
-      .get(xco2SensorType);
+      .get(sensorType);
 
     // TODO We assume there's only one CO2 sensor. Handle more.
     if (co2Assignments.size() > 1) {
