@@ -156,16 +156,27 @@ public class Calculators {
   public static BigDecimal interpolate(BigDecimal x0, BigDecimal y0,
     BigDecimal x1, BigDecimal y1, BigDecimal x) {
 
-    BigDecimal X1minusX = x1.subtract(x);
-    BigDecimal XminusX0 = x.subtract(x0);
-    BigDecimal X1minusX0 = x1.subtract(x0);
+    BigDecimal result = null;
 
-    BigDecimal Y0timesX1minusX = y0.multiply(X1minusX);
-    BigDecimal Y1timesXminusX0 = y1.multiply(XminusX0);
+    if (!isNull(x0, y0) && !isNull(x1, y1)) {
+      BigDecimal X1minusX = x1.subtract(x);
+      BigDecimal XminusX0 = x.subtract(x0);
+      BigDecimal X1minusX0 = x1.subtract(x0);
 
-    BigDecimal top = Y0timesX1minusX.add(Y1timesXminusX0);
+      BigDecimal Y0timesX1minusX = y0.multiply(X1minusX);
+      BigDecimal Y1timesXminusX0 = y1.multiply(XminusX0);
 
-    return top.divide(X1minusX0, 10, RoundingMode.HALF_UP);
+      BigDecimal top = Y0timesX1minusX.add(Y1timesXminusX0);
+
+      result = top.divide(X1minusX0, 10, RoundingMode.HALF_UP);
+    } else if (!isNull(x0, y0)) {
+      result = y0;
+    } else if (!isNull(x1, y1)) {
+      result = y1;
+    }
+
+    return result;
+
   }
 
   public static Double interpolate(Map.Entry<Double, Double> prior,
@@ -201,6 +212,10 @@ public class Calculators {
     }
 
     return result;
+  }
+
+  private static boolean isNull(BigDecimal x, BigDecimal y) {
+    return (null == x || null == y);
   }
 
   /**

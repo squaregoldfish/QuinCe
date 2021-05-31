@@ -299,6 +299,8 @@ public abstract class CalibrationDB {
     CalibrationSet result = new CalibrationSet(instrument, getCalibrationType(),
       getTargets(conn, instrument));
 
+    int targetsAdded = 0;
+
     PreparedStatement stmt = null;
     ResultSet records = null;
 
@@ -314,7 +316,16 @@ public abstract class CalibrationDB {
 
         if (!result.containsTarget(target)) {
           result.add(calibrationFromResultSet(records, instrument));
+          targetsAdded++;
         }
+      }
+
+      // If no calibrations were found, return a null result.
+      // Otherwise if we didn't find a complete set then throw an exception.
+      if (targetsAdded == 0) {
+        result = null;
+      } else if (!result.isComplete()) {
+        throw new CalibrationException("Incomplete calibration information");
       }
 
     } catch (SQLException e) {
