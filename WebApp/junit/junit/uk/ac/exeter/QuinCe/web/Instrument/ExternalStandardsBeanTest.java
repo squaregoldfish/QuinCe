@@ -1,6 +1,7 @@
 package junit.uk.ac.exeter.QuinCe.web.Instrument;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,6 +21,10 @@ import uk.ac.exeter.QuinCe.web.Instrument.ExternalStandardsBean;
 
 /**
  * Tests of calibration edits for the {@link ExternalStandardsBean}.
+ * 
+ * See
+ * {@code WebApp/junit/resources/sql/web/Instrument/CalibrationBeanTest/initial_setup.html}
+ * for the initial setup.
  */
 @TestInstance(Lifecycle.PER_CLASS)
 public class ExternalStandardsBeanTest extends TestSetTest {
@@ -126,6 +131,38 @@ public class ExternalStandardsBeanTest extends TestSetTest {
     }
 
     return result.toString();
+  }
+
+  @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
+    "resources/sql/testbase/instrument", "resources/sql/testbase/variable",
+    "resources/sql/web/Instrument/CalibrationBeanTest/base",
+    "resources/sql/web/Instrument/CalibrationBeanTest/externalStandardsEdit" })
+  public void addClashTest() {
+    assertFalse(true);
+  }
+
+  @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
+    "resources/sql/testbase/instrument", "resources/sql/testbase/variable",
+    "resources/sql/web/Instrument/CalibrationBeanTest/base",
+    "resources/sql/web/Instrument/CalibrationBeanTest/externalStandardsEdit" })
+  public void editClashTimeTest() {
+    assertFalse(true);
+  }
+
+  @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
+    "resources/sql/testbase/instrument", "resources/sql/testbase/variable",
+    "resources/sql/web/Instrument/CalibrationBeanTest/base",
+    "resources/sql/web/Instrument/CalibrationBeanTest/externalStandardsEdit" })
+  public void editClashTargetTest() {
+    assertFalse(true);
+  }
+
+  @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
+    "resources/sql/testbase/instrument", "resources/sql/testbase/variable",
+    "resources/sql/web/Instrument/CalibrationBeanTest/base",
+    "resources/sql/web/Instrument/CalibrationBeanTest/externalStandardsEdit" })
+  public void editClashTimeAndTargetTest() {
+    assertFalse(true);
   }
 
   @Override
