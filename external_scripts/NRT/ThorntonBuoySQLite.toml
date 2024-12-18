@@ -102,31 +102,36 @@
 
     timestamp_format = "%Y-%m-%d %H:%M:%S"
 
+# 2024-12-17
+# meteo table is offline.
+# Get fake values from victron table
+
   [[input.tables]]
     name = "victron"
 
     mapping = [
       ["Timestamp", "timestamp"],
       ["Battery Voltage", "battv"]
+      ["Air Temperature", "ppyesterday"]
     ]
 
     timestamp_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
-  [[input.tables]]
-    name = "meteo"
+#  [[input.tables]]
+#    name = "meteo"
 
-    mapping = [
-      ["Timestamp", "timestamp"],
-      ["Wind Direction", "winddirection"],
-      ["Wind Speed", "windspeed"],
-      ["Air Temperature", "temperature"],
-      ["Atmospheric Pressure", "pressure"],
-      ["Air Humidity", "humidity"],
-      ["Latitude", "latitude"],
-      ["Longitude", "longitude"]
-    ]
+#    mapping = [
+#      ["Timestamp", "timestamp"],
+#      ["Wind Direction", "winddirection"],
+#      ["Wind Speed", "windspeed"],
+#      ["Air Temperature", "temperature"],
+#      ["Atmospheric Pressure", "pressure"],
+#      ["Air Humidity", "humidity"],
+#      ["Latitude", "latitude"],
+#      ["Longitude", "longitude"]
+#    ]
 
-    timestamp_format = "%Y-%m-%d %H:%M:%S"
+#    timestamp_format = "%Y-%m-%d %H:%M:%S"
 
   [[input.tables]]
     name = "tdgp"
