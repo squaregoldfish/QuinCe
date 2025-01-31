@@ -44,8 +44,15 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
  */
 public class Instrument {
 
+  /**
+   * Name used for sensor groups in the instrument's JSON properties.
+   */
   private static final String SENSOR_GROUPS_JSON_NAME = "sensorGroups";
 
+  /**
+   * Name used for diagnostic QC configuration in the instrument's JSON
+   * properties.
+   */
   private static final String DIAGNOSTIC_QC_JSON_NAME = "diagnosticQC";
 
   /**
@@ -72,6 +79,16 @@ public class Instrument {
    * Property name for the fixed latitude
    */
   public static final String PROP_LATITUDE = "latitude";
+
+  /**
+   * Basis code for an instrument that takes surface observations.
+   */
+  public static final int BASIS_SURFACE = 1;
+
+  /**
+   * Basis code for Argo data.
+   */
+  public static final int BASIS_ARGO = 2;
 
   /**
    * The instrument's ID in the database
@@ -135,6 +152,11 @@ public class Instrument {
   private final String platformCode;
 
   /**
+   * The measurement basis for the instrument.
+   */
+  private final int basis;
+
+  /**
    * Indicates whether or not this instrument supplies near-real-time data
    *
    * At the time of writing, the NRT flag can only be set manually on the
@@ -182,7 +204,7 @@ public class Instrument {
     List<Long> sharedWith, InstrumentFileSet fileDefinitions,
     List<Variable> variables, Map<Variable, Properties> variableProperties,
     SensorAssignments sensorAssignments, String platformName,
-    String platformCode, boolean nrt, LocalDateTime lastNrtExport,
+    String platformCode, int basis, boolean nrt, LocalDateTime lastNrtExport,
     String propertiesJson) throws SensorGroupsException {
 
     this.owner = owner;
@@ -195,6 +217,7 @@ public class Instrument {
     this.sensorAssignments = sensorAssignments;
     this.platformName = platformName;
     this.platformCode = platformCode;
+    this.basis = basis;
     this.nrt = nrt;
     this.lastNrtExport = lastNrtExport;
     parsePropertiesJson(propertiesJson);
@@ -217,6 +240,7 @@ public class Instrument {
     this.sensorAssignments = source.sensorAssignments;
     this.platformName = source.platformName;
     this.platformCode = source.platformCode;
+    this.basis = source.basis;
     this.nrt = source.nrt;
     this.lastNrtExport = source.lastNrtExport;
     this.properties = source.properties;
@@ -248,7 +272,7 @@ public class Instrument {
     InstrumentFileSet fileDefinitions, List<Variable> variables,
     Map<Variable, Properties> variableProperties,
     SensorAssignments sensorAssignments, String platformName,
-    String platformCode, boolean nrt, LocalDateTime lastNrtExport,
+    String platformCode, int basis, boolean nrt, LocalDateTime lastNrtExport,
     String propertiesJson) throws SensorGroupsException {
 
     this.owner = owner;
@@ -260,6 +284,7 @@ public class Instrument {
     this.sensorAssignments = sensorAssignments;
     this.platformName = platformName;
     this.platformCode = platformCode;
+    this.basis = basis;
     this.nrt = nrt;
     this.lastNrtExport = lastNrtExport;
     parsePropertiesJson(propertiesJson);
@@ -288,7 +313,7 @@ public class Instrument {
     InstrumentFileSet fileDefinitions, List<Variable> variables,
     Map<Variable, Properties> variableProperties,
     SensorAssignments sensorAssignments, SensorGroups sensorGroups,
-    String platformName, String platformCode, boolean nrt,
+    String platformName, String platformCode, int basis, boolean nrt,
     LocalDateTime lastNrtExport) {
 
     this.owner = owner;
@@ -301,6 +326,7 @@ public class Instrument {
     this.sensorGroups = sensorGroups;
     this.platformName = platformName;
     this.platformCode = platformCode;
+    this.basis = basis;
     this.nrt = nrt;
     this.lastNrtExport = lastNrtExport;
     this.properties = new Properties();
@@ -1130,5 +1156,9 @@ public class Instrument {
 
   public void removeShare(User user) {
     sharedWith.remove(user.getDatabaseID());
+  }
+
+  public int getBasis() {
+    return basis;
   }
 }
