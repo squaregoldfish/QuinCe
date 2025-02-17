@@ -244,3 +244,8 @@ table.ui-selectmanycheckbox > tbody > tr > td > label {
 .unassignedFile {
   background-color: #FFbbbb !important;
 }
+
+.ui-selectoneradio label {
+  font-weight: 400;
+  font-size: 14px;
+}
