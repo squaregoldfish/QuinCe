@@ -2684,4 +2684,12 @@ public class NewInstrumentBean extends FileUploadBean {
   public String getUpdatedFile() {
     return updatedFile;
   }
+
+  public int getBasis() {
+    return basis;
+  }
+
+  public void setBasis(int basis) {
+    this.basis = basis;
+  }
 }

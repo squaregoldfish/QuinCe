@@ -211,7 +211,8 @@ public class Instrument {
     List<Variable> variables, Map<Variable, Properties> variableProperties,
     SensorAssignments sensorAssignments, String platformName,
     String platformCode, int basis, boolean nrt, LocalDateTime lastNrtExport,
-    String propertiesJson, LocalDateTime created) throws SensorGroupsException {
+    String propertiesJson, LocalDateTime created)
+    throws SensorGroupsException, InstrumentException {
 
     this.owner = owner;
     this.id = databaseId;
@@ -223,6 +224,10 @@ public class Instrument {
     this.sensorAssignments = sensorAssignments;
     this.platformName = platformName;
     this.platformCode = platformCode;
+
+    if (!validateBasis(basis)) {
+      throw new InstrumentException("Invalid basis value " + basis);
+    }
     this.basis = basis;
     this.nrt = nrt;
     this.lastNrtExport = lastNrtExport;
@@ -281,17 +286,59 @@ public class Instrument {
    * @param nrt
    *          Indicates whether or not the instrument provides data in near real
    *          time.
-   * @param lastNrtExport
-   *          The time at which an NRT dataset was last exported.
-   * @param created
-   *          The time when the instrument was created.
+   * @param properties
+   *          The instrument's properties.
+   * @throws SensorGroupsException
+   */
+  public Instrument(User owner, String name, List<Long> sharedWith,
+    InstrumentFileSet fileDefinitions, List<Variable> variables,
+    Map<Variable, Properties> variableProperties,
+    SensorAssignments sensorAssignments, String platformName,
+    String platformCode, int basis, boolean nrt, LocalDateTime lastNrtExport,
+    String propertiesJson, LocalDateTime created) throws SensorGroupsException {
+
+    this.owner = owner;
+    this.name = name;
+    this.sharedWith = null != sharedWith ? sharedWith : new ArrayList<Long>();
+    this.fileDefinitions = fileDefinitions;
+    this.variables = variables;
+    this.variableProperties = variableProperties;
+    this.sensorAssignments = sensorAssignments;
+    this.platformName = platformName;
+    this.platformCode = platformCode;
+    this.basis = basis;
+    this.nrt = nrt;
+    this.lastNrtExport = lastNrtExport;
+    parsePropertiesJson(propertiesJson);
+    this.created = created;
+  }
+
+  /**
+   * Create a new instrument with no properties defined.
+   *
+   * @param owner
+   *          The instrument owner.
+   * @param name
+   *          The instrument's name.
+   * @param fileDefinitions
+   *          The data file definitions for the instrument.
+   * @param variables
+   *          The variables that the instrument measures.
+   * @param sensorAssignments
+   *          The sensors assigned to the instrument.
+   * @param platformCode
+   *          The instrument's identifier code.
+   * @param nrt
+   *          Indicates whether or not the instrument provides data in near real
+   *          time.
    */
   public Instrument(User owner, String name, List<Long> sharedWith,
     InstrumentFileSet fileDefinitions, List<Variable> variables,
     Map<Variable, Properties> variableProperties,
     SensorAssignments sensorAssignments, SensorGroups sensorGroups,
     String platformName, String platformCode, int basis, boolean nrt,
-    LocalDateTime lastNrtExport, LocalDateTime created) {
+    LocalDateTime lastNrtExport, LocalDateTime created)
+    throws InstrumentException {
 
     this.owner = owner;
     this.name = name;
@@ -303,6 +350,9 @@ public class Instrument {
     this.sensorGroups = sensorGroups;
     this.platformName = platformName;
     this.platformCode = platformCode;
+    if (!validateBasis(basis)) {
+      throw new InstrumentException("Invalid basis value " + basis);
+    }
     this.basis = basis;
     this.nrt = nrt;
     this.lastNrtExport = lastNrtExport;
@@ -1379,6 +1429,10 @@ public class Instrument {
    */
   public int getBasis() {
     return basis;
+  }
+
+  private boolean validateBasis(int basis) {
+    return basis == BASIS_SURFACE || basis == BASIS_ARGO;
   }
 
   /**
