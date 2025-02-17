@@ -371,6 +371,11 @@ public class NewInstrumentBean extends FileUploadBean {
   private String platformCode = null;
 
   /**
+   * The instrument's measurement basis.
+   */
+  private int basis = Instrument.BASIS_SURFACE;
+
+  /**
    * The name of the file for which a Run Type column is being defined
    */
   private String runTypeFile = null;
@@ -2060,8 +2065,8 @@ public class NewInstrumentBean extends FileUploadBean {
       // TODO groups in here.
       Instrument instrument = new Instrument(getUser(), instrumentName, null,
         instrumentFiles, instrumentVariables, storedVariableProperties,
-        sensorAssignments, sensorGroups, platformName, platformCode, false,
-        null, LocalDateTime.now());
+        sensorAssignments, sensorGroups, platformName, platformCode, basis,
+        false, null, LocalDateTime.now());
 
       instrument.setProperty(Instrument.PROP_PRE_FLUSHING_TIME,
         preFlushingTime);

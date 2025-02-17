@@ -210,7 +210,7 @@ public class Instrument {
     List<Long> sharedWith, InstrumentFileSet fileDefinitions,
     List<Variable> variables, Map<Variable, Properties> variableProperties,
     SensorAssignments sensorAssignments, String platformName,
-    String platformCode, boolean nrt, LocalDateTime lastNrtExport,
+    String platformCode, int basis, boolean nrt, LocalDateTime lastNrtExport,
     String propertiesJson, LocalDateTime created) throws SensorGroupsException {
 
     this.owner = owner;
@@ -223,6 +223,7 @@ public class Instrument {
     this.sensorAssignments = sensorAssignments;
     this.platformName = platformName;
     this.platformCode = platformCode;
+    this.basis = basis;
     this.nrt = nrt;
     this.lastNrtExport = lastNrtExport;
     parsePropertiesJson(propertiesJson);
@@ -246,6 +247,7 @@ public class Instrument {
     this.sensorAssignments = source.sensorAssignments;
     this.platformName = source.platformName;
     this.platformCode = source.platformCode;
+    this.basis = source.basis;
     this.nrt = source.nrt;
     this.lastNrtExport = source.lastNrtExport;
     this.properties = source.properties;
@@ -288,7 +290,7 @@ public class Instrument {
     InstrumentFileSet fileDefinitions, List<Variable> variables,
     Map<Variable, Properties> variableProperties,
     SensorAssignments sensorAssignments, SensorGroups sensorGroups,
-    String platformName, String platformCode, boolean nrt,
+    String platformName, String platformCode, int basis, boolean nrt,
     LocalDateTime lastNrtExport, LocalDateTime created) {
 
     this.owner = owner;
@@ -301,6 +303,7 @@ public class Instrument {
     this.sensorGroups = sensorGroups;
     this.platformName = platformName;
     this.platformCode = platformCode;
+    this.basis = basis;
     this.nrt = nrt;
     this.lastNrtExport = lastNrtExport;
     this.properties = new Properties();
@@ -1367,6 +1370,15 @@ public class Instrument {
    */
   public LocalDateTime getCreated() {
     return created;
+  }
+
+  /**
+   * Get the instrument's measurement basis.
+   *
+   * @return The measurement basis.
+   */
+  public int getBasis() {
+    return basis;
   }
 
   /**

@@ -47,8 +47,8 @@ INSERT INTO variable_sensors
   
 -- Instrument
 INSERT INTO instrument
-  (id, owner, name, platform_name, platform_code, nrt, properties)
-  VALUES (1, 1, 'Instrument', 'Platform', 'CODE' ,0 , '{"latitude":"0","longitude":"0","diagnosticQC":{"5":{"affectedRunTypes":{"2":["var_1","var_2"],"4":["var_1","var_3"]}},"6":{"affectedRunTypes":{"4":["var_2","var_3"]}}}}');
+  (id, owner, name, platform_name, platform_code, basis, nrt, properties)
+  VALUES (1, 1, 'Instrument', 'Platform', 'CODE', 1 ,0 , '{"latitude":"0","longitude":"0","diagnosticQC":{"5":{"affectedRunTypes":{"2":["var_1","var_2"],"4":["var_1","var_3"]}},"6":{"affectedRunTypes":{"4":["var_2","var_3"]}}}}');
   
 INSERT INTO instrument_variables (instrument_id, variable_id)
   VALUES (1, 1000000);
