@@ -1,5 +1,5 @@
 -- A test variable
-INSERT INTO variables (name) VALUES ('Has Child');
+INSERT INTO variables (name, allowed_basis) VALUES ('Has Child', 1);
 
 -- Core sensor that is a child
 INSERT INTO variable_sensors

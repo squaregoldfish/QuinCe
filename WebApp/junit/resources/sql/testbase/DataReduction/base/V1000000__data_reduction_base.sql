@@ -17,7 +17,7 @@ INSERT INTO user (id, email, firstname, surname, salt, password)
   VALUES (1, 'test@test.com', 'Fred', 'Bloggs', '', '');
 
 -- A variable. Uses SST, Salinity and CO2
-INSERT INTO variables (id, name) VALUES (1000000, 'testVar');
+INSERT INTO variables (id, name, allowed_basis) VALUES (1000000, 'testVar', 1);
 
 -- Sensors for the variable. No flags cascade
 INSERT INTO variable_sensors
