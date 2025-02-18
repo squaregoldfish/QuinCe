@@ -48,7 +48,7 @@ public class SensorsConfiguration {
    * Query to get the sensor types required by all variables
    */
   private static final String GET_VARIABLES_SENSOR_TYPES_QUERY = "SELECT "
-    + "v.id, v.name, v.attributes, v.properties, "
+    + "v.id, v.name, v.allowed_basis, v.attributes, v.properties, "
     + "s.sensor_type, s.core, s.attribute_name, s.attribute_value, "
     + "s.questionable_cascade, s.bad_cascade, "
     + "COALESCE(s.export_column_short, t.name), "
@@ -154,6 +154,7 @@ public class SensorsConfiguration {
 
       long currentVariableId = -1;
       String name = null;
+      int allowedBasis = 0;
       VariableAttributes attributes = null;
       String propertiesJson = null;
       long coreSensorType = -1L;
@@ -170,8 +171,8 @@ public class SensorsConfiguration {
           if (currentVariableId > -1) {
             // Write the old variable
             instrumentVariables.put(currentVariableId,
-              new Variable(this, currentVariableId, name, attributes,
-                propertiesJson, coreSensorType, requiredSensorTypes,
+              new Variable(this, currentVariableId, name, allowedBasis,
+                attributes, propertiesJson, coreSensorType, requiredSensorTypes,
                 attributeConditions, questionableCascades, badCascades,
                 columnHeadings));
           }
@@ -179,8 +180,9 @@ public class SensorsConfiguration {
           // Set up the new variable
           currentVariableId = newVariable;
           name = records.getString(2);
-          attributes = makeAttributesMap(records.getString(3));
-          propertiesJson = records.getString(4);
+          allowedBasis = records.getInt(3);
+          attributes = makeAttributesMap(records.getString(4));
+          propertiesJson = records.getString(5);
           coreSensorType = -1L;
           attributeConditions = new HashMap<Long, AttributeCondition>();
           requiredSensorTypes = new ArrayList<Long>();
@@ -189,28 +191,28 @@ public class SensorsConfiguration {
           columnHeadings = new HashMap<SensorType, ColumnHeading>();
         }
 
-        long sensorTypeId = records.getLong(5);
-        boolean core = records.getBoolean(6);
+        long sensorTypeId = records.getLong(6);
+        boolean core = records.getBoolean(7);
         if (core) {
           coreSensorType = sensorTypeId;
         } else {
           requiredSensorTypes.add(sensorTypeId);
 
-          String attributeName = records.getString(7);
-          String attributeValue = records.getString(8);
+          String attributeName = records.getString(8);
+          String attributeValue = records.getString(9);
           if (null != attributeName) {
             attributeConditions.put(sensorTypeId,
               new AttributeCondition(attributeName, attributeValue));
           }
 
-          questionableCascades.add(records.getInt(9));
-          badCascades.add(records.getInt(10));
+          questionableCascades.add(records.getInt(10));
+          badCascades.add(records.getInt(11));
         }
 
-        String shortName = records.getString(11);
-        String longName = records.getString(12);
-        String code = records.getString(13);
-        String units = records.getString(14);
+        String shortName = records.getString(12);
+        String longName = records.getString(13);
+        String code = records.getString(14);
+        String units = records.getString(15);
 
         SensorType sensorType = this.getSensorType(sensorTypeId);
         columnHeadings.put(sensorType, new ColumnHeading(sensorTypeId,
@@ -219,9 +221,10 @@ public class SensorsConfiguration {
 
       // Write the last variable
       instrumentVariables.put(currentVariableId,
-        new Variable(this, currentVariableId, name, attributes, propertiesJson,
-          coreSensorType, requiredSensorTypes, attributeConditions,
-          questionableCascades, badCascades, columnHeadings));
+        new Variable(this, currentVariableId, name, allowedBasis, attributes,
+          propertiesJson, coreSensorType, requiredSensorTypes,
+          attributeConditions, questionableCascades, badCascades,
+          columnHeadings));
     } catch (SQLException e) {
       throw new DatabaseException("Error while loading instrument variables",
         e);

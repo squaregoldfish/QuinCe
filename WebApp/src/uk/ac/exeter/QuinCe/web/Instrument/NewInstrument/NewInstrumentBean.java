@@ -692,7 +692,10 @@ public class NewInstrumentBean extends FileUploadBean {
     Map<Long, String> variables = new HashMap<Long, String>();
 
     try {
-      for (Variable variable : InstrumentDB.getAllVariables(getDataSource())) {
+      List<Variable> allVariables = InstrumentDB
+        .getAllVariables(getDataSource());
+      for (Variable variable : allVariables.stream()
+        .filter(v -> v.basisAllowed(basis)).toList()) {
         variables.put(variable.getId(), variable.getName());
       }
     } catch (Exception e) {
@@ -1768,7 +1771,17 @@ public class NewInstrumentBean extends FileUploadBean {
    * @return The navigation to the General Info page
    */
   public String goToGeneralInfo() {
-    return (nameValid() ? NAV_GENERAL_INFO : null);
+    String result = null;
+
+    if (nameValid()) {
+      if (basis == Instrument.BASIS_ARGO) {
+        result = NAV_VARIABLES;
+      } else {
+        result = NAV_GENERAL_INFO;
+      }
+    }
+
+    return result;
   }
 
   private boolean nameValid() {

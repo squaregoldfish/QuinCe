@@ -39,6 +39,12 @@ public class Variable implements Comparable<Variable> {
   private String name;
 
   /**
+   * Bit mask indicating which measurement bases that are allowed for this
+   * variable.
+   */
+  private int allowedBasis;
+
+  /**
    * IDs and Labels for this variable's attributes, which must be defined by the
    * user when they create an instrument.
    */
@@ -103,8 +109,8 @@ public class Variable implements Comparable<Variable> {
    *           If any cascade flags are invalid
    */
   protected Variable(SensorsConfiguration sensorConfig, long id, String name,
-    VariableAttributes attributes, String propertiesJson, long coreSensorTypeId,
-    List<Long> requiredSensorTypeIds,
+    int allowedBasis, VariableAttributes attributes, String propertiesJson,
+    long coreSensorTypeId, List<Long> requiredSensorTypeIds,
     Map<Long, AttributeCondition> attrConditions,
     List<Integer> questionableCascades, List<Integer> badCascades,
     Map<SensorType, ColumnHeading> columnHeadings)
@@ -113,6 +119,7 @@ public class Variable implements Comparable<Variable> {
 
     this.id = id;
     this.name = name;
+    this.allowedBasis = allowedBasis;
     this.attributes = attributes;
 
     if (null == propertiesJson || propertiesJson.length() == 0) {
@@ -123,7 +130,8 @@ public class Variable implements Comparable<Variable> {
     }
 
     if (coreSensorTypeId < 0) {
-      throw new SensorConfigurationException("Variable " + id + "does not have a core SensorType");
+      throw new SensorConfigurationException(
+        "Variable " + id + "does not have a core SensorType");
     }
 
     coreSensorType = sensorConfig.getSensorType(coreSensorTypeId);
@@ -383,5 +391,9 @@ public class Variable implements Comparable<Variable> {
   protected AttributeCondition getAttributeCondition(SensorType sensorType) {
     return null == attributeConditions ? null
       : attributeConditions.get(sensorType.getId());
+  }
+
+  public boolean basisAllowed(int basis) {
+    return (basis & allowedBasis) > 0;
   }
 }

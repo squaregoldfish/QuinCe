@@ -1,5 +1,5 @@
 -- Test variable
-INSERT INTO variables (id, name) VALUES (1000000, 'testVar');
+INSERT INTO variables (id, name, allowed_basis) VALUES (1000000, 'testVar', 1);
 
 -- Test sensor type
 INSERT INTO sensor_types (id, name, vargroup, display_order) VALUES (1000000, 'testSensor', 'testGroup', 1000);

@@ -1,5 +1,5 @@
 -- A test variable
-INSERT INTO variables (name) VALUES ('No Internal Calibration');
+INSERT INTO variables (name, allowed_basis) VALUES ('No Internal Calibration', 1);
 
 -- A valid core sensor
 INSERT INTO variable_sensors
