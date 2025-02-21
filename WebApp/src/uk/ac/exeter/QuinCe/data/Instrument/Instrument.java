@@ -46,6 +46,16 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 public class Instrument {
 
   /**
+   * Flag that indicates an instrument takes surface measurements.
+   */
+  public static final int BASIS_SURFACE = 0;
+
+  /**
+   * Flag that indicates an instrument takes Argo measurements.
+   */
+  public static final int BASIS_ARGO = 1;
+
+  /**
    * Name for the Sensor Groups entry in the JSON representation of the
    * instrument's properties.
    */
@@ -172,6 +182,11 @@ public class Instrument {
   private final LocalDateTime created;
 
   /**
+   * Indicates the type of measurements taken by the instrument.
+   */
+  private int basis = BASIS_SURFACE;
+
+  /**
    * Create an Instrument object with an existing database record.
    *
    * @param owner
@@ -194,6 +209,8 @@ public class Instrument {
    *          The name of the platform on which the instrument is deployed.
    * @param platformCode
    *          The code for the platform on which the instrument is deployed.
+   * @param basis
+   *          The instrument's measurement basis.
    * @param nrt
    *          Indicates whether or not the instrument provides data in near real
    *          time.
@@ -203,16 +220,15 @@ public class Instrument {
    *          The main instrument properties as a JSON string.
    * @param created
    *          The time when the instrument was created.
-   * @throws SensorGroupsException
-   *           If the sensor groupings configuration is invalid.
+   * @throws InstrumentException
+   *           If any of the parameters are invalid.
    */
   public Instrument(User owner, long databaseId, String name,
     List<Long> sharedWith, InstrumentFileSet fileDefinitions,
     List<Variable> variables, Map<Variable, Properties> variableProperties,
     SensorAssignments sensorAssignments, String platformName,
     String platformCode, int basis, boolean nrt, LocalDateTime lastNrtExport,
-    String propertiesJson, LocalDateTime created)
-    throws SensorGroupsException, InstrumentException {
+    String propertiesJson, LocalDateTime created) throws InstrumentException {
 
     this.owner = owner;
     this.id = databaseId;
@@ -231,7 +247,11 @@ public class Instrument {
     this.basis = basis;
     this.nrt = nrt;
     this.lastNrtExport = lastNrtExport;
-    parsePropertiesJson(propertiesJson);
+    try {
+      parsePropertiesJson(propertiesJson);
+    } catch (Exception e) {
+      throw new InstrumentException("Invalid properties JSON", e);
+    }
     this.created = created;
   }
 
@@ -277,25 +297,30 @@ public class Instrument {
    *          The configuration properties for the measured variables.
    * @param sensorAssignments
    *          The assignments of input data columns to specific sensors.
-   * @param sensorGroups
-   *          The logical groupings of the defined sensors.
    * @param platformName
    *          The name of the platform on which the instrument is deployed.
    * @param platformCode
    *          The code for the platform on which the instrument is deployed.
+   * @param basis
+   *          The instrument's measurement basis.
    * @param nrt
    *          Indicates whether or not the instrument provides data in near real
    *          time.
-   * @param properties
-   *          The instrument's properties.
-   * @throws SensorGroupsException
+   * @param lastNrtExport
+   *          The time at which an NRT dataset was last exported.
+   * @param propertiesJson
+   *          The main instrument properties as a JSON string.
+   * @param created
+   *          The time when the instrument was created.
+   * @throws InstrumentException
+   *           If any of the parameters are invalid.
    */
   public Instrument(User owner, String name, List<Long> sharedWith,
     InstrumentFileSet fileDefinitions, List<Variable> variables,
     Map<Variable, Properties> variableProperties,
     SensorAssignments sensorAssignments, String platformName,
     String platformCode, int basis, boolean nrt, LocalDateTime lastNrtExport,
-    String propertiesJson, LocalDateTime created) throws SensorGroupsException {
+    String propertiesJson, LocalDateTime created) throws InstrumentException {
 
     this.owner = owner;
     this.name = name;
@@ -306,31 +331,55 @@ public class Instrument {
     this.sensorAssignments = sensorAssignments;
     this.platformName = platformName;
     this.platformCode = platformCode;
+    if (!validateBasis(basis)) {
+      throw new InstrumentException("Invalid basis value " + basis);
+    }
     this.basis = basis;
     this.nrt = nrt;
     this.lastNrtExport = lastNrtExport;
-    parsePropertiesJson(propertiesJson);
+    try {
+      parsePropertiesJson(propertiesJson);
+    } catch (Exception e) {
+      throw new InstrumentException("Invalid properties JSON", e);
+    }
     this.created = created;
   }
 
   /**
-   * Create a new instrument with no properties defined.
+   * Create a new instrument that is not yet fully configured and not stored in
+   * the database, with no properties defined.
    *
    * @param owner
-   *          The instrument owner.
+   *          The instrument's owner.
    * @param name
-   *          The instrument's name.
+   *          The name of the instrument.
+   * @param sharedWith
+   *          The database IDs of the users with which the instrument is shared.
    * @param fileDefinitions
    *          The data file definitions for the instrument.
    * @param variables
-   *          The variables that the instrument measures.
+   *          The variables measured by the instrument.
+   * @param variableProperties
+   *          The configuration properties for the measured variables.
    * @param sensorAssignments
-   *          The sensors assigned to the instrument.
+   *          The assignments of input data columns to specific sensors.
+   * @param sensorGroups
+   *          The logical sensor groupings.
+   * @param platformName
+   *          The name of the platform on which the instrument is deployed.
    * @param platformCode
-   *          The instrument's identifier code.
+   *          The code for the platform on which the instrument is deployed.
+   * @param basis
+   *          The instrument's measurement basis.
    * @param nrt
    *          Indicates whether or not the instrument provides data in near real
    *          time.
+   * @param lastNrtExport
+   *          The time at which an NRT dataset was last exported.
+   * @param created
+   *          The time when the instrument was created.
+   * @throws InstrumentException
+   *           If any of the parameters are invalid.
    */
   public Instrument(User owner, String name, List<Long> sharedWith,
     InstrumentFileSet fileDefinitions, List<Variable> variables,
@@ -1431,6 +1480,14 @@ public class Instrument {
     return basis;
   }
 
+  /**
+   * Check that a {@code basis} code is valid.
+   *
+   * @param basis
+   *          The basis value to check.
+   * @return {@code true} if the basis value is valid; {@code false} if it is
+   *         not.
+   */
   private boolean validateBasis(int basis) {
     return basis == BASIS_SURFACE || basis == BASIS_ARGO;
   }
