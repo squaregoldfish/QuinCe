@@ -1,0 +1,106 @@
+classDiagram
+    class DataReductionRecord {
+        long measurementId
+    }
+
+    class DatasetSensorValues {
+        Map~SensorValue.id, SensorValue~ valuesById
+        Map~FileColumn.id, SensorValuesList~ valuesByColumn
+        SensorValuesList longitudes
+        SensorValuesList latitudes
+    }
+
+    class FileColumn {
+        long id
+        SensorType sensorType
+    }
+
+    class InternalCalibrationData {
+        DatasetSensorValues datasetSensorValues
+        SimplePlotPageDataStructure dataStructure
+    }
+    
+    class ManualQCData {
+        Map~LocalDateTime, Measurement~ measurements
+        Set~MeasurmentValueSensorType~ measurementSensorTypes
+        List~Long~ rowIds*
+        Map~Long -> Variable, ReadOnlyDataReductionRecord~ dataReduction
+    }
+
+    class Measurement {
+        long id
+        long datasetId
+        LocalDateTime time*
+        Map~SensorType.id, MeasurementValue~ measurementValues
+    }
+
+    class MeasurementValue {
+        SensorType sensorType
+        List~Long~ sensorValueIds
+        List~Long~ supportingSensorValueIds
+    }
+
+    class PlotPageData {
+        DataSet dataSet
+        Instrument instrument
+        Map~COLUMN_GROUP_NAME_string, PlotPageColumnHeading~ columnHeadings
+        generateTableData(start, length)
+    }
+
+    class PlotPageTableRecord {
+        LocalDateTime id*
+        Map~COLUMN_INDEX_int, PlotPageTableValue~ columns
+    }
+
+    class SensorValue {
+        long id
+        long datasetId
+        long columnId
+        LocalDateTime time
+        String value
+    }
+
+    class SensorValuesList {
+        List~SensorValue~ list
+        SensorType sensorType
+        Set~Long~ columnIds
+        DatasetSensorValues allSensorValues
+    }
+
+    class SimplePlotPageDataStructure {
+        List~DATE_TIME_long~ ids*
+        List~PlotPageColumnHeading~ columnHeadings
+        PlotPageColumnHeading timeHeading*
+    }
+
+PlotPageData <-- ManualQCData
+PlotPageData <-- InternalCalibrationData
+ManualQCData ..> Measurement : measurements
+ManualQCData ..> ReadOnlyDataReductionRecord : dataReduction
+ManualQCData ..> MeasurementValueSensorType : measurementSensorTypes
+ManualQCData ..> DatasetSensorValues
+ReadOnlyDataReductionRecord --> DataReductionRecord
+ExportData --> ManualQCData
+DatasetSensorValues ..> SensorValue : valuesById/valuesByColumn
+DatasetSensorValues ..> FileColumn : valuesByColumn
+DatasetSensorValues ..> SensorValuesList : valuesByColumn/longitudes/latitudes
+SensorValuesList ..> DatasetSensorValues : allSensorValues
+SensorValuesList ..> SensorValue : list
+SensorValue ..> FileColumn : columnId
+InternalCalibrationData ..> DatasetSensorValues : datasetSensorValues
+InternalCalibrationData ..> SimplePlotPageDataStructure : dataStructure
+PlotPageTableValue <-- MeasurementValue
+PlotPageTableValue <-- FixedPlotPageTableValue
+MeasurementValue ..> SensorValue : (supporting)sensorValueIds
+SensorType <-- MeasurementValueSensorType
+PlotPageData ..> PlotPageColumnHeading : columnHeadings
+SensorValuesList ..> SensorType : sensorType
+Measurement ..> SensorType : measurementValues
+FileColumn ..> SensorType : sensorType
+MeasurementValue ..> SensorType : sensorType
+PlotPageData ..> PlotPageTableRecord : generateTableData()
+PlotPageTableRecord ..> PlotPageTableValue : columns
+DataReductionRecord ..> Measurement : measurementId
+SimplePlotPageDataStructure ..> PlotPageColumnHeading : columnHeadings/timeHeading
+
+note "Items in italics will need to change for non-time based data, with currently unknown implications"

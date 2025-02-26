@@ -100,7 +100,7 @@ public class DatasetSensorValues {
     this.instrument = instrument;
 
     /*
-     * The longitudes and latitudes cannot be instatiated in the constructor.
+     * The longitudes and latitudes cannot be instantiated in the constructor.
      * They will be initiated on demand.
      */
   }
