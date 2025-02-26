@@ -10,11 +10,6 @@ classDiagram
         SensorValuesList latitudes
     }
 
-    class FileColumn {
-        long id
-        SensorType sensorType
-    }
-
     class InternalCalibrationData {
         DatasetSensorValues datasetSensorValues
         SimplePlotPageDataStructure dataStructure
@@ -22,7 +17,6 @@ classDiagram
     
     class ManualQCData {
         Map~LocalDateTime, Measurement~ measurements
-        Set~MeasurmentValueSensorType~ measurementSensorTypes
         List~Long~ rowIds*
         Map~Long -> Variable, ReadOnlyDataReductionRecord~ dataReduction
     }
@@ -56,7 +50,7 @@ classDiagram
         long id
         long datasetId
         long columnId
-        LocalDateTime time
+        LocalDateTime time*
         String value
     }
 
@@ -65,6 +59,16 @@ classDiagram
         SensorType sensorType
         Set~Long~ columnIds
         DatasetSensorValues allSensorValues
+        List~LocalDateTime~ rawTimesCache*
+        List~LocalDateTime~ valueTimesCache*
+        List~SensorValuesListValue~ outputValues
+    }
+
+    class SensorValuesListValue {
+        LocalDateTime startTime*
+        LocalDateTime endTime*
+        LocalDateTime nominalTime*
+        Collection~SensorValue~ sourceSensorValues
     }
 
     class SimplePlotPageDataStructure {
@@ -73,34 +77,27 @@ classDiagram
         PlotPageColumnHeading timeHeading*
     }
 
-PlotPageData <-- ManualQCData
 PlotPageData <-- InternalCalibrationData
+PlotPageData <-- ManualQCData
+InternalCalibrationData ..> SimplePlotPageDataStructure : dataStructure
+SimplePlotPageDataStructure ..> PlotPageColumnHeading : columnHeadings/timeHeading
+InternalCalibrationData ..> DatasetSensorValues : datasetSensorValues
 ManualQCData ..> Measurement : measurements
 ManualQCData ..> ReadOnlyDataReductionRecord : dataReduction
-ManualQCData ..> MeasurementValueSensorType : measurementSensorTypes
 ManualQCData ..> DatasetSensorValues
 ReadOnlyDataReductionRecord --> DataReductionRecord
-ExportData --> ManualQCData
 DatasetSensorValues ..> SensorValue : valuesById/valuesByColumn
-DatasetSensorValues ..> FileColumn : valuesByColumn
 DatasetSensorValues ..> SensorValuesList : valuesByColumn/longitudes/latitudes
 SensorValuesList ..> DatasetSensorValues : allSensorValues
 SensorValuesList ..> SensorValue : list
-SensorValue ..> FileColumn : columnId
-InternalCalibrationData ..> DatasetSensorValues : datasetSensorValues
-InternalCalibrationData ..> SimplePlotPageDataStructure : dataStructure
-PlotPageTableValue <-- MeasurementValue
-PlotPageTableValue <-- FixedPlotPageTableValue
+SensorValuesListValue ..> SensorValue : sourceSensorValues
 MeasurementValue ..> SensorValue : (supporting)sensorValueIds
-SensorType <-- MeasurementValueSensorType
 PlotPageData ..> PlotPageColumnHeading : columnHeadings
-SensorValuesList ..> SensorType : sensorType
-Measurement ..> SensorType : measurementValues
-FileColumn ..> SensorType : sensorType
-MeasurementValue ..> SensorType : sensorType
 PlotPageData ..> PlotPageTableRecord : generateTableData()
 PlotPageTableRecord ..> PlotPageTableValue : columns
 DataReductionRecord ..> Measurement : measurementId
-SimplePlotPageDataStructure ..> PlotPageColumnHeading : columnHeadings/timeHeading
+Measurement ..> MeasurementValue : measurementValues
+SensorValuesList ..> SensorValuesListValue : outputValues
+PlotPageTableValue <-- MeasurementValue
 
-note "Items in italics will need to change for non-time based data, with currently unknown implications"
+note "Italics = coordinate issue"
