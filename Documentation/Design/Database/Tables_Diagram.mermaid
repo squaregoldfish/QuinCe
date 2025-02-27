@@ -20,7 +20,9 @@ erDiagram
 
   dataset }|..|| instrument : ""
   dataset ||..|{ measurements : ""
-  dataset ||..|{ sensor_values : ""
+  
+  dataset ||..|{ coordinate : ""
+  coordinate ||..|{ sensor_values : ""
 
   sensor_values ||..|| file_column : ""
 
