@@ -29,28 +29,27 @@ import uk.ac.exeter.QuinCe.utils.StringUtils;
  *
  * <p>
  * All calibrations will be held in the same table in the database,
- * distinguished by a {@code type} field
+ * distinguished by a {@code type} field.
  * </p>
  *
  * <p>
- * Comparison operations on this class compare the instrument ID, type and
- * target in that order.
+ * The coefficients for a Calibration are maintained in a fixed order.
  * </p>
  */
 public abstract class Calibration implements Comparable<Calibration> {
 
   /**
-   * The database ID of this calibration
+   * The database ID of this calibration.
    */
   private long id;
 
   /**
-   * The instrument to which this calibration belongs
+   * The instrument to which this calibration will be applied.
    */
   protected Instrument instrument;
 
   /**
-   * The calibration type
+   * The calibration type.
    */
   protected String type = null;
 
@@ -70,23 +69,27 @@ public abstract class Calibration implements Comparable<Calibration> {
   /**
    * The values for the calibration. The list must contain the same number of
    * entries as the list of value names returned by
-   * {@link #getCoefficientNames()}.
+   * {@link #getCoefficientNames(boolean)} with {@code includeHidden=true}.
    *
    * <p>
    * <b>Note:</b> You should not use this variable directly unless you have a
    * good reason to. You should instead use {@link #getCoefficients()}, which
-   * automatically takes care of initialise them if they haven't been already.
+   * automatically takes care of initialising them if they haven't been already.
    * </p>
    */
   protected List<CalibrationCoefficient> coefficients = null;
 
   /**
-   * Create an empty calibration for an instrument.
+   * Create a Calibration from a database record with no specified target.
    *
-   * @param instrumentId
-   *          The instrument's database ID.
+   * @param instrument
+   *          The instrument that the calibration will be applied to.
    * @param type
    *          The calibration type.
+   * @param id
+   *          The calibration's database ID.
+   * @param deploymentDate
+   *          The date of the calibration.
    */
   protected Calibration(Instrument instrument, String type, long id,
     LocalDateTime deploymentDate) {
@@ -98,7 +101,7 @@ public abstract class Calibration implements Comparable<Calibration> {
   }
 
   /**
-   * Create an empty calibration for a specified target
+   * Create a new calibration.
    *
    * @param instrumentId
    *          The instrument ID
@@ -107,6 +110,23 @@ public abstract class Calibration implements Comparable<Calibration> {
    * @param target
    *          The target
    */
+
+  /**
+   * Create a new Calibration.
+   *
+   * <p>
+   * <b>Note:</b> This constructor does not include the {@link #deploymentDate}.
+   * This must be set separately using {@link #setDeploymentDate(LocalDateTime)}
+   * because that will ensure that the coefficients are correctly initialised.
+   * </p>
+   *
+   * @param instrument
+   *          The instrument that the calibration will be applied to.
+   * @param type
+   *          The calibration type.
+   * @param target
+   *          The calibration target.
+   */
   protected Calibration(Instrument instrument, String type, String target) {
     this.id = DatabaseUtils.NO_DATABASE_RECORD;
     this.instrument = instrument;
@@ -114,6 +134,24 @@ public abstract class Calibration implements Comparable<Calibration> {
     this.target = target;
   }
 
+  /**
+   * Create a Calibration from a database record.
+   *
+   * <p>
+   * <b>Note:</b> This constructor does not include the {@link #deploymentDate}.
+   * This must be set separately using {@link #setDeploymentDate(LocalDateTime)}
+   * because that will ensure that the coefficients are correctly initialised.
+   * </p>
+   *
+   * @param id
+   *          The calibration's database ID.
+   * @param instrument
+   *          The instrument that the calibration will be applied to.
+   * @param type
+   *          The calibration type.
+   * @param target
+   *          The calibration target.
+   */
   protected Calibration(long id, Instrument instrument, String type,
     String target) {
     this.id = id;
@@ -123,9 +161,13 @@ public abstract class Calibration implements Comparable<Calibration> {
   }
 
   /**
-   * Get the human-readable names of the values to be stored for the calibration
+   * Get the names of the coefficients for this calibration.
    *
-   * @return The value names
+   * @param includeHidden
+   *          Indicates whether or not hidden coefficients should be included.
+   *          Hidden coefficients are not displayed to the user, but are used
+   *          internally.
+   * @return The coefficient names.
    */
   public abstract LinkedHashSet<String> getCoefficientNames(
     boolean includeHidden);
@@ -171,7 +213,7 @@ public abstract class Calibration implements Comparable<Calibration> {
    * Build the human-readable coefficients string for
    * {@link #getHumanReadableCoefficients()}.
    *
-   * @return The human-readable coefficients
+   * @return The human-readable coefficients.
    */
   protected String buildHumanReadableCoefficients() {
 
@@ -191,38 +233,38 @@ public abstract class Calibration implements Comparable<Calibration> {
   }
 
   /**
-   * Get the calibration target
+   * Get the calibration target.
    *
-   * @return The target
+   * @return The target.
    */
   public String getTarget() {
     return target;
   }
 
   /**
-   * Set the calibration target
+   * Set the calibration target.
    *
    * @param target
-   *          The target
+   *          The target.
    */
   public void setTarget(String target) {
     this.target = target;
   }
 
   /**
-   * Get the deployment date as a {@link LocalDateTime} object
+   * Get the deployment date as a {@link LocalDateTime} object.
    *
-   * @return The deployment date
+   * @return The deployment date.
    */
   public LocalDateTime getDeploymentDate() {
     return deploymentDate;
   }
 
   /**
-   * Set the deployment date
+   * Set the deployment date.
    *
    * @param deploymentDate
-   *          The deployment date
+   *          The deployment date.
    */
   public void setDeploymentDate(LocalDateTime deploymentDate) {
     this.deploymentDate = deploymentDate;
@@ -233,18 +275,18 @@ public abstract class Calibration implements Comparable<Calibration> {
   }
 
   /**
-   * Get the database ID of the instrument to which this calibration applies
+   * Get the database ID of the instrument to which this calibration applies.
    *
-   * @return The instrument ID
+   * @return The instrument ID.
    */
   public Instrument getInstrument() {
     return instrument;
   }
 
   /**
-   * Get the calibration values as a semicolon-delimited list
+   * Get the calibration values as a semicolon-delimited list.
    *
-   * @return The calibration values
+   * @return The calibration values.
    */
   public String getCoefficientsAsDelimitedList() {
     if (null == coefficients) {
@@ -261,7 +303,12 @@ public abstract class Calibration implements Comparable<Calibration> {
   }
 
   /**
-   * Initialise the coefficients for this calibration with zero values
+   * Initialise the coefficients for this calibration with zero values.
+   *
+   * <p>
+   * In normal use this method should not be used directly; methods to set
+   * aspects of the Calibration will call this automatically.
+   * </p>
    */
   protected void initialiseCoefficients() {
     coefficients = getCoefficientNames(true).stream()
@@ -269,9 +316,9 @@ public abstract class Calibration implements Comparable<Calibration> {
   }
 
   /**
-   * Get the coefficients for this calibration
+   * Get the coefficients for this calibration.
    *
-   * @return The coefficients
+   * @return The coefficients.
    */
   public List<CalibrationCoefficient> getCoefficients() {
     if (null == coefficients) {
@@ -282,21 +329,21 @@ public abstract class Calibration implements Comparable<Calibration> {
 
   /**
    * Get the list of coefficients that are user-editable. For most calibrations
-   * this will be the complete set
+   * this will be the complete set.
    *
-   * @return The user-editable calibration coefficients
+   * @return The user-editable calibration coefficients.
    */
   public List<CalibrationCoefficient> getEditableCoefficients() {
     return getCoefficients();
   }
 
   /**
-   * Set the coefficients for this calibration
+   * Set the coefficients for this calibration.
    *
-   * @param coefficients
-   *          The coefficients
+   * @param newCoefficients
+   *          The coefficients.
    * @throws CalibrationException
-   *           If an incorrect number of coefficients is supplied
+   *           If an incorrect number of coefficients is supplied.
    */
   public void setCoefficients(Map<String, String> newCoefficients)
     throws CalibrationException {
@@ -314,6 +361,14 @@ public abstract class Calibration implements Comparable<Calibration> {
       .forEach(e -> setCoefficient(e.getKey(), e.getValue()));
   }
 
+  /**
+   * Set the coefficients for this calibration.
+   *
+   * @param newCoefficients
+   *          The coefficients.
+   * @throws CalibrationException
+   *           If an incorrect number of coefficients is supplied.
+   */
   protected void setCoefficients(List<CalibrationCoefficient> newCoefficients)
     throws CalibrationException {
 
@@ -342,7 +397,7 @@ public abstract class Calibration implements Comparable<Calibration> {
    * </p>
    *
    * @return {@code true} if the calibration is valid; {@code false} if it is
-   *         not
+   *         not.
    * @see #coefficientsValid()
    */
   public boolean validate() {
@@ -358,13 +413,22 @@ public abstract class Calibration implements Comparable<Calibration> {
   }
 
   /**
-   * Determine whether the calibration coefficients are valid
+   * Determine whether the calibration coefficients are valid.
    *
    * @return {@code true} if the coefficients are valid; {@code false} if they
-   *         are not
+   *         are not.
    */
   public abstract boolean coefficientsValid();
 
+  /**
+   * Compares this {@link Calibration} the specified object for order.
+   *
+   * <p>
+   * Comparison is performed on the {@link #instrument} id
+   * ({@link Instrument#getId()}), {@link #type} and {@link #target} in that
+   * order.
+   * </p>
+   */
   @Override
   public int compareTo(Calibration o) {
     int result = (int) (this.instrument.getId() - o.instrument.getId());
@@ -385,11 +449,11 @@ public abstract class Calibration implements Comparable<Calibration> {
   }
 
   /**
-   * Get the value of a named coefficient
+   * Get the value of a named coefficient.
    *
    * @param name
-   *          The coefficient name
-   * @return The coefficient value
+   *          The coefficient name.
+   * @return The coefficient value.
    */
   public Double getDoubleCoefficient(String name) {
     Double result = null;
@@ -404,6 +468,13 @@ public abstract class Calibration implements Comparable<Calibration> {
     return result;
   }
 
+  /**
+   * Get the value of a named coefficient as a {@link BigDecimal}.
+   *
+   * @param name
+   *          The coefficient name.
+   * @return The coefficient value.
+   */
   public BigDecimal getBigDecimalCoefficient(String name) {
     BigDecimal result = null;
 
@@ -418,11 +489,11 @@ public abstract class Calibration implements Comparable<Calibration> {
   }
 
   /**
-   * Calibrate a single value using this calibration
+   * Calibrate a single value using this calibration.
    *
    * @param rawValue
-   *          The value to be calibrated
-   * @return The calibrated value
+   *          The value to be calibrated.
+   * @return The calibrated value.
    */
   public abstract Double calibrateValue(Double rawValue);
 
@@ -442,10 +513,21 @@ public abstract class Calibration implements Comparable<Calibration> {
     return true;
   }
 
+  /**
+   * Get this Calibration's database ID.
+   *
+   * @return The database ID.
+   */
   public long getId() {
     return id;
   }
 
+  /**
+   * Set the database ID for this Calibration
+   *
+   * @param id
+   *          The database ID.
+   */
   public void setId(long id) {
     this.id = id;
   }
@@ -490,14 +572,51 @@ public abstract class Calibration implements Comparable<Calibration> {
       && Objects.equals(target, other.target);
   }
 
+  /**
+   * Set the value of named coefficient.
+   *
+   * <p>
+   * This can only be used to adjust an existing coefficient; the coefficients
+   * must have set <i>en masse</i> through {@link #setCoefficients(List)} or
+   * {@link #setCoefficients(Map)} first.
+   * </p>
+   *
+   * <p>
+   * Using this method prior to initialisation of the coefficients will likely
+   * result in a {@link NullPointerException}.
+   * </p>
+   *
+   * @param name
+   *          The coefficient name.
+   * @param value
+   *          The coefficient value.
+   *
+   */
   protected void setCoefficient(String name, String value) {
     getCoefficients().get(getCoefficientIndex(name)).setValue(value);
   }
 
+  /**
+   * Returns the number of coefficients for this Calibration.
+   *
+   * @return The coefficient count.
+   */
   protected int size() {
     return getCoefficients().size();
   }
 
+  /**
+   * Get the index of the named calibration coefficient in the list of its
+   * {@link CalibrationCoefficient}.
+   *
+   * <p>
+   * Returns {@code -1} if there is no coefficient with the supplied name.
+   * </p>
+   *
+   * @param name
+   *          The coefficient name.
+   * @return The coefficient index.
+   */
   private int getCoefficientIndex(String name) {
     int result = -1;
 
@@ -512,23 +631,46 @@ public abstract class Calibration implements Comparable<Calibration> {
     return result;
   }
 
+  /**
+   * Get the coefficients for this Calibration as a JSON string.
+   *
+   * @return The coefficients JSON.
+   */
   public String getCoefficientsJson() {
     JsonObject json = new JsonObject();
     coefficients.forEach(c -> json.addProperty(c.getName(), c.getValue()));
     return json.toString();
   }
 
+  /**
+   * Determines whether or not at least one coefficient has been set for this
+   * Calibration.
+   *
+   * @return {@code true} if at least one coefficient has been set:
+   *         {@code false} no coefficients are set.
+   */
   public boolean isSet() {
     return null != coefficients;
   }
 
   /**
-   * Get the label to use for the set of coefficients.
+   * Get the label to use for the set of coefficients in this Calibration.
    *
    * @return The coefficients label.
    */
   public abstract String getCoefficientsLabel();
 
+  /**
+   * Get the label to use for the set of coefficients in this Calibration
+   * formatted for use in JSON.
+   *
+   * <p>
+   * This converts the label to lower case.
+   * </p>
+   *
+   * @return The coefficients label formatted for JSON.
+   * @see #getCoefficientsLabel()
+   */
   public String getJsonCoefficientsLabel() {
     return getCoefficientsLabel().toLowerCase();
   }
@@ -551,7 +693,7 @@ public abstract class Calibration implements Comparable<Calibration> {
    *
    * @param calibration
    *          The {@link Calibration} whose coefficients are to be duplicated.
-   * @return
+   * @return The copied coefficients.
    */
   protected static List<CalibrationCoefficient> duplicateCoefficients(
     Calibration calibration) {
@@ -560,8 +702,16 @@ public abstract class Calibration implements Comparable<Calibration> {
       .map(c -> new CalibrationCoefficient(c.getName(), c.getValue())).toList();
   }
 
+  /**
+   * Compares another Calibration object with this object to see if they have
+   * the same impact.
+   *
+   * @param other
+   *          The Calibration to be compared.
+   * @return {@code true} if the supplied Calibration is equivalent to this;
+   *         {@code false} if they are not.
+   */
   public boolean hasSameEffect(Calibration other) {
-
     if (timeAffectsCalibration()
       && !this.deploymentDate.equals(other.deploymentDate)) {
       return false;
@@ -576,5 +726,13 @@ public abstract class Calibration implements Comparable<Calibration> {
 
   }
 
+  /**
+   * Indicates whether or not the impact of a Calibration depends on the amount
+   * of time since it was deployed.
+   *
+   * @return {@code true} if the time since the Calibration must be taken into
+   *         account when applying it; {@code false} if the time since the
+   *         calibration does not matter.
+   */
   protected abstract boolean timeAffectsCalibration();
 }
