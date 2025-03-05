@@ -51,7 +51,7 @@ classDiagram
     class Measurement {
         long id
         long datasetId
-        LocalDateTime time*
+        LocalDateTime time
         Map~SensorType.id, MeasurementValue~ measurementValues
     }
 
@@ -102,7 +102,7 @@ classDiagram
     }
 
     class SimplePlotPageDataStructure {
-        List~DATE_TIME_long~ ids*
+        List~DATE_TIME_long~ ids
         List~PlotPageColumnHeading~ columnHeadings
         List~PlotPageColumnHeading~ coordinateHeadings
     }
