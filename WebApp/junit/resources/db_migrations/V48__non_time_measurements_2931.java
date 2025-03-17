@@ -53,10 +53,16 @@ public class V48__non_time_measurements_2931 extends BaseJavaMigration {
     maxCoordIdStmt.close();
 
     // Add coordinate field to sensor_values table with foreign key constraint
-    PreparedStatement addCoordFieldStmt = conn.prepareStatement(
+    PreparedStatement addSensorValuesCoordFieldStmt = conn.prepareStatement(
       "ALTER TABLE sensor_values ADD coordinate_id BIGINT(20) DEFAULT 0 NOT NULL AFTER id");
-    addCoordFieldStmt.execute();
-    addCoordFieldStmt.close();
+    addSensorValuesCoordFieldStmt.execute();
+    addSensorValuesCoordFieldStmt.close();
+
+    // Add coordinate field to measurements table with foreign key constraint
+    PreparedStatement addMeasurementsCoordFieldStmt = conn.prepareStatement(
+      "ALTER TABLE measurements ADD coordinate_id BIGINT(20) DEFAULT 0 NOT NULL AFTER id");
+    addMeasurementsCoordFieldStmt.execute();
+    addMeasurementsCoordFieldStmt.close();
 
     // Load all coordinate records and copy IDs back to sensor_values
     int batchSize = 20000;
@@ -64,8 +70,11 @@ public class V48__non_time_measurements_2931 extends BaseJavaMigration {
       "SELECT id, dataset_id, date FROM coordinates WHERE id > ? ORDER BY id LIMIT "
         + batchSize);
 
-    PreparedStatement writeCoordStmt = conn.prepareStatement(
+    PreparedStatement writeSensorValuesCoordStmt = conn.prepareStatement(
       "UPDATE sensor_values SET coordinate_id = ? WHERE dataset_id = ? AND date = ?");
+
+    PreparedStatement writeMeasurementsCoordStmt = conn.prepareStatement(
+      "UPDATE measurements SET coordinate_id = ? WHERE dataset_id = ? AND date = ?");
 
     long lastCoordId = 0L;
     while (lastCoordId < maxCoordId) {
@@ -75,21 +84,28 @@ public class V48__non_time_measurements_2931 extends BaseJavaMigration {
       ResultSet coords = getCoordsQuery.executeQuery();
       while (coords.next()) {
         long coordId = coords.getLong(1);
-        writeCoordStmt.setLong(1, coordId);
-        writeCoordStmt.setLong(2, coords.getLong(2));
-        writeCoordStmt.setLong(3, coords.getLong(3));
+        writeSensorValuesCoordStmt.setLong(1, coordId);
+        writeSensorValuesCoordStmt.setLong(2, coords.getLong(2));
+        writeSensorValuesCoordStmt.setLong(3, coords.getLong(3));
+        writeSensorValuesCoordStmt.addBatch();
 
-        writeCoordStmt.addBatch();
+        writeMeasurementsCoordStmt.setLong(1, coordId);
+        writeMeasurementsCoordStmt.setLong(2, coords.getLong(2));
+        writeMeasurementsCoordStmt.setLong(3, coords.getLong(3));
+        writeMeasurementsCoordStmt.addBatch();
+
         lastCoordId = coordId;
       }
 
       System.out.println(lastCoordId);
-      writeCoordStmt.executeBatch();
+      writeSensorValuesCoordStmt.executeBatch();
+      writeMeasurementsCoordStmt.executeBatch();
       conn.commit();
       coords.close();
     }
 
     getCoordsQuery.close();
-    writeCoordStmt.close();
+    writeSensorValuesCoordStmt.close();
+    writeMeasurementsCoordStmt.close();
   }
 }

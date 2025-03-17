@@ -2,12 +2,20 @@
 
 -- Add foreign key reference to coordinate id
 ALTER TABLE sensor_values ADD CONSTRAINT sv_coord FOREIGN KEY (coordinate_id) REFERENCES coordinates(id);
+ALTER TABLE measurements ADD CONSTRAINT meas_coord FOREIGN KEY (coordinate_id) REFERENCES coordinates(id);
 
 -- Remove old sensor_values columns
 ALTER TABLE sensor_values DROP FOREIGN KEY SENSORVALUE_DATASET;
 ALTER TABLE sensor_values DROP INDEX sv_datasetid_date;
 ALTER TABLE sensor_values DROP COLUMN dataset_id;
 ALTER TABLE sensor_values DROP COLUMN date;
+
+-- Remove old measurements columns                                                                                                                           |  -------------------------------------------------------------------------------------------------------------------------------------------------------------
+ALTER TABLE measurements DROP FOREIGN KEY measurement_dataset;
+ALTER TABLE measurements DROP INDEX MEAS_DATASETID_DATE;
+ALTER TABLE measurements DROP COLUMN dataset_id;
+ALTER TABLE measurements DROP COLUMN date;
+
 
 -- Add measurement basis columns
 -- All existing instruments and variables are surface based
