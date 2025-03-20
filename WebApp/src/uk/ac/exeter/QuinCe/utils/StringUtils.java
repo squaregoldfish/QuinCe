@@ -29,8 +29,10 @@ import org.apache.commons.lang3.math.NumberUtils;
  * Miscellaneous string utilities.
  *
  * <p>
- * This class extends {@link org.apache.commons.lang3.StringUtils}, so methods
- * from that class can be called directly through this one.
+ * This class extends {@link org.apache.commons.lang3.StringUtils} so methods
+ * from that class can be called directly through this one, thereby reducing
+ * issues with {@code import} statements if a class needs to use methods from
+ * both classes.
  * </p>
  */
 public final class StringUtils extends org.apache.commons.lang3.StringUtils {
@@ -80,6 +82,22 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
     return result;
   }
 
+  /**
+   * Extract the specified entries from a {@link List} and combine them into a
+   * single {@link String} separated by the specified delimiter.
+   *
+   * <p>
+   * The entries are specified by their list indices.
+   * </p>
+   *
+   * @param list
+   *          The {@link List} from which the entries must be extracted.
+   * @param entries
+   *          The indices of the entries to extract.
+   * @param delimiter
+   *          The delimiter to use between entries.
+   * @return The extracted entries.
+   */
   public static String listToDelimited(List<String> list,
     TreeSet<Integer> entries, String delimiter) {
 
@@ -90,11 +108,6 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
     });
 
     return collectionToDelimited(selection, delimiter);
-  }
-
-  public static String listToDelimited(Collection<String> list,
-    String delimiter) {
-    return list.stream().collect(Collectors.joining(";"));
   }
 
   /**
@@ -253,7 +266,7 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
 
   /**
    * Convert a comma-separated list of numbers to a {@link Set} of longs. The
-   * Set will be ordered.
+   * Set will be ordered by value.
    *
    * @param values
    *          The numbers.
@@ -312,6 +325,7 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
    * Trims all items in a list of strings, and remotes any leading and/or
    * trailing double quotes.
    *
+   * <p>
    * <ul>
    * <li>All whitespace and quotes are removed from the beginning and end of the
    * string.</li>
@@ -319,6 +333,7 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
    * removed also.</li>
    * <li>The process is repeated until the string is no longer modified.</li>
    * </ul>
+   * </p>
    *
    * @param source
    *          The source list
@@ -337,6 +352,30 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
     return result;
   }
 
+  /**
+   * Remove leading and trailing whitespace from a {@link String}, with extra
+   * features over the standard {@link String#trim()}.
+   *
+   * <p>
+   * If the string starts with a single {@code \}, it is treated as if it were a
+   * whitespace character and trimmed. If the string starts with multiple
+   * {@code \} characters, the first is removed and the rest are kept.
+   * </p>
+   *
+   * <p>
+   * If {@code replaceQuotes} is {@code true}, quote characters ({@code "} and
+   * {@code '}) are treated as if they were whitespace characters and trimmed
+   * accordingly.
+   * </p>
+   *
+   * @param string
+   *          The {@link String} to be trimmed.
+   * @param replaceQuotes
+   *          Indicates whether quote characters should be treated as
+   *          whitespace.
+   * @return The trimmed {@link String}.
+   * @see #trimWhitespaceAndQuotes(String)
+   */
   private static String trimString(String string, boolean replaceQuotes) {
 
     String trimmed = null;
@@ -383,7 +422,6 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
    * @return The trimmed String.
    */
   private static String trimWhitespaceAndQuotes(String string) {
-    // This is a copy of the code from String.trim()
     char[] chars = string.toCharArray();
 
     int length = chars.length;
@@ -403,43 +441,12 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
   }
 
   /**
-   * Convert a Properties object into a JSON string
+   * Create a {@link Properties} object from a string.
    *
-   * @param properties
-   *          The properties
-   * @return The JSON string
-   */
-  public static String getPropertiesAsJson(Properties properties) {
-
-    StringBuilder result = new StringBuilder();
-    if (null == properties) {
-      result.append("null");
-    } else {
-
-      result.append('{');
-
-      int propCount = 0;
-      for (String prop : properties.stringPropertyNames()) {
-        propCount++;
-        result.append('"');
-        result.append(prop);
-        result.append("\":\"");
-        result.append(properties.getProperty(prop));
-        result.append('"');
-
-        if (propCount < properties.size()) {
-          result.append(',');
-        }
-      }
-
-      result.append('}');
-    }
-
-    return result.toString();
-  }
-
-  /**
-   * Create a {@link Properties} object from a string
+   * <p>
+   * This method is deprecated and should not be used; it is only kept because
+   * it is used by a database migration.
+   * </p>
    *
    * @param propsString
    *          The properties String
@@ -447,6 +454,7 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
    * @throws IOException
    *           If the string cannot be parsed
    */
+  @Deprecated
   public static Properties propertiesFromString(String propsString)
     throws IOException {
     Properties result = null;
@@ -464,15 +472,19 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
   /**
    * Make a valid CSV String from the given text.
    *
+   * <p>
    * This always performs three steps:
+   * </p>
    * <ul>
    * <li>Surround the value in quotes</li>
    * <li>Any " are replaced with "", per the CSV spec</li>
    * <li>Newlines are replaced with semi-colons</li>
    * </ul>
    *
+   * <p>
    * While these are not strictly necessary for all values, they are appropriate
    * for this application and the target audiences of exported CSV files.
+   * </p>
    *
    * @param text
    *          The value
@@ -523,7 +535,7 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
 
     int output_length = -1;
     for (int i = 0; i < string.length(); i++) {
-      if (string.charAt(i) != ',') {
+      if (string.charAt(i) != character) {
         output_length++;
         output[output_length] = string.charAt(i);
       }
@@ -570,6 +582,19 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
     return result;
   }
 
+  /**
+   * Format a {@link String} containing a numeric value to three decimal places.
+   *
+   * <p>
+   * If the {@link String} does not contain a numeric value, the passed in value
+   * is returned unchanged.
+   * </p>
+   *
+   * @param value
+   *          The number.
+   * @return The formatted number.
+   * @see #threeDecimalPoints
+   */
   public static String formatNumber(String value) {
     String result = value;
 
@@ -580,6 +605,14 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
     return result;
   }
 
+  /**
+   * Format a number to three decimal places.
+   *
+   * @param value
+   *          The number.
+   * @return The formatted number.
+   * @see #threeDecimalPoints
+   */
   public static String formatNumber(Double value) {
     String result = null;
 
@@ -590,6 +623,14 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
     return result;
   }
 
+  /**
+   * Replace all instances of a tab character in a {@link String} with a single
+   * space.
+   *
+   * @param in
+   *          The {@link String} to be processed.
+   * @return The {@link String} with all tabs replaced.
+   */
   public static String tabToSpace(String in) {
 
     String result = null;
@@ -690,15 +731,29 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
     return string.replaceAll("'", Matcher.quoteReplacement("\\'"));
   }
 
+  /**
+   * Replace all newlines in a {@link String} with semicolons.
+   *
+   * @param str
+   *          The {@link String} to be processed.
+   * @return The processed {@link String}.
+   */
   public static String replaceNewlines(String str) {
     return null == str ? null : str.replaceAll("\\r?\\n", ";");
   }
 
+  /**
+   * Take a {@link List} of {@link String}s and remove from the end any blank
+   * lines (including those with just whitespace characters).
+   *
+   * @param list
+   *          The {@link List}.
+   */
   public static void removeBlankTailLines(List<String> list) {
     boolean blankLine = true;
     while (blankLine) {
       String lastLine = list.get(list.size() - 1);
-      if (lastLine.trim().length() == 0) {
+      if (null == lastLine || lastLine.trim().length() == 0) {
         list.remove(list.size() - 1);
       } else {
         blankLine = false;
@@ -706,6 +761,20 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
     }
   }
 
+  /**
+   * Determine whether or not a {@link String} contains a numeric value.
+   *
+   * <p>
+   * This simply calls {@link Double#parseDouble(String)} and determines whether
+   * or not it succeeds. If a {@code null} value is passed, {@code false} is
+   * returned so it is treated as a non-numeric value.
+   * </p>
+   *
+   * @param value
+   *          The value to be checked.
+   * @return {@code true} if the value is numeric; {@code false} if it is not.
+   * @see Double#parseDouble(String)
+   */
   public static boolean isNumeric(String value) {
     boolean result = true;
     if (null == value) {
@@ -721,6 +790,32 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
     return result;
   }
 
+  /**
+   * Combine two {@link String}s into a single {@link String} with the specified
+   * combining {@link String} between them.
+   *
+   * <p>
+   * The strings are only combined if both are non-empty (by the criteria of
+   * {@link #isEmpty(CharSequence)}). Otherwise only the non-empty string is
+   * returned, or an empty string if both are empty.
+   * </p>
+   *
+   * <p>
+   * If {@code unique} is {@code true}, only one of the strings will be returned
+   * if they are both equal.
+   * </p>
+   *
+   * @param string1
+   *          The first {@link String}.
+   * @param string2
+   *          The second {@link String}.
+   * @param combiner
+   *          The combining {@link String}.
+   * @param unique
+   *          Indicates whether duplicate strings should be combined.
+   * @return The combined {@link String}.
+   * @see #isEmpty(CharSequence)
+   */
   public static String combine(String string1, String string2, String combiner,
     boolean unique) {
     String result = "";
@@ -731,7 +826,7 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
 
     if (null != string2 && !isEmpty(string2.trim())) {
       if (!unique || !string2.equals(string1)) {
-        if (null != result && !isEmpty(result)) {
+        if (!isEmpty(result)) {
           result += combiner;
           result += string2.trim();
         } else {
