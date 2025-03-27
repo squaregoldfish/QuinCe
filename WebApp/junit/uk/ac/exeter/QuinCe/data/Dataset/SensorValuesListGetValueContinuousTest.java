@@ -59,11 +59,10 @@ public class SensorValuesListGetValueContinuousTest extends TestSetTest {
   protected void makeSensorValues(DatasetSensorValues allSensorValues,
     TestSetLine line, int column, int firstMinute)
     throws RecordNotFoundException, InvalidFlagException {
-    char[] elevenToTwentyThreeFlags = line.getStringField(column, false)
-      .toCharArray();
+    char[] flags = line.getStringField(column, false).toCharArray();
 
     int minute = firstMinute;
-    for (char flag : elevenToTwentyThreeFlags) {
+    for (char flag : flags) {
       if (flag != 'N') {
         allSensorValues.add(makeSensorValue(minute, flag));
       }
@@ -84,7 +83,7 @@ public class SensorValuesListGetValueContinuousTest extends TestSetTest {
 
     SensorValuesList list = allSensorValues.getColumnValues(1L);
 
-    SensorValuesListValue value = getValue(list, line);
+    SensorValuesListOutput value = getValue(list, line);
 
     String expectedValueString = line.getStringField(getExpectedValueCol(),
       true);
@@ -124,10 +123,16 @@ public class SensorValuesListGetValueContinuousTest extends TestSetTest {
 
       assertEquals(expectedUsedValueIds, actualUsedValueIds,
         "Used values incorrect");
+
+      boolean expectedInterpolatesAroundFlags = line
+        .getBooleanField(getInterpolatesAroundFlagCol());
+
+      assertEquals(expectedInterpolatesAroundFlags,
+        value.interpolatesAroundFlags(), "Interpolates Around Flags incorrect");
     }
   }
 
-  protected SensorValuesListValue getValue(SensorValuesList list,
+  protected SensorValuesListOutput getValue(SensorValuesList list,
     TestSetLine line) throws SensorValuesListException {
     return list.getValue(makeTime(line.getIntField(getRequestedMinuteCol())),
       true);
@@ -159,6 +164,10 @@ public class SensorValuesListGetValueContinuousTest extends TestSetTest {
 
   protected int getRequestedMinuteCol() {
     return 1;
+  }
+
+  protected int getInterpolatesAroundFlagCol() {
+    return 8;
   }
 
   protected void buildSensorValues(DatasetSensorValues allSensorValues,

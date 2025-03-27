@@ -39,7 +39,7 @@ public class SensorValuesListGetValueRangeTest
   }
 
   @Override
-  protected SensorValuesListValue getValue(SensorValuesList list,
+  protected SensorValuesListOutput getValue(SensorValuesList list,
     TestSetLine line) throws SensorValuesListException {
 
     LocalDateTime startTime = makeTime(line.getIntField(START_TIME_COL));
@@ -80,4 +80,8 @@ public class SensorValuesListGetValueRangeTest
     return 10;
   }
 
+  @Override
+  protected int getInterpolatesAroundFlagCol() {
+    return 11;
+  }
 }

@@ -190,6 +190,26 @@ public class SensorValuesListValue
   }
 
   /**
+   * Copy constructor. Performs a shallow copy on internal values.
+   *
+   * @param original
+   *          The original value.
+   */
+  protected SensorValuesListValue(SensorValuesListValue original) {
+
+    this.sensorType = original.sensorType;
+    this.doubleValue = original.doubleValue;
+    this.stringValue = original.stringValue;
+    this.startTime = original.startTime;
+    this.endTime = original.endTime;
+    this.nominalTime = original.nominalTime;
+    this.qcFlag = original.qcFlag;
+    this.qcMessage = original.qcMessage;
+    this.sourceSensorValues = new ArrayList<SensorValue>(
+      original.sourceSensorValues);
+  }
+
+  /**
    * Create a copy of an existing {@link SensorValuesListValue} with a new
    * nominal time.
    *
