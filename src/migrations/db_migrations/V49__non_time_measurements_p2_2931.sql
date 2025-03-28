@@ -16,6 +16,10 @@ ALTER TABLE measurements DROP FOREIGN KEY measurement_dataset, ALGORITHM = INPLA
 ALTER TABLE measurements DROP COLUMN dataset_id, ALGORITHM = INPLACE, LOCK = NONE;
 ALTER TABLE measurements DROP COLUMN date, ALGORITHM = INPLACE, LOCK = NONE;
 
+-- Remove the original dataset start and end columns
+ALTER TABLE dataset DROP COLUMN start;
+ALTER TABLE dataset DROP COLUMN end;
+
 SET SESSION foreign_key_checks = ON;
 
 -- Add measurement basis columns
