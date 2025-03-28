@@ -95,15 +95,15 @@ classDiagram
         DatasetSensorValues allSensorValues
         List~Coordinate~ rawCoordinatesCache
         List~Coordinate~ valueCoordinatesCache
-        List~SensorValuesListValue~ outputValues
+        List~SingleSensorValuesListValue~ outputValues
     }
 
     class SensorValuesListValue {
-        LocalDateTime startTime
-        LocalDateTime endTime
-        LocalDateTime nominalTime
-        long coordinateId
-        Collection~SensorValue~ sourceSensorValues
+        getSourceSensorValues()
+    }
+
+    class SingleSensorValuesListValue {
+        sensorValue
     }
 
     class SimplePlotPageDataStructure {
@@ -125,8 +125,11 @@ DatasetSensorValues ..> SensorValue : valuesById/valuesByColumn
 DatasetSensorValues ..> SensorValuesList : valuesByColumn/longitudes/latitudes
 SensorValuesList ..> DatasetSensorValues : allSensorValues
 
-SensorValuesList ..> SensorValuesListValue : outputValues
-SensorValuesListValue ..> SensorValue : sourceSensorValues
+SingleSensorValuesListValue --> SensorValuesListValue
+SingleSensorValuesListValue ..> SensorValue : sensorValue
+
+SensorValuesList ..> SingleSensorValuesListValue : outputValues
+SensorValuesListValue ..> SensorValue : getSourceSensorValues()
 SensorValuesList ..> SensorValue : list
 
 SensorValue ..> Coordinate : coordinate
@@ -143,8 +146,6 @@ PlotPageTableRecord ..> PlotPageTableValue : columns
 PlotPageTableValue <-- MeasurementValue
 MeasurementValue ..> SensorValue : (supporting)sensorValueIds
 
-
-SensorValuesListValue ..> Coordinate : coordinateId
 
 ManualQCData ..> Coordinate : columns
 SensorValuesList ..> Coordinate : coordinateId

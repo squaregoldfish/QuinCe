@@ -48,12 +48,12 @@ public class Instrument {
   /**
    * Flag that indicates an instrument takes surface measurements.
    */
-  public static final int BASIS_SURFACE = 0;
+  public static final int BASIS_TIME = 1;
 
   /**
    * Flag that indicates an instrument takes Argo measurements.
    */
-  public static final int BASIS_ARGO = 1;
+  public static final int BASIS_ARGO = 2;
 
   /**
    * Name for the Sensor Groups entry in the JSON representation of the
@@ -184,7 +184,7 @@ public class Instrument {
   /**
    * Indicates the type of measurements taken by the instrument.
    */
-  private int basis = BASIS_SURFACE;
+  private int basis = BASIS_TIME;
 
   /**
    * Create an Instrument object with an existing database record.
@@ -1477,7 +1477,7 @@ public class Instrument {
    *         not.
    */
   private boolean validateBasis(int basis) {
-    return basis == BASIS_SURFACE || basis == BASIS_ARGO;
+    return basis == BASIS_TIME || basis == BASIS_ARGO;
   }
 
   /**

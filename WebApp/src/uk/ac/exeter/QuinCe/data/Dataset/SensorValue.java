@@ -1,19 +1,12 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
-import java.math.BigInteger;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
-import com.google.gson.Gson;
-
-import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.Calculators;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.InvalidFlagException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineException;
@@ -22,13 +15,12 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Calibration;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
-import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
 
 /**
- * Represents a single sensor value
+ * Represents a single value from a sensor.
  */
 public class SensorValue implements Comparable<SensorValue>, Cloneable {
 
@@ -59,9 +51,9 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
   private final long columnId;
 
   /**
-   * The time that the value was measured
+   * The coordinate for this value.
    */
-  private final LocalDateTime time;
+  private final Coordinate coordinate;
 
   /**
    * The automatic QC result
@@ -96,7 +88,7 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
   /**
    * Indicates whether or not this value can be saved to the database.
    */
-  private boolean canBeSaved = true;
+  private final boolean canBeSaved;
 
   /**
    * Build a sensor value with default QC flags
@@ -106,16 +98,17 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
    * @param time
    * @param value
    */
-  public SensorValue(long datasetId, long columnId, LocalDateTime time,
+  public SensorValue(long datasetId, long columnId, Coordinate coordinate,
     String value) {
 
     this.id = DatabaseUtils.NO_DATABASE_RECORD;
     this.datasetId = datasetId;
     this.columnId = columnId;
-    this.time = time;
+    this.coordinate = coordinate;
     this.value = value;
     this.autoQC = new AutoQCResult();
     this.dirty = true;
+    this.canBeSaved = true;
 
     if (null == value) {
       this.userQCFlag = Flag.BAD;
@@ -132,13 +125,13 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
    * @param value
    */
   public SensorValue(long databaseId, long datasetId, long columnId,
-    LocalDateTime time, String value, AutoQCResult autoQc, Flag userQcFlag,
+    Coordinate coordinate, String value, AutoQCResult autoQc, Flag userQcFlag,
     String userQcMessage) {
 
     this.id = databaseId;
     this.datasetId = datasetId;
     this.columnId = columnId;
-    this.time = time;
+    this.coordinate = coordinate;
     this.value = value;
 
     if (null == autoQc) {
@@ -150,6 +143,7 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
     this.userQCFlag = userQcFlag;
     this.userQCMessage = userQcMessage;
     this.dirty = false;
+    this.canBeSaved = true;
   }
 
   /**
@@ -163,7 +157,7 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
    * @param newTime
    *          The new timestamp.
    */
-  public SensorValue(SensorValue source, LocalDateTime newTime) {
+  public SensorValue(SensorValue source, Coordinate newCoordinate) {
     this.id = source.id;
     this.datasetId = source.datasetId;
     this.columnId = source.columnId;
@@ -173,7 +167,7 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
     this.value = source.value;
     this.dirty = false;
 
-    this.time = newTime;
+    this.coordinate = newCoordinate;
     this.canBeSaved = false;
   }
 
@@ -196,12 +190,12 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
   }
 
   /**
-   * Get the time that this value was measured
+   * Get the {@link Coordinate} for this value.
    *
-   * @return The measurement time
+   * @return The coordinate
    */
-  public LocalDateTime getTime() {
-    return time;
+  public Coordinate getCoordinate() {
+    return coordinate;
   }
 
   /**
@@ -472,9 +466,7 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
 
   @Override
   public int compareTo(SensorValue o) {
-    // Compare on time, dataset ID, column ID
-
-    int result = time.compareTo(o.time);
+    int result = coordinate.compareTo(o.coordinate);
 
     if (result == 0) {
       result = Long.compare(datasetId, o.datasetId);
@@ -534,7 +526,8 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
     int result = 1;
     result = prime * result + (int) (columnId ^ (columnId >>> 32));
     result = prime * result + (int) (datasetId ^ (datasetId >>> 32));
-    result = prime * result + ((time == null) ? 0 : time.hashCode());
+    result = prime * result
+      + ((coordinate == null) ? 0 : coordinate.hashCode());
     return result;
   }
 
@@ -551,10 +544,10 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
       return false;
     if (datasetId != other.datasetId)
       return false;
-    if (time == null) {
-      if (other.time != null)
+    if (coordinate == null) {
+      if (other.coordinate != null)
         return false;
-    } else if (!time.equals(other.time))
+    } else if (!coordinate.equals(other.coordinate))
       return false;
     return true;
   }
@@ -616,7 +609,7 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
 
   @Override
   public String toString() {
-    return time + ": " + columnId + " = "
+    return coordinate.toString() + ": " + columnId + " = "
       + (value.equals(NO_VALUE) ? "No Value" : value);
   }
 
@@ -636,44 +629,10 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
 
   @Override
   public Object clone() {
-    SensorValue clone = new SensorValue(id, datasetId, columnId, time, value,
-      autoQC, userQCFlag, userQCMessage);
+    SensorValue clone = new SensorValue(id, datasetId, columnId, coordinate,
+      value, autoQC, userQCFlag, userQCMessage);
     clone.dirty = this.dirty;
     return clone;
-  }
-
-  /**
-   * Calculate the mean time of a collection of SensorValues, optionally
-   * ignoring those with a NaN value.
-   * <p>
-   * Works by calculating the mean of the millisecond values. The division may
-   * result in rounding, but a millisecond offset is not going to affect things
-   * for our purposes.
-   * </p>
-   *
-   * @param values
-   *          The values.
-   * @param includeNan
-   *          Indicates whether NaN values should be ignored.
-   *
-   * @return The mean time.
-   */
-  public static LocalDateTime getMeanTime(Collection<SensorValue> values,
-    boolean includeNan) {
-
-    BigInteger millisTotal = BigInteger.ZERO;
-    int count = 0;
-
-    for (SensorValue value : values) {
-      if (includeNan || !value.isNaN()) {
-        long time = DateTimeUtils.dateToLong(value.getTime());
-        millisTotal = millisTotal.add(new BigInteger(String.valueOf(time)));
-        count++;
-      }
-    }
-
-    BigInteger mean = millisTotal.divide(new BigInteger(String.valueOf(count)));
-    return DateTimeUtils.longToDate(Long.parseLong(mean.toString()));
   }
 
   /**
@@ -699,27 +658,6 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
 
     return total / count;
 
-  }
-
-  public static Double interpolate(SensorValue prior, SensorValue post,
-    LocalDateTime measurementTime) {
-
-    Double result = null;
-
-    if (null != prior && null != post) {
-      double x0 = DateTimeUtils.dateToLong(prior.getTime());
-      double y0 = prior.getDoubleValue();
-      double x1 = DateTimeUtils.dateToLong(post.getTime());
-      double y1 = post.getDoubleValue();
-      result = Calculators.interpolate(x0, y0, x1, y1,
-        DateTimeUtils.dateToLong(measurementTime));
-    } else if (null != prior) {
-      result = prior.getDoubleValue();
-    } else if (null != post) {
-      result = post.getDoubleValue();
-    }
-
-    return result;
   }
 
   public static Flag getCombinedDisplayFlag(
@@ -770,16 +708,6 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
     }
 
     return result;
-  }
-
-  public static String getDateValueJson(List<SensorValue> sensorValues) {
-    Map<Long, Double> valuesMap = new TreeMap<Long, Double>();
-
-    sensorValues.forEach(v -> {
-      valuesMap.put(DateTimeUtils.dateToLong(v.time), v.getDoubleValue());
-    });
-
-    return new Gson().toJson(valuesMap);
   }
 
   public boolean canBeSaved() {

@@ -7,8 +7,8 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 
 /**
- * Contains a value extracted from a {@link SensorValuesList} via one of the
- * {@code getValue} methods.
+ * Contains a value extracted from a {@link TimestampSensorValuesList} via one
+ * of the {@code getValue} methods.
  *
  * <p>
  * This may contain an unaltered value or an interpolated value, depending on
@@ -17,12 +17,13 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
  * <p>
  *
  * <p>
- * This class provides all the same methods as a {@link SensorValuesListValue},
- * plus other information that the caller may need to know about how the value
- * was constructed.
+ * This class provides all the same methods as a
+ * {@link TimestampSensorValuesListValue}, plus other information that the
+ * caller may need to know about how the value was constructed.
  * </p>
  */
-public class SensorValuesListOutput extends SensorValuesListValue {
+public class TimestampSensorValuesListOutput
+  extends TimestampSensorValuesListValue {
 
   /**
    * Indicates whether or not this value is constructed by interpolating around
@@ -30,10 +31,11 @@ public class SensorValuesListOutput extends SensorValuesListValue {
    */
   private boolean interpolatesAroundFlags = false;
 
-  public SensorValuesListOutput(LocalDateTime startTime, LocalDateTime endTime,
-    LocalDateTime nominalTime, Collection<SensorValue> usedValues,
-    SensorType sensorType, Double mean, Flag chosenFlag,
-    String collectionToDelimited, boolean interpolatesAroundFlags) {
+  public TimestampSensorValuesListOutput(LocalDateTime startTime,
+    LocalDateTime endTime, LocalDateTime nominalTime,
+    Collection<SensorValue> usedValues, SensorType sensorType, Double mean,
+    Flag chosenFlag, String collectionToDelimited,
+    boolean interpolatesAroundFlags) {
 
     super(startTime, endTime, nominalTime, usedValues, sensorType, mean,
       chosenFlag, collectionToDelimited);
@@ -41,7 +43,7 @@ public class SensorValuesListOutput extends SensorValuesListValue {
     this.interpolatesAroundFlags = interpolatesAroundFlags;
   }
 
-  protected SensorValuesListOutput(LocalDateTime startTime,
+  protected TimestampSensorValuesListOutput(LocalDateTime startTime,
     LocalDateTime endTime, LocalDateTime nominalTime,
     Collection<SensorValue> sourceSensorValues, SensorType sensorType,
     String value, Flag qcFlag, String qcMessage,
@@ -53,13 +55,13 @@ public class SensorValuesListOutput extends SensorValuesListValue {
     this.interpolatesAroundFlags = interpolatesAroundFlags;
   }
 
-  public SensorValuesListOutput(SensorValuesListValue sourceValue,
+  public TimestampSensorValuesListOutput(SensorValuesListValue sourceValue,
     boolean interpolatesAroundFlags) {
     super(sourceValue);
     this.interpolatesAroundFlags = interpolatesAroundFlags;
   }
 
-  public SensorValuesListOutput(SensorValuesListValue sourceValue,
+  public TimestampSensorValuesListOutput(SensorValuesListValue sourceValue,
     LocalDateTime nominalTime, boolean interpolatesAroundFlags) {
     super(sourceValue, nominalTime);
     this.interpolatesAroundFlags = interpolatesAroundFlags;

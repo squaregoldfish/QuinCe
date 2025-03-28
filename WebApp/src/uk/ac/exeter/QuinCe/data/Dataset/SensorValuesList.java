@@ -168,7 +168,7 @@ public class SensorValuesList {
    * The set of values to be returned to the rest of the application from this
    * list, based on its measurement mode.
    */
-  private List<SensorValuesListValue> outputValues;
+  private List<SingleSensorValuesListValue> outputValues;
 
   /**
    * A cache of the timestamps of the entries in {@link #outputValues}.
