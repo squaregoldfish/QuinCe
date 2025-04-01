@@ -1,6 +1,5 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
@@ -31,8 +30,8 @@ public class TimestampSensorValuesListOutput
    */
   private boolean interpolatesAroundFlags = false;
 
-  public TimestampSensorValuesListOutput(LocalDateTime startTime,
-    LocalDateTime endTime, LocalDateTime nominalTime,
+  public TimestampSensorValuesListOutput(TimeCoordinate startTime,
+    TimeCoordinate endTime, TimeCoordinate nominalTime,
     Collection<SensorValue> usedValues, SensorType sensorType, Double mean,
     Flag chosenFlag, String collectionToDelimited,
     boolean interpolatesAroundFlags) {
@@ -43,8 +42,8 @@ public class TimestampSensorValuesListOutput
     this.interpolatesAroundFlags = interpolatesAroundFlags;
   }
 
-  protected TimestampSensorValuesListOutput(LocalDateTime startTime,
-    LocalDateTime endTime, LocalDateTime nominalTime,
+  protected TimestampSensorValuesListOutput(TimeCoordinate startTime,
+    TimeCoordinate endTime, TimeCoordinate nominalTime,
     Collection<SensorValue> sourceSensorValues, SensorType sensorType,
     String value, Flag qcFlag, String qcMessage,
     boolean interpolatesAroundFlags) {
@@ -55,14 +54,16 @@ public class TimestampSensorValuesListOutput
     this.interpolatesAroundFlags = interpolatesAroundFlags;
   }
 
-  public TimestampSensorValuesListOutput(SensorValuesListValue sourceValue,
+  public TimestampSensorValuesListOutput(
+    TimestampSensorValuesListValue sourceValue,
     boolean interpolatesAroundFlags) {
     super(sourceValue);
     this.interpolatesAroundFlags = interpolatesAroundFlags;
   }
 
-  public TimestampSensorValuesListOutput(SensorValuesListValue sourceValue,
-    LocalDateTime nominalTime, boolean interpolatesAroundFlags) {
+  public TimestampSensorValuesListOutput(
+    TimestampSensorValuesListValue sourceValue, TimeCoordinate nominalTime,
+    boolean interpolatesAroundFlags) {
     super(sourceValue, nominalTime);
     this.interpolatesAroundFlags = interpolatesAroundFlags;
   }
@@ -96,11 +97,11 @@ public class TimestampSensorValuesListOutput
    *         set; {@code false} otherwise.
    */
   protected static boolean interpolatesAroundFlags(
-    SensorValuesListOutput... values) {
+    TimestampSensorValuesListOutput... values) {
 
     boolean result = false;
 
-    for (SensorValuesListOutput value : values) {
+    for (TimestampSensorValuesListOutput value : values) {
       if (null != value && value.interpolatesAroundFlags) {
         result = true;
         break;

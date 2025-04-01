@@ -24,11 +24,11 @@ import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
- * Root object for a single measurement in a dataset
+ * Root object for a single measurement in a {@link DataSet}.
  */
 public class Measurement implements Comparable<Measurement> {
 
-  public static final MeasurementTimeComparator TIME_COMPARATOR = new MeasurementTimeComparator();
+  public static final MeasurementCoordinateComparator COORDINATE_COMPARATOR = new MeasurementCoordinateComparator();
 
   protected static Gson gson;
 
@@ -69,9 +69,9 @@ public class Measurement implements Comparable<Measurement> {
   private final long datasetId;
 
   /**
-   * The timestamp of the measurement
+   * The {@link Coordinate} of the measurement
    */
-  private LocalDateTime time;
+  private Coordinate coordinate;
 
   /**
    * The run types of the measurement.
@@ -115,12 +115,12 @@ public class Measurement implements Comparable<Measurement> {
    * @param runType
    *          The run type of the measurement
    */
-  public Measurement(long datasetId, LocalDateTime time,
+  public Measurement(long datasetId, Coordinate coordinate,
     Map<Long, String> runTypes) {
 
     this.id = DatabaseUtils.NO_DATABASE_RECORD;
     this.datasetId = datasetId;
-    this.time = time;
+    this.coordinate = coordinate;
     this.runTypes = runTypes;
     this.measurementValues = new HashMap<Long, MeasurementValue>();
   }
@@ -141,23 +141,23 @@ public class Measurement implements Comparable<Measurement> {
    * @param runType
    *          The run type of the measurement
    */
-  public Measurement(long id, long datasetId, LocalDateTime time,
+  public Measurement(long id, long datasetId, Coordinate coordinate,
     String runType) {
 
     this.id = id;
     this.datasetId = datasetId;
-    this.time = time;
+    this.coordinate = coordinate;
     this.runTypes = new HashMap<Long, String>();
     this.measurementValues = new HashMap<Long, MeasurementValue>();
   }
 
-  public Measurement(long id, long datasetId, LocalDateTime time,
+  public Measurement(long id, long datasetId, Coordinate coordinate,
     Map<Long, String> runTypes,
     HashMap<Long, MeasurementValue> measurementValues) {
 
     this.id = id;
     this.datasetId = datasetId;
-    this.time = time;
+    this.coordinate = coordinate;
     this.runTypes = runTypes;
 
     if (null == measurementValues) {
@@ -178,10 +178,10 @@ public class Measurement implements Comparable<Measurement> {
    * @param time
    *          The measurement time.
    */
-  private Measurement(LocalDateTime time) {
+  private Measurement(Coordinate coordinate) {
     this.id = DatabaseUtils.NO_DATABASE_RECORD;
     this.datasetId = DatabaseUtils.NO_DATABASE_RECORD;
-    this.time = time;
+    this.coordinate = coordinate;
     this.runTypes = new HashMap<Long, String>();
     this.measurementValues = null;
   }
@@ -215,12 +215,12 @@ public class Measurement implements Comparable<Measurement> {
   }
 
   /**
-   * Get the time of the measurement
+   * Get the {@link Coordinate} of the measurement
    *
    * @return The measurement time
    */
-  public LocalDateTime getTime() {
-    return time;
+  public Coordinate getCoordinate() {
+    return coordinate;
   }
 
   /**
@@ -249,7 +249,7 @@ public class Measurement implements Comparable<Measurement> {
     int result = 0;
 
     if (o.id != id) {
-      result = time.compareTo(o.time);
+      result = coordinate.compareTo(o.coordinate);
     }
 
     return result;
@@ -309,7 +309,7 @@ public class Measurement implements Comparable<Measurement> {
    */
   @Override
   public int hashCode() {
-    return Objects.hash(datasetId, time);
+    return Objects.hash(datasetId, coordinate);
   }
 
   @Override
@@ -321,7 +321,8 @@ public class Measurement implements Comparable<Measurement> {
     if (!(obj instanceof Measurement))
       return false;
     Measurement other = (Measurement) obj;
-    return datasetId == other.datasetId && Objects.equals(time, other.time);
+    return datasetId == other.datasetId
+      && Objects.equals(coordinate, other.coordinate);
   }
 
   @Override
@@ -329,8 +330,8 @@ public class Measurement implements Comparable<Measurement> {
     return "#" + id;
   }
 
-  public static Measurement dummyTimeMeasurement(LocalDateTime time) {
-    return new Measurement(time);
+  public static Measurement dummyTimeMeasurement(Coordinate coordinate) {
+    return new Measurement(coordinate);
   }
 
   /**
@@ -351,8 +352,8 @@ public class Measurement implements Comparable<Measurement> {
     return measurementValues.values();
   }
 
-  public void setTime(LocalDateTime time) {
-    this.time = time;
+  public void setCoordinate(Coordinate coordinate) {
+    this.coordinate = coordinate;
   }
 
   /**
@@ -405,9 +406,9 @@ public class Measurement implements Comparable<Measurement> {
   }
 }
 
-class MeasurementTimeComparator implements Comparator<Measurement> {
+class MeasurementCoordinateComparator implements Comparator<Measurement> {
   @Override
   public int compare(Measurement o1, Measurement o2) {
-    return o1.getTime().compareTo(o2.getTime());
+    return o1.getCoordinate().compareTo(o2.getCoordinate());
   }
 }

@@ -8,14 +8,14 @@ import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 
 /**
  * Coordinate for time-based measurements.
- * 
+ *
  * @see uk.ac.exeter.QuinCe.data.Instrument.Instrument#BASIS_TIME
  */
 public class TimeCoordinate extends Coordinate {
 
   /**
    * Constructor. Time is required.
-   * 
+   *
    * @param id
    *          The coordinate's database ID
    * @param datasetId
@@ -30,6 +30,24 @@ public class TimeCoordinate extends Coordinate {
     super(id, datasetId, time);
     if (null == time) {
       throw new NullPointerException("Time cannot be null");
+    }
+  }
+
+  /**
+   * Construct a copy of an existing TimeCoordinate with a new time.
+   *
+   * @param source
+   *          The source coordinate.
+   * @param newTime
+   *          The new time.
+   * @throws CoordinateException
+   *           If the supplied {@link Coordinate} is not a TimeCoordinate.
+   */
+  public TimeCoordinate(Coordinate source, LocalDateTime newTime)
+    throws CoordinateException {
+    super(source.getId(), source.getDatasetId(), newTime);
+    if (!(source instanceof TimeCoordinate)) {
+      throw new CoordinateException("Must supply a TimeCoordinate");
     }
   }
 
@@ -55,12 +73,12 @@ public class TimeCoordinate extends Coordinate {
 
   /**
    * Generate a dummy TimeCoordinate with the specified time.
-   * 
+   *
    * <p>
    * The result of calling {@link #getId()} and {@link #getDatasetId()} on the
    * returned object will be {@link DatabaseUtils#NO_DATABASE_RECORD}. *
    * </p>
-   * 
+   *
    * @param time
    *          The time for the coordinate.
    * @return The coordinate.

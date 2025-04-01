@@ -25,17 +25,17 @@ import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
 /**
  * Extended version of {@link SensorValuesList} that operates on time-based
  * values.
- * 
+ *
  * <p>
  * <b>IMPORTANT: READ ALL OF THIS DESCRIPTION, PARTICULARLY THE NOTE IN THE LAST
  * PARAGRAPH.</b>
  * </p>
- * 
+ *
  * <p>
  * This class provides several methods for special time-based value handling
  * functions, including different measurement modes and interpolation.
  * </p>
- * 
+ *
  * <p>
  * When retrieving values, the list is aware of the different measurement
  * strategies (or MODEs as named here) used by different sensors. These are:
@@ -134,7 +134,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * @throws RecordNotFoundException
    *           If the {@link SensorType} for the column cannot be established.
    */
-  public TimestampSensorValuesList(long columnId,
+  protected TimestampSensorValuesList(long columnId,
     DatasetSensorValues allSensorValues) throws RecordNotFoundException {
 
     super(columnId, allSensorValues);
@@ -156,7 +156,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * @throws RecordNotFoundException
    *           If the {@link SensorType} for any column cannot be established.
    */
-  public TimestampSensorValuesList(Collection<Long> columnIds,
+  protected TimestampSensorValuesList(Collection<Long> columnIds,
     DatasetSensorValues allSensorValues) throws RecordNotFoundException {
 
     super(columnIds, allSensorValues);
@@ -164,7 +164,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
 
   /**
    * Add a {@link SensorValue} to the list.
-   * 
+   *
    * <p>
    * Only values whose coordinates have a {@link Instrument#BASIS_TIME}
    * {@link Coordinate} type can be added. Any other {@link Coordinate} type
@@ -181,9 +181,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
     super.add(value);
 
     // Reset list properties for recalculation
-    measurementMode = -1;
-    outputValues = null;
-    valueCoordinatesCache = null;
+    resetOutput();
   }
 
   /**
@@ -327,8 +325,11 @@ public class TimestampSensorValuesList extends SensorValuesList {
             LocalDateTime groupStartTime = groupMembers.get(0).getCoordinate()
               .getTime();
 
-            outputValues.add(makeNumericValue(groupMembers, getCoordinate(
-              DateTimeUtils.midPoint(groupStartTime, groupEndTime))));
+            outputValues
+              .add(makeNumericValue(groupMembers,
+                getCoordinate(
+                  DateTimeUtils.midPoint(groupStartTime, groupEndTime)),
+                false));
             groupMembers = new ArrayList<SensorValue>();
           }
 
@@ -343,7 +344,8 @@ public class TimestampSensorValuesList extends SensorValuesList {
       LocalDateTime groupEndTime = groupMembers.get(groupMembers.size() - 1)
         .getCoordinate().getTime();
       outputValues.add(makeNumericValue(groupMembers,
-        getCoordinate(DateTimeUtils.midPoint(groupStartTime, groupEndTime))));
+        getCoordinate(DateTimeUtils.midPoint(groupStartTime, groupEndTime)),
+        false));
     }
   }
 
@@ -862,7 +864,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * group encompassing the passed in time, or the group immediately preceding
    * that time.
    * </p>
-   * 
+   *
    * <p>
    * <b>Developer Note:</b> Although this algorithm is the same as that in
    * {@link SensorValuesList#getValueOnOrBefore(Coordinate)}, it uses the local
@@ -883,7 +885,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
       buildOutputValues();
     }
 
-    TimestampSensorValuesListOutput result = null;
+    TimestampSensorValuesListValue result = null;
 
     List<Coordinate> times = getValueCoordinates();
     int searchIndex = Collections.binarySearch(times, time);
@@ -906,7 +908,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
       }
     }
 
-    return result;
+    return new TimestampSensorValuesListOutput(result, false);
   }
 
   /**
@@ -986,9 +988,10 @@ public class TimestampSensorValuesList extends SensorValuesList {
     TimestampSensorValuesListOutput result = null;
 
     if (usedValues.size() > 0) {
-      result = makeNumericValue(usedValues, nominalTime);
+      result = makeNumericValue(usedValues, nominalTime, true);
     } else if (allowInterpolation) {
-      result = (TimestampSensorValuesListValue) getValue(nominalTime, true);
+      result = new TimestampSensorValuesListOutput(
+        (TimestampSensorValuesListValue) getValue(nominalTime, true), true);
     }
 
     return result;
@@ -1072,23 +1075,24 @@ public class TimestampSensorValuesList extends SensorValuesList {
     try {
 
       boolean interpolatesAroundFlags = false;
-      
+
       List<SensorValue> usedValues;
 
       if (chosenFlag.isGood()) {
         usedValues = sensorValues.stream()
           .filter(v -> v.getDisplayFlag(allSensorValues).isGood()).toList();
         if (Flag.containsWorseFlag(presentFlags, Flag.GOOD)) {
-          if (allowInterpolatesOverFlags) {
-            interpolatesOverFlags = true;
+          if (allowInterpolatesAroundFlags) {
+            interpolatesAroundFlags = true;
           }
+        }
       } else {
         usedValues = sensorValues.stream()
           .filter(v -> v.getDisplayFlag(allSensorValues).equals(chosenFlag))
           .toList();
         if (Flag.containsWorseFlag(presentFlags, chosenFlag)) {
-          if (allowInterpolatesOverFlags) {
-            interpolatesOverFlags = true;
+          if (allowInterpolatesAroundFlags) {
+            interpolatesAroundFlags = true;
           }
         }
       }
@@ -1109,7 +1113,9 @@ public class TimestampSensorValuesList extends SensorValuesList {
 
       return new TimestampSensorValuesListOutput(startTime, endTime,
         nominalTime, usedValues, sensorType, mean.mean(), chosenFlag,
-        StringUtils.collectionToDelimited(qcMessages, ";"), interpolatesAroundFlags);
+        StringUtils.collectionToDelimited(qcMessages, ";"),
+        interpolatesAroundFlags);
+
     } catch (Exception e) {
       throw new SensorValuesListException(e);
     }
@@ -1226,14 +1232,14 @@ public class TimestampSensorValuesList extends SensorValuesList {
   }
 
   /**
-   * Get the raw {@link SensorValue}s between two times. Both times are
-   * inclusive.
+   * Get the raw {@link SensorValue}s between two {@link Coordinate}s. Both
+   * {@link Coordinate}s are inclusive.
    *
    * @param start
-   *          The start time.
+   *          The start coordinate.
    * @param end
-   *          The end time.
-   * @return The {@link SensorValue}s between the given times.
+   *          The end coordinate.
+   * @return The {@link SensorValue}s between the given coordinates.
    */
   public List<SensorValue> getRawValues(TimeCoordinate start,
     TimeCoordinate end) {
@@ -1261,13 +1267,30 @@ public class TimestampSensorValuesList extends SensorValuesList {
   }
 
   /**
+   * Get the raw {@link SensorValue}s between two times. Both times are
+   * inclusive.
+   *
+   * @param start
+   *          The start time.
+   * @param end
+   *          The end time.
+   * @return The {@link SensorValue}s between the given times.
+   */
+  public List<SensorValue> getRawValues(LocalDateTime start,
+    LocalDateTime end) {
+
+    return getRawValues(TimeCoordinate.dummyCoordinate(start),
+      TimeCoordinate.dummyCoordinate(end));
+  }
+
+  /**
    * Get a {@link TimeCoordinate} for the specified timestamp.
-   * 
+   *
    * <p>
    * If a {@link TimeCoordinate} already exists in the data, it is returned.
    * Otherwise a dummy {@link TimeCoordinate} is returned that has no database
    * ID.
-   * 
+   *
    * @param time
    * @return
    */
@@ -1313,5 +1336,16 @@ public class TimestampSensorValuesList extends SensorValuesList {
       allowStringPeriodicGroups = allow;
       resetOutput();
     }
+  }
+
+  /**
+   * Clear any already calculated output values, forcing them to be recalculated
+   * at the next call to {@code getValue} methods.
+   */
+  @Override
+  public void resetOutput() {
+    measurementMode = -1;
+    outputValues = null;
+    valueCoordinatesCache = null;
   }
 }

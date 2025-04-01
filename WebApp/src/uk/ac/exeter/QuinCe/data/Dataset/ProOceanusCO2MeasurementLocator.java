@@ -40,6 +40,12 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
  * PERIODIC mode (see {@link SensorValuesList}), so there will be one
  * measurement per period of {@code W M} and {@code A M} readings.
  * </p>
+ *
+ * <p>
+ * <b>NOTE:</b> This class will only work if the underlying {@link Instrument}
+ * is operating on {@link Instrument#BASIS_TIME}.
+ * </p>
+ * </p>
  */
 public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
 
@@ -60,6 +66,11 @@ public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
     Instrument instrument, DataSet dataset, DatasetSensorValues sensorValues)
     throws MeasurementLocatorException {
 
+    if (instrument.getBasis() != Instrument.BASIS_TIME) {
+      throw new MeasurementLocatorException(
+        "Cannot only use this method on instruments with time basis");
+    }
+
     try {
       SensorsConfiguration sensorConfig = ResourceManager.getInstance()
         .getSensorsConfiguration();
@@ -79,7 +90,8 @@ public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
         .getSensorType("ProOceanus Zero Count");
       SensorType co2Type = sensorConfig
         .getSensorType("xCO₂ (wet, no standards)");
-      SensorValuesList runTypes = sensorValues.getRunTypes();
+      TimestampSensorValuesList runTypes = (TimestampSensorValuesList) sensorValues
+        .getRunTypes();
 
       // Assume one column of each type
       long zeroCountColumn = instrument.getSensorAssignments()
@@ -91,7 +103,8 @@ public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
       // locate flushing values.
       List<SensorValue> flaggedSensorValues = new ArrayList<SensorValue>();
 
-      SensorValuesList co2Values = sensorValues.getColumnValues(co2Column);
+      TimestampSensorValuesList co2Values = (TimestampSensorValuesList) sensorValues
+        .getColumnValues(co2Column);
 
       // First, the zero values
       SensorValuesList zeroValues = sensorValues
@@ -103,7 +116,7 @@ public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
         for (SensorValue zero : zeroValues.getRawValues()) {
           String newZero = zero.getValue();
           if (!newZero.equals(lastZero)) {
-            LocalDateTime flushingStart = zero.getTime();
+            LocalDateTime flushingStart = zero.getCoordinate().getTime();
             LocalDateTime flushingEnd = flushingStart.plusSeconds(
               instrument.getIntProperty(Instrument.PROP_PRE_FLUSHING_TIME));
 
@@ -122,7 +135,7 @@ public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
         for (SensorValue runType : runTypes.getRawValues()) {
           String newRunType = runType.getValue();
           if (!newRunType.equals(lastRunType)) {
-            LocalDateTime flushingStart = runType.getTime();
+            LocalDateTime flushingStart = runType.getCoordinate().getTime();
             LocalDateTime flushingEnd = flushingStart.plusSeconds(
               instrument.getIntProperty(Instrument.PROP_PRE_FLUSHING_TIME));
 
@@ -155,20 +168,20 @@ public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
          */
         if (null != runType) {
 
-          SensorValuesListValue co2Value = co2Values.getValue(runType.getTime(),
-            false);
+          SensorValuesListValue co2Value = co2Values
+            .getValue(runType.getCoordinate(), false);
 
           // We only make measurements for non-flushing CO2 values
           if (null != co2Value) {
             if (runType.getStringValue().equals(WATER_MODE)) {
               if (instrument.hasVariable(waterVar)) {
                 measurements.add(new Measurement(dataset.getId(),
-                  runType.getNominalTime(), waterRunTypes));
+                  runType.getCoordinate(), waterRunTypes));
               }
             } else if (runType.getStringValue().equals(ATM_MODE)) {
               if (instrument.hasVariable(atmVar)) {
                 measurements.add(new Measurement(dataset.getId(),
-                  runType.getNominalTime(), atmRunTypes));
+                  runType.getCoordinate(), atmRunTypes));
               }
             } else {
               throw new MeasurementLocatorException(

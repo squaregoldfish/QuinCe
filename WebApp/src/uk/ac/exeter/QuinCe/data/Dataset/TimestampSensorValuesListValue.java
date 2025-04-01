@@ -12,7 +12,7 @@ import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 
 /**
  * Represents a time-based value retrieved from a {@link SensorValuesList}.
- * 
+ *
  * <p>
  * Values of this type are returned from {@link TimestampSensorValuesList}. Read
  * the documentation for that class for more information about how this class
@@ -105,7 +105,7 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
   /**
    * Constructor for a value based on a single {@link SensorValue}. The type and
    * QC flag are determined automatically.
-   * 
+   *
    * @throws RoutineException
    */
   protected TimestampSensorValuesListValue(SensorValue sourceSensorValue,
@@ -229,6 +229,27 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
     this.stringValue = null;
     this.qcFlag = qcFlag;
     this.qcMessage = qcMessage;
+  }
+
+  /**
+   * Copy constructor. Performs a shallow copy on internal values.
+   *
+   * @param original
+   *          The original value.
+   */
+  protected TimestampSensorValuesListValue(
+    TimestampSensorValuesListValue original) {
+
+    this.sensorType = original.sensorType;
+    this.doubleValue = original.doubleValue;
+    this.stringValue = original.stringValue;
+    this.startTime = original.startTime;
+    this.endTime = original.endTime;
+    this.nominalTime = original.nominalTime;
+    this.qcFlag = original.qcFlag;
+    this.qcMessage = original.qcMessage;
+    this.sourceSensorValues = new ArrayList<SensorValue>(
+      original.sourceSensorValues);
   }
 
   /**
@@ -356,5 +377,10 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
   @Override
   public Coordinate getCoordinate() {
     return nominalTime;
+  }
+
+  @Override
+  public boolean interpolatesAroundFlags() {
+    return false;
   }
 }

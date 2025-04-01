@@ -1,6 +1,5 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,27 +13,27 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**
- * A data structure to hold all the sensor values for a dataset, grouped by date
- * and sensor type. Primarily used for determining which sensor values to use
- * during data reduction of a data set.
+ * A data structure to hold all the sensor values for a dataset, grouped by
+ * {@link Coordinate} and sensor type. Primarily used for determining which
+ * sensor values to use during data reduction of a data set.
  *
- * The structure is a three level tree of Time -&gt; Sensor Type -&gt; Values,
- * thus holding all values for all variables (grouped by sensor type) at each
- * time stamp.
+ * The structure is a three level tree of Coordinate -&gt; Sensor Type -&gt;
+ * Values, thus holding all values for all variables (grouped by sensor type) at
+ * each {@link Coordinate}.
  *
  * The time stamps are stored in order; sensor types and values can be in any
  * order within a time stamp.
  */
 @SuppressWarnings("serial")
-public class DateColumnGroupedSensorValues
-  extends TreeMap<LocalDateTime, Map<SensorType, List<SensorValue>>> {
+public class CoordinateColumnGroupedSensorValues
+  extends TreeMap<Coordinate, Map<SensorType, List<SensorValue>>> {
 
   /**
    * The instrument that these values belong to
    */
   private Instrument instrument;
 
-  public DateColumnGroupedSensorValues(Instrument instrument) {
+  public CoordinateColumnGroupedSensorValues(Instrument instrument) {
     super();
     this.instrument = instrument;
   }
@@ -52,11 +51,12 @@ public class DateColumnGroupedSensorValues
 
     SensorAssignments sensorAssignments = instrument.getSensorAssignments();
 
-    if (!containsKey(value.getTime())) {
-      put(value.getTime(), new HashMap<SensorType, List<SensorValue>>());
+    if (!containsKey(value.getCoordinate())) {
+      put(value.getCoordinate(), new HashMap<SensorType, List<SensorValue>>());
     }
 
-    Map<SensorType, List<SensorValue>> sensorTypeMap = get(value.getTime());
+    Map<SensorType, List<SensorValue>> sensorTypeMap = get(
+      value.getCoordinate());
     SensorType sensorType = sensorAssignments
       .getSensorTypeForDBColumn(value.getColumnId());
     if (!sensorTypeMap.containsKey(sensorType)) {
@@ -83,11 +83,11 @@ public class DateColumnGroupedSensorValues
   }
 
   /**
-   * Get the first time in this set of sensor values
+   * Get the first {@link Coordinate} in this set of sensor values.
    *
-   * @return The first time
+   * @return The first coordinate.
    */
-  public LocalDateTime getFirstTime() {
+  public Coordinate getFirstCoordiante() {
     return keySet().iterator().next();
   }
 }

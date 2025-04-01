@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 
 /**
  * Miscellaneous date/time utilities
@@ -137,6 +138,20 @@ public class DateTimeUtils {
    */
   public static long secondsBetween(LocalDateTime date1, LocalDateTime date2) {
     return ChronoUnit.SECONDS.between(date1, date2);
+  }
+
+  /**
+   * Calculate the time between two {@link TimeCoordinate}s, in seconds
+   *
+   * @param date1
+   *          The first coordinate
+   * @param date2
+   *          The second coordinate
+   * @return The number of seconds between the dates
+   */
+  public static long secondsBetween(TimeCoordinate date1,
+    TimeCoordinate date2) {
+    return ChronoUnit.SECONDS.between(date1.getTime(), date2.getTime());
   }
 
   /**

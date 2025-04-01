@@ -24,21 +24,21 @@ public class CoordinateDB {
 
   /**
    * Store the provided {@link Coordinate}s in the database.
-   * 
+   *
    * <p>
    * A {@link Coordinate} will only be saved if it does not already have a
    * database ID; otherwise it will be ignored. {@link Coordinate}s without
    * database IDs will be stored, and their {@code id}s updated with the
    * generated database keys.
    * </p>
-   * 
+   *
    * <p>
    * <b>Note:</b> It is usually desirable that this method is called as part of
    * a larger transaction. It is up to the caller to work this out: this method
    * does not change the commit status of the supplied {@link Connection}, nor
    * does it perform any explicit commit action.
    * </p>
-   * 
+   *
    * @param conn
    *          A database connection.
    * @param coordinates
@@ -79,7 +79,7 @@ public class CoordinateDB {
 
   /**
    * Store the provided surface coordinates in the database
-   * 
+   *
    * @param conn
    * @param coordinates
    * @throws DatabaseException

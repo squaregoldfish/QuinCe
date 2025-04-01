@@ -1,6 +1,5 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,14 +34,14 @@ public class DatasetMeasurements {
   private HashMap<VariableRunType, ArrayList<Measurement>> measurements;
 
   /**
-   * A view of all the measurements in time order.
+   * A view of all the measurements in {@link Coordinate} order.
    */
-  private List<Measurement> timeOrderedMeasurements = null;
+  private List<Measurement> orderedMeasurements = null;
 
   /**
-   * The list of all measurement times.
+   * The list of all measurement {@link Coordinate}s.
    */
-  private List<LocalDateTime> measurementTimes = null;;
+  private List<Coordinate> measurementCoordinates = null;;
 
   /**
    * Basic constructor.
@@ -98,8 +97,8 @@ public class DatasetMeasurements {
       }
 
       measurements.get(varRunType).add(measurement);
-      timeOrderedMeasurements = null;
-      measurementTimes = null;
+      orderedMeasurements = null;
+      measurementCoordinates = null;
     }
   }
 
@@ -108,43 +107,43 @@ public class DatasetMeasurements {
    *
    * @return The time-ordered measurements.
    */
-  public List<Measurement> getTimeOrderedMeasurements() {
-    if (null == timeOrderedMeasurements) {
-      makeTimeOrderedMeasurements();
+  public List<Measurement> getOrderedMeasurements() {
+    if (null == orderedMeasurements) {
+      makeOrderedMeasurements();
     }
 
-    return timeOrderedMeasurements;
+    return orderedMeasurements;
   }
 
   /**
-   * Get the times of all measurements.
+   * Get the {@link Coordinate}s of all measurements.
    *
-   * @return The measurement times.
+   * @return The measurement coordinates.
    */
-  public List<LocalDateTime> getMeasurementTimes() {
-    if (null == timeOrderedMeasurements) {
-      makeTimeOrderedMeasurements();
+  public List<Coordinate> getMeasurementTimes() {
+    if (null == orderedMeasurements) {
+      makeOrderedMeasurements();
     }
 
-    return measurementTimes;
+    return measurementCoordinates;
   }
 
   /**
-   * Construct the time-ordered view of the measurements.
+   * Construct the {@link Coordinate}-ordered view of the measurements.
    */
-  private void makeTimeOrderedMeasurements() {
+  private void makeOrderedMeasurements() {
 
     // Make a unique list of all the measurements
     // Measurements have a natural sort order by time
-    TreeSet<Measurement> orderedMeasurements = new TreeSet<Measurement>();
-    measurements.values().forEach(orderedMeasurements::addAll);
+    TreeSet<Measurement> construction = new TreeSet<Measurement>();
+    measurements.values().forEach(construction::addAll);
 
-    timeOrderedMeasurements = new ArrayList<Measurement>(orderedMeasurements);
+    orderedMeasurements = new ArrayList<Measurement>(construction);
 
-    List<LocalDateTime> times = new ArrayList<LocalDateTime>(
-      timeOrderedMeasurements.size());
-    timeOrderedMeasurements.forEach(m -> times.add(m.getTime()));
-    measurementTimes = Collections.unmodifiableList(times);
+    List<Coordinate> coordinates = new ArrayList<Coordinate>(
+      construction.size());
+    orderedMeasurements.forEach(m -> coordinates.add(m.getCoordinate()));
+    measurementCoordinates = Collections.unmodifiableList(coordinates);
   }
 
   public TreeSet<Measurement> getMeasurementsInSameRun(Variable variable,
@@ -156,10 +155,10 @@ public class DatasetMeasurements {
     Measurement start) {
 
     TreeSet<Measurement> result = new TreeSet<Measurement>(
-      Measurement.TIME_COMPARATOR);
+      Measurement.COORDINATE_COMPARATOR);
     result.add(start);
 
-    int startPos = getTimeOrderedMeasurements().indexOf(start);
+    int startPos = getOrderedMeasurements().indexOf(start);
 
     // Search backwards until will find a measurement that has a different run
     // type
@@ -170,13 +169,13 @@ public class DatasetMeasurements {
       if (searchPos < 0) {
         sameRunType = false;
       } else {
-        String searchRunType = getTimeOrderedMeasurements().get(searchPos)
+        String searchRunType = getOrderedMeasurements().get(searchPos)
           .getRunType(variableId);
         if (searchPos < 0 || null == searchRunType
           || !searchRunType.equals(start.getRunType(variableId))) {
           sameRunType = false;
         } else {
-          result.add(getTimeOrderedMeasurements().get(searchPos));
+          result.add(getOrderedMeasurements().get(searchPos));
         }
       }
     }
@@ -187,17 +186,17 @@ public class DatasetMeasurements {
     searchPos = startPos;
     while (sameRunType) {
       searchPos++;
-      if (searchPos >= getTimeOrderedMeasurements().size()) {
+      if (searchPos >= getOrderedMeasurements().size()) {
         sameRunType = false;
       } else {
-        String searchRunType = getTimeOrderedMeasurements().get(searchPos)
+        String searchRunType = getOrderedMeasurements().get(searchPos)
           .getRunType(variableId);
-        if (searchPos >= getTimeOrderedMeasurements().size()
+        if (searchPos >= getOrderedMeasurements().size()
           || null == searchRunType
           || !searchRunType.equals(start.getRunType(variableId))) {
           sameRunType = false;
         } else {
-          result.add(getTimeOrderedMeasurements().get(searchPos));
+          result.add(getOrderedMeasurements().get(searchPos));
         }
       }
     }
@@ -206,7 +205,7 @@ public class DatasetMeasurements {
   }
 
   public TreeSet<Measurement> getRunBefore(long variableId, String runType,
-    LocalDateTime time) {
+    Coordinate coordinate) {
 
     TreeSet<Measurement> result;
 
@@ -217,7 +216,7 @@ public class DatasetMeasurements {
     } else {
 
       Optional<Measurement> lastBefore = getMeasurements(variableId, runType)
-        .stream().filter(m -> m.getTime().isBefore(time))
+        .stream().filter(m -> m.getCoordinate().isBefore(coordinate))
         .reduce((first, second) -> second);
 
       result = lastBefore.isEmpty() ? new TreeSet<Measurement>()
@@ -228,7 +227,7 @@ public class DatasetMeasurements {
   }
 
   public TreeSet<Measurement> getRunAfter(long variableId, String runType,
-    LocalDateTime time) {
+    Coordinate coordinate) {
 
     TreeSet<Measurement> result;
 
@@ -238,7 +237,8 @@ public class DatasetMeasurements {
       result = new TreeSet<Measurement>();
     } else {
       Optional<Measurement> firstAfter = getMeasurements(variableId, runType)
-        .stream().filter(m -> m.getTime().isAfter(time)).findFirst();
+        .stream().filter(m -> m.getCoordinate().isAfter(coordinate))
+        .findFirst();
 
       result = firstAfter.isEmpty() ? new TreeSet<Measurement>()
         : getMeasurementsInSameRun(variableId, firstAfter.get());

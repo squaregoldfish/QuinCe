@@ -1,7 +1,6 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
 import java.sql.Connection;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -74,14 +73,18 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
       // what to do
       List<SensorValue> flaggedSensorValues = new ArrayList<SensorValue>();
       List<Measurement> measurements = new ArrayList<Measurement>(
-        sensorValues.getTimes().size());
+        sensorValues.getCoordinates().size());
 
       int currentStatus = NO_STATUS;
       int lastStatus = NO_STATUS;
-      LocalDateTime currentStatusStart = null;
+      TimeCoordinate currentStatusStart = null;
+      TimeCoordinate recordCoordinate = null;
 
-      for (LocalDateTime recordTime : sensorValues.getTimes()) {
-        Map<Long, SensorValue> recordValues = sensorValues.get(recordTime);
+      for (Coordinate tempCoordinate : sensorValues.getCoordinates()) {
+        recordCoordinate = (TimeCoordinate) tempCoordinate;
+
+        Map<Long, SensorValue> recordValues = sensorValues
+          .get(recordCoordinate);
 
         // If this record contains the zero status, then it's a main Contros
         // record. Otherwise it's not so we skip it
@@ -93,7 +96,7 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
           if (recordStatus != currentStatus) {
             lastStatus = currentStatus;
             currentStatus = recordStatus;
-            currentStatusStart = recordTime;
+            currentStatusStart = recordCoordinate;
           }
 
           boolean flushSensors = false;
@@ -102,7 +105,7 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
           if (currentStatus == ZERO) {
             if (zeroFlushTime > 0
               && DateTimeUtils.secondsBetween(currentStatusStart,
-                recordTime) <= zeroFlushTime) {
+                recordCoordinate) <= zeroFlushTime) {
               flushSensors = true;
             }
 
@@ -116,7 +119,7 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
               // Or add the flushing time to the point after the FLUSH mode
               if ((lastStatus == ZERO || lastStatus == FLUSHING)
                 && DateTimeUtils.secondsBetween(currentStatusStart,
-                  recordTime) <= defaultFlushingTime) {
+                  recordCoordinate) <= defaultFlushingTime) {
 
                 flushSensors = true;
               }
@@ -146,8 +149,8 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
           }
 
           if (recordStatus != FLUSHING) {
-            measurements
-              .add(makeMeasurement(dataset, recordTime, variable, runType));
+            measurements.add(
+              makeMeasurement(dataset, recordCoordinate, variable, runType));
           }
         }
       }
@@ -175,11 +178,11 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
     return result;
   }
 
-  private Measurement makeMeasurement(DataSet dataset, LocalDateTime time,
+  private Measurement makeMeasurement(DataSet dataset, Coordinate coordinate,
     Variable variable, String runType) {
 
     HashMap<Long, String> runTypes = new HashMap<Long, String>();
     runTypes.put(variable.getId(), runType);
-    return new Measurement(dataset.getId(), time, runTypes);
+    return new Measurement(dataset.getId(), coordinate, runTypes);
   }
 }

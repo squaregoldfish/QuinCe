@@ -56,6 +56,11 @@ public class ProOceanusMeasurementValueCollector
     Connection conn, Measurement measurement)
     throws MeasurementValueCollectorException {
 
+    if (instrument.getBasis() != Instrument.BASIS_TIME) {
+      throw new MeasurementValueCollectorException(
+        "Cannot only use this method on instruments with time basis");
+    }
+
     try {
       SensorValuesListValue referenceValue = getReferenceValue(instrument,
         measurement, allSensorValues);
@@ -70,11 +75,11 @@ public class ProOceanusMeasurementValueCollector
           try {
             long columnId = instrument.getSensorAssignments()
               .getColumnIds(sensorType).get(0);
-            SensorValuesList sensorValuesList = allSensorValues
+            TimestampSensorValuesList sensorValuesList = (TimestampSensorValuesList) allSensorValues
               .getColumnValues(columnId);
 
-            SensorValuesListOutput value = sensorValuesList
-              .getValue(referenceValue, true);
+            SensorValuesListValue value = sensorValuesList
+              .getValue(referenceValue.getCoordinate(), true);
 
             result.add(new MeasurementValue(sensorType, value));
           } catch (SensorValuesListException e) {
@@ -100,9 +105,9 @@ public class ProOceanusMeasurementValueCollector
 
     long runTypeColumn = instrument.getSensorAssignments()
       .getColumnIds(SensorType.RUN_TYPE_SENSOR_TYPE).get(0);
-    SensorValuesList runTypeValues = allSensorValues
+    TimestampSensorValuesList runTypeValues = (TimestampSensorValuesList) allSensorValues
       .getColumnValues(runTypeColumn);
     runTypeValues.allowStringValuesToDefineGroups(true);
-    return runTypeValues.getValue(measurement.getTime(), false);
+    return runTypeValues.getValue(measurement.getCoordinate(), false);
   }
 }

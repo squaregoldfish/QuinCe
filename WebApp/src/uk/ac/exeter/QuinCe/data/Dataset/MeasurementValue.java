@@ -173,7 +173,7 @@ public class MeasurementValue implements PlotPageTableValue {
     this.type = type;
   }
 
-  public MeasurementValue(SensorType sensorType, SensorValuesListOutput value) {
+  public MeasurementValue(SensorType sensorType, SensorValuesListValue value) {
     if (null == value) {
       this.sensorType = sensorType;
       this.calculatedValue = Double.NaN;

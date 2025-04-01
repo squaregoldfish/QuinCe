@@ -18,6 +18,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriods;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesList;
+import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesListFactory;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesListValue;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.ExternalStandards.ExternalStandardsQCRoutine;
@@ -223,11 +224,11 @@ public class AutoQCJob extends DataSetJob {
             .getRawValues()) {
 
             SensorValuesListValue runType = runTypeValues
-              .getValueOnOrBefore(value.getTime());
+              .getValueOnOrBefore(value.getCoordinate());
 
             if (!valuesForQC.containsKey(runType.getStringValue())) {
-              valuesForQC.put(runType.getStringValue(),
-                new SensorValuesList(columnId, sensorValues));
+              valuesForQC.put(runType.getStringValue(), SensorValuesListFactory
+                .makeSensorValuesList(columnId, sensorValues));
             }
 
             valuesForQC.get(runType.getStringValue()).add(value);

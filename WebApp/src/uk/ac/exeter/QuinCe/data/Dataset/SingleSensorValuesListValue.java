@@ -9,7 +9,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 
 /**
  * Represents a value retrieved from a {@link SensorValuesList}.
- * 
+ *
  * <p>
  * This default implementation is essentially a wrapper around a
  * {@link SensorValue}. However, there can be more complex implementations that
@@ -41,13 +41,13 @@ public class SingleSensorValuesListValue implements SensorValuesListValue {
 
   /**
    * Simple constructor for a single {@link SensorValue}.
-   * 
+   *
    * <p>
    * This constructor extracts all required information, so no processing is
    * performed after this: the getter methods simply return the extracted
    * values.
    * </p>
-   * 
+   *
    * @param sourceSensorValue
    *          The {@link SensorValue}.
    * @param sensorType
@@ -91,7 +91,7 @@ public class SingleSensorValuesListValue implements SensorValuesListValue {
    * a numeric value. Otherwise an {@link IncorrectValueTypeException} is
    * thrown.
    * </p>
-   * 
+   *
    * @see SensorValue#isNumeric()
    */
   @Override
@@ -109,7 +109,7 @@ public class SingleSensorValuesListValue implements SensorValuesListValue {
    * not</i> contain a numeric value. Otherwise an
    * {@link IncorrectValueTypeException} is thrown.
    * </p>
-   * 
+   *
    * @see SensorValue#isNumeric()
    */
   @Override
@@ -134,5 +134,10 @@ public class SingleSensorValuesListValue implements SensorValuesListValue {
   @Override
   public Coordinate getCoordinate() {
     return sensorValue.getCoordinate();
+  }
+
+  @Override
+  public boolean interpolatesAroundFlags() {
+    return false;
   }
 }

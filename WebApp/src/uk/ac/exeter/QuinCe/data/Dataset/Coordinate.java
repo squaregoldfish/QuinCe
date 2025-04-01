@@ -11,20 +11,20 @@ import uk.ac.exeter.QuinCe.utils.MissingParam;
 /**
  * Holds a coordinate that is the basic index for a {@link SensorValue} or
  * {@link Measurement}.
- * 
+ *
  * <p>
  * A coordinate represents a 'point' at which something is measured. Every
  * {@link SensorValue} and {@link Measurement} must be linked to a
  * {@link Coordinate}.
  * </p>
- * 
+ *
  * <p>
  * The contents of a {@link Coordinate} will depend on the measurement basis of
  * the {@link Instrument}. Surface measurements require only a timestamp, Argo
  * measurements require a cycle number and depth, etc. Subclasses of this class
  * will be used for the different coordinate types.
  * </p>
- * 
+ *
  * @see uk.ac.exeter.QuinCe.data.Instrument.Instrument#getBasis()
  */
 public abstract class Coordinate implements Comparable<Coordinate> {
@@ -59,7 +59,7 @@ public abstract class Coordinate implements Comparable<Coordinate> {
 
   /**
    * Get the coordinate's database ID.
-   * 
+   *
    * @return The database ID.
    */
   public long getId() {
@@ -77,11 +77,11 @@ public abstract class Coordinate implements Comparable<Coordinate> {
 
   /**
    * Return the timestamp of this coordinate.
-   * 
+   *
    * <p>
    * Can be {@code null} depending on the coordinate type.
    * </p>
-   * 
+   *
    * @return The timestamp.
    */
   public LocalDateTime getTime() {
@@ -90,13 +90,13 @@ public abstract class Coordinate implements Comparable<Coordinate> {
 
   /**
    * Set the database ID for the coordinate.
-   * 
+   *
    * <p>
    * This should only be called when the coordinate is first stored in the
    * database. It cannot be called if the existing ID is anything other than
    * {@link DatabaseUtils#NO_DATABASE_RECORD}.
    * </p>
-   * 
+   *
    * @param id
    *          The database ID
    * @throws CoordinateException
@@ -111,11 +111,11 @@ public abstract class Coordinate implements Comparable<Coordinate> {
 
   /**
    * Get the coordinate type.
-   * 
+   *
    * <p>
    * Corresponds to a measurement basis.
    * </p>
-   * 
+   *
    * @return The coordinate type.
    * @see uk.ac.exeter.QuinCe.data.Instrument.Instrument#getBasis()
    */
@@ -154,4 +154,12 @@ public abstract class Coordinate implements Comparable<Coordinate> {
   }
 
   protected abstract int compareToWorker(Coordinate other);
+
+  public boolean isBefore(Coordinate other) {
+    return compareTo(other) < 0;
+  }
+
+  public boolean isAfter(Coordinate other) {
+    return compareTo(other) > 0;
+  }
 }

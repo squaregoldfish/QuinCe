@@ -43,20 +43,20 @@ public interface SensorValuesListValue {
 
   /**
    * Get the value as a {@link Double}.
-   * 
+   *
    * <p>
    * This will only give a result if the underlying data contains a numeric
    * value. Otherwise an {@link IncorrectValueTypeException} is thrown.
    * </p>
-   * 
+   *
    * @return The {@link Double) value.
-   * 
+   *
    */
   public Double getDoubleValue();
 
   /**
    * Get the {@link String} value.
-   * 
+   *
    * <p>
    * This will only give a result if the underlying data <i>does not</i> contain
    * a numeric value. Otherwise an {@link IncorrectValueTypeException} is
@@ -81,15 +81,29 @@ public interface SensorValuesListValue {
 
   /**
    * Determine whether or not this value has been interpolated.
-   * 
+   *
    * @return
    */
   public boolean isInterpolated();
 
   /**
    * Get the {@link Coordinate} for this value.
-   * 
+   *
    * @return The coordinate.
    */
   public Coordinate getCoordinate();
+
+  /**
+   * Determine whether or not this SensorValuesListValue has been constructed by
+   * interpolating around already flagged {@link SensorValue}s.
+   *
+   * <p>
+   * This is only valid for values using {@link TimeCoordinate}s; all other
+   * types of value should return {@code false}.
+   * </p>
+   *
+   * @return {@code true} if the value interpolates around flagged values;
+   *         {@code false} if it does not.
+   */
+  public boolean interpolatesAroundFlags();
 }
