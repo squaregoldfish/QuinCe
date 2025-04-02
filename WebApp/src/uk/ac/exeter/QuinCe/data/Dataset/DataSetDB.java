@@ -241,16 +241,29 @@ public class DataSetDB {
    * @throws RecordNotFoundException
    * @throws DatabaseException
    * @throws MissingParamException
+   * @throws CoordinateException
    */
   private static DataSet dataSetFromRecord(Connection conn, ResultSet record)
     throws SQLException, MissingParamException, DatabaseException,
-    RecordNotFoundException, InstrumentException, SensorGroupsException {
+    RecordNotFoundException, InstrumentException, SensorGroupsException,
+    CoordinateException {
 
     long id = record.getLong(1);
     Instrument instrument = InstrumentDB.getInstrument(conn, record.getLong(2));
     String name = record.getString(3);
-    LocalDateTime start = DateTimeUtils.longToDate(record.getLong(4));
-    LocalDateTime end = DateTimeUtils.longToDate(record.getLong(5));
+
+    Map<Long, Coordinate> coordinates = CoordinateDB.getDataSetCoordinates(conn,
+      id, instrument.getBasis());
+    Coordinate start = coordinates.get(record.getLong(4));
+    if (null == start) {
+      throw new RecordNotFoundException("Start coordinate not found");
+    }
+
+    Coordinate end = coordinates.get(record.getLong(5));
+    if (null == end) {
+      throw new RecordNotFoundException("End coordinate not found");
+    }
+
     int status = record.getInt(6);
     LocalDateTime statusDate = DateTimeUtils.longToDate(record.getLong(7));
     boolean nrt = record.getBoolean(8);
@@ -329,9 +342,10 @@ public class DataSetDB {
    *           If a database error occurs
    * @throws MissingParamException
    *           If any required parameters are missing
+   * @throws CoordinateException
    */
   public static void addDataSet(DataSource dataSource, DataSet dataSet)
-    throws DatabaseException, MissingParamException {
+    throws DatabaseException, MissingParamException, CoordinateException {
     // Make sure this inserts a new record
     dataSet.setId(DatabaseUtils.NO_DATABASE_RECORD);
     saveDataSet(dataSource, dataSet);
@@ -350,16 +364,17 @@ public class DataSetDB {
    *           If a database error occurs
    * @throws MissingParamException
    *           If any required parameters are missing
+   * @throws CoordinateException
    */
   public static void addDataSet(Connection conn, DataSet dataSet)
-    throws DatabaseException, MissingParamException {
+    throws DatabaseException, MissingParamException, CoordinateException {
     // Make sure this inserts a new record
     dataSet.setId(DatabaseUtils.NO_DATABASE_RECORD);
     saveDataSet(conn, dataSet);
   }
 
   private static void saveDataSet(DataSource dataSource, DataSet dataSet)
-    throws DatabaseException, MissingParamException {
+    throws DatabaseException, MissingParamException, CoordinateException {
     MissingParam.checkMissing(dataSource, "dataSource");
     Connection conn = null;
     try {
@@ -376,7 +391,7 @@ public class DataSetDB {
   }
 
   private static void saveDataSet(Connection conn, DataSet dataSet)
-    throws DatabaseException, MissingParamException {
+    throws DatabaseException, MissingParamException, CoordinateException {
 
     // TODO Validate the data set
     // TODO Make sure it's not a duplicate of an existing data set
@@ -387,6 +402,8 @@ public class DataSetDB {
     ResultSet addedKeys = null;
 
     try {
+      CoordinateDB.saveCoordinates(conn, dataSet.getStart(), dataSet.getEnd());
+
       String sql = UPDATE_DATASET_STATEMENT;
       if (DatabaseUtils.NO_DATABASE_RECORD == dataSet.getId()) {
         sql = ADD_DATASET_STATEMENT;
@@ -396,8 +413,8 @@ public class DataSetDB {
 
       stmt.setLong(1, dataSet.getInstrumentId());
       stmt.setString(2, dataSet.getName());
-      stmt.setLong(3, DateTimeUtils.dateToLong(dataSet.getStart()));
-      stmt.setLong(4, DateTimeUtils.dateToLong(dataSet.getEnd()));
+      stmt.setLong(3, dataSet.getStart().getId());
+      stmt.setLong(4, dataSet.getEnd().getId());
       stmt.setInt(5, dataSet.getStatus());
       stmt.setLong(6, DateTimeUtils.dateToLong(dataSet.getStatusDate()));
       stmt.setBoolean(7, dataSet.isNrt());
@@ -534,9 +551,9 @@ public class DataSetDB {
   }
 
   public static void setNrtDatasetStatus(DataSource dataSource,
-    Instrument instrument, int status)
-    throws DatabaseException, MissingParamException,
-    InvalidDataSetStatusException, RecordNotFoundException {
+    Instrument instrument, int status) throws DatabaseException,
+    MissingParamException, InvalidDataSetStatusException,
+    RecordNotFoundException, CoordinateException {
 
     try (Connection conn = dataSource.getConnection();) {
 
@@ -566,10 +583,11 @@ public class DataSetDB {
    *           If the status is invalid
    * @throws DatabaseException
    *           If a database error occurs
+   * @throws CoordinateException
    */
   public static void setDatasetStatus(DataSource dataSource, DataSet dataSet,
     int status) throws MissingParamException, InvalidDataSetStatusException,
-    DatabaseException {
+    DatabaseException, CoordinateException {
     dataSet.setStatus(status);
     saveDataSet(dataSource, dataSet);
   }
@@ -591,10 +609,11 @@ public class DataSetDB {
    *           If a database error occurs
    * @throws RecordNotFoundException
    *           If the dataset cannot be found in the database
+   * @throws CoordinateException
    */
   public static void setDatasetStatus(DataSource dataSource, long datasetId,
     int status) throws MissingParamException, InvalidDataSetStatusException,
-    DatabaseException, RecordNotFoundException {
+    DatabaseException, RecordNotFoundException, CoordinateException {
     MissingParam.checkZeroPositive(datasetId, "datasetId");
     setDatasetStatus(dataSource, getDataSet(dataSource, datasetId), status);
   }
@@ -620,10 +639,11 @@ public class DataSetDB {
    *           If the specified status is invalid
    * @throws RecordNotFoundException
    *           If the dataset does not exist
+   * @throws CoordinateException
    */
   public static void setDatasetStatus(Connection conn, long datasetId,
     int status) throws MissingParamException, InvalidDataSetStatusException,
-    DatabaseException, RecordNotFoundException {
+    DatabaseException, RecordNotFoundException, CoordinateException {
     DataSet dataSet = getDataSet(conn, datasetId);
     dataSet.setStatus(status);
     updateDataSet(conn, dataSet);
@@ -642,9 +662,11 @@ public class DataSetDB {
    *           If a database error occurs
    * @throws RecordNotFoundException
    *           If the dataset is not already in the database
+   * @throws CoordinateException
    */
   public static void updateDataSet(DataSource dataSource, DataSet dataSet)
-    throws MissingParamException, DatabaseException, RecordNotFoundException {
+    throws MissingParamException, DatabaseException, RecordNotFoundException,
+    CoordinateException {
 
     try (Connection conn = dataSource.getConnection()) {
       saveDataSet(conn, dataSet);
@@ -666,9 +688,11 @@ public class DataSetDB {
    *           If a database error occurs
    * @throws RecordNotFoundException
    *           If the dataset is not already in the database
+   * @throws CoordinateException
    */
   public static void updateDataSet(Connection conn, DataSet dataSet)
-    throws MissingParamException, DatabaseException, RecordNotFoundException {
+    throws MissingParamException, DatabaseException, RecordNotFoundException,
+    CoordinateException {
     saveDataSet(conn, dataSet);
   }
 
@@ -937,9 +961,8 @@ public class DataSetDB {
 
     JsonObject result = new JsonObject();
     result.addProperty("name", dataset.getName());
-    result.addProperty("startdate",
-      DateTimeUtils.toIsoDate(dataset.getStart()));
-    result.addProperty("enddate", DateTimeUtils.toIsoDate(dataset.getEnd()));
+    result.addProperty("start", dataset.getStart().toString());
+    result.addProperty("end", dataset.getEnd().toString());
     result.addProperty("platformCode", instrument.getPlatformCode());
     result.addProperty("platformName", instrument.getPlatformName());
     result.addProperty("instrumentName", instrument.getName());

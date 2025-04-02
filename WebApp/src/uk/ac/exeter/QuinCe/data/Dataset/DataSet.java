@@ -21,13 +21,12 @@ import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.Message;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
-import uk.ac.exeter.QuinCe.utils.TimeRange;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
  * Object to represent a data set
  */
-public class DataSet implements Comparable<DataSet>, TimeRange {
+public class DataSet implements Comparable<DataSet> {
 
   public static final long TIMEPOS_FIELDSET_ID = 0L;
 
@@ -224,14 +223,14 @@ public class DataSet implements Comparable<DataSet>, TimeRange {
   private String name;
 
   /**
-   * The start date of the data set
+   * The start {@link Coordinate} of the data set
    */
-  private LocalDateTime start;
+  private Coordinate start;
 
   /**
-   * The end date of the data set
+   * The end {@link Coordinate} of the data set
    */
-  private LocalDateTime end;
+  private Coordinate end;
 
   /**
    * Properties for each of the measured variables
@@ -346,9 +345,9 @@ public class DataSet implements Comparable<DataSet>, TimeRange {
    * @param name
    *          Dataset name
    * @param start
-   *          Start date
+   *          Start coordinate
    * @param end
-   *          End date
+   *          End coordinate
    * @param status
    *          The current status
    * @param statusDate
@@ -374,8 +373,8 @@ public class DataSet implements Comparable<DataSet>, TimeRange {
    *
    */
   protected DataSet(long id, Instrument instrument, String name,
-    LocalDateTime start, LocalDateTime end, int status,
-    LocalDateTime statusDate, boolean nrt, Map<String, Properties> properties,
+    Coordinate start, Coordinate end, int status, LocalDateTime statusDate,
+    boolean nrt, Map<String, Properties> properties,
     SensorOffsets sensorOffsets, LocalDateTime createdDate,
     LocalDateTime lastTouched, List<Message> errorMessages,
     DatasetProcessingMessages processingMessages,
@@ -429,14 +428,14 @@ public class DataSet implements Comparable<DataSet>, TimeRange {
    * @param name
    *          Dataset name
    * @param start
-   *          Start date
+   *          Start coordinate
    * @param end
-   *          End date
+   *          End coordinate
    * @param nrt
    *          Indicates whether or not this is a NRT dataset
    */
-  public DataSet(Instrument instrument, String name, LocalDateTime start,
-    LocalDateTime end, boolean nrt) {
+  public DataSet(Instrument instrument, String name, Coordinate start,
+    Coordinate end, boolean nrt) {
     this.instrument = instrument;
     this.name = name;
     this.start = start;
@@ -553,40 +552,40 @@ public class DataSet implements Comparable<DataSet>, TimeRange {
   }
 
   /**
-   * Get the start date of the data set
+   * Get the start {@link Coordinate} of the data set
    *
-   * @return The start date
+   * @return The start coordinate
    */
-  public LocalDateTime getStart() {
+  public Coordinate getStart() {
     return start;
   }
 
   /**
-   * Set the start date of the data set
+   * Set the start {@link Coordinate} of the data set
    *
    * @param start
-   *          The start date
+   *          The start coordinate
    */
-  public void setStart(LocalDateTime start) {
+  public void setStart(Coordinate start) {
     this.start = start;
   }
 
   /**
-   * Get the end date of the data set
+   * Get the end {@link Coordinate} of the data set
    *
-   * @return The end date
+   * @return The end coordinate
    */
-  public LocalDateTime getEnd() {
+  public Coordinate getEnd() {
     return end;
   }
 
   /**
-   * Set the end date of the data set
+   * Set the end {@link Coordinate} of the data set
    *
    * @param end
-   *          The end date
+   *          The end coordinate
    */
-  public void setEnd(LocalDateTime end) {
+  public void setEnd(Coordinate end) {
     this.end = end;
   }
 

@@ -41,7 +41,7 @@ public class DatasetSensorValues {
   /**
    * The database ID of the {@link DataSet} that these values belong to.
    */
-  private long datasetId;
+  private DataSet dataset;
 
   /**
    * The {@link SensorValue}s mapped by their database ID.
@@ -62,11 +62,6 @@ public class DatasetSensorValues {
    * The latitudes in the dataset.
    */
   private SensorValuesList latitudes = null;
-
-  /**
-   * The {@link Instrument} to which the {@link SensorValue}s belong.
-   */
-  private final Instrument instrument;
 
   /**
    * A special {@link Map} key used to indicate a summed total of flag values.
@@ -91,18 +86,16 @@ public class DatasetSensorValues {
   private TreeSet<Long> optionalColumns = new TreeSet<Long>();
 
   /**
-   * Initialise an empty instance for a dataset attached to a given
-   * {@link Instrument}.
+   * Initialise an empty instance for a {@link DataSet}.
    *
    * @param instrument
    *          The instrument.
    * @throws RecordNotFoundException
    */
-  public DatasetSensorValues(Instrument instrument)
-    throws RecordNotFoundException {
+  public DatasetSensorValues(DataSet dataset) throws RecordNotFoundException {
     valuesById = new HashMap<Long, SensorValue>();
     valuesByColumn = new HashMap<Long, SensorValuesList>();
-    this.instrument = instrument;
+    this.dataset = dataset;
 
     /*
      * The longitudes and latitudes cannot be instantiated in the constructor.
@@ -139,21 +132,21 @@ public class DatasetSensorValues {
    * @throws DatabaseException
    * @throws RecordNotFoundException
    */
-  public DatasetSensorValues(Connection conn, Instrument instrument,
-    long datasetId, boolean ignoreFlushing, boolean ignoreInternalCalibrations,
+  public DatasetSensorValues(Connection conn, DataSet dataset,
+    boolean ignoreFlushing, boolean ignoreInternalCalibrations,
     Collection<SensorValue> rawSensorValues)
     throws DatabaseException, RecordNotFoundException {
 
-    this.datasetId = datasetId;
+    this.dataset = dataset;
     valuesById = new HashMap<Long, SensorValue>();
     valuesByColumn = new HashMap<Long, SensorValuesList>();
-    this.instrument = instrument;
 
     TreeSet<Long> ignoredSensorValues = new TreeSet<Long>();
 
-    if (instrument.hasInternalCalibrations() && ignoreInternalCalibrations) {
+    if (dataset.getInstrument().hasInternalCalibrations()
+      && ignoreInternalCalibrations) {
       ignoredSensorValues = DataSetDataDB
-        .getInternalCalibrationSensorValueIDs(conn, instrument, datasetId);
+        .getInternalCalibrationSensorValueIDs(conn, dataset);
     }
 
     for (SensorValue sensorValue : rawSensorValues) {
@@ -646,7 +639,7 @@ public class DatasetSensorValues {
    * @return The {@link Instrument}.
    */
   public Instrument getInstrument() {
-    return instrument;
+    return dataset.getInstrument();
   }
 
   /**
@@ -693,7 +686,7 @@ public class DatasetSensorValues {
   public DatasetSensorValues subset(TreeSet<Coordinate> coordinates,
     TreeSet<Long> ids) throws RecordNotFoundException {
 
-    DatasetSensorValues result = new DatasetSensorValues(instrument);
+    DatasetSensorValues result = new DatasetSensorValues(dataset);
 
     /*
      * Build a TreeSet of values to be added to the result to ensure that
@@ -785,7 +778,7 @@ public class DatasetSensorValues {
 
         for (SensorValue value : affectedSensorValues) {
           String valueRunType = runTypePeriods
-            .getRunType(value.getCoordinate().getTime());
+            .getRunType(value.getCoordinate());
           if (null == valueRunType || affectedSensorAssignments.get(assignment)
             .contains(valueRunType)) {
 
@@ -835,20 +828,20 @@ public class DatasetSensorValues {
    */
   private Map<SensorAssignment, Collection<String>> getCascadeAffectedSensorAssignments(
     SensorValue source) throws RecordNotFoundException {
-    SensorType sourceType = instrument.getSensorAssignments()
+    SensorType sourceType = dataset.getInstrument().getSensorAssignments()
       .getSensorTypeForDBColumn(source.getColumnId());
 
     Map<SensorAssignment, Collection<String>> result = new HashMap<SensorAssignment, Collection<String>>();
 
     if (sourceType.isDiagnostic()) {
       // Diagnostics affect the sensors configured by the user
-      SensorAssignment sourceAssignment = instrument.getSensorAssignments()
-        .getById(source.getColumnId());
+      SensorAssignment sourceAssignment = dataset.getInstrument()
+        .getSensorAssignments().getById(source.getColumnId());
 
-      Collection<SensorAssignment> measurementSensors = instrument
+      Collection<SensorAssignment> measurementSensors = dataset.getInstrument()
         .getSensorAssignments().getNonDiagnosticSensors(false);
 
-      DiagnosticQCConfig diagnosticQCConfig = instrument
+      DiagnosticQCConfig diagnosticQCConfig = dataset.getInstrument()
         .getDiagnosticQCConfig();
 
       measurementSensors.forEach(m -> {
@@ -1034,6 +1027,6 @@ public class DatasetSensorValues {
   }
 
   public long getDatasetId() {
-    return datasetId;
+    return dataset.getId();
   }
 }

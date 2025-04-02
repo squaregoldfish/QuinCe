@@ -63,8 +63,9 @@ public class GradientTestRoutine extends AutoQCRoutine {
       if (Math.abs(valueDelta) > minimumChange) {
 
         // time-increment
-        double tDiff = ChronoUnit.NANOS.between(prevValue.getTime(),
-          currValue.getTime()) / (60.0 * 1000000000);
+        double tDiff = ChronoUnit.NANOS.between(
+          prevValue.getCoordinate().getTime(),
+          currValue.getCoordinate().getTime()) / (60.0 * 1000000000);
 
         double deltaPerMin = Math.abs(valueDelta / tDiff);
 

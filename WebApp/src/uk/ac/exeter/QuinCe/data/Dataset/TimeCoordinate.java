@@ -1,6 +1,7 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
@@ -34,21 +35,21 @@ public class TimeCoordinate extends Coordinate {
   }
 
   /**
-   * Construct a copy of an existing TimeCoordinate with a new time.
+   * Construct a TimeCoordinate for a DataSet with a specified time.
    *
-   * @param source
-   *          The source coordinate.
-   * @param newTime
-   *          The new time.
-   * @throws CoordinateException
-   *           If the supplied {@link Coordinate} is not a TimeCoordinate.
+   * <p>
+   * The coordinate will not exist in the database, so will be given an ID of
+   * {@link DatabaseUtils#NO_DATABASE_RECORD}.
+   * </p>
+   *
+   * @param datasetId
+   *          The DataSet ID.
+   * @param time
+   *          The time.
    */
-  public TimeCoordinate(Coordinate source, LocalDateTime newTime)
+  private TimeCoordinate(long datasetId, LocalDateTime time)
     throws CoordinateException {
-    super(source.getId(), source.getDatasetId(), newTime);
-    if (!(source instanceof TimeCoordinate)) {
-      throw new CoordinateException("Must supply a TimeCoordinate");
-    }
+    super(DatabaseUtils.NO_DATABASE_RECORD, datasetId, time);
   }
 
   @Override
@@ -86,5 +87,33 @@ public class TimeCoordinate extends Coordinate {
   public static TimeCoordinate dummyCoordinate(LocalDateTime time) {
     return new TimeCoordinate(DatabaseUtils.NO_DATABASE_RECORD,
       DatabaseUtils.NO_DATABASE_RECORD, time);
+  }
+
+  /**
+   * Get a TimeCoordinate for a specified timestamp.
+   *
+   * <p>
+   * The existing coordinates for the DataSet are supplied in
+   * {@code existingCoordinates}. If a coordinate exists with the specified
+   * time, that coordinate is returned. Otherwise a new {@link TimeCoordinate}
+   * object is created with the specified time. Calling {@link #isInDatabase()}
+   * on this new coordinate will return {@code false}.
+   * </p>
+   *
+   * @param time
+   *          The desired coordinate time.
+   * @param existingCoordinates
+   *          The existing coordinates in the DataSet.
+   * @return The found or created coordinate.
+   * @throws CoordinateException
+   *           If a new coordinate is required but cannot be created.
+   */
+  public static TimeCoordinate getCoordinate(LocalDateTime time,
+    Collection<Coordinate> existingCoordinates) throws CoordinateException {
+
+    return (TimeCoordinate) existingCoordinates.stream()
+      .filter(c -> c.getTime().equals(time)).findAny()
+      .orElse(new TimeCoordinate(
+        existingCoordinates.stream().findFirst().get().getDatasetId(), time));
   }
 }

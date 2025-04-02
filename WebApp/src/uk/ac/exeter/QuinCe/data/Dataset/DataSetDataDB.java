@@ -19,8 +19,6 @@ import java.util.TreeSet;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.lang3.NotImplementedException;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -39,7 +37,6 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
-import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.MissingParam;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
@@ -89,26 +86,20 @@ public class DataSetDataDB {
     + "sensor_values WHERE dataset_id = ?";
 
   private static final String GET_SENSOR_VALUES_FOR_DATASET_QUERY = "SELECT "
-    + "c.id, c.date, c.depth, c.station, c.cast, c.bottle, c.replicate, c.cycle, "
-    + "sv.id, sv.file_column, sv.value, sv.auto_qc, "
-    + "sv.user_qc_flag, sv.user_qc_message "
-    + "FROM sensor_values INNER JOIN coordinates c ON c.id = sv.coordinate_id "
-    + "WHERE dataset_id = ? ORDER BY id";
+    + "id, coordinate_id, file_column, value, auto_qc, "
+    + "user_qc_flag, user_qc_message "
+    + "FROM sensor_values WHERE dataset_id = ? ORDER BY id";
 
   private static final String GET_SENSOR_VALUES_FOR_DATASET_NO_FLUSHING_QUERY = "SELECT "
-    + "c.id, c.date, c.depth, c.station, c.cast, c.bottle, c.replicate, c.cycle, "
-    + "sv.id, sv.file_column, sv.value, sv.auto_qc, "
-    + "sv.user_qc_flag, av.user_qc_message "
-    + "FROM sensor_values INNER JOIN coordinates c ON c.id = sv.coordinate_id "
-    + " WHERE dataset_id = ? AND user_qc_flag != " + Flag.VALUE_FLUSHING;
+    + "id, coordinate_id, file_column, value, auto_qc, "
+    + "user_qc_flag, user_qc_message "
+    + "FROM sensor_values  WHERE dataset_id = ? AND user_qc_flag != "
+    + Flag.VALUE_FLUSHING;
 
   private static final String GET_POSITION_SENSOR_VALUES_QUERY = "SELECT "
-    + "c.id, c.date, c.depth, c.station, c.cast, c.bottle, c.replicate, c.cycle, "
-    + "sv.id, sv.file_column, sv.value, sv.auto_qc, "
-    + "sv.user_qc_flag, sv.user_qc_message "
-    + "FROM sensor_values INNER JOIN coordinates c ON c.id = sv.coordinate_id "
-    + "WHERE dataset_id = ? AND file_column IN (" + SensorType.LONGITUDE_ID
-    + ", " + SensorType.LATITUDE_ID + ")";
+    + "id, file_column, value, auto_qc, " + "user_qc_flag, user_qc_message "
+    + "FROM sensor_values WHERE dataset_id = ? AND file_column IN ("
+    + SensorType.LONGITUDE_ID + ", " + SensorType.LATITUDE_ID + ")";
 
   /**
    * Statement to store a measurement record
@@ -124,10 +115,8 @@ public class DataSetDataDB {
    * Query to get all measurement records for a dataset
    */
   private static final String GET_MEASUREMENTS_QUERY = "SELECT "
-    + "c.id, c.date, c.depth, c.station, c.cast, c.bottle, c.replicate, c.cycle, "
-    + "m.id, m.measurement_values, r.variable_id, r.run_type "
-    + "FROM measurements m INNER JOIN coordinates c ON c.id = m.coordinate_id "
-    + "LEFT JOIN measurement_run_types r ON r.measurement_id = m.id "
+    + "m.id, m.coordinate_id, m.measurement_values, r.variable_id, r.run_type "
+    + "FROM measurements m LEFT JOIN measurement_run_types r ON r.measurement_id = m.id "
     + "WHERE dataset_id = ? " + "ORDER BY m.date ASC";
 
   /**
@@ -166,19 +155,16 @@ public class DataSetDataDB {
     + "ORDER BY dr.measurement_id ASC";
 
   private static final String GET_RUN_TYPES_QUERY = "SELECT "
-    + "date, value FROM sensor_values "
-    + " WHERE dataset_id = ? AND file_column IN "
+    + "coordinate_id, value FROM sensor_values "
+    + "FROM sensor_values WHERE dataset_id = ? AND file_column IN "
     + DatabaseUtils.IN_PARAMS_TOKEN + " ORDER BY date ASC";
 
   private static final String STORE_MEASUREMENT_VALUES_STATEMENT = "UPDATE measurements "
     + "SET measurement_values = ? WHERE id = ?";
 
   private static final String GET_INTERNAL_CALIBRATION_SENSOR_VALUES_QUERY = "SELECT "
-    + "c.id, c.date, c.depth, c.station, c.cast, c.bottle, c.replicate, c.cycle, "
-    + "sv.id, sv.file_column, sv.value, sv.auto_qc, "
-    + "sv.user_qc_flag, sv.user_qc_message, mrt.run_type "
-    + "FROM sensor_values sv "
-    + "INNER JOIN coordinates c ON c.id = sv.coordinate_id "
+    + "id, coordinate_id, file_column, value, auto_qc, "
+    + "user_qc_flag, user_qc_message, mrt.run_type " + "FROM sensor_values sv "
     + "INNER JOIN measurements m ON m.date = sv.date "
     + "INNER JOIN measurement_run_types mrt ON m.id = mrt.measurement_id "
     + "WHERE m.dataset_id = ? AND mrt.run_type IN "
@@ -197,6 +183,9 @@ public class DataSetDataDB {
     + "COUNT(*) FROM data_reduction WHERE measurement_id IN "
     + "(SELECT id FROM measurements WHERE dataset_id = ?) " + "AND qc_flag = "
     + Flag.VALUE_NOT_CALIBRATED;
+
+  private static final String UPDATE_MEASUREMENT_COORDINATE_STATEMENT = "UPDATE "
+    + "measurements SET coordinate_id = ? WHERE id = ?";
 
   /**
    * Take a list of fields, and return those which come from the dataset data.
@@ -449,8 +438,7 @@ public class DataSetDataDB {
         }
       }
 
-      addStmt.close();
-      updateStmt.close();
+      DatabaseUtils.closeStatements(addStmt, updateStmt);
 
       conn.commit();
     } catch (
@@ -469,6 +457,12 @@ public class DataSetDataDB {
       }
 
       throw e;
+    } finally {
+      try {
+        conn.setAutoCommit(autoCommitStatus);
+      } catch (SQLException e) {
+        ; // Ignore expception
+      }
     }
 
     // Clear the dirty flag on all the sensor values
@@ -530,40 +524,42 @@ public class DataSetDataDB {
    * @throws InvalidFlagException
    */
   public static DatasetSensorValues getSensorValues(Connection conn,
-    Instrument instrument, long datasetId, boolean ignoreFlushing,
-    boolean ignoreInternalCalibrations) throws RecordNotFoundException,
-    DatabaseException, MissingParamException, InvalidFlagException {
+    DataSet dataset, boolean ignoreFlushing, boolean ignoreInternalCalibrations)
+    throws RecordNotFoundException, DatabaseException, MissingParamException,
+    InvalidFlagException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(datasetId, "datasetId");
+    MissingParam.checkMissing(dataset, "dataset");
 
     TreeSet<Long> ignoredSensorValues = new TreeSet<Long>();
 
-    if (instrument.hasInternalCalibrations() && ignoreInternalCalibrations) {
-      ignoredSensorValues = getInternalCalibrationSensorValueIDs(conn,
-        instrument, datasetId);
+    if (dataset.getInstrument().hasInternalCalibrations()
+      && ignoreInternalCalibrations) {
+      ignoredSensorValues = getInternalCalibrationSensorValueIDs(conn, dataset);
     }
 
-    DatasetSensorValues values = new DatasetSensorValues(instrument);
+    DatasetSensorValues values = new DatasetSensorValues(dataset);
 
     String query = ignoreFlushing
       ? GET_SENSOR_VALUES_FOR_DATASET_NO_FLUSHING_QUERY
       : GET_SENSOR_VALUES_FOR_DATASET_QUERY;
 
-    try (PreparedStatement stmt = conn.prepareStatement(query)) {
+    try {
+      Map<Long, Coordinate> coordinates = CoordinateDB
+        .getSensorValueCoordinates(conn, dataset);
 
-      stmt.setLong(1, datasetId);
+      try (PreparedStatement stmt = conn.prepareStatement(query)) {
 
-      try (ResultSet records = stmt.executeQuery()) {
+        stmt.setLong(1, dataset.getId());
 
-        while (records.next()) {
-          HashMap<Long, Coordinate> loadedCoordinates = new HashMap<Long, Coordinate>();
-          Coordinate coordinate = coordinateFromResultSet(records,
-            loadedCoordinates, instrument, datasetId);
-          SensorValue value = sensorValueFromResultSet(records, coordinate,
-            datasetId);
-          if (!ignoredSensorValues.contains(value.getId())) {
-            values.add(value);
+        try (ResultSet records = stmt.executeQuery()) {
+
+          while (records.next()) {
+            SensorValue value = sensorValueFromResultSet(records,
+              dataset.getId(), coordinates);
+            if (!ignoredSensorValues.contains(value.getId())) {
+              values.add(value);
+            }
           }
         }
       }
@@ -584,27 +580,30 @@ public class DataSetDataDB {
    * @return The sensor values.
    * @throws DatabaseException
    * @throws InvalidFlagException
+   * @throws RecordNotFoundException
    */
   public static TreeSet<SensorValue> getRawSensorValues(Connection conn,
-    Instrument instrument, long datasetId)
-    throws DatabaseException, InvalidFlagException, CoordinateException {
+    DataSet dataset) throws DatabaseException, InvalidFlagException,
+    CoordinateException, RecordNotFoundException {
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(datasetId, "datasetId");
+    MissingParam.checkMissing(dataset, "dataset");
 
     TreeSet<SensorValue> sensorValues = new TreeSet<SensorValue>();
 
-    try (PreparedStatement stmt = conn
-      .prepareStatement(GET_SENSOR_VALUES_FOR_DATASET_QUERY)) {
+    try {
+      Map<Long, Coordinate> coordinates = CoordinateDB
+        .getSensorValueCoordinates(conn, dataset);
 
-      stmt.setLong(1, datasetId);
+      try (PreparedStatement stmt = conn
+        .prepareStatement(GET_SENSOR_VALUES_FOR_DATASET_QUERY)) {
 
-      try (ResultSet records = stmt.executeQuery()) {
-        HashMap<Long, Coordinate> loadedCoordinates = new HashMap<Long, Coordinate>();
-        while (records.next()) {
-          Coordinate coordinate = coordinateFromResultSet(records,
-            loadedCoordinates, instrument, datasetId);
-          sensorValues
-            .add(sensorValueFromResultSet(records, coordinate, datasetId));
+        stmt.setLong(1, dataset.getId());
+
+        try (ResultSet records = stmt.executeQuery()) {
+          while (records.next()) {
+            sensorValues.add(
+              sensorValueFromResultSet(records, dataset.getId(), coordinates));
+          }
         }
       }
     } catch (SQLException e) {
@@ -615,61 +614,35 @@ public class DataSetDataDB {
   }
 
   public static DatasetSensorValues getPositionSensorValues(Connection conn,
-    Instrument instrument, long datasetId)
-    throws DatabaseException, RecordNotFoundException {
-
-    DatasetSensorValues values = new DatasetSensorValues(instrument);
+    DataSet dataset) throws DatabaseException, RecordNotFoundException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkMissing(datasetId, "datasetId");
+    MissingParam.checkMissing(dataset, "dataset");
 
-    try (PreparedStatement stmt = conn
-      .prepareStatement(GET_POSITION_SENSOR_VALUES_QUERY)) {
+    DatasetSensorValues values = new DatasetSensorValues(dataset);
 
-      stmt.setLong(1, datasetId);
-      try (ResultSet records = stmt.executeQuery()) {
-        HashMap<Long, Coordinate> loadedCoordinates = new HashMap<Long, Coordinate>();
-        while (records.next()) {
-          Coordinate coordinate = coordinateFromResultSet(records,
-            loadedCoordinates, instrument, datasetId);
-          values.add(sensorValueFromResultSet(records, coordinate, datasetId));
+    try {
+      Map<Long, Coordinate> coordinates = CoordinateDB
+        .getSensorValueCoordinates(conn, dataset);
+
+      try (PreparedStatement stmt = conn
+        .prepareStatement(GET_POSITION_SENSOR_VALUES_QUERY)) {
+
+        stmt.setLong(1, dataset.getId());
+        try (ResultSet records = stmt.executeQuery()) {
+          while (records.next()) {
+            values.add(
+              sensorValueFromResultSet(records, dataset.getId(), coordinates));
+          }
         }
       }
-    } catch (Exception e) {
+    } catch (
+
+    Exception e) {
       throw new DatabaseException("Error while retrieving sensor values", e);
     }
 
     return values;
-  }
-
-  private static Coordinate coordinateFromResultSet(ResultSet record,
-    HashMap<Long, Coordinate> loadedCoordinates, Instrument instrument,
-    long datasetId) throws SQLException, CoordinateException {
-
-    Coordinate result;
-
-    long coordinateId = record.getLong(1);
-    if (loadedCoordinates.containsKey(coordinateId)) {
-      result = loadedCoordinates.get(coordinateId);
-    } else {
-
-      switch (instrument.getBasis()) {
-      case Instrument.BASIS_TIME: {
-        result = new TimeCoordinate(coordinateId, datasetId,
-          DateTimeUtils.longToDate(record.getLong(2)));
-        loadedCoordinates.put(coordinateId, result);
-        break;
-      }
-      case Instrument.BASIS_ARGO: {
-        throw new NotImplementedException("Argo basis not yet implemented");
-      }
-      default: {
-        throw new CoordinateException("Basis not recognised");
-      }
-      }
-    }
-
-    return result;
   }
 
   /**
@@ -684,20 +657,26 @@ public class DataSetDataDB {
    *           If any values cannot be read
    * @throws InvalidFlagException
    *           If the stored Flag value is invalid
+   * @throws RecordNotFoundException
    */
   private static SensorValue sensorValueFromResultSet(ResultSet record,
-    Coordinate coordinate, long datasetId)
-    throws SQLException, InvalidFlagException {
+    long datasetId, Map<Long, Coordinate> coordinates)
+    throws SQLException, InvalidFlagException, RecordNotFoundException {
 
-    long valueId = record.getLong(9);
-    long fileColumnId = record.getLong(10);
-    String value = record.getString(11);
-    AutoQCResult autoQC = AutoQCResult.buildFromJson(record.getString(12));
-    Flag userQCFlag = new Flag(record.getInt(13));
-    String userQCMessage = record.getString(14);
+    long valueId = record.getLong(1);
+    long coordinateId = record.getLong(2);
+    long fileColumnId = record.getLong(3);
+    String value = record.getString(4);
+    AutoQCResult autoQC = AutoQCResult.buildFromJson(record.getString(5));
+    Flag userQCFlag = new Flag(record.getInt(6));
+    String userQCMessage = record.getString(7);
 
-    return new SensorValue(valueId, datasetId, fileColumnId, coordinate, value,
-      autoQC, userQCFlag, userQCMessage);
+    if (null == coordinates.get(coordinateId)) {
+      throw new RecordNotFoundException("Coordinate not loaded");
+    }
+
+    return new SensorValue(valueId, datasetId, fileColumnId,
+      coordinates.get(coordinateId), value, autoQC, userQCFlag, userQCMessage);
   }
 
   /**
@@ -773,11 +752,10 @@ public class DataSetDataDB {
    *           If any required parameters are missing
    */
   public static DatasetMeasurements getMeasurementsByRunType(Connection conn,
-    Instrument instrument, long datasetId)
-    throws MissingParamException, DatabaseException {
+    DataSet dataset) throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(datasetId, "datasetId");
+    MissingParam.checkMissing(dataset, "dataset");
 
     PreparedStatement stmt = null;
     ResultSet records = null;
@@ -785,21 +763,20 @@ public class DataSetDataDB {
     DatasetMeasurements measurements = new DatasetMeasurements();
 
     try {
+      Map<Long, Coordinate> coordinates = CoordinateDB
+        .getMeasurementCoordinates(conn, dataset);
 
       stmt = conn.prepareStatement(GET_MEASUREMENTS_QUERY);
-      stmt.setLong(1, datasetId);
+      stmt.setLong(1, dataset.getId());
 
       records = stmt.executeQuery();
-      HashMap<Long, Coordinate> loadedCoordinates = new HashMap<Long, Coordinate>();
 
       // There are potentially multiple records per measurement.
       // See measurementFromResultSet.
       records.next();
       while (!records.isAfterLast()) {
-        Coordinate coordinate = coordinateFromResultSet(records,
-          loadedCoordinates, instrument, datasetId);
         measurements.addMeasurement(
-          measurementFromResultSet(datasetId, coordinate, records));
+          measurementFromResultSet(records, dataset.getId(), coordinates));
       }
 
     } catch (Exception e) {
@@ -826,11 +803,10 @@ public class DataSetDataDB {
    *           If any required parameters are missing
    */
   public static List<Measurement> getMeasurements(Connection conn,
-    Instrument instrument, long datasetId)
-    throws MissingParamException, DatabaseException {
+    DataSet dataset) throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(datasetId, "datasetId");
+    MissingParam.checkMissing(dataset, "dataset");
 
     PreparedStatement stmt = null;
     ResultSet records = null;
@@ -838,21 +814,20 @@ public class DataSetDataDB {
     List<Measurement> measurements = new ArrayList<Measurement>();
 
     try {
+      Map<Long, Coordinate> coordinates = CoordinateDB
+        .getMeasurementCoordinates(conn, dataset);
 
       stmt = conn.prepareStatement(GET_MEASUREMENTS_QUERY);
-      stmt.setLong(1, datasetId);
+      stmt.setLong(1, dataset.getId());
 
       records = stmt.executeQuery();
-      HashMap<Long, Coordinate> loadedCoordinates = new HashMap<Long, Coordinate>();
 
       // There are potentially multiple records per measurement.
       // See measurementFromResultSet.
       records.next();
       while (!records.isAfterLast()) {
-        Coordinate coordinate = coordinateFromResultSet(records,
-          loadedCoordinates, instrument, datasetId);
         measurements
-          .add(measurementFromResultSet(datasetId, coordinate, records));
+          .add(measurementFromResultSet(records, dataset.getId(), coordinates));
       }
 
     } catch (Exception e) {
@@ -865,12 +840,14 @@ public class DataSetDataDB {
     return measurements;
   }
 
-  private static Measurement measurementFromResultSet(long datasetId,
-    Coordinate coordinate, ResultSet record) throws SQLException {
+  private static Measurement measurementFromResultSet(ResultSet record,
+    long datasetId, Map<Long, Coordinate> coordinates)
+    throws SQLException, RecordNotFoundException {
 
     // Get the main measurement details
-    long id = record.getLong(9);
-    String measurementValuesJson = record.getString(10);
+    long id = record.getLong(1);
+    Coordinate coordinate = coordinates.get(record.getLong(2));
+    String measurementValuesJson = record.getString(3);
 
     HashMap<Long, MeasurementValue> measurementValues = null == measurementValuesJson
       ? null
@@ -886,17 +863,21 @@ public class DataSetDataDB {
 
       // Get the run type details. If the variable Id is null, there is no run
       // type
-      long variableId = record.getLong(11);
+      long variableId = record.getLong(4);
       if (!record.wasNull()) {
-        runTypes.put(variableId, record.getString(12));
+        runTypes.put(variableId, record.getString(5));
       }
 
       record.next();
-      if (record.isAfterLast() || record.getLong(9) != id) {
+      if (record.isAfterLast() || record.getLong(1) != id) {
         // We've gone off the end of the result set, or we've found
         // a new measurement. Either way stop reading run types.
         extractRunType = false;
       }
+    }
+
+    if (null == coordinate) {
+      throw new RecordNotFoundException("Coordinate not loaded");
     }
 
     return new Measurement(id, datasetId, coordinate, runTypes,
@@ -1212,41 +1193,46 @@ public class DataSetDataDB {
   }
 
   public static RunTypePeriods getRunTypePeriods(Connection conn,
-    Instrument instrument, long datasetId)
-    throws MissingParamException, DatabaseException, DataSetException {
+    DataSet dataset) throws MissingParamException, DatabaseException,
+    DataSetException, CoordinateException, RecordNotFoundException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkMissing(instrument, "instrument");
-    MissingParam.checkZeroPositive(datasetId, "datasetId");
+    MissingParam.checkMissing(dataset, "dataset");
 
     RunTypePeriods result = new RunTypePeriods();
 
-    List<Long> runTypeColumnIds = instrument.getSensorAssignments()
+    List<Long> runTypeColumnIds = dataset.getInstrument().getSensorAssignments()
       .getRunTypeColumnIDs();
 
     if (runTypeColumnIds.size() > 0) {
       String sensorValuesSQL = DatabaseUtils
         .makeInStatementSql(GET_RUN_TYPES_QUERY, runTypeColumnIds.size());
 
-      try (PreparedStatement stmt = conn.prepareStatement(sensorValuesSQL)) {
+      try {
+        Map<Long, Coordinate> coordinates = CoordinateDB
+          .getSensorValueCoordinates(conn, dataset);
 
-        stmt.setLong(1, datasetId);
+        try (PreparedStatement stmt = conn.prepareStatement(sensorValuesSQL)) {
 
-        int currentParam = 2;
-        for (long column : runTypeColumnIds) {
-          stmt.setLong(currentParam, column);
-          currentParam++;
-        }
+          stmt.setLong(1, dataset.getId());
 
-        try (ResultSet records = stmt.executeQuery()) {
-          while (records.next()) {
-            result.add(records.getString(2),
-              DateTimeUtils.longToDate(records.getLong(1)));
+          int currentParam = 2;
+          for (long column : runTypeColumnIds) {
+            stmt.setLong(currentParam, column);
+            currentParam++;
+          }
+
+          try (ResultSet records = stmt.executeQuery()) {
+            while (records.next()) {
+              result.add(records.getString(2),
+                coordinates.get(records.getLong(1)));
+            }
           }
         }
       } catch (SQLException e) {
         throw new DatabaseException("Error while getting run type periods", e);
       }
+
     }
 
     return result;
@@ -1308,26 +1294,24 @@ public class DataSetDataDB {
   }
 
   public static TreeSet<Long> getInternalCalibrationSensorValueIDs(
-    Connection conn, Instrument instrument, long datasetId)
-    throws DatabaseException {
+    Connection conn, DataSet dataset) throws DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkMissing(instrument, "Instrument");
-    MissingParam.checkPositive(datasetId, "datasetId");
+    MissingParam.checkMissing(dataset, "dataset");
 
     TreeSet<Long> result = new TreeSet<Long>();
 
-    List<String> calibrationRunTypes = instrument
+    List<String> calibrationRunTypes = dataset.getInstrument()
       .getInternalCalibrationRunTypes();
-    List<Long> calibratedColumns = instrument.getSensorAssignments()
-      .getInternalCalibrationSensors();
+    List<Long> calibratedColumns = dataset.getInstrument()
+      .getSensorAssignments().getInternalCalibrationSensors();
 
     String sql = DatabaseUtils.makeInStatementSql(
       GET_INTERNAL_CALIBRATION_SENSOR_VALUE_IDS_QUERY,
       calibrationRunTypes.size(), calibratedColumns.size());
 
     try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-      stmt.setLong(1, datasetId);
+      stmt.setLong(1, dataset.getId());
       int currentParam = 1;
 
       for (String runType : calibrationRunTypes) {
@@ -1355,46 +1339,48 @@ public class DataSetDataDB {
   }
 
   public static List<RunTypeSensorValue> getInternalCalibrationSensorValues(
-    Connection conn, Instrument instrument, long datasetId)
-    throws DatabaseException, InvalidFlagException, CoordinateException {
+    Connection conn, DataSet dataset) throws DatabaseException,
+    InvalidFlagException, CoordinateException, RecordNotFoundException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkMissing(instrument, "Instrument");
-    MissingParam.checkPositive(datasetId, "datasetId");
+    MissingParam.checkMissing(dataset, "dataset");
 
     List<RunTypeSensorValue> result = new ArrayList<RunTypeSensorValue>();
 
-    List<String> calibrationRunTypes = instrument
+    List<String> calibrationRunTypes = dataset.getInstrument()
       .getInternalCalibrationRunTypes();
-    List<Long> calibratedColumns = instrument.getSensorAssignments()
-      .getInternalCalibrationSensors();
+    List<Long> calibratedColumns = dataset.getInstrument()
+      .getSensorAssignments().getInternalCalibrationSensors();
 
     String sql = DatabaseUtils.makeInStatementSql(
       GET_INTERNAL_CALIBRATION_SENSOR_VALUES_QUERY, calibrationRunTypes.size(),
       calibratedColumns.size());
 
-    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-      stmt.setLong(1, datasetId);
-      int currentParam = 1;
+    try {
+      Map<Long, Coordinate> coordinates = CoordinateDB
+        .getSensorValueCoordinates(conn, dataset);
 
-      for (String runType : calibrationRunTypes) {
-        currentParam++;
-        stmt.setString(currentParam, runType);
-      }
+      try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setLong(1, dataset.getId());
+        int currentParam = 1;
 
-      for (Long column : calibratedColumns) {
-        currentParam++;
-        stmt.setLong(currentParam, column);
-      }
+        for (String runType : calibrationRunTypes) {
+          currentParam++;
+          stmt.setString(currentParam, runType);
+        }
 
-      try (ResultSet records = stmt.executeQuery()) {
-        HashMap<Long, Coordinate> loadedCoordinates = new HashMap<Long, Coordinate>();
-        while (records.next()) {
-          Coordinate coordinate = coordinateFromResultSet(records,
-            loadedCoordinates, instrument, datasetId);
-          SensorValue sensorValue = sensorValueFromResultSet(records,
-            coordinate, datasetId);
-          result.add(new RunTypeSensorValue(sensorValue, records.getString(8)));
+        for (Long column : calibratedColumns) {
+          currentParam++;
+          stmt.setLong(currentParam, column);
+        }
+
+        try (ResultSet records = stmt.executeQuery()) {
+          while (records.next()) {
+            SensorValue sensorValue = sensorValueFromResultSet(records,
+              dataset.getId(), coordinates);
+            result
+              .add(new RunTypeSensorValue(sensorValue, records.getString(8)));
+          }
         }
       }
     } catch (SQLException e) {
@@ -1403,6 +1389,52 @@ public class DataSetDataDB {
     }
 
     return result;
+  }
+
+  /**
+   * Update the {@link Coordinate} for a {@link Measurement} in the database.
+   *
+   * <p>
+   * If the {@link Coordinate} is not yet in the database, it will be added and
+   * have its ID updated.
+   * </p>
+   *
+   * @param conn
+   *          A database connection.
+   * @param measurement
+   *          The measurement whose coordinate is to be updated.
+   * @throws DatabaseException
+   * @throws CoordinateException
+   */
+  public static void updateMeasurementCoordinate(Connection conn,
+    Measurement measurement) throws CoordinateException, DatabaseException {
+
+    boolean autoCommitStatus = true;
+
+    try {
+      conn.setAutoCommit(false);
+
+      if (!measurement.getCoordinate().isInDatabase()) {
+        CoordinateDB.saveCoordinate(conn, measurement.getCoordinate());
+      }
+
+      try (PreparedStatement stmt = conn
+        .prepareStatement(UPDATE_MEASUREMENT_COORDINATE_STATEMENT)) {
+        stmt.setLong(1, measurement.getCoordinate().getId());
+        stmt.setLong(2, measurement.getId());
+
+        stmt.execute();
+      }
+      conn.commit();
+    } catch (SQLException e) {
+      throw new DatabaseException("Error updating measurement coordinate", e);
+    } finally {
+      try {
+        conn.setAutoCommit(autoCommitStatus);
+      } catch (SQLException e) {
+        ; // Ignore exception
+      }
+    }
   }
 }
 

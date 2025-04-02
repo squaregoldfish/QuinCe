@@ -99,6 +99,7 @@ public class ExtractDataSetJob extends DataSetJob {
       DataSet dataSet = getDataset(conn);
       dataSet.setStatus(DataSet.STATUS_DATA_EXTRACTION);
       DataSetDB.updateDataSet(conn, dataSet);
+      conn.commit();
 
       Instrument instrument = getInstrument(conn);
 

@@ -30,6 +30,12 @@ import uk.ac.exeter.QuinCe.utils.MissingParam;
 public abstract class Coordinate implements Comparable<Coordinate> {
 
   /**
+   * A special instance of a {@link Coordinate} that is larger than all other
+   * {@link Coordinate}s.
+   */
+  public static final Coordinate MAX = MaxCoordinate.getInstance();
+
+  /**
    * The coordinate's database ID.
    */
   private long id;
@@ -161,5 +167,16 @@ public abstract class Coordinate implements Comparable<Coordinate> {
 
   public boolean isAfter(Coordinate other) {
     return compareTo(other) > 0;
+  }
+
+  /**
+   * Determine whether or not this TimeCoordinate has been stored in the
+   * database.
+   *
+   * @return {@code true} if the coordinate is in the database; {@code false}
+   *         otherwise.
+   */
+  public boolean isInDatabase() {
+    return getId() != DatabaseUtils.NO_DATABASE_RECORD;
   }
 }

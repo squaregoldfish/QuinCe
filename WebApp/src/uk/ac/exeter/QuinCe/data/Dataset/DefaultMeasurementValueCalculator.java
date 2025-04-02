@@ -102,7 +102,7 @@ public class DefaultMeasurementValueCalculator
         try {
           valueCoordinate = dataSet.getSensorOffsets().getOffsetTime(
             (TimeCoordinate) baseValue.getCoordinate(), coreAssignment,
-            requiredAssignment);
+            requiredAssignment, allSensorValues);
         } catch (Exception e) {
           throw new MeasurementValueCalculatorException(
             "Cannot calculate time offset", e);
@@ -177,7 +177,7 @@ public class DefaultMeasurementValueCalculator
     if (positionCoordinate instanceof TimeCoordinate) {
       try {
         positionCoordinate = dataSet.getSensorOffsets().offsetToFirstGroup(
-          (TimeCoordinate) positionCoordinate, coreAssignment);
+          (TimeCoordinate) positionCoordinate, coreAssignment, allSensorValues);
       } catch (Exception e) {
         throw new MeasurementValueCalculatorException(
           "Unable to apply sensor offsets", e);

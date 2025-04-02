@@ -5,7 +5,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -13,6 +20,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**
  * Methods for storing and accessing {@link Coordinate} objects in the database.
@@ -21,6 +29,59 @@ public class CoordinateDB {
 
   private static final String STORE_SURFACE_COORDINATE_STMT = "INSERT INTO coordinates "
     + "(dataset_id, date) VALUES (?, ?)";
+
+  private static final String GET_DATASET_COORDINATES_QUERY = "SELECT "
+    + "start_coordinate, end_coordinate FROM dataset WHERE id = ?";
+
+  private static final String GET_SENSOR_VALUE_COORDINATES_QUERY = "SELECT "
+    + "coordinate_id FROM sensor_values WHERE dataset_id = ?";
+
+  private static final String GET_MEASUREMENT_COORDINATES_QUERY = "SELECT "
+    + "coordinate_id FROM measurements WHERE dataset_id = ?";
+
+  private static final String GET_COORDINATES_QUERY = "SELECT "
+    + "id, dataset_id, date, depth, station, cast, bottle, replicate, cycle "
+    + "FROM coordinates WHERE id IN " + DatabaseUtils.IN_PARAMS_TOKEN;
+
+  /**
+   * Store the provided {@link Coordinate} in the database.
+   *
+   * @param conn
+   *          A database connection.
+   * @param coordinate
+   *          The coordinate to be stored.
+   * @throws CoordinateException
+   *           If the coordinate is invalid.
+   * @throws DatabaseException
+   *           If a database error occurs.
+   * @see #saveCoordinates(Connection, Collection)
+   */
+  protected static void saveCoordinate(Connection conn, Coordinate coordinate)
+    throws CoordinateException, DatabaseException {
+    saveCoordinates(conn, Collections.singleton(coordinate));
+  }
+
+  /**
+   * Store the provided {@link Coordinate}s in the database.
+   *
+   * <p>
+   * This is a wrapper around {@link #saveCoordinates(Connection, Collection)}.
+   * </p>
+   *
+   * @param conn
+   *          A database connection.
+   * @param coordinates
+   *          The coordinates.
+   * @throws CoordinateException
+   *           If any of the coordinates are invalid.
+   * @throws DatabaseException
+   *           If a database error occurs.
+   * @see #saveCoordinates(Connection, Collection)
+   */
+  protected static void saveCoordinates(Connection conn,
+    Coordinate... coordinates) throws CoordinateException, DatabaseException {
+    saveCoordinates(conn, Arrays.asList(coordinates));
+  }
 
   /**
    * Store the provided {@link Coordinate}s in the database.
@@ -63,7 +124,7 @@ public class CoordinateDB {
 
       switch (coordinates.stream().findAny().get().getType()) {
       case Instrument.BASIS_TIME: {
-        storeSurfaceCoordinates(conn, coordinates);
+        storeTimeCoordinates(conn, coordinates);
         break;
       }
       case Instrument.BASIS_ARGO: {
@@ -85,7 +146,7 @@ public class CoordinateDB {
    * @throws DatabaseException
    * @throws CoordinateException
    */
-  private static void storeSurfaceCoordinates(Connection conn,
+  private static void storeTimeCoordinates(Connection conn,
     Collection<Coordinate> coordinates)
     throws DatabaseException, CoordinateException {
 
@@ -108,5 +169,236 @@ public class CoordinateDB {
     } catch (SQLException e) {
       throw new DatabaseException("Error while storing coordinates", e);
     }
+  }
+
+  /**
+   * Retrieve the start/end {@link Coordinates} for a {@link DataSet}.
+   *
+   * @param conn
+   *          A database connection.
+   * @param dataset
+   *          The DataSet
+   * @return The retrieved coordinates.
+   * @throws DatabaseException
+   *           If a database error occurs.
+   * @throws CoordinateException
+   *           If any Coordinate object cannot be constructed.
+   */
+  public static Map<Long, Coordinate> getDataSetCoordinates(Connection conn,
+    long datasetId, int basis)
+    throws DatabaseException, RecordNotFoundException, CoordinateException {
+
+    Set<Long> coordinateIds = new HashSet<Long>();
+
+    try {
+      // DataSet start/end coordinates
+      try (PreparedStatement datasetStmt = conn
+        .prepareStatement(GET_DATASET_COORDINATES_QUERY)) {
+
+        datasetStmt.setLong(1, datasetId);
+
+        try (ResultSet record = datasetStmt.executeQuery()) {
+          if (record.next()) {
+            // It's possible that the dataset coordinates are empty.
+            long startId = record.getLong(1);
+            if (startId != 0L) {
+              coordinateIds.add(startId);
+            }
+
+            long endId = record.getLong(1);
+            if (endId != 0L) {
+              coordinateIds.add(endId);
+            }
+          }
+        }
+      }
+
+      return getCoordinates(conn, basis, coordinateIds);
+    } catch (SQLException e) {
+      throw new DatabaseException("Error retrieving coordinates", e);
+    }
+  }
+
+  /**
+   * Retrieve the {@link Coordinates} of the {@link SensorValue}s in a
+   * {@link DataSet}.
+   *
+   * @param conn
+   *          A database connection.
+   * @param dataset
+   *          The DataSet
+   * @return The retrieved coordinates.
+   * @throws DatabaseException
+   *           If a database error occurs.
+   * @throws CoordinateException
+   *           If any Coordinate object cannot be constructed.
+   */
+  public static Map<Long, Coordinate> getSensorValueCoordinates(Connection conn,
+    DataSet dataset)
+    throws DatabaseException, RecordNotFoundException, CoordinateException {
+
+    Set<Long> coordinateIds = new HashSet<Long>();
+
+    try {
+      // SensorValue coordinates
+      try (PreparedStatement sensorValuesStmt = conn
+        .prepareStatement(GET_SENSOR_VALUE_COORDINATES_QUERY)) {
+
+        sensorValuesStmt.setLong(1, dataset.getId());
+
+        try (ResultSet records = sensorValuesStmt.executeQuery()) {
+          while (records.next()) {
+            coordinateIds.add(records.getLong(1));
+          }
+        }
+      }
+
+      return getCoordinates(conn, dataset.getInstrument().getBasis(),
+        coordinateIds);
+    } catch (SQLException e) {
+      throw new DatabaseException("Error retrieving coordinates", e);
+    }
+  }
+
+  /**
+   * Retrieve the {@link Coordinates} of the {@link Measurements}
+   * {@link DataSet}.
+   *
+   * <p>
+   * This includes the DataSet, SensorValue and Measurement records.
+   * </p>
+   *
+   * @param conn
+   *          A database connection.
+   * @param dataset
+   *          The DataSet
+   * @return The retrieved coordinates.
+   * @throws DatabaseException
+   *           If a database error occurs.
+   * @throws CoordinateException
+   *           If any Coordinate object cannot be constructed.
+   */
+  public static Map<Long, Coordinate> getMeasurementCoordinates(Connection conn,
+    DataSet dataset)
+    throws DatabaseException, RecordNotFoundException, CoordinateException {
+
+    Set<Long> coordinateIds = new HashSet<Long>();
+
+    try {
+      try (PreparedStatement measurementsStmt = conn
+        .prepareStatement(GET_MEASUREMENT_COORDINATES_QUERY)) {
+
+        measurementsStmt.setLong(1, dataset.getId());
+
+        try (ResultSet records = measurementsStmt.executeQuery()) {
+          while (records.next()) {
+            coordinateIds.add(records.getLong(1));
+          }
+        }
+      }
+
+      return getCoordinates(conn, dataset.getInstrument().getBasis(),
+        coordinateIds);
+    } catch (SQLException e) {
+      throw new DatabaseException("Error retrieving coordinates", e);
+    }
+  }
+
+  /**
+   * Retrieve the specified {@link Coordinate}s from the database.
+   *
+   * <p>
+   * The {@link Coordinate}s are returned as a {@link Map} of
+   * {@code Coordinate ID -> Coordinate}.
+   * </p>
+   *
+   * @param conn
+   *          A database connection.
+   * @param basis
+   *          The measurement basis for the underlying instrument.
+   * @param coordinateIds
+   *          The coordinates' database IDs.
+   * @return The coordinates.
+   * @throws SQLException
+   *           If a database error occurs.
+   * @throws CoordinateException
+   *           If any coordinate cannot be constructed.
+   */
+  private static Map<Long, Coordinate> getCoordinates(Connection conn,
+    int basis, Collection<Long> coordinateIds)
+    throws SQLException, CoordinateException {
+
+    Map<Long, Coordinate> result = new HashMap<Long, Coordinate>();
+
+    List<Long> uniqueIds = coordinateIds.stream().distinct().toList();
+
+    String sql = DatabaseUtils.makeInStatementSql(GET_COORDINATES_QUERY,
+      uniqueIds.size());
+
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+      int inIndex = 1;
+      for (long id : coordinateIds.stream().distinct().toList()) {
+        stmt.setLong(inIndex, id);
+        inIndex++;
+      }
+
+      try (ResultSet records = stmt.executeQuery()) {
+        while (records.next()) {
+          Coordinate coordinate = coordinateFromRecord(records, basis);
+          result.put(coordinate.getId(), coordinate);
+        }
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Retrieve a {@link Coordinate} from a {@link ResultSet}.
+   *
+   * <p>
+   * If {@code loadedCoordinates} is supplied, this is presumed to be a cache of
+   * already retrieved {@link Coordinate}s. If the coordinate ID in the record
+   * is already in this Map, the value from the Map is returned without reading
+   * the record.
+   * </p>
+   *
+   * @param record
+   *          The record to be read.
+   * @param loadedCoordinates
+   *          Optional cache of previously loaded {@link Coordinate}s.
+   * @param basis
+   *          The measurement basis for the instrument.
+   * @param datasetId
+   *          The ID of the dataset.
+   * @return The retrieved coordinate.
+   * @throws SQLException
+   *           If a database error occurs.
+   * @throws CoordinateException
+   *           If the {@link Coordinate} object cannot be constructed.
+   */
+  private static Coordinate coordinateFromRecord(ResultSet record, int basis)
+    throws SQLException, CoordinateException {
+
+    Coordinate result;
+
+    long coordinateId = record.getLong(1);
+    long datasetId = record.getLong(2);
+
+    switch (basis) {
+    case Instrument.BASIS_TIME: {
+      result = new TimeCoordinate(coordinateId, datasetId,
+        DateTimeUtils.longToDate(record.getLong(3)));
+      break;
+    }
+    case Instrument.BASIS_ARGO: {
+      throw new NotImplementedException("Argo basis not yet implemented");
+    }
+    default: {
+      throw new CoordinateException("Basis not recognised");
+    }
+    }
+
+    return result;
   }
 }

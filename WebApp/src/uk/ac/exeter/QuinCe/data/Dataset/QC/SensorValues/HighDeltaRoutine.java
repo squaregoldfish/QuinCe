@@ -46,8 +46,9 @@ public class HighDeltaRoutine extends AutoQCRoutine {
 
         // Calculate the change between this record and the previous one
         if (!sensorValue.isNaN()) {
-          double minutesDifference = ChronoUnit.SECONDS
-            .between(lastValue.getTime(), sensorValue.getTime()) / 60.0;
+          double minutesDifference = ChronoUnit.SECONDS.between(
+            lastValue.getCoordinate().getTime(),
+            sensorValue.getCoordinate().getTime()) / 60.0;
 
           double valueDelta = Math
             .abs(sensorValue.getDoubleValue() - lastValue.getDoubleValue());

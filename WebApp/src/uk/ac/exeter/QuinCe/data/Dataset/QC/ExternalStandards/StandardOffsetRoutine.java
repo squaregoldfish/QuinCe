@@ -34,13 +34,13 @@ public class StandardOffsetRoutine extends ExternalStandardsQCRoutine {
     for (SensorValue sensorValue : sensorValues.getRawValues()) {
 
       SensorValuesListValue runTypeValue = runTypeValues
-        .getValueOnOrBefore(sensorValue.getTime());
+        .getValueOnOrBefore(sensorValue.getCoordinate());
       if (null != runTypeValue) {
         String runType = runTypeValue.getStringValue();
 
         if (externalStandards.getTargets().contains(runType)) {
           double standardValue = externalStandards
-            .getCalibrations(sensorValue.getTime()).get(runType)
+            .getCalibrations(sensorValue.getCoordinate().getTime()).get(runType)
             .getDoubleCoefficient(sensorType.getShortName());
 
           double offset = Math

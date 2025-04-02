@@ -1,9 +1,9 @@
 package uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriods;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
@@ -103,8 +103,8 @@ public class PositionQCRoutine extends AutoQCRoutine {
   protected void qcAction(List<SensorValue> values) throws RoutineException {
 
     try {
-      // Step through each time in the dataset
-      for (LocalDateTime time : allSensorValues.getRawPositionTimes()) {
+      // Step through each coordinate in the dataset
+      for (Coordinate time : allSensorValues.getRawPositionCoordinates()) {
 
         // Get the position values for this time
         SensorValue longitude = allSensorValues

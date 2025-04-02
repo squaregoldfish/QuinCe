@@ -38,7 +38,7 @@ public class MissingStandardsRoutine extends DataReductionQCRoutine {
 
     try {
       RunTypePeriods runTypePeriods = DataSetDataDB.getRunTypePeriods(conn,
-        instrument, dataSet.getId());
+        dataSet);
 
       // All values detected by this routine get the same flag
       RoutineFlag flag = new RoutineFlag(this, Flag.BAD, null, null);
@@ -66,11 +66,13 @@ public class MissingStandardsRoutine extends DataReductionQCRoutine {
               if (instrument.getSensorAssignments()
                 .isOfSensorType(ssValue.getColumnId(), sensorType)) {
 
-                String runType = runTypePeriods.getRunType(ssValue.getTime());
+                String runType = runTypePeriods
+                  .getRunType(ssValue.getCoordinate());
                 if (instrument.getRunTypeCategory(variable.getId(), runType)
                   .equals(RunTypeCategory.INTERNAL_CALIBRATION)) {
 
-                  if (ssValue.getTime().isBefore(measurement.getTime())) {
+                  if (ssValue.getCoordinate()
+                    .isBefore(measurement.getCoordinate())) {
                     beforeCalibsFound.add(runType);
                   } else {
                     afterCalibsFound.add(runType);

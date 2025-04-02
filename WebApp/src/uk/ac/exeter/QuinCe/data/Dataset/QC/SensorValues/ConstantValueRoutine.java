@@ -121,9 +121,9 @@ public class ConstantValueRoutine extends AutoQCRoutine {
     // constant value.
     if (constantValues.size() > 2) {
 
-      long minutesDifference = ChronoUnit.MINUTES.between(
-        constantValues.get(0).getTime(),
-        constantValues.get(constantValues.size() - 1).getTime());
+      long minutesDifference = ChronoUnit.MINUTES
+        .between(constantValues.get(0).getCoordinate().getTime(), constantValues
+          .get(constantValues.size() - 1).getCoordinate().getTime());
 
       if (minutesDifference > maxDuration) {
         for (SensorValue value : constantValues) {

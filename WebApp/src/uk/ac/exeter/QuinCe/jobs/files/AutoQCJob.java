@@ -154,12 +154,11 @@ public class AutoQCJob extends DataSetJob {
       Collection<SensorValue> rawSensorValues = (Collection<SensorValue>) getTransferData(
         SENSOR_VALUES);
       if (null == rawSensorValues) {
-        rawSensorValues = DataSetDataDB.getRawSensorValues(conn,
-          dataSet.getId());
+        rawSensorValues = DataSetDataDB.getRawSensorValues(conn, dataSet);
       }
 
-      DatasetSensorValues sensorValues = new DatasetSensorValues(conn,
-        instrument, dataSet.getId(), true, true, rawSensorValues);
+      DatasetSensorValues sensorValues = new DatasetSensorValues(conn, dataSet,
+        true, true, rawSensorValues);
 
       RunTypePeriods runTypePeriods = null;
       SensorValuesList runTypeValues = null;
@@ -181,8 +180,7 @@ public class AutoQCJob extends DataSetJob {
           .newFromSensorValueCollection(runTypeValuesTemp, sensorValues);
 
         // Get the Run Type Periods for the dataset
-        runTypePeriods = DataSetDataDB.getRunTypePeriods(conn, instrument,
-          dataSet.getId());
+        runTypePeriods = DataSetDataDB.getRunTypePeriods(conn, dataSet);
       }
 
       QCRoutinesConfiguration qcRoutinesConfig = ResourceManager.getInstance()

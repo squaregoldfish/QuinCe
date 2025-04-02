@@ -90,15 +90,14 @@ public class DataReductionQCJob extends DataSetJob {
       Collection<SensorValue> rawSensorValues = (Collection<SensorValue>) getTransferData(
         SENSOR_VALUES);
       if (null == rawSensorValues) {
-        rawSensorValues = DataSetDataDB.getRawSensorValues(conn,
-          dataSet.getId());
+        rawSensorValues = DataSetDataDB.getRawSensorValues(conn, dataSet);
       }
 
       DatasetSensorValues allSensorValues = new DatasetSensorValues(conn,
-        instrument, dataSet.getId(), false, false, rawSensorValues);
+        dataSet, false, false, rawSensorValues);
 
       List<Measurement> measurements = DataSetDataDB.getMeasurements(conn,
-        dataSet.getId());
+        dataSet);
 
       Map<Long, Map<Variable, ReadOnlyDataReductionRecord>> records = DataSetDataDB
         .getDataReductionData(conn, instrument, dataSet);

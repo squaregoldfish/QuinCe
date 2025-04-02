@@ -1,16 +1,14 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
-import java.time.LocalDateTime;
-
 public class RunTypePeriod {
 
   private String runType;
 
-  private LocalDateTime start;
+  private Coordinate start;
 
-  private LocalDateTime end;
+  private Coordinate end;
 
-  protected RunTypePeriod(String runType, LocalDateTime start) {
+  protected RunTypePeriod(String runType, Coordinate start) {
     this.runType = runType;
     this.start = start;
     this.end = start;
@@ -20,31 +18,31 @@ public class RunTypePeriod {
     return runType;
   }
 
-  public LocalDateTime getStart() {
+  public Coordinate getStart() {
     return start;
   }
 
-  public LocalDateTime getEnd() {
+  public Coordinate getEnd() {
     return end;
   }
 
-  protected void setEnd(LocalDateTime end) {
+  protected void setEnd(Coordinate end) {
     this.end = end;
   }
 
-  public boolean encompasses(LocalDateTime time) {
+  public boolean encompasses(Coordinate coordinate) {
     boolean result = false;
     if (start.equals(end)) {
-      result = time.equals(start);
+      result = coordinate.equals(start);
     } else {
       boolean afterStart = false;
       boolean beforeEnd = false;
 
-      if (time.equals(start) || time.isAfter(start)) {
+      if (coordinate.equals(start) || coordinate.isAfter(start)) {
         afterStart = true;
       }
 
-      if (time.equals(end) || time.isBefore(end)) {
+      if (coordinate.equals(end) || coordinate.isBefore(end)) {
         beforeEnd = true;
       }
 

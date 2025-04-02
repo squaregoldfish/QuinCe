@@ -75,7 +75,8 @@ public class SensorOffsets {
    * @throws CoordinateException
    */
   public List<SensorValue> applyOffsets(SensorGroupPair groupPair,
-    List<SensorValue> sensorValues) throws SensorOffsetsException {
+    List<SensorValue> sensorValues, DatasetSensorValues allSensorValues)
+    throws SensorOffsetsException {
 
     List<SensorValue> result = new ArrayList<SensorValue>(sensorValues.size());
 
@@ -86,8 +87,8 @@ public class SensorOffsets {
             sensorValue.getCoordinate().getTime());
           LocalDateTime newTime = sensorValue.getCoordinate().getTime()
             .minus(offset, ChronoUnit.MILLIS);
-          result.add(new SensorValue(sensorValue,
-            new TimeCoordinate(sensorValue.getCoordinate(), newTime)));
+          result.add(new SensorValue(sensorValue, TimeCoordinate
+            .getCoordinate(newTime, allSensorValues.getCoordinates())));
         }
       }
     } catch (CoordinateException e) {
@@ -155,7 +156,8 @@ public class SensorOffsets {
    * @throws CoordinateException
    */
   public TimeCoordinate getOffsetTime(TimeCoordinate source,
-    SensorAssignment base, SensorAssignment target)
+    SensorAssignment base, SensorAssignment target,
+    DatasetSensorValues allSensorValues)
     throws SensorGroupsException, CoordinateException {
 
     LocalDateTime resultTime = source.getTime();
@@ -210,17 +212,19 @@ public class SensorOffsets {
 
     }
 
-    return new TimeCoordinate(source, resultTime);
+    return TimeCoordinate.getCoordinate(resultTime,
+      allSensorValues.getCoordinates());
   }
 
   public TimeCoordinate offsetToFirstGroup(TimeCoordinate source,
-    SensorAssignment baseAssignment)
+    SensorAssignment baseAssignment, DatasetSensorValues allSensorValues)
     throws SensorGroupsException, CoordinateException {
     // Find an assignment from the first group
     SensorAssignment firstGroupAssignment = sensorGroups.first().getMembers()
       .first();
 
-    return getOffsetTime(source, baseAssignment, firstGroupAssignment);
+    return getOffsetTime(source, baseAssignment, firstGroupAssignment,
+      allSensorValues);
   }
 
   private static boolean containsTime(TreeSet<SensorOffset> offsets,

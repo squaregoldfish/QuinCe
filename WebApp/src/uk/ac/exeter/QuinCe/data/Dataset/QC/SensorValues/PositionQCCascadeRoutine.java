@@ -1,9 +1,9 @@
 package uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues;
 
-import java.time.LocalDateTime;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriods;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
@@ -20,17 +20,17 @@ public class PositionQCCascadeRoutine {
     RunTypePeriods runTypePeriods) throws RoutineException {
 
     try {
-      TreeSet<LocalDateTime> allTimes = new TreeSet<LocalDateTime>();
-      allTimes.addAll(allSensorValues.getTimes());
+      TreeSet<Coordinate> allCoordiantes = new TreeSet<Coordinate>();
+      allCoordiantes.addAll(allSensorValues.getCoordinates());
 
-      for (LocalDateTime time : allTimes) {
+      for (Coordinate coordinate : allCoordiantes) {
         PlotPageTableValue position = allSensorValues
-          .getPositionTableValue(SensorType.LONGITUDE_ID, time);
+          .getPositionTableValue(SensorType.LONGITUDE_ID, coordinate);
 
         if (null != position
           && position.getType() != PlotPageTableValue.NAN_TYPE) {
           // Cascade the QC position to sensor values
-          for (SensorValue value : allSensorValues.get(time).values()) {
+          for (SensorValue value : allSensorValues.get(coordinate).values()) {
 
             SensorType sensorType = instrument.getSensorAssignments()
               .getSensorTypeForDBColumn(value.getColumnId());
@@ -41,7 +41,7 @@ public class PositionQCCascadeRoutine {
             // quality of the position doesn't matter if we're just calibrating
             // or whatever.
             if (sensorType.hasInternalCalibration() && !instrument
-              .isMeasurementRunType(runTypePeriods.getRunType(time))) {
+              .isMeasurementRunType(runTypePeriods.getRunType(coordinate))) {
               setCascade = false;
             }
 
