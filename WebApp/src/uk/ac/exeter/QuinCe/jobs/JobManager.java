@@ -22,6 +22,7 @@ import com.google.gson.Gson;
 import uk.ac.exeter.QuinCe.User.NoSuchUserException;
 import uk.ac.exeter.QuinCe.User.User;
 import uk.ac.exeter.QuinCe.User.UserDB;
+import uk.ac.exeter.QuinCe.data.Dataset.CoordinateException;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
 import uk.ac.exeter.QuinCe.data.Dataset.InvalidDataSetStatusException;
@@ -212,12 +213,14 @@ public class JobManager {
    * @throws RecordNotFoundException
    *           If the underlying database records for the specified job
    *           parameters (DataSet, owner etc.) cannot be found.
+   * @throws CoordinateException
+   * @throws NumberFormatException
    */
   public static long addJob(DataSource dataSource, User owner, String jobClass,
     Properties properties) throws DatabaseException, MissingParamException,
     RecordNotFoundException, NoSuchUserException, JobClassNotFoundException,
     InvalidJobClassTypeException, InvalidJobConstructorException, JobException,
-    InvalidDataSetStatusException {
+    InvalidDataSetStatusException, NumberFormatException, CoordinateException {
 
     long result = -1;
     Connection conn = null;

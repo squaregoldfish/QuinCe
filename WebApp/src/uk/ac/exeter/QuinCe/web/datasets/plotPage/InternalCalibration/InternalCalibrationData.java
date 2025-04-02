@@ -11,6 +11,7 @@ import java.util.TreeSet;
 
 import javax.sql.DataSource;
 
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDataDB;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
@@ -29,7 +30,6 @@ import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
-import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.ValueCounter;
@@ -95,13 +95,13 @@ public class InternalCalibrationData extends PlotPageData {
       progress.setValue(5F);
 
       progress.setName("Loading sensor data");
-      datasetSensorValues = DataSetDataDB.getSensorValues(conn, instrument,
-        dataset.getId(), false, true);
+      datasetSensorValues = DataSetDataDB.getSensorValues(conn, dataset, false,
+        true);
 
       progress.setName("Loading calibration data");
       progress.setValue(33F);
       List<RunTypeSensorValue> sensorValues = DataSetDataDB
-        .getInternalCalibrationSensorValues(conn, instrument, dataset.getId());
+        .getInternalCalibrationSensorValues(conn, dataset);
 
       progress.setName("Analysing data");
       progress.setValue(66F);
@@ -109,7 +109,8 @@ public class InternalCalibrationData extends PlotPageData {
 
       for (RunTypeSensorValue value : sensorValues) {
         long columnId = makeColumnId(value.getRunType(), value.getColumnId());
-        dataStructure.add(value.getTime(), getColumnHeading(columnId), value);
+        dataStructure.add(value.getCoordinate(), getColumnHeading(columnId),
+          value);
       }
       progress.setValue(100F);
     }
@@ -250,7 +251,7 @@ public class InternalCalibrationData extends PlotPageData {
   }
 
   @Override
-  protected TreeMap<LocalDateTime, PlotPageTableValue> getColumnValues(
+  protected TreeMap<Coordinate, PlotPageTableValue> getColumnValues(
     PlotPageColumnHeading column) throws Exception {
 
     return dataStructure.getColumnValues(column);
@@ -267,8 +268,7 @@ public class InternalCalibrationData extends PlotPageData {
   }
 
   private List<SensorValue> getSelectedSensorValues() {
-    return dataStructure.getSensorValues(selectedColumn,
-      DateTimeUtils.longsToDates(selectedRows));
+    return dataStructure.getSensorValues(selectedColumn, selectedRows);
   }
 
   protected void applyManualFlag()
@@ -383,12 +383,12 @@ public class InternalCalibrationData extends PlotPageData {
   }
 
   @Override
-  protected List<LocalDateTime> getDataTimes() {
-    return dataStructure.getTimes();
+  protected List<Coordinate> getCoordinates() {
+    return dataStructure.getCoordinates();
   }
 
   @Override
-  protected DataLatLng getMapPosition(LocalDateTime time) throws Exception {
+  protected DataLatLng getMapPosition(Coordinate coordinate) throws Exception {
     return null;
   }
 }

@@ -1,6 +1,5 @@
 package uk.ac.exeter.QuinCe.web.datasets.plotPage;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -10,9 +9,10 @@ import java.util.stream.Collectors;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
-import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.MathUtils;
 
 public class Plot {
@@ -190,24 +190,24 @@ public class Plot {
 
   protected void makePlotValues() throws Exception {
 
-    TreeMap<LocalDateTime, PlotPageTableValue> xValues = data
+    TreeMap<Coordinate, PlotPageTableValue> xValues = data
       .getColumnValues(xAxis);
 
-    TreeMap<LocalDateTime, PlotPageTableValue> yValues = data
+    TreeMap<Coordinate, PlotPageTableValue> yValues = data
       .getColumnValues(yAxis);
 
-    TreeMap<LocalDateTime, PlotPageTableValue> y2Values = null == y2Axis
+    TreeMap<Coordinate, PlotPageTableValue> y2Values = null == y2Axis
       ? new TreeMap<>()
       : data.getColumnValues(y2Axis);
 
     plotValues = new TreeSet<>();
 
-    for (LocalDateTime time : xValues.keySet()) {
-      if (yValues.containsKey(time) || y2Values.containsKey(time)) {
+    for (Coordinate coordinate : xValues.keySet()) {
+      if (yValues.containsKey(coordinate) || y2Values.containsKey(coordinate)) {
 
-        PlotPageTableValue x = xValues.get(time);
-        PlotPageTableValue y = yValues.get(time);
-        PlotPageTableValue y2 = y2Values.get(time);
+        PlotPageTableValue x = xValues.get(coordinate);
+        PlotPageTableValue y = yValues.get(coordinate);
+        PlotPageTableValue y2 = y2Values.get(coordinate);
 
         boolean hasYValue = null != y && null != y.getValue();
         boolean hasY2Value = null != y2 && null != y2.getValue();
@@ -241,10 +241,11 @@ public class Plot {
           }
 
           if (xAxis.getId() == FileDefinition.TIME_COLUMN_ID) {
-            plotValue = new PlotValue(DateTimeUtils.dateToLong(time), time,
-              yValue, yGhost, yFlag, y2Value, y2Ghost, y2Flag);
+            plotValue = new PlotValue(coordinate.getId(),
+              (TimeCoordinate) coordinate, yValue, yGhost, yFlag, y2Value,
+              y2Ghost, y2Flag);
           } else if (null != x && null != x.getValue() && null != y) {
-            plotValue = new PlotValue(DateTimeUtils.dateToLong(time),
+            plotValue = new PlotValue(coordinate.getId(),
               MathUtils.nullableParseDouble(x.getValue()), yValue, yGhost,
               yFlag, y2Value, y2Ghost, y2Flag);
           }

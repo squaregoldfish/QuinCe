@@ -21,6 +21,7 @@ import com.google.gson.reflect.TypeToken;
 import com.javadocmd.simplelatlng.LatLng;
 
 import uk.ac.exeter.QuinCe.data.Dataset.ColumnHeading;
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDataDB;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
@@ -196,8 +197,7 @@ public abstract class PlotPageData {
       if (instrument.hasRunTypes()) {
         DataSource dataSource = ResourceManager.getInstance().getDBDataSource();
         try (Connection conn = dataSource.getConnection()) {
-          runTypePeriods = DataSetDataDB.getRunTypePeriods(conn, instrument,
-            dataset.getId());
+          runTypePeriods = DataSetDataDB.getRunTypePeriods(conn, dataset);
         } catch (SQLException e) {
           error("Error loading data", e);
         }
@@ -870,7 +870,7 @@ public abstract class PlotPageData {
    *          The column.
    * @return The column values.
    */
-  protected abstract TreeMap<LocalDateTime, PlotPageTableValue> getColumnValues(
+  protected abstract TreeMap<Coordinate, PlotPageTableValue> getColumnValues(
     PlotPageColumnHeading column) throws Exception;
 
   /**
@@ -962,7 +962,7 @@ public abstract class PlotPageData {
     return mapCache.get(column).getValueRange(getAllSensorValues(), hideFlags);
   }
 
-  protected abstract List<LocalDateTime> getDataTimes();
+  protected abstract List<Coordinate> getCoordinates();
 
   public String getMapData(PlotPageColumnHeading column, GeoBounds bounds,
     boolean useNeededFlags, boolean hideNonGoodFlags,
@@ -991,16 +991,14 @@ public abstract class PlotPageData {
     MapRecords records = new MapRecords(size(), getAllSensorValues());
 
     if (column.getId() == FileDefinition.TIME_COLUMN_ID) {
-      List<LocalDateTime> times = getDataTimes();
-      for (LocalDateTime time : times) {
-        LatLng position = getAllSensorValues().getClosestPosition(time);
-        records.add(new TimeMapRecord(position, time));
+      for (Coordinate coordinate : getCoordinates()) {
+        LatLng position = getAllSensorValues().getClosestPosition(coordinate);
+        records.add(new TimeMapRecord(position, coordinate));
       }
     } else {
-      TreeMap<LocalDateTime, PlotPageTableValue> values = getColumnValues(
-        column);
+      TreeMap<Coordinate, PlotPageTableValue> values = getColumnValues(column);
 
-      for (Map.Entry<LocalDateTime, PlotPageTableValue> entry : values
+      for (Map.Entry<Coordinate, PlotPageTableValue> entry : values
         .entrySet()) {
         LatLng position = getMapPosition(entry.getKey());
         if (null != position) {
@@ -1013,7 +1011,7 @@ public abstract class PlotPageData {
     mapCache.put(column, records);
   }
 
-  protected abstract DataLatLng getMapPosition(LocalDateTime time)
+  protected abstract DataLatLng getMapPosition(Coordinate coordinate)
     throws Exception;
 
   public boolean getPlot1HideFlags() {

@@ -41,21 +41,22 @@ public class JapanCustomReducer extends DataReducer {
     try {
       // Get the calibration slope information
       baseSlope = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "Base Slope", dataset.getStart()).getBigDecimalValue();
+        variable, "Base Slope", dataset.getStart().getTime())
+        .getBigDecimalValue();
 
       baseIntercept = CalculationCoefficient
         .getCoefficient(calculationCoefficients, variable, "Base Intercept",
-          dataset.getStart())
+          dataset.getStart().getTime())
         .getBigDecimalValue();
 
       slopeAdjustment = CalculationCoefficient
         .getCoefficient(calculationCoefficients, variable, "Slope Adjustment",
-          dataset.getStart())
+          dataset.getStart().getTime())
         .getBigDecimalValue();
 
       interceptAdjustment = CalculationCoefficient
         .getCoefficient(calculationCoefficients, variable,
-          "Intercept Adjustment", dataset.getStart())
+          "Intercept Adjustment", dataset.getStart().getTime())
         .getBigDecimalValue();
     } catch (Exception e) {
       throw new DataReductionException(e);

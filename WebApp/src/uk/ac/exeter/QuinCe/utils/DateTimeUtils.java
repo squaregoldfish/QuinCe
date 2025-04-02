@@ -194,7 +194,8 @@ public class DateTimeUtils {
   }
 
   public static boolean overlap(DataSet ds1, DataSet ds2) {
-    return overlap(ds1.getStart(), ds1.getEnd(), ds2.getStart(), ds2.getEnd());
+    return overlap(ds1.getStart().getTime(), ds1.getEnd().getTime(),
+      ds2.getStart().getTime(), ds2.getEnd().getTime());
   }
 
   /**

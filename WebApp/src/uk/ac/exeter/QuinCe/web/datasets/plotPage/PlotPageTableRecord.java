@@ -1,13 +1,12 @@
 package uk.ac.exeter.QuinCe.web.datasets.plotPage;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
-import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 
 /**
  * A representation of a record in the plot page table.
@@ -49,12 +48,12 @@ public class PlotPageTableRecord {
     this.id = id;
   }
 
-  public PlotPageTableRecord(LocalDateTime id) {
-    this.id = DateTimeUtils.dateToLong(id);
+  public PlotPageTableRecord(Coordinate coordinate) {
+    this.id = coordinate.getId();
   }
 
   /**
-   * Add a timestamp column
+   * Add a {@link Coordinate} column.
    *
    * @param value
    *          The time value.
@@ -67,8 +66,8 @@ public class PlotPageTableRecord {
    * @param flagNeeded
    *          Indicates whether or not a user QC flag is needed.
    */
-  public void addColumn(LocalDateTime value) {
-    addColumn(new SimplePlotPageTableValue(value, null, false));
+  public void addColumn(Coordinate coordinate) {
+    addColumn(new SimplePlotPageTableValue(coordinate));
   }
 
   public void addColumn(SensorValue sensorValue) {

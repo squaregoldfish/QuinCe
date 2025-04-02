@@ -373,7 +373,7 @@ public class NewInstrumentBean extends FileUploadBean {
   /**
    * The instrument's measurement basis.
    */
-  private int basis = Instrument.BASIS_SURFACE;
+  private int basis = Instrument.BASIS_TIME;
 
   /**
    * The name of the file for which a Run Type column is being defined

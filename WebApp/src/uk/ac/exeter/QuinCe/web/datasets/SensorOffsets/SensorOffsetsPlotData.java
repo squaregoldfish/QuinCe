@@ -8,7 +8,9 @@ import java.util.TreeMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 
+import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorOffsets;
+import uk.ac.exeter.QuinCe.data.Dataset.SensorOffsetsException;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesList;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorGroupPair;
@@ -18,7 +20,7 @@ import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
  * Data structure for building main time series plot data for the Sensor Offsets
  * page.
  */
-public class TimeSeriesPlotData {
+public class SensorOffsetsPlotData {
 
   /**
    * The internal data structure.
@@ -27,8 +29,12 @@ public class TimeSeriesPlotData {
 
   private List<SensorValue> series2;
 
-  protected TimeSeriesPlotData(SensorValuesList series1Points,
-    SensorValuesList series2Points) {
+  private DatasetSensorValues allSensorValues;
+
+  protected SensorOffsetsPlotData(SensorValuesList series1Points,
+    SensorValuesList series2Points, DatasetSensorValues allSensorValues) {
+
+    this.allSensorValues = allSensorValues;
 
     data = new TreeMap<LocalDateTime, Tuple>();
 
@@ -46,7 +52,7 @@ public class TimeSeriesPlotData {
         if (!p.getDoubleValue().isNaN()) {
           Tuple tuple = new Tuple();
           tuple.setFirst(p.getDoubleValue());
-          data.put(p.getTime(), tuple);
+          data.put(p.getCoordinate().getTime(), tuple);
         }
       });
   }
@@ -55,39 +61,39 @@ public class TimeSeriesPlotData {
     points.getRawValues().stream().filter(p -> p.getUserQCFlag().isGood())
       .forEach(p -> {
         if (!p.getDoubleValue().isNaN()) {
-          if (data.containsKey(p.getTime())) {
-            data.get(p.getTime()).setSecond(p.getDoubleValue());
+          if (data.containsKey(p.getCoordinate().getTime())) {
+            data.get(p.getCoordinate().getTime()).setSecond(p.getDoubleValue());
           } else {
             Tuple tuple = new Tuple();
             tuple.setSecond(p.getDoubleValue());
-            data.put(p.getTime(), tuple);
+            data.put(p.getCoordinate().getTime(), tuple);
           }
         }
       });
   }
 
   protected String getArray(SensorOffsets sensorOffsets,
-    SensorGroupPair groupPair) {
+    SensorGroupPair groupPair) throws SensorOffsetsException {
 
     List<SensorValue> offsetsApplied = sensorOffsets.applyOffsets(groupPair,
-      series2);
+      series2, allSensorValues);
 
     TreeMap<LocalDateTime, Tuple> dataWithOffset = new TreeMap<LocalDateTime, Tuple>(
       data);
 
     // Add the offsets to the copied map
     offsetsApplied.forEach(o -> {
-      if (dataWithOffset.containsKey(o.getTime())) {
+      if (dataWithOffset.containsKey(o.getCoordinate().getTime())) {
 
-        Tuple oldTuple = dataWithOffset.get(o.getTime());
+        Tuple oldTuple = dataWithOffset.get(o.getCoordinate().getTime());
 
         Tuple newTuple = new Tuple(oldTuple);
         newTuple.setOffsetSecond(o.getDoubleValue());
-        dataWithOffset.put(o.getTime(), newTuple);
+        dataWithOffset.put(o.getCoordinate().getTime(), newTuple);
       } else {
         Tuple tuple = new Tuple();
         tuple.setOffsetSecond(o.getDoubleValue());
-        dataWithOffset.put(o.getTime(), tuple);
+        dataWithOffset.put(o.getCoordinate().getTime(), tuple);
       }
     });
 

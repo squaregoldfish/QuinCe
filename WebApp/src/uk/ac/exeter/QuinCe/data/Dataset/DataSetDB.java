@@ -448,6 +448,12 @@ public class DataSetDB {
         addedKeys = stmt.getGeneratedKeys();
         addedKeys.next();
         dataSet.setId(addedKeys.getLong(1));
+
+        // Update the coordinates
+        dataSet.getStart().setDatasetId(dataSet.getId());
+        dataSet.getEnd().setDatasetId(dataSet.getId());
+        CoordinateDB.saveCoordinates(conn, dataSet.getStart(),
+          dataSet.getEnd());
       }
 
     } catch (SQLException e) {

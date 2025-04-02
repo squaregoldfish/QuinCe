@@ -1,20 +1,18 @@
 package uk.ac.exeter.QuinCe.web.datasets.plotPage;
 
-import java.time.LocalDateTime;
-
 import com.javadocmd.simplelatlng.LatLng;
 
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
-import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 
 public class PlotPageValueMapRecord extends MapRecord {
 
   private PlotPageTableValue value;
 
-  protected PlotPageValueMapRecord(LatLng position, LocalDateTime time,
+  protected PlotPageValueMapRecord(LatLng position, Coordinate coordinate,
     PlotPageTableValue value) {
-    super(position, DateTimeUtils.dateToLong(time));
+    super(position, coordinate.getId());
     this.value = value;
   }
 

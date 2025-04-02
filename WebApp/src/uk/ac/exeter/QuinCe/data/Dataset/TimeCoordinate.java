@@ -47,9 +47,20 @@ public class TimeCoordinate extends Coordinate {
    * @param time
    *          The time.
    */
-  private TimeCoordinate(long datasetId, LocalDateTime time)
+  public TimeCoordinate(long datasetId, LocalDateTime time)
     throws CoordinateException {
     super(DatabaseUtils.NO_DATABASE_RECORD, datasetId, time);
+  }
+
+  /**
+   * Constructor for a coordinate attached to a new, unsaved {@link DataSet}.
+   * 
+   * @param time
+   *          The time.
+   */
+  public TimeCoordinate(LocalDateTime time) {
+    super(DatabaseUtils.NO_DATABASE_RECORD, DatabaseUtils.NO_DATABASE_RECORD,
+      time);
   }
 
   @Override
@@ -115,5 +126,13 @@ public class TimeCoordinate extends Coordinate {
       .filter(c -> c.getTime().equals(time)).findAny()
       .orElse(new TimeCoordinate(
         existingCoordinates.stream().findFirst().get().getDatasetId(), time));
+  }
+
+  public boolean isBefore(LocalDateTime time) {
+    return getTime().isBefore(time);
+  }
+
+  public boolean isAfter(LocalDateTime time) {
+    return getTime().isAfter(time);
   }
 }

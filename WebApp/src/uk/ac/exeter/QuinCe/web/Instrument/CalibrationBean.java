@@ -21,6 +21,7 @@ import com.google.gson.JsonObject;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Calibration;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationCoefficient;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationDB;
@@ -411,8 +412,8 @@ public abstract class CalibrationBean extends BaseManagedBean {
       datasetJson.put("id", getTimelineId(dataset));
       datasetJson.put("type", "range");
       datasetJson.put("group", "Datasets");
-      datasetJson.put("start", DateTimeUtils.toIsoDate(dataset.getStart()));
-      datasetJson.put("end", DateTimeUtils.toIsoDate(dataset.getEnd()));
+      datasetJson.put("start", dataset.getStart().toString());
+      datasetJson.put("end", dataset.getEnd().toString());
       datasetJson.put("content", dataset.getName());
       datasetJson.put("title", dataset.getName());
       datasetJson.put("className", entry.getValue().getDisplayClass());
@@ -742,10 +743,12 @@ public abstract class CalibrationBean extends BaseManagedBean {
 
     for (DataSet dataset : datasets.keySet()) {
       CalibrationSet originalSet = new CalibrationSet(calibrationTargets,
-        dataset.getStart(), dataset.getEnd(), dbInstance, originalCalibrations);
+        dataset.getStart().getTime(), dataset.getEnd().getTime(), dbInstance,
+        originalCalibrations);
 
       CalibrationSet editedSet = new CalibrationSet(calibrationTargets,
-        dataset.getStart(), dataset.getEnd(), dbInstance, calibrations);
+        dataset.getStart().getTime(), dataset.getEnd().getTime(), dbInstance,
+        calibrations);
 
       if (!editedSet.hasSameEffect(originalSet)) {
         datasets.get(dataset).set(true,
@@ -769,7 +772,8 @@ public abstract class CalibrationBean extends BaseManagedBean {
 
   private boolean isInDataset(LocalDateTime time) {
     return datasets.keySet().stream()
-      .anyMatch(d -> !d.getEnd().isBefore(time) && !d.getStart().isAfter(time));
+      .anyMatch(d -> !((TimeCoordinate) d.getEnd()).isBefore(time)
+        && !((TimeCoordinate) d.getStart()).isAfter(time));
   }
 
   public TreeMap<Long, Boolean> getAffectedDatasets() {

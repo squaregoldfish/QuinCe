@@ -516,8 +516,8 @@ public abstract class CalibrationDB {
     throws DatabaseException, RecordNotFoundException, InstrumentException,
     CalibrationException {
 
-    return getCalibrationSet(conn, dataset.getInstrument(), dataset.getStart(),
-      dataset.getEnd());
+    return getCalibrationSet(conn, dataset.getInstrument(),
+      dataset.getStart().getTime(), dataset.getEnd().getTime());
   }
 
   /**

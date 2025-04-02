@@ -259,8 +259,7 @@ public class ExportBean extends BaseManagedBean {
 
     // Process each row of the data
     for (Long rowId : data.getRowIDs()) {
-      if (data.containsTime(DateTimeUtils.longToDate(rowId),
-        exportOption.includeRawSensors())) {
+      if (data.contains(rowId, exportOption.includeRawSensors())) {
 
         boolean firstColumn = true;
 
@@ -285,7 +284,7 @@ public class ExportBean extends BaseManagedBean {
         }
 
         // Measurement values
-        Measurement measurement = data.getMeasurement(data.getRowTime(rowId));
+        Measurement measurement = data.getMeasurement(rowId);
 
         List<PlotPageColumnHeading> measurementValueColumns = data
           .getExtendedColumnHeadings()

@@ -43,7 +43,7 @@ public abstract class Coordinate implements Comparable<Coordinate> {
   /**
    * The ID of the {@link DataSet} that this coordinate is part of.
    */
-  private final long datasetId;
+  private long datasetId;
 
   /**
    * The timestamp of the coordinate. Optional for most coordinate types.
@@ -79,6 +79,19 @@ public abstract class Coordinate implements Comparable<Coordinate> {
    */
   public long getDatasetId() {
     return datasetId;
+  }
+
+  /**
+   * Get the database ID of the {@link DataSet} that this coordinate is part of.
+   *
+   * @return The dataset ID
+   * @throws CoordinateException
+   */
+  public void setDatasetId(long datasetId) throws CoordinateException {
+    if (datasetId != DatabaseUtils.NO_DATABASE_RECORD) {
+      throw new CoordinateException("Dataset ID already set");
+    }
+    this.datasetId = datasetId;
   }
 
   /**

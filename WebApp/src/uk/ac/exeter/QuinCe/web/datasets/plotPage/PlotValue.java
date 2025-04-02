@@ -3,6 +3,7 @@ package uk.ac.exeter.QuinCe.web.datasets.plotPage;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.utils.MathUtils;
 
@@ -16,7 +17,7 @@ class PlotValue implements Comparable<PlotValue> {
   /**
    * The x value as a timestamp
    */
-  private final LocalDateTime xTime;
+  private final TimeCoordinate xTime;
 
   /**
    * The x value
@@ -94,7 +95,7 @@ class PlotValue implements Comparable<PlotValue> {
    * @param flag
    *          The y value's QC flag.
    */
-  protected PlotValue(long id, LocalDateTime x, Double y, boolean ghost,
+  protected PlotValue(long id, TimeCoordinate x, Double y, boolean ghost,
     Flag flag, Double y2, boolean ghost2, Flag flag2) {
     this.id = id;
     this.xDouble = 0D;
@@ -159,7 +160,7 @@ class PlotValue implements Comparable<PlotValue> {
   }
 
   public LocalDateTime getXTime() {
-    return xTime;
+    return xTime.getTime();
   }
 
   public Double getY() {

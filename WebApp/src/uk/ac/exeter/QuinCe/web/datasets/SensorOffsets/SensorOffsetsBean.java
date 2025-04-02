@@ -69,7 +69,7 @@ public class SensorOffsetsBean extends BaseManagedBean {
 
   private long deleteTime;
 
-  TimeSeriesPlotData plotData;
+  SensorOffsetsPlotData plotData;
 
   boolean dirty = false;
 
@@ -154,8 +154,8 @@ public class SensorOffsetsBean extends BaseManagedBean {
 
   public void loadData() throws Exception {
     try {
-      sensorValues = DataSetDataDB.getSensorValues(
-        getDataSource().getConnection(), instrument, datasetId, true, true);
+      sensorValues = DataSetDataDB
+        .getSensorValues(getDataSource().getConnection(), dataset, true, true);
       preparePlotData();
     } catch (Exception e) {
       e.printStackTrace();
@@ -176,7 +176,8 @@ public class SensorOffsetsBean extends BaseManagedBean {
     return instrument;
   }
 
-  public String getTimeSeriesData() throws SensorGroupsException {
+  public String getTimeSeriesData()
+    throws SensorGroupsException, SensorOffsetsException {
     String result = null;
 
     if (null != plotData) {
@@ -191,9 +192,10 @@ public class SensorOffsetsBean extends BaseManagedBean {
     if (null != sensorValues) {
       SensorGroupPair pair = getCurrentPairObject();
 
-      plotData = new TimeSeriesPlotData(
+      plotData = new SensorOffsetsPlotData(
         sensorValues.getColumnValues(pair.first().getNextLink()),
-        sensorValues.getColumnValues(pair.second().getPrevLink()));
+        sensorValues.getColumnValues(pair.second().getPrevLink()),
+        sensorValues);
     }
   }
 
@@ -201,7 +203,7 @@ public class SensorOffsetsBean extends BaseManagedBean {
     preparePlotData();
   }
 
-  protected TimeSeriesPlotData getPlotData() {
+  protected SensorOffsetsPlotData getPlotData() {
     return plotData;
   }
 

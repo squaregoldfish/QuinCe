@@ -307,8 +307,8 @@ public class DataSetsBean extends BaseManagedBean {
         JsonObject entry = new JsonObject();
 
         entry.addProperty("type", "background");
-        entry.addProperty("start", DateTimeUtils.toIsoDate(dataSet.getStart()));
-        entry.addProperty("end", DateTimeUtils.toIsoDate(dataSet.getEnd()));
+        entry.addProperty("start", dataSet.getStart().toString());
+        entry.addProperty("end", dataSet.getEnd().toString());
         entry.addProperty("content", dataSet.getName());
         entry.addProperty("title", dataSet.getName());
         entry.addProperty("className",

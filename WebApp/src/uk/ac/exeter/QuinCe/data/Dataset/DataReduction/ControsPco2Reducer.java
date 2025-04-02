@@ -77,7 +77,7 @@ public class ControsPco2Reducer extends DataReducer {
 
     try {
       F = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "F", dataset.getStart()).getBigDecimalValue();
+        variable, "F", dataset.getStart().getTime()).getBigDecimalValue();
 
       calcKSteps(dataset);
       calcZeroS2Beams(dataset, allMeasurements);
@@ -88,22 +88,23 @@ public class ControsPco2Reducer extends DataReducer {
 
   private void calcKSteps(DataSet dataset) {
     k1Prior = CalculationCoefficient.getCoefficient(calculationCoefficients,
-      variable, "k1", dataset.getStart());
+      variable, "k1", dataset.getStart().getTime());
     k2Prior = CalculationCoefficient.getCoefficient(calculationCoefficients,
-      variable, "k2", dataset.getStart());
+      variable, "k2", dataset.getStart().getTime());
     k3Prior = CalculationCoefficient.getCoefficient(calculationCoefficients,
-      variable, "k3", dataset.getStart());
+      variable, "k3", dataset.getStart().getTime());
     runTimePrior = CalculationCoefficient.getCoefficient(
-      calculationCoefficients, variable, "Runtime", dataset.getStart());
+      calculationCoefficients, variable, "Runtime",
+      dataset.getStart().getTime());
 
     k1Post = CalculationCoefficient.getPostCoefficient(calculationCoefficients,
-      variable, "k1", dataset.getEnd());
+      variable, "k1", dataset.getEnd().getTime());
     k2Post = CalculationCoefficient.getPostCoefficient(calculationCoefficients,
-      variable, "k2", dataset.getEnd());
+      variable, "k2", dataset.getEnd().getTime());
     k3Post = CalculationCoefficient.getPostCoefficient(calculationCoefficients,
-      variable, "k3", dataset.getEnd());
+      variable, "k3", dataset.getEnd().getTime());
     runTimePost = CalculationCoefficient.getPostCoefficient(
-      calculationCoefficients, variable, "Runtime", dataset.getEnd());
+      calculationCoefficients, variable, "Runtime", dataset.getEnd().getTime());
 
     if (null != k1Post && null != k2Post && null != k3Post
       && null != runTimePost) {

@@ -1,12 +1,10 @@
 package uk.ac.exeter.QuinCe.web.datasets.plotPage;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
-import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 
 public class SimplePlotPageTableValue implements PlotPageTableValue {
@@ -66,24 +64,14 @@ public class SimplePlotPageTableValue implements PlotPageTableValue {
   }
 
   /**
-   * Constructor for a timestamp.
+   * Constructor for a {@link Coordinate}.
    *
-   * @param time
-   *          The timestamp.
+   * @param coordinate
+   *          The coordinate.
    */
-  public SimplePlotPageTableValue(LocalDateTime time,
-    DateTimeFormatter formatter, boolean milliseconds) {
-
-    this.rawValue = time;
-
-    if (milliseconds) {
-      this.value = String.valueOf(DateTimeUtils.dateToLong(time));
-    } else if (null != formatter) {
-      this.value = formatter.format(time);
-    } else {
-      this.value = DateTimeUtils.toIsoDate(time);
-    }
-
+  public SimplePlotPageTableValue(Coordinate coordinate) {
+    this.rawValue = coordinate;
+    this.value = coordinate.toString();
     this.qcFlag = Flag.GOOD;
     this.qcMessage = "";
     this.flagNeeded = false;
