@@ -1,24 +1,17 @@
-package db_migrations;
+package resources.db_migrations;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;
 
 /**
- * Migration for support for non-time-based data.
- * 
- * <p>
- * This assumes that the data integrity is sound, and doesn't check anything. An
- * error will be thrown if anything is amiss.
- * </p>
+ * Migration for support for non-time-based data
  */
-public class V48__non_time_measurements_2931 extends BaseJavaMigration {
+public class V49__non_time_measurements_2931 extends BaseJavaMigration {
 
   @Override
   public void migrate(Context context) throws Exception {
@@ -35,7 +28,7 @@ public class V48__non_time_measurements_2931 extends BaseJavaMigration {
         + "depth MEDIUMINT NULL, station VARCHAR(10) NULL, "
         + "cast VARCHAR(10) NULL, bottle VARCHAR(10) NULL, "
         + "replicate VARCHAR(10) NULL, cycle VARCHAR(10) NULL, "
-        + "PRIMARY KEY(id), INDEX coord_datasetid (dataset_id), "
+        + "PRIMARY KEY(id), "
         + "CONSTRAINT coord_dataset FOREIGN KEY (dataset_id) REFERENCES dataset(id))"
         + "ENGINE = InnoDB");
 
@@ -87,7 +80,7 @@ public class V48__non_time_measurements_2931 extends BaseJavaMigration {
     while (lastCoordId < maxCoordId) {
       getCoordsQuery.setLong(1, lastCoordId);
 
-      // Copy coordinate IDs back to sensor values
+      // Copy coordinate IDs back to
       ResultSet coords = getCoordsQuery.executeQuery();
       while (coords.next()) {
         long coordId = coords.getLong(1);
@@ -114,65 +107,5 @@ public class V48__non_time_measurements_2931 extends BaseJavaMigration {
     getCoordsQuery.close();
     writeSensorValuesCoordStmt.close();
     writeMeasurementsCoordStmt.close();
-
-    // Replace DataSet start/end times with coordinates
-    PreparedStatement addStartCoordStmt = conn.prepareStatement(
-      "ALTER TABLE dataset ADD start_coordinate BIGINT(20) DEFAULT 0 NOT NULL AFTER start");
-    addStartCoordStmt.execute();
-    addStartCoordStmt.close();
-
-    PreparedStatement addEndCoordStmt = conn.prepareStatement(
-      "ALTER TABLE dataset ADD end_coordinate BIGINT(20) DEFAULT 0 NOT NULL AFTER end");
-    addEndCoordStmt.execute();
-    addEndCoordStmt.close();
-
-    List<Long> datasetIds = new ArrayList<Long>();
-    PreparedStatement datasetIdStmt = conn
-      .prepareStatement("SELECT id FROM dataset");
-    ResultSet datasetIdRecords = datasetIdStmt.executeQuery();
-    while (datasetIdRecords.next()) {
-      datasetIds.add(datasetIdRecords.getLong(1));
-    }
-    datasetIdRecords.close();
-    datasetIdStmt.close();
-
-    PreparedStatement getDatasetStartCoordStmt = conn.prepareStatement(
-      "SELECT id, min(date) FROM coordinates WHERE dataset_id = ?");
-    PreparedStatement getDatasetEndCoordStmt = conn.prepareStatement(
-      "SELECT id, max(date) FROM coordinates WHERE dataset_id = ?");
-    PreparedStatement setDatasetCoordsStmt = conn.prepareStatement(
-      "UPDATE dataset SET start_coordinate = ?, end_coordinate = ? WHERE id = ?");
-
-    int datasetsUpdated = 0;
-    for (long datasetId : datasetIds) {
-
-      getDatasetStartCoordStmt.setLong(1, datasetId);
-      ResultSet startRecord = getDatasetStartCoordStmt.executeQuery();
-      startRecord.next();
-
-      getDatasetEndCoordStmt.setLong(1, datasetId);
-      ResultSet endRecord = getDatasetEndCoordStmt.executeQuery();
-      endRecord.next();
-
-      setDatasetCoordsStmt.setLong(1, startRecord.getLong(1));
-      setDatasetCoordsStmt.setLong(2, endRecord.getLong(1));
-      setDatasetCoordsStmt.setLong(3, datasetId);
-
-      setDatasetCoordsStmt.execute();
-
-      startRecord.close();
-      endRecord.close();
-
-      conn.commit();
-
-      datasetsUpdated++;
-      if (datasetsUpdated % 10 == 0) {
-        System.out.println(datasetsUpdated);
-      }
-    }
-
-    getDatasetStartCoordStmt.close();
-    getDatasetEndCoordStmt.close();
-    setDatasetCoordsStmt.close();
   }
 }
