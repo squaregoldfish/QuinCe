@@ -15,6 +15,7 @@ import org.mockito.Mockito;
 
 import uk.ac.exeter.QuinCe.TestBase.TestSetLine;
 import uk.ac.exeter.QuinCe.TestBase.TestSetTest;
+import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
@@ -85,7 +86,8 @@ public class SpeedQCRoutineTest extends TestSetTest {
     Mockito.when(instrument.getSensorAssignments())
       .thenReturn(sensorAssignments);
 
-    DatasetSensorValues allSensorValues = new DatasetSensorValues(instrument);
+    DatasetSensorValues allSensorValues = new DatasetSensorValues(
+      Mockito.mock(DataSet.class));
 
     boolean has1 = true;
     boolean has2 = false;

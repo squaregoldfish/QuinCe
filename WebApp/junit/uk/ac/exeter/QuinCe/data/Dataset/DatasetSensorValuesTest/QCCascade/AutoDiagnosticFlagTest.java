@@ -346,7 +346,7 @@ public class AutoDiagnosticFlagTest extends AbstractDiagnosticFlagTest {
       Variable variable = instrument.getVariables().get(0);
       DataSet dataset = DataSetDB.getDataSet(conn, 1L);
       DatasetSensorValues allSensorValues = DataSetDataDB.getSensorValues(conn,
-        instrument, dataset.getId(), false, false);
+        dataset, false, false);
 
       // Set the auto QC and user QC values for the data SensorValues
       SensorValue sst = allSensorValues.getById(SST_VAL_ID);

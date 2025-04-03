@@ -16,8 +16,8 @@ import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
  * method.
  */
 @TestInstance(Lifecycle.PER_CLASS)
-public class SensorValuesListGetValueRangeTest
-  extends SensorValuesListGetValueContinuousTest {
+public class TimestampSensorValuesListGetValueRangeTest
+  extends TimestampSensorValuesListGetValueContinuousTest {
 
   private static final int START_TIME_COL = 2;
 
@@ -32,21 +32,24 @@ public class SensorValuesListGetValueRangeTest
 
   @Override
   protected void buildSensorValues(DatasetSensorValues allSensorValues,
-    TestSetLine line) throws RecordNotFoundException, InvalidFlagException {
+    TestSetLine line)
+    throws RecordNotFoundException, InvalidFlagException, CoordinateException {
 
     makeSensorValues(allSensorValues, line, 0, 11);
     makeSensorValues(allSensorValues, line, 1, 21);
   }
 
   @Override
-  protected SensorValuesListOutput getValue(SensorValuesList list,
-    TestSetLine line) throws SensorValuesListException {
+  protected TimestampSensorValuesListValue getValue(
+    TimestampSensorValuesList list, TestSetLine line)
+    throws SensorValuesListException, CoordinateException {
 
-    LocalDateTime startTime = makeTime(line.getIntField(START_TIME_COL));
-    LocalDateTime endTime = makeTime(line.getIntField(END_TIME_COL));
+    TimeCoordinate startTime = makeCoordinate(line.getIntField(START_TIME_COL));
+    TimeCoordinate endTime = makeCoordinate(line.getIntField(END_TIME_COL));
 
     return list.getValue(startTime, endTime,
-      DateTimeUtils.midPoint(startTime, endTime),
+      new TimeCoordinate(DATASET_ID,
+        DateTimeUtils.midPoint(startTime.getTime(), endTime.getTime())),
       line.getBooleanField(ALLOW_INTERPOLATION_COL));
   }
 

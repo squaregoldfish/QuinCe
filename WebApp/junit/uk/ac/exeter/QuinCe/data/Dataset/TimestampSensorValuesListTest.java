@@ -20,15 +20,17 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
 
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
-import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.DateTimeFormatsBean;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
-public class SensorValuesListTest extends BaseTest {
+public class TimestampSensorValuesListTest extends BaseTest {
+
+  private static final long DATASET_ID = 1L;
 
   private long sensorValueId = 0L;
 
@@ -56,8 +58,7 @@ public class SensorValuesListTest extends BaseTest {
    *           If the construction fails.
    */
   private DatasetSensorValues getDatasetSensorValues() throws Exception {
-    return new DatasetSensorValues(
-      InstrumentDB.getInstrument(getConnection(), 1L));
+    return new DatasetSensorValues(Mockito.mock(DataSet.class));
   }
 
   /**
@@ -75,17 +76,20 @@ public class SensorValuesListTest extends BaseTest {
    * @param minute
    *          The minute.
    * @return The {@link SensorValue}.
+   * @throws CoordinateException
    */
-  private SensorValue makeSensorValue(long column, int hour, int minute) {
-    return new SensorValue(1L, column,
-      LocalDateTime.of(2023, 1, 1, hour, minute, 0), "12");
+  private SensorValue makeSensorValue(long column, int hour, int minute)
+    throws CoordinateException {
+    return new SensorValue(1L, column, new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2023, 1, 1, hour, minute, 0)), "12");
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
     "resources/sql/testbase/instrument" })
   @Test
   public void nullAddTest() throws Exception {
-    SensorValuesList list = new SensorValuesList(1L, getDatasetSensorValues());
+    TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
+      getDatasetSensorValues());
     assertThrows(IllegalArgumentException.class, () -> {
       list.add(null);
     });
@@ -95,7 +99,8 @@ public class SensorValuesListTest extends BaseTest {
     "resources/sql/testbase/instrument" })
   @Test
   public void singleColumnValidAddTest() throws Exception {
-    SensorValuesList list = new SensorValuesList(1L, getDatasetSensorValues());
+    TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
+      getDatasetSensorValues());
     list.add(makeSensorValue(1L, 1, 1));
     assertEquals(1, list.rawSize());
   }
@@ -104,7 +109,8 @@ public class SensorValuesListTest extends BaseTest {
     "resources/sql/testbase/instrument" })
   @Test
   public void singleColumnInvalidColumnTest() throws Exception {
-    SensorValuesList list = new SensorValuesList(1L, getDatasetSensorValues());
+    TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
+      getDatasetSensorValues());
     assertThrows(IllegalArgumentException.class, () -> {
       list.add(makeSensorValue(2L, 1, 1));
     });
@@ -114,7 +120,8 @@ public class SensorValuesListTest extends BaseTest {
     "resources/sql/testbase/instrument" })
   @Test
   public void onlyValueDuplicateTimestampTest() throws Exception {
-    SensorValuesList list = new SensorValuesList(1L, getDatasetSensorValues());
+    TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
+      getDatasetSensorValues());
     list.add(makeSensorValue(1L, 1, 1));
     assertThrows(IllegalArgumentException.class, () -> {
       list.add(makeSensorValue(1L, 1, 1));
@@ -139,14 +146,15 @@ public class SensorValuesListTest extends BaseTest {
     // Middle
     list.add(makeSensorValue(1L, 1, 3));
 
-    assertTrue(timesOrdered(list.getRawTimes()));
+    assertTrue(timeCoordinatesOrdered(list.getRawCoordinates()));
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
     "resources/sql/testbase/instrument" })
   @Test
   public void multipleValuesDuplicateTimestampTest() throws Exception {
-    SensorValuesList list = new SensorValuesList(1L, getDatasetSensorValues());
+    TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
+      getDatasetSensorValues());
 
     // First value
     list.add(makeSensorValue(1L, 1, 5));
@@ -170,7 +178,8 @@ public class SensorValuesListTest extends BaseTest {
   @Test
   public void multipleColumnsDifferentSensorTypesTest() throws Exception {
     assertThrows(IllegalArgumentException.class, () -> {
-      new SensorValuesList(Arrays.asList(1L, 2L), getDatasetSensorValues());
+      new TimestampSensorValuesList(Arrays.asList(1L, 2L),
+        getDatasetSensorValues());
     });
   }
 
@@ -180,8 +189,8 @@ public class SensorValuesListTest extends BaseTest {
   @Test
   public void multipleColumnsValidAddTest() throws Exception {
 
-    SensorValuesList list = new SensorValuesList(Arrays.asList(1L, 10L),
-      getDatasetSensorValues());
+    TimestampSensorValuesList list = new TimestampSensorValuesList(
+      Arrays.asList(1L, 10L), getDatasetSensorValues());
 
     list.add(makeSensorValue(1L, 1, 2));
     list.add(makeSensorValue(10L, 1, 4));
@@ -193,8 +202,8 @@ public class SensorValuesListTest extends BaseTest {
   @Test
   public void multipleColumnsInvalidAddTest() throws Exception {
 
-    SensorValuesList list = new SensorValuesList(Arrays.asList(1L, 10L),
-      getDatasetSensorValues());
+    TimestampSensorValuesList list = new TimestampSensorValuesList(
+      Arrays.asList(1L, 10L), getDatasetSensorValues());
 
     assertThrows(IllegalArgumentException.class, () -> {
       list.add(makeSensorValue(2L, 1, 4));
@@ -205,7 +214,8 @@ public class SensorValuesListTest extends BaseTest {
     "resources/sql/testbase/instrument" })
   @Test
   public void emptyIsEmptyTest() throws Exception {
-    SensorValuesList list = new SensorValuesList(1L, getDatasetSensorValues());
+    TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
+      getDatasetSensorValues());
     assertTrue(list.isEmpty());
   }
 
@@ -213,22 +223,23 @@ public class SensorValuesListTest extends BaseTest {
     "resources/sql/testbase/instrument" })
   @Test
   public void notEmptyIsEmptyTest() throws Exception {
-    SensorValuesList list = new SensorValuesList(1L, getDatasetSensorValues());
+    TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
+      getDatasetSensorValues());
     list.add(makeSensorValue(1L, 1, 2));
     assertFalse(list.isEmpty());
   }
 
   private static Stream<Arguments> measurementModeParams() {
-    return Stream.of(Arguments.of(1, SensorValuesList.MODE_PERIODIC),
-      Arguments.of(2, SensorValuesList.MODE_CONTINUOUS),
-      Arguments.of(3, SensorValuesList.MODE_CONTINUOUS),
-      Arguments.of(4, SensorValuesList.MODE_CONTINUOUS),
-      Arguments.of(5, SensorValuesList.MODE_CONTINUOUS),
-      Arguments.of(6, SensorValuesList.MODE_PERIODIC),
-      Arguments.of(7, SensorValuesList.MODE_PERIODIC),
-      Arguments.of(8, SensorValuesList.MODE_PERIODIC),
-      Arguments.of(9, SensorValuesList.MODE_CONTINUOUS),
-      Arguments.of(10, SensorValuesList.MODE_PERIODIC));
+    return Stream.of(Arguments.of(1, TimestampSensorValuesList.MODE_PERIODIC),
+      Arguments.of(2, TimestampSensorValuesList.MODE_CONTINUOUS),
+      Arguments.of(3, TimestampSensorValuesList.MODE_CONTINUOUS),
+      Arguments.of(4, TimestampSensorValuesList.MODE_CONTINUOUS),
+      Arguments.of(5, TimestampSensorValuesList.MODE_CONTINUOUS),
+      Arguments.of(6, TimestampSensorValuesList.MODE_PERIODIC),
+      Arguments.of(7, TimestampSensorValuesList.MODE_PERIODIC),
+      Arguments.of(8, TimestampSensorValuesList.MODE_PERIODIC),
+      Arguments.of(9, TimestampSensorValuesList.MODE_CONTINUOUS),
+      Arguments.of(10, TimestampSensorValuesList.MODE_PERIODIC));
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
@@ -244,14 +255,16 @@ public class SensorValuesListTest extends BaseTest {
         + fileNumber + ".csv")
       .getFile();
 
-    SensorValuesList list = new SensorValuesList(1L, getDatasetSensorValues());
+    TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
+      getDatasetSensorValues());
 
     BufferedReader in = new BufferedReader(new FileReader(timesFile));
     String line;
     while ((line = in.readLine()) != null) {
       LocalDateTime timestamp = LocalDateTime.parse(line,
         DateTimeFormatsBean.DT_ISO_MS_F);
-      list.add(new SensorValue(1L, 1L, timestamp, "1"));
+      list.add(new SensorValue(1L, 1L,
+        new TimeCoordinate(DATASET_ID, timestamp), "1"));
     }
     in.close();
 
@@ -266,7 +279,7 @@ public class SensorValuesListTest extends BaseTest {
       .getFile();
 
     DatasetSensorValues result = new DatasetSensorValues(
-      InstrumentDB.getInstrument(getConnection(), 1L));
+      Mockito.mock(DataSet.class));
 
     BufferedReader in = new BufferedReader(new FileReader(file));
     String line;
@@ -275,7 +288,8 @@ public class SensorValuesListTest extends BaseTest {
       LocalDateTime timestamp = LocalDateTime.parse(fields[0],
         DateTimeFormatsBean.DT_ISO_MS_F);
       SensorValue sensorValue = new SensorValue(getSensorValueId(), 1L,
-        columnId, timestamp, fields[1], new AutoQCResult(), flag, "");
+        columnId, new TimeCoordinate(DATASET_ID, timestamp), fields[1],
+        new AutoQCResult(), flag, "");
       result.add(sensorValue);
     }
     in.close();
@@ -372,7 +386,9 @@ public class SensorValuesListTest extends BaseTest {
     DatasetSensorValues allSensorValues = makeDatasetSensorValues(
       "stringValuesContinuous1.csv", 6L, Flag.GOOD);
 
-    SensorValuesList list = allSensorValues.getColumnValues(6L);
-    assertEquals(SensorValuesList.MODE_CONTINUOUS, list.getMeasurementMode());
+    TimestampSensorValuesList list = (TimestampSensorValuesList) allSensorValues
+      .getColumnValues(6L);
+    assertEquals(TimestampSensorValuesList.MODE_CONTINUOUS,
+      list.getMeasurementMode());
   }
 }

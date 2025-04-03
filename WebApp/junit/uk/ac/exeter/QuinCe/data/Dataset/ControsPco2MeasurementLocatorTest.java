@@ -88,14 +88,14 @@ public class ControsPco2MeasurementLocatorTest extends BaseTest {
 
     ControsPco2MeasurementLocator locator = new ControsPco2MeasurementLocator();
 
-    DatasetSensorValues sensorValues = DataSetDataDB.getSensorValues(
-      getConnection(), getInstrument(), getDataset().getId(), false, true);
+    DatasetSensorValues sensorValues = DataSetDataDB
+      .getSensorValues(getConnection(), getDataset(), false, true);
 
     List<Measurement> measurements = locator.locateMeasurements(getConnection(),
       getInstrument(), getDataset(), sensorValues);
 
-    List<LocalDateTime> locatedMeasurementTimes = measurements.stream()
-      .map(m -> m.getTime()).toList();
+    List<Coordinate> locatedMeasurementTimes = measurements.stream()
+      .map(m -> m.getCoordinate()).toList();
 
     assertTrue(CollectionUtils.isEqualCollection(
       getNoZeroExpectedMeasurementTimes(), locatedMeasurementTimes));

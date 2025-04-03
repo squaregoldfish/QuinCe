@@ -12,13 +12,13 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
 
 import uk.ac.exeter.QuinCe.TestBase.TestSetLine;
 import uk.ac.exeter.QuinCe.TestBase.TestSetTest;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.InvalidFlagException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
-import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -28,7 +28,10 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
  * continuous measurements.
  */
 @TestInstance(Lifecycle.PER_CLASS)
-public class SensorValuesListGetValueContinuousTest extends TestSetTest {
+public class TimestampSensorValuesListGetValueContinuousTest
+  extends TestSetTest {
+
+  protected static final long DATASET_ID = 1L;
 
   @BeforeEach
   public void setUp() {
@@ -45,20 +48,22 @@ public class SensorValuesListGetValueContinuousTest extends TestSetTest {
     return "SensorValuesListGetValueContinuous";
   }
 
-  protected LocalDateTime makeTime(int minute) {
-    return LocalDateTime.of(2023, 1, 1, 12, minute, 0);
+  protected TimeCoordinate makeCoordinate(int minute)
+    throws CoordinateException {
+    return new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2023, 1, 1, 12, minute, 0));
   }
 
   protected SensorValue makeSensorValue(int minute, char flagChar)
-    throws InvalidFlagException {
-    return new SensorValue((long) minute, 1L, 1L, makeTime(minute),
-      String.valueOf(minute), new AutoQCResult(), new Flag(flagChar),
-      String.valueOf(flagChar));
+    throws InvalidFlagException, CoordinateException {
+    return new SensorValue((long) minute, DATASET_ID, 1L,
+      makeCoordinate(minute), String.valueOf(minute), new AutoQCResult(),
+      new Flag(flagChar), String.valueOf(flagChar));
   }
 
   protected void makeSensorValues(DatasetSensorValues allSensorValues,
     TestSetLine line, int column, int firstMinute)
-    throws RecordNotFoundException, InvalidFlagException {
+    throws RecordNotFoundException, InvalidFlagException, CoordinateException {
     char[] flags = line.getStringField(column, false).toCharArray();
 
     int minute = firstMinute;
@@ -77,31 +82,32 @@ public class SensorValuesListGetValueContinuousTest extends TestSetTest {
   public void getValueTest(TestSetLine line) throws Exception {
 
     DatasetSensorValues allSensorValues = new DatasetSensorValues(
-      InstrumentDB.getInstrument(getConnection(), 1L));
+      Mockito.mock(DataSet.class));
 
     buildSensorValues(allSensorValues, line);
 
-    SensorValuesList list = allSensorValues.getColumnValues(1L);
+    TimestampSensorValuesList list = (TimestampSensorValuesList) allSensorValues
+      .getColumnValues(1L);
 
-    SensorValuesListOutput value = getValue(list, line);
+    TimestampSensorValuesListValue value = getValue(list, line);
 
     String expectedValueString = line.getStringField(getExpectedValueCol(),
       true);
     if (null == expectedValueString) {
       assertNull(value);
     } else {
-      LocalDateTime expectedStartTime = makeTime(
+      Coordinate expectedStartTime = makeCoordinate(
         line.getIntField(getExpectedStartTimeCol()));
 
       assertEquals(expectedStartTime, value.getStartTime(),
         "Start time incorrect");
 
-      LocalDateTime expectedEndTime = makeTime(
+      Coordinate expectedEndTime = makeCoordinate(
         line.getIntField(getExpectedEndTimeCol()));
 
       assertEquals(expectedEndTime, value.getEndTime(), "End time incorrect");
 
-      LocalDateTime expectedNominalTime = makeTime(
+      Coordinate expectedNominalTime = makeCoordinate(
         line.getIntField(getExpectedNominalTimeCol()));
 
       assertEquals(expectedNominalTime, value.getNominalTime(),
@@ -132,10 +138,11 @@ public class SensorValuesListGetValueContinuousTest extends TestSetTest {
     }
   }
 
-  protected SensorValuesListOutput getValue(SensorValuesList list,
-    TestSetLine line) throws SensorValuesListException {
-    return list.getValue(makeTime(line.getIntField(getRequestedMinuteCol())),
-      true);
+  protected TimestampSensorValuesListValue getValue(
+    TimestampSensorValuesList list, TestSetLine line)
+    throws SensorValuesListException, CoordinateException {
+    return (TimestampSensorValuesListValue) list.getValue(
+      makeCoordinate(line.getIntField(getRequestedMinuteCol())), true);
   }
 
   protected int getExpectedUsedValuesCol() {
@@ -171,7 +178,8 @@ public class SensorValuesListGetValueContinuousTest extends TestSetTest {
   }
 
   protected void buildSensorValues(DatasetSensorValues allSensorValues,
-    TestSetLine line) throws RecordNotFoundException, InvalidFlagException {
+    TestSetLine line)
+    throws RecordNotFoundException, InvalidFlagException, CoordinateException {
 
     makeSensorValues(allSensorValues, line, 0, 11);
   }

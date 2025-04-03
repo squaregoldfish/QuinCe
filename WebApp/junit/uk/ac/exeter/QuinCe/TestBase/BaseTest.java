@@ -35,6 +35,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
 import uk.ac.exeter.QuinCe.User.UserDB;
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.web.User.LoginBean;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -342,6 +343,22 @@ public class BaseTest {
     }
 
     return result;
+  }
+
+  /**
+   * Determine whether or not a list of {@link Coordinate} objects is in
+   * ascending order according to their timestamp.
+   *
+   * <p>
+   * Identical values are allowed.
+   * </p>
+   *
+   * @param list
+   *          The list.
+   * @return {@code true} if the list is ordered; {@code false} otherwise.
+   */
+  protected boolean timeCoordinatesOrdered(List<Coordinate> list) {
+    return timesOrdered(list.stream().map(c -> c.getTime()).toList());
   }
 
   /**

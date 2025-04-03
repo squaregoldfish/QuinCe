@@ -10,8 +10,10 @@ import java.util.Properties;
 import org.junit.jupiter.api.BeforeEach;
 
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
+import uk.ac.exeter.QuinCe.data.Dataset.CoordinateException;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
@@ -51,7 +53,8 @@ public class DataReducerTest extends BaseTest {
       PlotPageTableValue.MEASURED_TYPE, new Properties());
   }
 
-  protected Measurement makeMeasurement(MeasurementValue... measurementValues) {
+  protected Measurement makeMeasurement(MeasurementValue... measurementValues)
+    throws CoordinateException {
 
     HashMap<Long, MeasurementValue> measurementValuesMap = new HashMap<Long, MeasurementValue>();
     for (MeasurementValue measurementValue : measurementValues) {
@@ -62,7 +65,7 @@ public class DataReducerTest extends BaseTest {
     HashMap<Long, String> runTypes = new HashMap<Long, String>();
     runTypes.put(Measurement.RUN_TYPE_DEFINES_VARIABLE, "runtype");
 
-    return new Measurement(1L, 1L, LocalDateTime.now(), runTypes,
-      measurementValuesMap);
+    return new Measurement(1L, 1L, new TimeCoordinate(1L, LocalDateTime.now()),
+      runTypes, measurementValuesMap);
   }
 }

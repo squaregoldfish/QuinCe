@@ -29,7 +29,7 @@ public class SensorValueTest extends BaseTest {
   @Test
   public void cannotUpdateAutoQCOnNonStoredValueTest() {
     SensorValue sensorValue = new SensorValue(1L, 1L,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+      new TimeCoordinate(LocalDateTime.of(2021, 1, 1, 0, 0, 0)), "20");
 
     assertThrows(RecordNotFoundException.class, () -> {
       sensorValue.addAutoQCFlag(

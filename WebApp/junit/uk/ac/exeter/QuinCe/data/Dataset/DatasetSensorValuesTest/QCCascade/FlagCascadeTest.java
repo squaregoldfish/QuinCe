@@ -117,7 +117,7 @@ public class FlagCascadeTest extends TestSetTest {
 
       // Set the QC flags on sensor values
       DatasetSensorValues allSensorValues = DataSetDataDB.getSensorValues(conn,
-        instrument, dataset.getId(), false, true);
+        dataset, false, true);
 
       SensorValue sstVal = allSensorValues.getById(2L);
       SensorValue salVal = allSensorValues.getById(3L);
@@ -138,7 +138,7 @@ public class FlagCascadeTest extends TestSetTest {
 
       // Get all the measurements grouped by run type
       DatasetMeasurements allMeasurements = DataSetDataDB
-        .getMeasurementsByRunType(conn, instrument, dataset.getId());
+        .getMeasurementsByRunType(conn, dataset);
 
       MeasurementValueCollector measurementValueCollector = new DefaultMeasurementValueCollector();
 

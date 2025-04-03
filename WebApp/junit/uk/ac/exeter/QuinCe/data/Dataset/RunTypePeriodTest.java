@@ -13,9 +13,6 @@ import uk.ac.exeter.QuinCe.TestBase.BaseTest;
 /**
  * Tests for the {@link RunTypePeriod} class. Note that these can't be create
  * directly, we use {@link RunTypePeriods} to create them.
- *
- * @author Steve Jones
- *
  */
 public class RunTypePeriodTest extends BaseTest {
 
@@ -26,16 +23,17 @@ public class RunTypePeriodTest extends BaseTest {
   @Test
   public void creationTest() throws Exception {
 
-    LocalDateTime time = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    TimeCoordinate coordinate = new TimeCoordinate(
+      LocalDateTime.of(2000, 1, 1, 0, 0, 0));
 
     RunTypePeriods periods = new RunTypePeriods();
-    periods.add("RunType", time);
+    periods.add("RunType", coordinate);
 
     RunTypePeriod period = periods.get(0);
 
     assertEquals("RunType", period.getRunType());
-    assertEquals(time, period.getStart());
-    assertEquals(time, period.getEnd());
+    assertEquals(coordinate, period.getStart());
+    assertEquals(coordinate, period.getEnd());
   }
 
   /**
@@ -44,8 +42,10 @@ public class RunTypePeriodTest extends BaseTest {
   @Test
   public void endSetTest() throws Exception {
 
-    LocalDateTime start = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    LocalDateTime end = LocalDateTime.of(2000, 1, 1, 1, 0, 0);
+    TimeCoordinate start = new TimeCoordinate(
+      LocalDateTime.of(2000, 1, 1, 0, 0, 0));
+    TimeCoordinate end = new TimeCoordinate(
+      LocalDateTime.of(2000, 1, 1, 1, 0, 0));
 
     RunTypePeriods periods = new RunTypePeriods();
     periods.add("RunType", start);
@@ -59,8 +59,10 @@ public class RunTypePeriodTest extends BaseTest {
    */
   @Test
   public void encompassesTest() throws Exception {
-    LocalDateTime start = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    LocalDateTime end = LocalDateTime.of(2000, 1, 1, 1, 0, 0);
+    TimeCoordinate start = new TimeCoordinate(
+      LocalDateTime.of(2000, 1, 1, 0, 0, 0));
+    TimeCoordinate end = new TimeCoordinate(
+      LocalDateTime.of(2000, 1, 1, 1, 0, 0));
 
     RunTypePeriods periods = new RunTypePeriods();
     periods.add("RunType", start);
@@ -70,23 +72,30 @@ public class RunTypePeriodTest extends BaseTest {
 
     assertTrue(period.encompasses(start));
     assertTrue(period.encompasses(end));
-    assertTrue(period.encompasses(LocalDateTime.of(2000, 1, 1, 0, 30, 0)));
+    assertTrue(period
+      .encompasses(new TimeCoordinate(LocalDateTime.of(2000, 1, 1, 0, 30, 0))));
 
-    assertFalse(period.encompasses(LocalDateTime.of(1999, 12, 31, 23, 59, 59)));
-    assertFalse(period.encompasses(LocalDateTime.of(2000, 2, 1, 0, 0, 0)));
+    assertFalse(period.encompasses(
+      new TimeCoordinate(LocalDateTime.of(1999, 12, 31, 23, 59, 59))));
+    assertFalse(period
+      .encompasses(new TimeCoordinate(LocalDateTime.of(2000, 2, 1, 0, 0, 0))));
   }
 
   @Test
   public void singleTimeEncompassesTest() throws Exception {
-    LocalDateTime start = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    TimeCoordinate start = new TimeCoordinate(
+      LocalDateTime.of(2000, 1, 1, 0, 0, 0));
     RunTypePeriods periods = new RunTypePeriods();
     periods.add("RunType", start);
 
     RunTypePeriod period = periods.get(0);
 
     assertTrue(period.encompasses(start));
-    assertFalse(period.encompasses(LocalDateTime.of(2000, 1, 1, 0, 30, 0)));
-    assertFalse(period.encompasses(LocalDateTime.of(1999, 12, 31, 23, 59, 59)));
-    assertFalse(period.encompasses(LocalDateTime.of(2000, 2, 1, 0, 0, 0)));
+    assertFalse(period
+      .encompasses(new TimeCoordinate(LocalDateTime.of(2000, 1, 1, 0, 30, 0))));
+    assertFalse(period.encompasses(
+      new TimeCoordinate(LocalDateTime.of(1999, 12, 31, 23, 59, 59))));
+    assertFalse(period
+      .encompasses(new TimeCoordinate(LocalDateTime.of(2000, 2, 1, 0, 0, 0))));
   }
 }

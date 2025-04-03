@@ -54,7 +54,7 @@ public class TimeCoordinate extends Coordinate {
 
   /**
    * Constructor for a coordinate attached to a new, unsaved {@link DataSet}.
-   * 
+   *
    * @param time
    *          The time.
    */

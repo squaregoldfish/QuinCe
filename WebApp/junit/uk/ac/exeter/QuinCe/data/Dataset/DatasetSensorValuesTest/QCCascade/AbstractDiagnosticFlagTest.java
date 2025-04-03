@@ -113,7 +113,8 @@ public abstract class AbstractDiagnosticFlagTest extends TestSetTest {
     Collection<String> expectedComment) {
 
     Flag flag = record.getQCFlag();
-    String qcComment = StringUtils.collectionToDelimited(record.getQCMessages(), ";");
+    String qcComment = StringUtils.collectionToDelimited(record.getQCMessages(),
+      ";");
 
     checkQC("Data Reduction", flag, expectedFlag, qcComment, expectedComment);
   }
@@ -202,7 +203,7 @@ public abstract class AbstractDiagnosticFlagTest extends TestSetTest {
   protected RunTypePeriods makeRunTypePeriods(SensorValue source)
     throws Exception {
     RunTypePeriods result = new RunTypePeriods();
-    result.add(source.getValue(), source.getTime());
+    result.add(source.getValue(), source.getCoordinate());
     return result;
   }
 
@@ -251,7 +252,7 @@ public abstract class AbstractDiagnosticFlagTest extends TestSetTest {
 
     // Get all the measurements grouped by run type
     DatasetMeasurements allMeasurements = DataSetDataDB
-      .getMeasurementsByRunType(conn, instrument, dataset.getId());
+      .getMeasurementsByRunType(conn, dataset);
 
     MeasurementValueCollector measurementValueCollector = new DefaultMeasurementValueCollector();
 

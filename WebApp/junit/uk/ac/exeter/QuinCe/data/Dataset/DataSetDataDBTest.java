@@ -19,13 +19,10 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineFlag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.RangeCheckRoutine;
-import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 
 public class DataSetDataDBTest extends BaseTest {
-
-  private static final long INSTRUMENT_ID = 1L;
 
   private static final long DATASET_ID = 1L;
 
@@ -47,20 +44,20 @@ public class DataSetDataDBTest extends BaseTest {
    * @return The value retrieved from the database
    * @throws Exception
    */
-  private SensorValue retrieveSingleStoredValue(LocalDateTime time)
+  private SensorValue retrieveSingleStoredValue(Coordinate coordinate)
     throws Exception {
 
-    DatasetSensorValues storedValues = DataSetDataDB.getSensorValues(
-      getConnection(),
-      InstrumentDB.getInstrument(getConnection(), INSTRUMENT_ID), DATASET_ID,
-      false, false);
+    DataSet dataset = DataSetDB.getDataSet(getConnection(), DATASET_ID);
+
+    DatasetSensorValues storedValues = DataSetDataDB
+      .getSensorValues(getConnection(), dataset, false, false);
 
     assertEquals(1, storedValues.size());
 
     SensorValuesList columnValues = storedValues.getColumnValues(COLUMN_ID);
 
     assertEquals(1, columnValues.rawSize());
-    return columnValues.getRawSensorValue(time);
+    return columnValues.getRawSensorValue(coordinate);
   }
 
   /**
@@ -75,14 +72,15 @@ public class DataSetDataDBTest extends BaseTest {
   @Test
   public void storeSensorValuesSingleValueTest() throws Exception {
 
-    LocalDateTime valueTime = LocalDateTime.of(2021, 1, 1, 0, 0, 0);
+    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0));
     String value = "20";
-    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, valueTime,
+    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
       value);
 
     DataSetDataDB.storeSensorValues(getConnection(),
       Arrays.asList(sensorValue));
-    SensorValue storedValue = retrieveSingleStoredValue(valueTime);
+    SensorValue storedValue = retrieveSingleStoredValue(coordinate);
 
     // Show that the SensorValue's ID has been updated
     assertNotEquals(DatabaseUtils.NO_DATABASE_RECORD, sensorValue.getId(),
@@ -94,7 +92,7 @@ public class DataSetDataDBTest extends BaseTest {
     assertNotEquals(DatabaseUtils.NO_DATABASE_RECORD, storedValue.getId(),
       "Database ID not set");
     assertEquals(COLUMN_ID, storedValue.getColumnId(), "Incorrect column ID");
-    assertEquals(valueTime, storedValue.getTime(), "Incorrect time");
+    assertEquals(coordinate, storedValue.getCoordinate(), "Incorrect time");
     assertEquals(value, storedValue.getValue(), "Incorrect value");
     assertEquals(new AutoQCResult(), storedValue.getAutoQcResult(),
       "Auto QC result not stored correctly");
@@ -109,13 +107,14 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void storeSensorValuesNullValueTest() throws Exception {
-    LocalDateTime valueTime = LocalDateTime.of(2021, 1, 1, 0, 0, 0);
-    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, valueTime,
+    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0));
+    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
       null);
 
     DataSetDataDB.storeSensorValues(getConnection(),
       Arrays.asList(sensorValue));
-    SensorValue storedValue = retrieveSingleStoredValue(valueTime);
+    SensorValue storedValue = retrieveSingleStoredValue(coordinate);
 
     assertNull(storedValue.getValue(), "Stored value not null");
   }
@@ -125,9 +124,10 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void storeSensorValuesCustomUserQCValueTest() throws Exception {
-    LocalDateTime valueTime = LocalDateTime.of(2021, 1, 1, 0, 0, 0);
+    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0));
 
-    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, valueTime,
+    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
       "20");
 
     Flag qcFlag = Flag.QUESTIONABLE;
@@ -136,7 +136,7 @@ public class DataSetDataDBTest extends BaseTest {
 
     DataSetDataDB.storeSensorValues(getConnection(),
       Arrays.asList(sensorValue));
-    SensorValue storedValue = retrieveSingleStoredValue(valueTime);
+    SensorValue storedValue = retrieveSingleStoredValue(coordinate);
 
     assertEquals(qcFlag, storedValue.getUserQCFlag(), "Incorrect user QC flag");
     assertEquals(qcMessage, storedValue.getUserQCMessage(),
@@ -148,14 +148,15 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void updateSensorValueTest() throws Exception {
-    LocalDateTime valueTime = LocalDateTime.of(2021, 1, 1, 0, 0, 0);
-    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, valueTime,
+    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0));
+    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
       "20");
 
     DataSetDataDB.storeSensorValues(getConnection(),
       Arrays.asList(sensorValue));
 
-    SensorValue originalStoredValue = retrieveSingleStoredValue(valueTime);
+    SensorValue originalStoredValue = retrieveSingleStoredValue(coordinate);
 
     Flag userQCFlag = Flag.QUESTIONABLE;
     String userQCMessage = "Updated User QC";
@@ -171,7 +172,7 @@ public class DataSetDataDBTest extends BaseTest {
     // Check that the dirty flag is cleared
     assertFalse(originalStoredValue.isDirty(), "Dirty flag not cleared");
 
-    SensorValue updatedValue = retrieveSingleStoredValue(valueTime);
+    SensorValue updatedValue = retrieveSingleStoredValue(coordinate);
 
     assertEquals(autoQC, updatedValue.getAutoQcResult(), "Incorrect Auto QC");
     assertEquals(userQCFlag, updatedValue.getUserQCFlag(),
@@ -185,8 +186,11 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void storeSensorValuesNoConnTest() throws Exception {
-    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0));
+
+    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
+      "20");
 
     assertThrows(MissingParamException.class, () -> {
       DataSetDataDB.storeSensorValues(null, Arrays.asList(sensorValue));
@@ -217,8 +221,11 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void storeSensorValuesInvalidDatasetTest() throws Exception {
-    SensorValue sensorValue = new SensorValue(7000L, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0));
+
+    SensorValue sensorValue = new SensorValue(7000L, COLUMN_ID, coordinate,
+      "20");
 
     assertThrows(InvalidSensorValueException.class, () -> {
       DataSetDataDB.storeSensorValues(getConnection(),
@@ -231,8 +238,11 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void storeSensorValuesInvalidColumnTest() throws Exception {
-    SensorValue sensorValue = new SensorValue(DATASET_ID, 7000L,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0));
+
+    SensorValue sensorValue = new SensorValue(DATASET_ID, 7000L, coordinate,
+      "20");
 
     assertThrows(InvalidSensorValueException.class, () -> {
       DataSetDataDB.storeSensorValues(getConnection(),
@@ -250,10 +260,12 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void storeValuesMultipleValuesOneInvalid() throws Exception {
-    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
-    SensorValue badValue = new SensorValue(7000L, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0));
+
+    SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
+      "20");
+    SensorValue badValue = new SensorValue(7000L, COLUMN_ID, coordinate, "20");
 
     assertThrows(InvalidSensorValueException.class, () -> {
       DataSetDataDB.storeSensorValues(getConnection(),
@@ -261,9 +273,10 @@ public class DataSetDataDBTest extends BaseTest {
     });
 
     assertEquals(0,
-      DataSetDataDB.getSensorValues(getConnection(),
-        InstrumentDB.getInstrument(getConnection(), INSTRUMENT_ID), DATASET_ID,
-        false, false).size(),
+      DataSetDataDB
+        .getSensorValues(getConnection(),
+          DataSetDB.getDataSet(getConnection(), DATASET_ID), false, false)
+        .size(),
       "Value has been stored; should not have been");
   }
 
@@ -272,21 +285,24 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void getSensorValuesFlushingNotIgnoredTest() throws Exception {
+    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0));
 
-    SensorValue normalValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+    SensorValue normalValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
+      "20");
 
     SensorValue flushingValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 1, 0), "21");
+      coordinate, "21");
     flushingValue.setUserQC(Flag.FLUSHING, "Flushing");
 
     DataSetDataDB.storeSensorValues(getConnection(),
       Arrays.asList(normalValue, flushingValue));
 
     assertEquals(2,
-      DataSetDataDB.getSensorValues(getConnection(),
-        InstrumentDB.getInstrument(getConnection(), INSTRUMENT_ID), DATASET_ID,
-        false, false).size(),
+      DataSetDataDB
+        .getSensorValues(getConnection(),
+          DataSetDB.getDataSet(getConnection(), DATASET_ID), false, false)
+        .size(),
       "Incorrect number of values retrieved");
   }
 
@@ -295,21 +311,24 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void getSensorValuesFlushingIgnoredTest() throws Exception {
+    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0));
 
-    SensorValue normalValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+    SensorValue normalValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
+      "20");
 
     SensorValue flushingValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 1, 0), "21");
+      coordinate, "21");
     flushingValue.setUserQC(Flag.FLUSHING, "Flushing");
 
     DataSetDataDB.storeSensorValues(getConnection(),
       Arrays.asList(normalValue, flushingValue));
 
     assertEquals(1,
-      DataSetDataDB.getSensorValues(getConnection(),
-        InstrumentDB.getInstrument(getConnection(), INSTRUMENT_ID), DATASET_ID,
-        true, false).size(),
+      DataSetDataDB
+        .getSensorValues(getConnection(),
+          DataSetDB.getDataSet(getConnection(), DATASET_ID), true, false)
+        .size(),
       "Incorrect number of values retrieved");
   }
 
@@ -318,27 +337,30 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void deleteSensorValuesTest() throws Exception {
-    SensorValue value1 = new SensorValue(DATASET_ID, 1L,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0));
 
-    SensorValue value2 = new SensorValue(DATASET_ID, 2L,
-      LocalDateTime.of(2021, 1, 1, 0, 1, 0), "21");
+    SensorValue value1 = new SensorValue(DATASET_ID, 1L, coordinate, "20");
+
+    SensorValue value2 = new SensorValue(DATASET_ID, 2L, coordinate, "21");
 
     DataSetDataDB.storeSensorValues(getConnection(),
       Arrays.asList(value1, value2));
 
     assertEquals(2,
-      DataSetDataDB.getSensorValues(getConnection(),
-        InstrumentDB.getInstrument(getConnection(), INSTRUMENT_ID), DATASET_ID,
-        true, false).size(),
+      DataSetDataDB
+        .getSensorValues(getConnection(),
+          DataSetDB.getDataSet(getConnection(), DATASET_ID), true, false)
+        .size(),
       "Values not stored as expected");
 
     DataSetDataDB.deleteSensorValues(getConnection(), DATASET_ID);
 
     assertEquals(0,
-      DataSetDataDB.getSensorValues(getConnection(),
-        InstrumentDB.getInstrument(getConnection(), INSTRUMENT_ID), DATASET_ID,
-        true, false).size(),
+      DataSetDataDB
+        .getSensorValues(getConnection(),
+          DataSetDB.getDataSet(getConnection(), DATASET_ID), true, false)
+        .size(),
       "Values not removed");
   }
 }

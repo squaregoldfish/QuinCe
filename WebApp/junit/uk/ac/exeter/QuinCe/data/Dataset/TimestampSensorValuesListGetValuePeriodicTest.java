@@ -12,8 +12,8 @@ import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
  * method for periodic measurements.
  */
 @TestInstance(Lifecycle.PER_CLASS)
-public class SensorValuesListGetValuePeriodicTest
-  extends SensorValuesListGetValueContinuousTest {
+public class TimestampSensorValuesListGetValuePeriodicTest
+  extends TimestampSensorValuesListGetValueContinuousTest {
 
   @Override
   protected String getTestSetName() {
@@ -22,7 +22,8 @@ public class SensorValuesListGetValuePeriodicTest
 
   @Override
   protected void buildSensorValues(DatasetSensorValues allSensorValues,
-    TestSetLine line) throws RecordNotFoundException, InvalidFlagException {
+    TestSetLine line)
+    throws RecordNotFoundException, InvalidFlagException, CoordinateException {
 
     makeSensorValues(allSensorValues, line, 0, 11);
     makeSensorValues(allSensorValues, line, 1, 21);
