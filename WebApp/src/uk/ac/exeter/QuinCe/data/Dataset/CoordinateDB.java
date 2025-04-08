@@ -30,14 +30,15 @@ public class CoordinateDB {
   private static final String STORE_SURFACE_COORDINATE_STMT = "INSERT INTO coordinates "
     + "(dataset_id, date) VALUES (?, ?)";
 
-  private static final String GET_DATASET_COORDINATES_QUERY = "SELECT "
-    + "start_coordinate, end_coordinate FROM dataset WHERE id = ?";
-
   private static final String GET_SENSOR_VALUE_COORDINATES_QUERY = "SELECT "
-    + "coordinate_id FROM sensor_values WHERE dataset_id = ?";
+    + "sv.coordinate_id FROM sensor_values sv "
+    + "INNER JOIN coordinates c ON c.id = sv.coordinate_id "
+    + "WHERE c.dataset_id = ?";
 
   private static final String GET_MEASUREMENT_COORDINATES_QUERY = "SELECT "
-    + "coordinate_id FROM measurements WHERE dataset_id = ?";
+    + "m.coordinate_id FROM measurements m "
+    + "INNER JOIN coordinates c ON c.id = m.coordinate_id "
+    + "WHERE c.dataset_id = ?";
 
   private static final String GET_COORDINATES_QUERY = "SELECT "
     + "id, dataset_id, date, depth, station, cast, bottle, replicate, cycle "
@@ -168,54 +169,6 @@ public class CoordinateDB {
       }
     } catch (SQLException e) {
       throw new DatabaseException("Error while storing coordinates", e);
-    }
-  }
-
-  /**
-   * Retrieve the start/end {@link Coordinates} for a {@link DataSet}.
-   *
-   * @param conn
-   *          A database connection.
-   * @param dataset
-   *          The DataSet
-   * @return The retrieved coordinates.
-   * @throws DatabaseException
-   *           If a database error occurs.
-   * @throws CoordinateException
-   *           If any Coordinate object cannot be constructed.
-   */
-  public static Map<Long, Coordinate> getDataSetCoordinates(Connection conn,
-    long datasetId, int basis)
-    throws DatabaseException, RecordNotFoundException, CoordinateException {
-
-    Set<Long> coordinateIds = new HashSet<Long>();
-
-    try {
-      // DataSet start/end coordinates
-      try (PreparedStatement datasetStmt = conn
-        .prepareStatement(GET_DATASET_COORDINATES_QUERY)) {
-
-        datasetStmt.setLong(1, datasetId);
-
-        try (ResultSet record = datasetStmt.executeQuery()) {
-          if (record.next()) {
-            // It's possible that the dataset coordinates are empty.
-            long startId = record.getLong(1);
-            if (startId != 0L) {
-              coordinateIds.add(startId);
-            }
-
-            long endId = record.getLong(1);
-            if (endId != 0L) {
-              coordinateIds.add(endId);
-            }
-          }
-        }
-      }
-
-      return getCoordinates(conn, basis, coordinateIds);
-    } catch (SQLException e) {
-      throw new DatabaseException("Error retrieving coordinates", e);
     }
   }
 

@@ -53,7 +53,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void defaultQCTest() throws Exception {
     DatasetSensorValues allValues = new DatasetSensorValues(DataSetDB
@@ -68,7 +68,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void autoQCBadTest() throws Exception {
     DatasetSensorValues allValues = new DatasetSensorValues(DataSetDB
@@ -84,7 +84,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void autoQCQuestionableTest() throws Exception {
     DatasetSensorValues allValues = new DatasetSensorValues(DataSetDB
@@ -100,7 +100,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void autoQCQuestionableBadTest() throws Exception {
     DatasetSensorValues allValues = new DatasetSensorValues(DataSetDB
@@ -138,7 +138,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void userQCTest() throws Exception {
     DatasetSensorValues allValues = new DatasetSensorValues(DataSetDB
@@ -154,7 +154,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void userThenAutoQCTest() throws Exception {
     DatasetSensorValues allValues = new DatasetSensorValues(DataSetDB
@@ -171,7 +171,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void userOverrideWithLessSignificantTest() throws Exception {
     DatasetSensorValues allValues = new DatasetSensorValues(DataSetDB
@@ -188,7 +188,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void emptyValueBadTest() throws Exception {
     DatasetSensorValues allValues = new DatasetSensorValues(DataSetDB
@@ -202,7 +202,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void emptyValueAutoQCBadTest() throws Exception {
     DatasetSensorValues allValues = new DatasetSensorValues(DataSetDB
@@ -217,7 +217,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void emptyValueUserQCBadTest() throws Exception {
     DatasetSensorValues allValues = new DatasetSensorValues(DataSetDB
@@ -272,7 +272,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void oneCascadeTest()
     throws InvalidFlagException, RecordNotFoundException, RoutineException,
@@ -294,7 +294,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void twoCascadesTest()
     throws InvalidFlagException, RecordNotFoundException, RoutineException,
@@ -320,7 +320,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void removeOneCascadeTest()
     throws InvalidFlagException, RecordNotFoundException, RoutineException,
@@ -348,7 +348,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void removeAllCascadeAutoQCTest()
     throws InvalidFlagException, RecordNotFoundException, RoutineException,
@@ -373,7 +373,7 @@ public class SensorValueQCTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
+    "resources/sql/testbase/instrument", "resources/sql/testbase/dataset" })
   @Test
   public void removeAllCascadeNoAutoQCTest()
     throws InvalidFlagException, RecordNotFoundException, RoutineException,

@@ -5,7 +5,7 @@
 
 -- Assumes instrument from testbase.instrument
 INSERT INTO dataset (
-    id, instrument_id, name, start, end, min_longitude,
+    id, instrument_id, name, start_time, end_time, min_longitude,
     max_longitude, min_latitude, max_latitude, status, nrt, status_date,
     properties, error_messages, last_touched
   ) VALUES (

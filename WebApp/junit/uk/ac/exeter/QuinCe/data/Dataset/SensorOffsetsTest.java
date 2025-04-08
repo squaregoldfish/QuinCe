@@ -22,6 +22,8 @@ import org.mockito.Mockito;
 
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
+import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignmentException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorGroup;
@@ -309,6 +311,8 @@ public class SensorOffsetsTest extends BaseTest {
     assertEquals(expectedOffset, minutesDifference);
   }
 
+  @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
+    "resources/sql/testbase/instrument" })
   @Test
   public void sensorValuesOffsets() throws Exception {
     SensorsConfiguration sensorConfig = ResourceManager.getInstance()
@@ -338,8 +342,10 @@ public class SensorOffsetsTest extends BaseTest {
     sensorValues.add(makeSensorValue(40, Flag.GOOD));
     sensorValues.add(makeSensorValue(50, Flag.GOOD));
 
+    Instrument instrument = InstrumentDB.getInstrument(getConnection(), 1L);
     DatasetSensorValues allSensorValues = new DatasetSensorValues(
       Mockito.mock(DataSet.class));
+    Mockito.when(allSensorValues.getInstrument()).thenReturn(instrument);
 
     for (SensorValue sensorValue : sensorValues) {
       allSensorValues.add(sensorValue);
@@ -365,7 +371,8 @@ public class SensorOffsetsTest extends BaseTest {
         .get(ChronoField.MINUTE_OF_HOUR)));
   }
 
-  @FlywayTest
+  @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
+    "resources/sql/testbase/instrument" })
   @Test
   public void sensorValuesOffsetsFilterNotGood() throws Exception {
     SensorsConfiguration sensorConfig = ResourceManager.getInstance()
@@ -395,8 +402,10 @@ public class SensorOffsetsTest extends BaseTest {
     sensorValues.add(makeSensorValue(40, Flag.GOOD));
     sensorValues.add(makeSensorValue(50, Flag.QUESTIONABLE));
 
+    Instrument instrument = InstrumentDB.getInstrument(getConnection(), 1L);
     DatasetSensorValues allSensorValues = new DatasetSensorValues(
       Mockito.mock(DataSet.class));
+    Mockito.when(allSensorValues.getInstrument()).thenReturn(instrument);
 
     for (SensorValue sensorValue : sensorValues) {
       allSensorValues.add(sensorValue);

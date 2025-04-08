@@ -285,14 +285,16 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void getSensorValuesFlushingNotIgnoredTest() throws Exception {
-    TimeCoordinate coordinate = new TimeCoordinate(DATASET_ID,
+    TimeCoordinate coordinate1 = new TimeCoordinate(DATASET_ID,
       LocalDateTime.of(2021, 1, 1, 0, 0, 0));
+    TimeCoordinate coordinate2 = new TimeCoordinate(DATASET_ID,
+      LocalDateTime.of(2021, 1, 1, 0, 0, 1));
 
-    SensorValue normalValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
-      "20");
+    SensorValue normalValue = new SensorValue(DATASET_ID, COLUMN_ID,
+      coordinate1, "20");
 
     SensorValue flushingValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      coordinate, "21");
+      coordinate2, "21");
     flushingValue.setUserQC(Flag.FLUSHING, "Flushing");
 
     DataSetDataDB.storeSensorValues(getConnection(),

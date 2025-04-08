@@ -178,7 +178,7 @@ public class DatasetSensorValues {
       addById(sensorValue);
     } else if (sensorValue.getColumnId() == SensorType.LATITUDE_ID) {
       if (null == latitudes) {
-        longitudes = SensorValuesListFactory
+        latitudes = SensorValuesListFactory
           .makeSensorValuesList(SensorType.LATITUDE_ID, this);
       }
       latitudes.add(sensorValue);

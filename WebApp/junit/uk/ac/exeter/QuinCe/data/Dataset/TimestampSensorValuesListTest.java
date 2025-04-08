@@ -25,6 +25,8 @@ import org.mockito.Mockito;
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
+import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.DateTimeFormatsBean;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
@@ -58,7 +60,11 @@ public class TimestampSensorValuesListTest extends BaseTest {
    *           If the construction fails.
    */
   private DatasetSensorValues getDatasetSensorValues() throws Exception {
-    return new DatasetSensorValues(Mockito.mock(DataSet.class));
+    DatasetSensorValues result = new DatasetSensorValues(
+      Mockito.mock(DataSet.class));
+    Mockito.when(result.getInstrument())
+      .thenReturn(InstrumentDB.getInstrument(getConnection(), DATASET_ID));
+    return result;
   }
 
   /**
@@ -278,8 +284,11 @@ public class TimestampSensorValuesListTest extends BaseTest {
       "classpath:resources/testdata/data/DataSet/SensorValuesList/" + filename)
       .getFile();
 
+    Instrument instrument = InstrumentDB.getInstrument(getConnection(),
+      DATASET_ID);
     DatasetSensorValues result = new DatasetSensorValues(
       Mockito.mock(DataSet.class));
+    Mockito.when(result.getInstrument()).thenReturn(instrument);
 
     BufferedReader in = new BufferedReader(new FileReader(file));
     String line;
@@ -346,7 +355,7 @@ public class TimestampSensorValuesListTest extends BaseTest {
       "stringValuesPeriodic.csv", 6L, Flag.GOOD);
 
     SensorValuesList list = allSensorValues.getColumnValues(6L);
-    assertEquals(5, list.valuesSize());
+    assertEquals(50, list.valuesSize());
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
@@ -372,7 +381,7 @@ public class TimestampSensorValuesListTest extends BaseTest {
       "numericValuesPeriodic.csv", 6L, Flag.GOOD);
 
     SensorValuesList list = allSensorValues.getColumnValues(6L);
-    assertEquals(3, list.valuesSize());
+    assertEquals(50, list.valuesSize());
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",

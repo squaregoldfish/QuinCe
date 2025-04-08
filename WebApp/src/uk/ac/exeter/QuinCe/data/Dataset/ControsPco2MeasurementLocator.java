@@ -64,7 +64,7 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
 
       CalculationCoefficient defaultRunTimeCoefficient = CalculationCoefficient
         .getCoefficient(calibrationSet, variable, "Response Time",
-          dataset.getStart().getTime());
+          dataset.getStartTime());
 
       long defaultFlushingTime = Math
         .round(defaultRunTimeCoefficient.getValue()) * RESPONSE_TIME_MULTIPLIER;

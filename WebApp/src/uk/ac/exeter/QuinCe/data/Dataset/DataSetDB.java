@@ -57,7 +57,7 @@ public class DataSetDB {
    * @see #addDataSet(DataSource, DataSet)
    */
   private static final String ADD_DATASET_STATEMENT = "INSERT INTO dataset "
-    + "(instrument_id, name, start, end, status, status_date, "
+    + "(instrument_id, name, start_time, end_time, status, status_date, "
     + "nrt, properties, last_touched, error_messages, processing_messages, user_messages, "
     + "min_longitude, max_longitude, min_latitude, max_latitude, exported) "
     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -68,7 +68,7 @@ public class DataSetDB {
    * @see #addDataSet(DataSource, DataSet)
    */
   private static final String UPDATE_DATASET_STATEMENT = "Update dataset set "
-    + "instrument_id = ?, name = ?, start = ?, end = ?, status = ?, "
+    + "instrument_id = ?, name = ?, start_time = ?, end_time = ?, status = ?, "
     + "status_date = ?, nrt = ?, properties = ?, last_touched = ?, "
     + "error_messages = ?, processing_messages = ?, user_messages = ?, "
     + "min_longitude = ?, max_longitude = ?, "
@@ -85,21 +85,19 @@ public class DataSetDB {
    * in the same order.
    */
   private static final String DATASET_QUERY_BASE = "SELECT "
-    + "d.id, d.instrument_id, d.name, d.start, d.end, d.status, "
+    + "d.id, d.instrument_id, d.name, d.start_time, d.end_time, d.status, "
     + "d.status_date, d.nrt, d.properties, d.created, d.last_touched, "
     + "COALESCE(d.error_messages, '[]'), processing_messages, user_messages, "
     + "d.min_longitude, d.max_longitude, d.min_latitude, d.max_latitude, d.exported "
     + "FROM dataset d WHERE ";
 
-  private static final String GET_DATASETS_BETWEEN_DATES_QUERY = DATASET_QUERY_BASE
-    + "d.instrument_id = ? AND d.start <= ? AND d.end >= ?";
-
   private static final String NRT_COUNT_QUERY = "SELECT COUNT(*) FROM dataset "
     + "WHERE nrt = 1 AND instrument_id = ?";
 
   private static final String NRT_STATUS_QUERY = "SELECT "
-    + "ds.instrument_id, ds.created, ds.end, ds.status, ds.status_date "
+    + "ds.instrument_id, ds.created, c.date, ds.status, ds.status_date "
     + "FROM dataset ds INNER JOIN instrument i ON ds.instrument_id = i.id "
+    + "INNER JOIN coordinates ON c.id = ds.end_coordinate"
     + "WHERE ds.nrt = 1 ORDER BY i.platform_code ASC";
 
   /**
@@ -135,7 +133,7 @@ public class DataSetDB {
     sql.append(Stream.of(whereFields).map(field -> "d." + field + " = ? ")
       .collect(Collectors.joining("AND ")));
 
-    sql.append("GROUP BY d.id ORDER BY d.start ASC");
+    sql.append("GROUP BY d.id");
 
     return sql.toString();
   }
@@ -251,19 +249,8 @@ public class DataSetDB {
     long id = record.getLong(1);
     Instrument instrument = InstrumentDB.getInstrument(conn, record.getLong(2));
     String name = record.getString(3);
-
-    Map<Long, Coordinate> coordinates = CoordinateDB.getDataSetCoordinates(conn,
-      id, instrument.getBasis());
-    Coordinate start = coordinates.get(record.getLong(4));
-    if (null == start) {
-      throw new RecordNotFoundException("Start coordinate not found");
-    }
-
-    Coordinate end = coordinates.get(record.getLong(5));
-    if (null == end) {
-      throw new RecordNotFoundException("End coordinate not found");
-    }
-
+    LocalDateTime startDate = DateTimeUtils.longToDate(record.getLong(4));
+    LocalDateTime endDate = DateTimeUtils.longToDate(record.getLong(5));
     int status = record.getInt(6);
     LocalDateTime statusDate = DateTimeUtils.longToDate(record.getLong(7));
     boolean nrt = record.getBoolean(8);
@@ -323,10 +310,10 @@ public class DataSetDB {
     double maxLat = record.getDouble(18);
     boolean exported = record.getBoolean(19);
 
-    return new DataSet(id, instrument, name, start, end, status, statusDate,
-      nrt, properties, sensorOffsets, createdDate, lastTouched, errorMessage,
-      processingMessages, userMessages, minLon, minLat, maxLon, maxLat,
-      exported);
+    return new DataSet(id, instrument, name, startDate, endDate, status,
+      statusDate, nrt, properties, sensorOffsets, createdDate, lastTouched,
+      errorMessage, processingMessages, userMessages, minLon, minLat, maxLon,
+      maxLat, exported);
   }
 
   /**
@@ -402,8 +389,6 @@ public class DataSetDB {
     ResultSet addedKeys = null;
 
     try {
-      CoordinateDB.saveCoordinates(conn, dataSet.getStart(), dataSet.getEnd());
-
       String sql = UPDATE_DATASET_STATEMENT;
       if (DatabaseUtils.NO_DATABASE_RECORD == dataSet.getId()) {
         sql = ADD_DATASET_STATEMENT;
@@ -413,8 +398,8 @@ public class DataSetDB {
 
       stmt.setLong(1, dataSet.getInstrumentId());
       stmt.setString(2, dataSet.getName());
-      stmt.setLong(3, dataSet.getStart().getId());
-      stmt.setLong(4, dataSet.getEnd().getId());
+      stmt.setLong(3, DateTimeUtils.dateToLong(dataSet.getStartTime()));
+      stmt.setLong(4, DateTimeUtils.dateToLong(dataSet.getEndTime()));
       stmt.setInt(5, dataSet.getStatus());
       stmt.setLong(6, DateTimeUtils.dateToLong(dataSet.getStatusDate()));
       stmt.setBoolean(7, dataSet.isNrt());
@@ -448,12 +433,6 @@ public class DataSetDB {
         addedKeys = stmt.getGeneratedKeys();
         addedKeys.next();
         dataSet.setId(addedKeys.getLong(1));
-
-        // Update the coordinates
-        dataSet.getStart().setDatasetId(dataSet.getId());
-        dataSet.getEnd().setDatasetId(dataSet.getId());
-        CoordinateDB.saveCoordinates(conn, dataSet.getStart(),
-          dataSet.getEnd());
       }
 
     } catch (SQLException e) {
@@ -967,8 +946,10 @@ public class DataSetDB {
 
     JsonObject result = new JsonObject();
     result.addProperty("name", dataset.getName());
-    result.addProperty("start", dataset.getStart().toString());
-    result.addProperty("end", dataset.getEnd().toString());
+    result.addProperty("start",
+      DateTimeUtils.formatDateTime(dataset.getStartTime()));
+    result.addProperty("end",
+      DateTimeUtils.formatDateTime(dataset.getEndTime()));
     result.addProperty("platformCode", instrument.getPlatformCode());
     result.addProperty("platformName", instrument.getPlatformName());
     result.addProperty("instrumentName", instrument.getName());
@@ -1063,73 +1044,6 @@ public class DataSetDB {
     }
 
     return dataSets;
-  }
-
-  /**
-   * Get the {@link DataSet}s between two dates for a given instrument.
-   *
-   * <p>
-   * Any dataset that is partially covered by the selected date range will be
-   * included in the results.
-   * </p>
-   *
-   * <p>
-   * If either the {@code start} or {@code end} dates are {@code null}, the
-   * method assumes that they are infinitely far away in time and will therefore
-   * encompass all datasets.
-   * </p>
-   *
-   * @param dataSource
-   *          A data source
-   * @param instrumentId
-   *          The instrument's database ID
-   * @param start
-   *          The start date
-   * @param end
-   *          The end date
-   * @return The matching {@link DataSet}s
-   * @throws DatabaseException
-   *           If a database error occurs
-   * @throws MissingParamException
-   *           If any required parameters are missing
-   */
-  public static List<DataSet> getDatasetsBetweenDates(DataSource dataSource,
-    long instrumentId, LocalDateTime start, LocalDateTime end)
-    throws MissingParamException, DatabaseException {
-
-    MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkPositive(instrumentId, "instrumentId");
-
-    List<DataSet> result = new ArrayList<DataSet>();
-
-    try (Connection conn = dataSource.getConnection();
-      PreparedStatement stmt = conn
-        .prepareStatement(GET_DATASETS_BETWEEN_DATES_QUERY)) {
-
-      long startDateMillis = null != start ? DateTimeUtils.dateToLong(start)
-        : Long.MIN_VALUE;
-      long endDateMillis = null != end ? DateTimeUtils.dateToLong(end)
-        : Long.MAX_VALUE;
-
-      stmt.setLong(1, instrumentId);
-      stmt.setLong(2, endDateMillis);
-      stmt.setLong(3, startDateMillis);
-
-      try (ResultSet records = stmt.executeQuery()) {
-
-        while (records.next()) {
-          result.add(dataSetFromRecord(conn, records));
-        }
-
-      } catch (Exception e) {
-        throw new DatabaseException("Error while retrieving datasets", e);
-      }
-
-    } catch (SQLException e) {
-      throw new DatabaseException("Error while retrieving datasets", e);
-    }
-
-    return result;
   }
 
   /**

@@ -104,7 +104,7 @@ public class TimeCoordinate extends Coordinate {
    * Get a TimeCoordinate for a specified timestamp.
    *
    * <p>
-   * The existing coordinates for the DataSet are supplied in
+   * The {@link Collection} of {@link Coordinate}s to search is supplied in
    * {@code existingCoordinates}. If a coordinate exists with the specified
    * time, that coordinate is returned. Otherwise a new {@link TimeCoordinate}
    * object is created with the specified time. Calling {@link #isInDatabase()}
@@ -128,10 +128,28 @@ public class TimeCoordinate extends Coordinate {
         existingCoordinates.stream().findFirst().get().getDatasetId(), time));
   }
 
+  /**
+   * Determines whether or not this {@code TimeCoordinate} is before the
+   * specified time.
+   *
+   * @param time
+   *          The time.
+   * @return {@code true} if this TimeCoordinate is before the time;
+   *         {@code false} otherwise.
+   */
   public boolean isBefore(LocalDateTime time) {
     return getTime().isBefore(time);
   }
 
+  /**
+   * Determines whether or not this {@code TimeCoordinate} is after the
+   * specified time.
+   *
+   * @param time
+   *          The time.
+   * @return {@code true} if this TimeCoordinate is after the time;
+   *         {@code false} otherwise.
+   */
   public boolean isAfter(LocalDateTime time) {
     return getTime().isAfter(time);
   }

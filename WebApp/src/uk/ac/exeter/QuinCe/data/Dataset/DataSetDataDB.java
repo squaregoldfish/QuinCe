@@ -73,8 +73,7 @@ public class DataSetDataDB {
    */
   private static final String STORE_NEW_SENSOR_VALUE_STATEMENT = "INSERT INTO "
     + "sensor_values (coordinate_id, file_column, value, "
-    + "auto_qc, user_qc_flag, user_qc_message) "
-    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+    + "auto_qc, user_qc_flag, user_qc_message) VALUES (?, ?, ?, ?, ?, ?)";
 
   private static final String UPDATE_SENSOR_VALUE_STATEMENT = "UPDATE sensor_values "
     + "SET auto_qc=?, user_qc_flag=?, user_qc_message=? WHERE id = ?";
@@ -83,29 +82,31 @@ public class DataSetDataDB {
    * Statement to remove all sensor values for a data set
    */
   private static final String DELETE_SENSOR_VALUES_STATEMENT = "DELETE FROM "
-    + "sensor_values WHERE dataset_id = ?";
+    + "sensor_values WHERE coordinate_id IN (SELECT id FROM coordinates WHERE dataset_id = ?)";
 
   private static final String GET_SENSOR_VALUES_FOR_DATASET_QUERY = "SELECT "
-    + "id, coordinate_id, file_column, value, auto_qc, "
-    + "user_qc_flag, user_qc_message "
-    + "FROM sensor_values WHERE dataset_id = ? ORDER BY id";
+    + "sv.id, sv.coordinate_id, sv.file_column, sv.value, sv.auto_qc, "
+    + "sv.user_qc_flag, sv.user_qc_message "
+    + "FROM sensor_values sv INNER JOIN coordinates c ON sv.coordinate_id = c.id "
+    + "WHERE c.dataset_id = ? ORDER BY sv.id";
 
   private static final String GET_SENSOR_VALUES_FOR_DATASET_NO_FLUSHING_QUERY = "SELECT "
-    + "id, coordinate_id, file_column, value, auto_qc, "
-    + "user_qc_flag, user_qc_message "
-    + "FROM sensor_values  WHERE dataset_id = ? AND user_qc_flag != "
-    + Flag.VALUE_FLUSHING;
+    + "sv.id, sv.coordinate_id, sv.file_column, sv.value, sv.auto_qc, "
+    + "sv.user_qc_flag, sv.user_qc_message "
+    + "FROM sensor_values sv INNER JOIN coordinates c ON sv.coordinate_id = c.id "
+    + "WHERE c.dataset_id = ? AND user_qc_flag != " + Flag.VALUE_FLUSHING;
 
   private static final String GET_POSITION_SENSOR_VALUES_QUERY = "SELECT "
-    + "id, file_column, value, auto_qc, " + "user_qc_flag, user_qc_message "
-    + "FROM sensor_values WHERE dataset_id = ? AND file_column IN ("
-    + SensorType.LONGITUDE_ID + ", " + SensorType.LATITUDE_ID + ")";
+    + "sv.id, sv.file_column, sv.value, av.auto_qc, sv.user_qc_flag, sv.user_qc_message "
+    + "FROM sensor_values sv INNER JOIN coordinates c ON sv.coordinate_id = c.id "
+    + "WHERE c.dataset_id = ? AND sv.file_column IN (" + SensorType.LONGITUDE_ID
+    + ", " + SensorType.LATITUDE_ID + ")";
 
   /**
    * Statement to store a measurement record
    */
   private static final String STORE_MEASUREMENT_STATEMENT = "INSERT INTO "
-    + "measurements (dataset_id, coordinate_id) " + "VALUES (?, ?)";
+    + "measurements (coordinate_id) " + "VALUES (?)";
 
   private static final String STORE_RUN_TYPE_STATEMENT = "INSERT INTO "
     + "measurement_run_types (measurement_id, variable_id, run_type) "
@@ -117,7 +118,8 @@ public class DataSetDataDB {
   private static final String GET_MEASUREMENTS_QUERY = "SELECT "
     + "m.id, m.coordinate_id, m.measurement_values, r.variable_id, r.run_type "
     + "FROM measurements m LEFT JOIN measurement_run_types r ON r.measurement_id = m.id "
-    + "WHERE dataset_id = ? " + "ORDER BY m.date ASC";
+    + "INNER JOIN coordinates c ON m.coordinate_id = c.id "
+    + "WHERE c.dataset_id = ? " + "ORDER BY c.date ASC";
 
   /**
    * Statement to store a data reduction result
@@ -145,44 +147,50 @@ public class DataSetDataDB {
     + "measurements WHERE dataset_id = ?";
 
   private static final String GET_REQUIRED_FLAGS_QUERY = "SELECT "
-    + "COUNT(*) FROM sensor_values WHERE dataset_id = ? "
-    + "AND user_qc_flag = " + Flag.VALUE_NEEDED;
+    + "COUNT(*) FROM sensor_values sv INNER JOIN coordinates c ON sv.coordinate_id = c.id "
+    + "WHERE c.dataset_id = ? AND sv.user_qc_flag = " + Flag.VALUE_NEEDED;
 
   private static final String GET_DATA_REDUCTION_QUERY = "SELECT "
     + "dr.measurement_id, dr.variable_id, dr.calculation_values, "
-    + "dr.qc_flag, dr.qc_message FROM data_reduction dr INNER JOIN "
-    + "measurements m ON dr.measurement_id = m.id WHERE m.dataset_id = ? "
-    + "ORDER BY dr.measurement_id ASC";
+    + "dr.qc_flag, dr.qc_message FROM data_reduction dr "
+    + "INNER JOIN measurements m ON dr.measurement_id = m.id "
+    + "INNER JOIN coordinates c ON m.coordinate_id = c.id "
+    + "WHERE c.dataset_id = ? ORDER BY dr.measurement_id ASC";
 
   private static final String GET_RUN_TYPES_QUERY = "SELECT "
-    + "coordinate_id, value FROM sensor_values "
-    + "FROM sensor_values WHERE dataset_id = ? AND file_column IN "
+    + "sv.coordinate_id, sv.value FROM sensor_values "
+    + "FROM sensor_values sv INNER JOIN coordinates c ON sv.coordinate_id = c.id "
+    + "WHERE c.dataset_id = ? AND file_column IN "
     + DatabaseUtils.IN_PARAMS_TOKEN + " ORDER BY date ASC";
 
   private static final String STORE_MEASUREMENT_VALUES_STATEMENT = "UPDATE measurements "
     + "SET measurement_values = ? WHERE id = ?";
 
   private static final String GET_INTERNAL_CALIBRATION_SENSOR_VALUES_QUERY = "SELECT "
-    + "id, coordinate_id, file_column, value, auto_qc, "
-    + "user_qc_flag, user_qc_message, mrt.run_type " + "FROM sensor_values sv "
+    + "sv.id, sv.coordinate_id, sv.file_column, sv.value, sv.auto_qc, "
+    + "sv.user_qc_flag, sv.user_qc_message, mrt.run_type "
+    + "FROM sensor_values sv "
     + "INNER JOIN measurements m ON m.date = sv.date "
     + "INNER JOIN measurement_run_types mrt ON m.id = mrt.measurement_id "
-    + "WHERE m.dataset_id = ? AND mrt.run_type IN "
+    + "INNER JOIN coordinates c ON sv.coordinate_id = c.id "
+    + "WHERE c.dataset_id = ? AND mrt.run_type IN "
     + DatabaseUtils.IN_PARAMS_TOKEN + " AND sv.file_column IN "
     + DatabaseUtils.IN_PARAMS_TOKEN;
 
   private static final String GET_INTERNAL_CALIBRATION_SENSOR_VALUE_IDS_QUERY = "SELECT "
     + "sv.id FROM sensor_values sv "
-    + "INNER JOIN measurements m ON m.date = sv.date "
+    + "INNER JOIN measurements m ON m.coordinate_id = sv.coordinate_id "
     + "INNER JOIN measurement_run_types mrt ON m.id = mrt.measurement_id "
-    + "WHERE m.dataset_id = ? AND mrt.run_type IN "
+    + "INNER JOIN coordinates c ON sv.coordinate_id = c.id "
+    + "WHERE c.dataset_id = ? AND mrt.run_type IN "
     + DatabaseUtils.IN_PARAMS_TOKEN + " AND sv.file_column IN "
     + DatabaseUtils.IN_PARAMS_TOKEN + " ORDER BY sv.id";
 
   private static final String HAS_CALIBRATION_NEEDED_FLAGS_QUERY = "SELECT "
-    + "COUNT(*) FROM data_reduction WHERE measurement_id IN "
-    + "(SELECT id FROM measurements WHERE dataset_id = ?) " + "AND qc_flag = "
-    + Flag.VALUE_NOT_CALIBRATED;
+    + "COUNT(*) FROM data_reduction dr "
+    + "INNER JOIN measurements m ON dr.measurement_id = m.id "
+    + "INNER JOIN coordinates c ON m.coordinate_id = c.id "
+    + "WHERE c.dataset_id = ? AND dr.qc_flag = " + Flag.VALUE_NOT_CALIBRATED;
 
   private static final String UPDATE_MEASUREMENT_COORDINATE_STATEMENT = "UPDATE "
     + "measurements SET coordinate_id = ? WHERE id = ?";
@@ -447,9 +455,7 @@ public class DataSetDataDB {
       throw new DatabaseException("Error storing sensor values", e);
     } catch (Exception e) {
       try {
-        addStmt.close();
-        updateStmt.close();
-
+        DatabaseUtils.closeStatements(addStmt, updateStmt);
         conn.rollback();
         conn.setAutoCommit(autoCommitStatus);
       } catch (SQLException e2) {
@@ -708,8 +714,7 @@ public class DataSetDataDB {
 
       // Batch up all the measurements
       for (Measurement measurement : measurements) {
-        measurementStmt.setLong(1, measurement.getDatasetId());
-        measurementStmt.setLong(2, measurement.getCoordinate().getId());
+        measurementStmt.setLong(1, measurement.getCoordinate().getId());
         measurementStmt.execute();
 
         try (ResultSet createdKey = measurementStmt.getGeneratedKeys()) {

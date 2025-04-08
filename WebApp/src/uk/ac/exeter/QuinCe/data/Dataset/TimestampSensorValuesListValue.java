@@ -383,4 +383,9 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
   public boolean interpolatesAroundFlags() {
     return false;
   }
+
+  public boolean encompasses(TimeCoordinate time) {
+    return DateTimeUtils.isBetween(time.getTime(), startTime.getTime(),
+      endTime.getTime());
+  }
 }

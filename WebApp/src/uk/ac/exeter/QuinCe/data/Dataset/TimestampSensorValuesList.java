@@ -173,6 +173,10 @@ public class TimestampSensorValuesList extends SensorValuesList {
    */
   @Override
   public void add(SensorValue value) {
+    if (null == value) {
+      throw new IllegalArgumentException("Value cannot be null");
+    }
+
     if (value.getCoordinate().getType() != Instrument.BASIS_TIME) {
       throw new IllegalArgumentException(
         "Only time-based SensorValues are allowed");
@@ -746,7 +750,11 @@ public class TimestampSensorValuesList extends SensorValuesList {
         post = outputValues.get(postIndex);
       }
 
-      if (null == prior) {
+      if (null != prior && prior.encompasses(time)) {
+        result = new TimestampSensorValuesListOutput(prior, time, false);
+      } else if (null != post && post.encompasses(time)) {
+        result = new TimestampSensorValuesListOutput(post, time, false);
+      } else if (null == prior) {
         result = new TimestampSensorValuesListOutput(post, time, false);
       } else if (null == post) {
         result = new TimestampSensorValuesListOutput(prior, time, false);
@@ -990,8 +998,11 @@ public class TimestampSensorValuesList extends SensorValuesList {
     if (usedValues.size() > 0) {
       result = makeNumericValue(usedValues, nominalTime, true);
     } else if (allowInterpolation) {
-      result = new TimestampSensorValuesListOutput(
-        (TimestampSensorValuesListValue) getValue(nominalTime, true), true);
+      TimestampSensorValuesListValue foundValue = (TimestampSensorValuesListValue) getValue(
+        nominalTime, true);
+      result = null == foundValue ? null
+        : new TimestampSensorValuesListOutput(foundValue,
+          foundValue.interpolatesAroundFlags());
     }
 
     return result;

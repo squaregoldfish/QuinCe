@@ -80,7 +80,7 @@ public class V49__non_time_measurements_2931 extends BaseJavaMigration {
     while (lastCoordId < maxCoordId) {
       getCoordsQuery.setLong(1, lastCoordId);
 
-      // Copy coordinate IDs back to
+      // Copy coordinate IDs back to sensor values
       ResultSet coords = getCoordsQuery.executeQuery();
       while (coords.next()) {
         long coordId = coords.getLong(1);

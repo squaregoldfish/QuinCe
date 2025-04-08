@@ -69,43 +69,43 @@ public class CariocaReducer extends DataReducer {
 
     try {
       A = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "tempA", dataset.getStart().getTime()).getBigDecimalValue();
+        variable, "tempA", dataset.getStartTime()).getBigDecimalValue();
 
       B = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "tempB", dataset.getStart().getTime()).getBigDecimalValue();
+        variable, "tempB", dataset.getStartTime()).getBigDecimalValue();
 
       C = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "tempC", dataset.getStart().getTime()).getBigDecimalValue();
+        variable, "tempC", dataset.getStartTime()).getBigDecimalValue();
 
       RL = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "tempRL", dataset.getStart().getTime()).getValue();
+        variable, "tempRL", dataset.getStartTime()).getValue();
 
       RH = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "tempRH", dataset.getStart().getTime()).getValue();
+        variable, "tempRH", dataset.getStartTime()).getValue();
 
       R1 = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "tempR1", dataset.getStart().getTime()).getValue();
+        variable, "tempR1", dataset.getStartTime()).getValue();
 
       a = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "co2a", dataset.getStart().getTime()).getValue();
+        variable, "co2a", dataset.getStartTime()).getValue();
 
       b = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "co2b", dataset.getStart().getTime()).getValue();
+        variable, "co2b", dataset.getStartTime()).getValue();
 
       c = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "co2c", dataset.getStart().getTime()).getValue();
+        variable, "co2c", dataset.getStartTime()).getValue();
 
       k = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "co2k", dataset.getStart().getTime()).getValue();
+        variable, "co2k", dataset.getStartTime()).getValue();
 
       kPrime = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "co2k'", dataset.getStart().getTime()).getValue();
+        variable, "co2k'", dataset.getStartTime()).getValue();
 
       A_T = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "A_T", dataset.getStart().getTime()).getValue();
+        variable, "A_T", dataset.getStartTime()).getValue();
 
       e1 = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "e1", dataset.getStart().getTime()).getValue();
+        variable, "e1", dataset.getStartTime()).getValue();
     } catch (Exception e) {
       throw new DataReductionException(e);
     }

@@ -5,17 +5,20 @@ ALTER TABLE sensor_values ADD CONSTRAINT sv_coord FOREIGN KEY (coordinate_id) RE
 ALTER TABLE measurements ADD CONSTRAINT meas_coord FOREIGN KEY (coordinate_id) REFERENCES coordinates(id);
 
 -- Remove old sensor_values columns
+DROP INDEX SV_DATASETID_DATE ON sensor_values;
 ALTER TABLE sensor_values DROP FOREIGN KEY SENSORVALUE_DATASET;
-ALTER TABLE sensor_values DROP INDEX sv_datasetid_date;
 ALTER TABLE sensor_values DROP COLUMN dataset_id;
 ALTER TABLE sensor_values DROP COLUMN date;
 
--- Remove old measurements columns                                                                                                                           |  -------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Remove old measurements columns
+DROP INDEX MEAS_DATASETID_DATE ON measurements;
 ALTER TABLE measurements DROP FOREIGN KEY measurement_dataset;
-ALTER TABLE measurements DROP INDEX MEAS_DATASETID_DATE;
 ALTER TABLE measurements DROP COLUMN dataset_id;
 ALTER TABLE measurements DROP COLUMN date;
 
+-- Remove the original dataset start and end columns
+ALTER TABLE dataset CHANGE start start_time BIGINT(20);
+ALTER TABLE dataset CHANGE end end_time BIGINT(20);
 
 -- Add measurement basis columns
 -- All existing instruments and variables are surface based

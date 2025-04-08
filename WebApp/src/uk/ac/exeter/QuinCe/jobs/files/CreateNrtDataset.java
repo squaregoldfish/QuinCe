@@ -8,7 +8,6 @@ import java.util.Properties;
 import uk.ac.exeter.QuinCe.User.User;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
-import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -89,7 +88,7 @@ public class CreateNrtDataset extends Job {
         ResourceManager.getInstance().getConfig(), instrument);
 
       if (null != lastDataset) {
-        nrtStartDate = lastDataset.getEnd().getTime().plusSeconds(1);
+        nrtStartDate = lastDataset.getEndTime().plusSeconds(1);
       } else {
         // We can only continue if there's at least one file
         if (instrumentFiles.size() > 0) {
@@ -115,8 +114,7 @@ public class CreateNrtDataset extends Job {
           String nrtDatasetName = buildNrtDatasetName(instrument);
 
           DataSet newDataset = new DataSet(instrument, nrtDatasetName,
-            new TimeCoordinate(nrtStartDate), new TimeCoordinate(endDate),
-            true);
+            nrtStartDate, endDate, true);
           DataSetDB.addDataSet(conn, newDataset);
 
           // TODO This is a copy of the code in DataSetsBean.addDataSet. Does

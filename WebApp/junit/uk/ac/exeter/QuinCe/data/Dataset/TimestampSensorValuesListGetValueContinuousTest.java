@@ -19,6 +19,8 @@ import uk.ac.exeter.QuinCe.TestBase.TestSetTest;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.InvalidFlagException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
+import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -81,8 +83,11 @@ public class TimestampSensorValuesListGetValueContinuousTest
   @MethodSource("getLines")
   public void getValueTest(TestSetLine line) throws Exception {
 
+    Instrument instrument = InstrumentDB.getInstrument(getConnection(),
+      DATASET_ID);
     DatasetSensorValues allSensorValues = new DatasetSensorValues(
       Mockito.mock(DataSet.class));
+    Mockito.when(allSensorValues.getInstrument()).thenReturn(instrument);
 
     buildSensorValues(allSensorValues, line);
 

@@ -131,7 +131,7 @@ INSERT INTO file_column
  -- Start date = 2024-01-01 00:00:00
  -- End date = 2024-01-10 00:00:00
  INSERT INTO dataset
-   (id, instrument_id, name, start, end, min_longitude, max_longitude, min_latitude, max_latitude,
+   (id, instrument_id, name, start_time, end_time, min_longitude, max_longitude, min_latitude, max_latitude,
     status, status_date, properties)
    VALUES
    (1, 1, 'Dataset', 1704067200000, 1704844800000, 0, 0, 0, 0, 50, 1704844800000,

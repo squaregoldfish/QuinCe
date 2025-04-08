@@ -138,15 +138,15 @@ public class ExtractDataSetJob extends DataSetJob {
 
       LocalDateTime filesLatestStart = TimeRange
         .getLatestStart(fileDefinitionRanges.values());
-      if (filesLatestStart.isAfter(dataSet.getStart().getTime())) {
-        dataSet.setStart(new TimeCoordinate(dataSet.getId(), filesLatestStart));
+      if (filesLatestStart.isAfter(dataSet.getStartTime())) {
+        dataSet.setStartTime(filesLatestStart);
 
       }
 
       LocalDateTime filesEarliestEnd = TimeRange
         .getEarliestEnd(fileDefinitionRanges.values());
-      if (filesEarliestEnd.isBefore(dataSet.getEnd().getTime())) {
-        dataSet.setEnd(new TimeCoordinate(dataSet.getId(), filesEarliestEnd));
+      if (filesEarliestEnd.isBefore(dataSet.getEndTime())) {
+        dataSet.setEndTime(filesEarliestEnd);
       }
 
       // Collect the data bounds
@@ -157,8 +157,6 @@ public class ExtractDataSetJob extends DataSetJob {
 
       // Initialise the coordinates cache
       Set<Coordinate> coordinates = new TreeSet<Coordinate>();
-      coordinates.add(dataSet.getStart());
-      coordinates.add(dataSet.getEnd());
 
       for (DataFile file : files) {
         FileDefinition fileDefinition = file.getFileDefinition();
@@ -204,10 +202,10 @@ public class ExtractDataSetJob extends DataSetJob {
 
             LocalDateTime time = file.getOffsetTime(line);
 
-            if ((time.equals(dataSet.getStart())
-              || time.isAfter(dataSet.getStart().getTime()))
-              && (time.isBefore(dataSet.getEnd().getTime())
-                || time.isEqual(dataSet.getEnd().getTime()))) {
+            if ((time.equals(dataSet.getStartTime())
+              || time.isAfter(dataSet.getStartTime()))
+              && (time.isBefore(dataSet.getEndTime())
+                || time.isEqual(dataSet.getEndTime()))) {
 
               if (!dataSet.fixedPosition() && fileDefinition.hasPosition()) {
 

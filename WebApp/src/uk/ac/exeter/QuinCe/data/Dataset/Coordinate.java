@@ -6,7 +6,6 @@ import java.util.Objects;
 import javax.sound.midi.Instrument;
 
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
-import uk.ac.exeter.QuinCe.utils.MissingParam;
 
 /**
  * Holds a coordinate that is the basic index for a {@link SensorValue} or
@@ -51,13 +50,11 @@ public abstract class Coordinate implements Comparable<Coordinate> {
   private LocalDateTime time = null;
 
   public Coordinate(long id, long datasetId) {
-    MissingParam.checkPositive(datasetId, "datasetId");
     this.id = id;
     this.datasetId = datasetId;
   }
 
   public Coordinate(long id, long datasetId, LocalDateTime time) {
-    MissingParam.checkPositive(datasetId, "datasetId");
     this.id = id;
     this.datasetId = datasetId;
     this.time = time;
@@ -122,7 +119,7 @@ public abstract class Coordinate implements Comparable<Coordinate> {
    *           If the coordinate already has an ID.
    */
   protected void setId(long id) throws CoordinateException {
-    if (id != DatabaseUtils.NO_DATABASE_RECORD) {
+    if (this.id != DatabaseUtils.NO_DATABASE_RECORD) {
       throw new CoordinateException("Coordinate already has a database id");
     }
     this.id = id;
@@ -143,11 +140,7 @@ public abstract class Coordinate implements Comparable<Coordinate> {
   @Override
   public final int compareTo(Coordinate other) {
     if (getClass() == other.getClass()) {
-      int result = Long.compare(datasetId, other.datasetId);
-      if (result == 0) {
-        result = this.compareToWorker(other);
-      }
-      return result;
+      return this.compareToWorker(other);
     } else {
       throw new IllegalArgumentException(
         "Cannot compare coordinates of different types");

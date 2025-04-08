@@ -17,8 +17,8 @@ ALTER TABLE measurements DROP COLUMN dataset_id, ALGORITHM = INPLACE, LOCK = NON
 ALTER TABLE measurements DROP COLUMN date, ALGORITHM = INPLACE, LOCK = NONE;
 
 -- Remove the original dataset start and end columns
-ALTER TABLE dataset DROP COLUMN start;
-ALTER TABLE dataset DROP COLUMN end;
+ALTER TABLE dataset CHANGE start start_time BIGINT(20);
+ALTER TABLE dataset CHANGE end end_time BIGINT(20);
 
 SET SESSION foreign_key_checks = ON;
 

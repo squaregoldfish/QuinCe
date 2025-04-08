@@ -517,7 +517,7 @@ public abstract class CalibrationDB {
     CalibrationException {
 
     return getCalibrationSet(conn, dataset.getInstrument(),
-      dataset.getStart().getTime(), dataset.getEnd().getTime());
+      dataset.getStartTime(), dataset.getEndTime());
   }
 
   /**

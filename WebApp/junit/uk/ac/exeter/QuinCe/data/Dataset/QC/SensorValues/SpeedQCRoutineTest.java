@@ -85,9 +85,11 @@ public class SpeedQCRoutineTest extends TestSetTest {
     Instrument instrument = Mockito.mock(Instrument.class);
     Mockito.when(instrument.getSensorAssignments())
       .thenReturn(sensorAssignments);
+    Mockito.when(instrument.getBasis()).thenReturn(Instrument.BASIS_TIME);
 
     DatasetSensorValues allSensorValues = new DatasetSensorValues(
       Mockito.mock(DataSet.class));
+    Mockito.when(allSensorValues.getInstrument()).thenReturn(instrument);
 
     boolean has1 = true;
     boolean has2 = false;

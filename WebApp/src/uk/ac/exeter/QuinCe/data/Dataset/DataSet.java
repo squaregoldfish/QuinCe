@@ -223,14 +223,14 @@ public class DataSet implements Comparable<DataSet> {
   private String name;
 
   /**
-   * The start {@link Coordinate} of the data set
+   * The start date of the DataSet.
    */
-  private Coordinate start;
+  private LocalDateTime startTime;
 
   /**
-   * The end {@link Coordinate} of the data set
+   * The end date of the data set
    */
-  private Coordinate end;
+  private LocalDateTime endTime;
 
   /**
    * Properties for each of the measured variables
@@ -344,7 +344,7 @@ public class DataSet implements Comparable<DataSet> {
    *          Database ID of the instrument to which the data set belongs
    * @param name
    *          Dataset name
-   * @param start
+   * @param startDate
    *          Start coordinate
    * @param end
    *          End coordinate
@@ -373,8 +373,8 @@ public class DataSet implements Comparable<DataSet> {
    *
    */
   protected DataSet(long id, Instrument instrument, String name,
-    Coordinate start, Coordinate end, int status, LocalDateTime statusDate,
-    boolean nrt, Map<String, Properties> properties,
+    LocalDateTime startDate, LocalDateTime endDate, int status,
+    LocalDateTime statusDate, boolean nrt, Map<String, Properties> properties,
     SensorOffsets sensorOffsets, LocalDateTime createdDate,
     LocalDateTime lastTouched, List<Message> errorMessages,
     DatasetProcessingMessages processingMessages,
@@ -384,8 +384,8 @@ public class DataSet implements Comparable<DataSet> {
     this.id = id;
     this.instrument = instrument;
     this.name = name;
-    this.start = start;
-    this.end = end;
+    this.startTime = startDate;
+    this.endTime = endDate;
     this.status = status;
     this.statusDate = statusDate;
     this.nrt = nrt;
@@ -428,18 +428,18 @@ public class DataSet implements Comparable<DataSet> {
    * @param name
    *          Dataset name
    * @param start
-   *          Start coordinate
+   *          Start date
    * @param end
-   *          End coordinate
+   *          End date
    * @param nrt
    *          Indicates whether or not this is a NRT dataset
    */
-  public DataSet(Instrument instrument, String name, Coordinate start,
-    Coordinate end, boolean nrt) {
+  public DataSet(Instrument instrument, String name, LocalDateTime startDate,
+    LocalDateTime endDate, boolean nrt) {
     this.instrument = instrument;
     this.name = name;
-    this.start = start;
-    this.end = end;
+    this.startTime = startDate;
+    this.endTime = endDate;
     this.nrt = nrt;
     this.statusDate = DateTimeUtils.longToDate(System.currentTimeMillis());
     loadProperties(instrument);
@@ -552,41 +552,41 @@ public class DataSet implements Comparable<DataSet> {
   }
 
   /**
-   * Get the start {@link Coordinate} of the data set
+   * Get the start date of the data set
    *
-   * @return The start coordinate
+   * @return The start date
    */
-  public Coordinate getStart() {
-    return start;
+  public LocalDateTime getStartTime() {
+    return startTime;
   }
 
   /**
-   * Set the start {@link Coordinate} of the data set
+   * Set the start date of the data set
    *
    * @param start
-   *          The start coordinate
+   *          The start date
    */
-  public void setStart(Coordinate start) {
-    this.start = start;
+  public void setStartTime(LocalDateTime startTime) {
+    this.startTime = startTime;
   }
 
   /**
-   * Get the end {@link Coordinate} of the data set
+   * Get the end date of the data set
    *
-   * @return The end coordinate
+   * @return The end date
    */
-  public Coordinate getEnd() {
-    return end;
+  public LocalDateTime getEndTime() {
+    return endTime;
   }
 
   /**
-   * Set the end {@link Coordinate} of the data set
+   * Set the end date of the data set
    *
    * @param end
-   *          The end coordinate
+   *          The end date
    */
-  public void setEnd(Coordinate end) {
-    this.end = end;
+  public void setEndTime(LocalDateTime endTime) {
+    this.endTime = endTime;
   }
 
   /**
@@ -744,8 +744,8 @@ public class DataSet implements Comparable<DataSet> {
    */
   public List<Long> getSourceFiles(Connection conn)
     throws MissingParamException, DatabaseException {
-    return DataFileDB.getFilesWithinDates(conn, instrument, start.getTime(),
-      end.getTime(), true);
+    return DataFileDB.getFilesWithinDates(conn, instrument, startTime, endTime,
+      true);
   }
 
   /**
@@ -924,7 +924,7 @@ public class DataSet implements Comparable<DataSet> {
 
   @Override
   public int compareTo(DataSet o) {
-    return start.compareTo(o.start);
+    return startTime.compareTo(o.startTime);
   }
 
   public void addProcessingMessage(String module, String message) {

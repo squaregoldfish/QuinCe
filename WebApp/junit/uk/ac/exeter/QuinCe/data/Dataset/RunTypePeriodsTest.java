@@ -157,7 +157,7 @@ public class RunTypePeriodsTest extends BaseTest {
     RunTypePeriod period = periods.get(0);
     assertEquals(new TimeCoordinate(LocalDateTime.of(2000, 1, 1, 0, 0, 0)),
       period.getStart());
-    assertEquals(LocalDateTime.MAX, period.getEnd());
+    assertEquals(TimeCoordinate.MAX, period.getEnd());
   }
 
   @Test
@@ -172,7 +172,7 @@ public class RunTypePeriodsTest extends BaseTest {
     RunTypePeriod period = periods.get(0);
     assertEquals(new TimeCoordinate(LocalDateTime.of(2000, 1, 1, 0, 0, 0)),
       period.getStart());
-    assertEquals(LocalDateTime.MAX, period.getEnd());
+    assertEquals(TimeCoordinate.MAX, period.getEnd());
   }
 
   @Test
