@@ -706,7 +706,7 @@ public class MissingParamTest extends BaseTest {
   }
 
   /**
-   * Test the database ID check (with NO RECORD option not set) with a negative
+   * Test the database ID check (with NO RECORD option set) with a negative
    * value.
    */
   @Test
@@ -716,7 +716,7 @@ public class MissingParamTest extends BaseTest {
   }
 
   /**
-   * Test the database ID check (with NO RECORD option not set) with a NO RECORD
+   * Test the database ID check (with NO RECORD option set) with a NO RECORD
    * value.
    */
   @Test
@@ -736,7 +736,7 @@ public class MissingParamTest extends BaseTest {
   }
 
   /**
-   * Test the database ID check (with NO RECORD option not set) with a positive
+   * Test the database ID check (with NO RECORD option set) with a positive
    * value.
    */
   @Test

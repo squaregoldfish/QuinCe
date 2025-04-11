@@ -178,7 +178,7 @@ public class MissingParam {
   /**
    * Ensure that a {@link String} is not null, or its trimmed value is not
    * empty.
-   * 
+   *
    * @param string
    * @param stringName
    * @throws MissingParamException
@@ -305,7 +305,7 @@ public class MissingParam {
   /**
    * Check whether a value is a valid database ID. Optionally allow the
    * {@link DatabaseUtils#NO_DATABASE_RECORD} value.
-   * 
+   *
    * @param parameter
    *          The parameter value.
    * @param parameterName
