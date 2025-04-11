@@ -1285,7 +1285,7 @@ public class DataSetDataDB {
     throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(datasetId, "datasetId");
+    MissingParam.checkDatabaseId(datasetId, "datasetId", false);
 
     try (PreparedStatement drStmt = conn
       .prepareStatement(DELETE_DATA_REDUCTION_STATEMENT);) {

@@ -841,7 +841,7 @@ public class InstrumentDB {
     SensorGroupsException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     SensorsConfiguration sensorConfig = ResourceManager.getInstance()
       .getSensorsConfiguration();
@@ -1223,7 +1223,7 @@ public class InstrumentDB {
     long categoryType) throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     List<String> runTypes = new ArrayList<String>();
 
@@ -1276,7 +1276,7 @@ public class InstrumentDB {
     Map<String, String> result = new LinkedHashMap<String, String>();
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     PreparedStatement stmt = null;
     ResultSet records = null;
@@ -1391,7 +1391,7 @@ public class InstrumentDB {
     RunTypeAssignment runType) throws SQLException, MissingParamException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(fileId, "fileId");
+    MissingParam.checkDatabaseId(fileId, "fileId", false);
     MissingParam.checkMissing(runType, "runType");
 
     PreparedStatement runTypeStatement = conn
@@ -1735,7 +1735,7 @@ public class InstrumentDB {
     SensorTypeNotFoundException {
 
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     SensorsConfiguration sensorConfig = ResourceManager.getInstance()
       .getSensorsConfiguration();
@@ -1840,7 +1840,7 @@ public class InstrumentDB {
     IOException {
 
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     try (Connection conn = dataSource.getConnection()) {
       Instrument instrument = getInstrument(conn, instrumentId);

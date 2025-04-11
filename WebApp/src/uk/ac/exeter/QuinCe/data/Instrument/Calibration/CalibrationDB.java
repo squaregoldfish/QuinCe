@@ -218,8 +218,8 @@ public abstract class CalibrationDB {
     CalibrationEdit calibrationEdit) throws DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(calibrationEdit.getCalibrationId(),
-      "edit calibrationId");
+    MissingParam.checkDatabaseId(calibrationEdit.getCalibrationId(),
+      "edit calibrationId", false);
 
     try (PreparedStatement stmt = conn
       .prepareStatement(DELETE_CALIBRATION_STATEMENT);) {

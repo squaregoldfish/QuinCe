@@ -1063,7 +1063,7 @@ public class DataSetDB {
     throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     int result = 0;
 
@@ -1192,7 +1192,7 @@ public class DataSetDB {
     throws DatabaseException, MissingParamException, RecordNotFoundException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(datasetId, "datasetId");
+    MissingParam.checkDatabaseId(datasetId, "datasetId", false);
 
     PreparedStatement setExportedStmt = null;
     PreparedStatement setLastNrtStmt = null;

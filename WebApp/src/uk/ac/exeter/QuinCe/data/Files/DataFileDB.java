@@ -399,7 +399,7 @@ public class DataFileDB {
     throws MissingParamException, DatabaseException, RecordNotFoundException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(fileId, "fileId");
+    MissingParam.checkDatabaseId(fileId, "fileId", false);
 
     boolean result = false;
 
@@ -1051,7 +1051,7 @@ public class DataFileDB {
     long instrumentId, boolean applyOffset)
     throws MissingParamException, DatabaseException {
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     LocalDateTime result = null;
 

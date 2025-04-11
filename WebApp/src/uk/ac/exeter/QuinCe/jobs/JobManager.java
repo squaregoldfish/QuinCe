@@ -802,7 +802,7 @@ public class JobManager {
     DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(jobID, "jobID");
+    MissingParam.checkDatabaseId(jobID, "jobID", false);
     MissingParam.checkZeroPositive(progress, "progress");
 
     if (progress < 0 || progress > 100) {
@@ -1239,7 +1239,7 @@ public class JobManager {
   private static String getJobStatus(DataSource dataSource, long jobId)
     throws MissingParamException, NoSuchJobException, DatabaseException {
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkPositive(jobId, "jobId");
+    MissingParam.checkDatabaseId(jobId, "jobId", false);
 
     String result = null;
 
@@ -1273,7 +1273,7 @@ public class JobManager {
     String result = null;
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(jobId, "jobId");
+    MissingParam.checkDatabaseId(jobId, "jobId", false);
 
     PreparedStatement stmt = null;
     ResultSet record = null;
@@ -1318,7 +1318,7 @@ public class JobManager {
   public static User getJobOwner(DataSource dataSource, long jobId)
     throws MissingParamException, DatabaseException, NoSuchJobException {
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkPositive(jobId, "jobId");
+    MissingParam.checkDatabaseId(jobId, "jobId", false);
 
     User owner = null;
     Connection conn = null;
@@ -1354,7 +1354,7 @@ public class JobManager {
   public static User getJobOwner(Connection conn, long jobId)
     throws MissingParamException, DatabaseException, NoSuchJobException {
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(jobId, "jobId");
+    MissingParam.checkDatabaseId(jobId, "jobId", false);
 
     User owner = null;
 
@@ -1530,7 +1530,7 @@ public class JobManager {
     UnrecognisedStatusException, NoSuchJobException,
     JobThreadPoolNotInitialisedException {
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkPositive(jobId, "jobId");
+    MissingParam.checkDatabaseId(jobId, "jobId", false);
 
     Connection conn = null;
 
@@ -1593,7 +1593,7 @@ public class JobManager {
     DatabaseException, NoSuchJobException,
     JobThreadPoolNotInitialisedException {
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(jobId, "jobId");
+    MissingParam.checkDatabaseId(jobId, "jobId", false);
 
     // Find the job in the Thread Pool
     int jobKilled = JobThreadPool.getInstance().killJob(jobId);
