@@ -418,7 +418,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
                   groupEndTime.getTime())),
                 groupMembers, sensorType, firstValue.getValue(),
                 firstValue.getDisplayFlag(allSensorValues),
-                firstValue.getDisplayQCMessage(allSensorValues));
+                firstValue.getDisplayQCMessage(allSensorValues), false);
               outputValues.add(outputValue);
 
               // End time and group members updated outside this block below
@@ -446,7 +446,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
             groupEndTime.getTime())),
           groupMembers, sensorType, firstValue.getValue(),
           firstValue.getDisplayFlag(allSensorValues),
-          firstValue.getDisplayQCMessage(allSensorValues));
+          firstValue.getDisplayQCMessage(allSensorValues), false);
         outputValues.add(outputValue);
       }
     } catch (Exception e) {
@@ -527,7 +527,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
       buildOutputValues();
     }
 
-    TimestampSensorValuesListOutput result;
+    TimestampSensorValuesListValue result;
 
     if (outputValues.size() == 0) {
       result = null;
@@ -561,11 +561,10 @@ public class TimestampSensorValuesList extends SensorValuesList {
    *           If the value cannot be constructed.
    * @see #getValue(LocalDateTime)
    */
-  private TimestampSensorValuesListOutput getValueContinuous(
-    TimeCoordinate time, boolean allowInterpolation)
-    throws SensorValuesListException {
+  private TimestampSensorValuesListValue getValueContinuous(TimeCoordinate time,
+    boolean allowInterpolation) throws SensorValuesListException {
 
-    TimestampSensorValuesListOutput result;
+    TimestampSensorValuesListValue result;
 
     int searchIndex = Collections.binarySearch(getValueCoordinates(), time);
     TimestampSensorValuesListValue exactMatch = null;
@@ -577,7 +576,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
     if (!allowInterpolation
       || (null != exactMatch && exactMatch.getQCFlag().isGood())) {
       // If the exact match is GOOD, use it
-      result = new TimestampSensorValuesListOutput(exactMatch, false);
+      result = new TimestampSensorValuesListValue(exactMatch, false);
     } else {
       // Get the best possible interpolated value
       int priorIndex = searchIndex >= 0 ? searchIndex - 1
@@ -585,20 +584,20 @@ public class TimestampSensorValuesList extends SensorValuesList {
       int postIndex = searchIndex >= 0 ? searchIndex + 1
         : Math.abs(searchIndex) - 1;
 
-      TimestampSensorValuesListOutput prior = findInterpContinuousValue(
+      TimestampSensorValuesListValue prior = findInterpContinuousValue(
         priorIndex, time.getTime(), -1, (x) -> x >= 0);
-      TimestampSensorValuesListOutput post = findInterpContinuousValue(
-        postIndex, time.getTime(), 1, (x) -> x < outputValues.size());
+      TimestampSensorValuesListValue post = findInterpContinuousValue(postIndex,
+        time.getTime(), 1, (x) -> x < outputValues.size());
 
-      TimestampSensorValuesListOutput interpolated = buildInterpolatedValue(
+      TimestampSensorValuesListValue interpolated = buildInterpolatedValue(
         prior, post, time,
-        TimestampSensorValuesListOutput.interpolatesAroundFlags(prior, post));
+        TimestampSensorValuesListValue.interpolatesAroundFlags(prior, post));
 
       // If the interpolated value has a better flag than the exact match,
       // use that.
       if (null == interpolated) {
         result = null == exactMatch ? null
-          : new TimestampSensorValuesListOutput(exactMatch, false);
+          : new TimestampSensorValuesListValue(exactMatch, false);
       } else if (null == exactMatch) {
         result = interpolated;
       } else if (exactMatch.getQCFlag()
@@ -606,7 +605,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
         result = interpolated;
         interpolated.setInterpolatesAroundFlags();
       } else {
-        result = new TimestampSensorValuesListOutput(exactMatch, false);
+        result = new TimestampSensorValuesListValue(exactMatch, false);
         ;
       }
     }
@@ -640,11 +639,11 @@ public class TimestampSensorValuesList extends SensorValuesList {
    *          An additional test that the value must meet.
    * @return The found value.
    */
-  private TimestampSensorValuesListOutput findInterpContinuousValue(
+  private TimestampSensorValuesListValue findInterpContinuousValue(
     int startIndex, LocalDateTime referenceTime, int stepDirection,
     IntPredicate limitTest) {
 
-    TimestampSensorValuesListOutput result = null;
+    TimestampSensorValuesListValue result = null;
     boolean stopSearch = false;
 
     int currentIndex = startIndex;
@@ -668,13 +667,13 @@ public class TimestampSensorValuesList extends SensorValuesList {
           if (null != result && !result.getQCFlag().isGood()) {
             interpolatesAroundFlags = true;
           }
-          result = new TimestampSensorValuesListOutput(testValue,
+          result = new TimestampSensorValuesListValue(testValue,
             interpolatesAroundFlags);
           stopSearch = true;
         } else {
           if (null == result) {
             // If this is the first value in the search, store it
-            result = new TimestampSensorValuesListOutput(testValue, false);
+            result = new TimestampSensorValuesListValue(testValue, false);
           } else {
             /*
              * Store this value if it's got a better flag than what we already
@@ -682,7 +681,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
              * flag comparison methods.
              */
             if (result.getQCFlag().moreSignificantThan(testValue.getQCFlag())) {
-              result = new TimestampSensorValuesListOutput(testValue, true);
+              result = new TimestampSensorValuesListValue(testValue, true);
             }
           }
 
@@ -700,8 +699,8 @@ public class TimestampSensorValuesList extends SensorValuesList {
   }
 
   /**
-   * Construct a {@link TimestampSensorValuesListOutput} for the list in
-   * PERIODIC mode.
+   * Construct a {@link TimestampSensorValuesListValue} for the list in PERIODIC
+   * mode.
    *
    * @param time
    *          The required time.
@@ -709,10 +708,10 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * @throws SensorValuesListException
    *           If the value cannot be constructed.
    */
-  private TimestampSensorValuesListOutput getValuePeriodic(TimeCoordinate time,
+  private TimestampSensorValuesListValue getValuePeriodic(TimeCoordinate time,
     boolean allowInterpolation) throws SensorValuesListException {
 
-    TimestampSensorValuesListOutput result;
+    TimestampSensorValuesListValue result;
 
     /*
      * Search for a group of the specified time. This works as a binary search,
@@ -727,7 +726,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
       : null;
 
     if (null != exactMatch) {
-      result = new TimestampSensorValuesListOutput(exactMatch, time, false);
+      result = new TimestampSensorValuesListValue(exactMatch, time, false);
     } else if (!allowInterpolation) {
       result = null;
     } else {
@@ -751,13 +750,13 @@ public class TimestampSensorValuesList extends SensorValuesList {
       }
 
       if (null != prior && prior.encompasses(time)) {
-        result = new TimestampSensorValuesListOutput(prior, time, false);
+        result = new TimestampSensorValuesListValue(prior, time, false);
       } else if (null != post && post.encompasses(time)) {
-        result = new TimestampSensorValuesListOutput(post, time, false);
+        result = new TimestampSensorValuesListValue(post, time, false);
       } else if (null == prior) {
-        result = new TimestampSensorValuesListOutput(post, time, false);
+        result = new TimestampSensorValuesListValue(post, time, false);
       } else if (null == post) {
-        result = new TimestampSensorValuesListOutput(prior, time, false);
+        result = new TimestampSensorValuesListValue(prior, time, false);
       } else {
         result = getBestOrInterpolate(prior, post, time);
       }
@@ -886,7 +885,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * @throws SensorValuesListException
    */
   @Override
-  public TimestampSensorValuesListOutput getValueOnOrBefore(Coordinate time)
+  public TimestampSensorValuesListValue getValueOnOrBefore(Coordinate time)
     throws SensorValuesListException {
 
     if (null == outputValues) {
@@ -916,7 +915,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
       }
     }
 
-    return new TimestampSensorValuesListOutput(result, false);
+    return new TimestampSensorValuesListValue(result, false);
   }
 
   /**
@@ -966,7 +965,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * @throws SensorValuesListException
    *           If the value cannot be constructed.
    */
-  public TimestampSensorValuesListOutput getValue(TimeCoordinate start,
+  public TimestampSensorValuesListValue getValue(TimeCoordinate start,
     TimeCoordinate end, TimeCoordinate nominalTime, boolean allowInterpolation)
     throws SensorValuesListException {
 
@@ -993,7 +992,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
       currentIndex++;
     }
 
-    TimestampSensorValuesListOutput result = null;
+    TimestampSensorValuesListValue result = null;
 
     if (usedValues.size() > 0) {
       result = makeNumericValue(usedValues, nominalTime, true);
@@ -1001,7 +1000,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
       TimestampSensorValuesListValue foundValue = (TimestampSensorValuesListValue) getValue(
         nominalTime, true);
       result = null == foundValue ? null
-        : new TimestampSensorValuesListOutput(foundValue,
+        : new TimestampSensorValuesListValue(foundValue,
           foundValue.interpolatesAroundFlags());
     }
 
@@ -1029,7 +1028,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * @throws SensorValuesListException
    *           If the value cannot be constructed.
    */
-  public TimestampSensorValuesListOutput getValue(
+  public TimestampSensorValuesListValue getValue(
     TimestampSensorValuesListValue timeReference, boolean allowInterpolation)
     throws SensorValuesListException {
 
@@ -1053,7 +1052,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * @return The generated value.
    * @throws SensorValuesListException
    */
-  private TimestampSensorValuesListOutput makeNumericValue(
+  private TimestampSensorValuesListValue makeNumericValue(
     List<SensorValue> sensorValues, TimeCoordinate nominalTime,
     boolean allowInterpolatesAroundFlags) throws SensorValuesListException {
 
@@ -1122,8 +1121,8 @@ public class TimestampSensorValuesList extends SensorValuesList {
       MeanCalculator mean = new MeanCalculator(
         usedValues.stream().map(SensorValue::getDoubleValue).toList());
 
-      return new TimestampSensorValuesListOutput(startTime, endTime,
-        nominalTime, usedValues, sensorType, mean.mean(), chosenFlag,
+      return new TimestampSensorValuesListValue(startTime, endTime, nominalTime,
+        usedValues, sensorType, mean.mean(), chosenFlag,
         StringUtils.collectionToDelimited(qcMessages, ";"),
         interpolatesAroundFlags);
 
@@ -1147,16 +1146,16 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * @throws SensorValuesListException
    *           If the interpolation cannot be performed.
    */
-  private TimestampSensorValuesListOutput getBestOrInterpolate(
+  private TimestampSensorValuesListValue getBestOrInterpolate(
     TimestampSensorValuesListValue first, TimestampSensorValuesListValue second,
     TimeCoordinate targetTime) throws SensorValuesListException {
 
-    TimestampSensorValuesListOutput result;
+    TimestampSensorValuesListValue result;
 
     if (first.getQCFlag().moreSignificantThan(second.getQCFlag())) {
-      result = new TimestampSensorValuesListOutput(second, false);
+      result = new TimestampSensorValuesListValue(second, false);
     } else if (second.getQCFlag().moreSignificantThan(first.getQCFlag())) {
-      result = new TimestampSensorValuesListOutput(first, false);
+      result = new TimestampSensorValuesListValue(first, false);
     } else {
       // Equal flags -> interpolate
       result = buildInterpolatedValue(first, second, targetTime, false);
@@ -1187,12 +1186,12 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * @throws SensorValuesListException
    *           If the value cannot be constructed.
    */
-  private TimestampSensorValuesListOutput buildInterpolatedValue(
+  private TimestampSensorValuesListValue buildInterpolatedValue(
     TimestampSensorValuesListValue first, TimestampSensorValuesListValue second,
     TimeCoordinate targetTime, boolean interpolatingAroundFlags)
     throws SensorValuesListException {
 
-    TimestampSensorValuesListOutput result;
+    TimestampSensorValuesListValue result;
 
     if (null == first || null == second) {
       // Only 'interpolate' if we have values both before and after
@@ -1211,7 +1210,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
         combinedSourceValues.addAll(first.getSourceSensorValues());
         combinedSourceValues.addAll(second.getSourceSensorValues());
 
-        result = new TimestampSensorValuesListOutput(first.getStartTime(),
+        result = new TimestampSensorValuesListValue(first.getStartTime(),
           second.getEndTime(), targetTime, combinedSourceValues,
           first.getSensorType(), interpValue,
           Flag.getMostSignificantFlag(first.getQCFlag(), second.getQCFlag()),
