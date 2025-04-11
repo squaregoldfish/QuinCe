@@ -320,6 +320,31 @@ public class MissingParam {
     } else if (!canBeEmpty && parameter.length == 0) {
       throw new EmptyMissingParamException(parameterName);
     }
+  }
 
+  /**
+   * Check whether a value is a valid database ID. Optionally allow the
+   * {@link DatabaseUtils#NO_DATABASE_RECORD} value.
+   * 
+   * @param parameter
+   *          The parameter value.
+   * @param parameterName
+   *          The parameter name.
+   * @param allowNoRecord
+   *          Indicates whether the {@link DatabaseUtils#NO_DATABASE_RECORD}
+   *          value is allowed.
+   */
+  public static void checkDatabaseId(long parameter, String parameterName,
+    boolean allowNoRecord) {
+
+    boolean ok = parameter > 0;
+    if (!ok && allowNoRecord && parameter == DatabaseUtils.NO_DATABASE_RECORD) {
+      ok = true;
+    }
+
+    if (!ok) {
+      throw new MissingParamException(
+        parameterName + " is not a valid database ID");
+    }
   }
 }

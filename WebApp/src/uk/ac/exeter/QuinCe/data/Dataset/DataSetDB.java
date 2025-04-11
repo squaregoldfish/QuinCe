@@ -159,7 +159,7 @@ public class DataSetDB {
     throws DatabaseException, MissingParamException {
 
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkZeroPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     LinkedHashMap<Long, DataSet> result = null;
     Connection conn = null;
@@ -196,7 +196,7 @@ public class DataSetDB {
     throws DatabaseException, MissingParamException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     LinkedHashMap<Long, DataSet> result = new LinkedHashMap<Long, DataSet>();
 
@@ -478,7 +478,7 @@ public class DataSetDB {
     throws DatabaseException, MissingParamException, RecordNotFoundException {
 
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkZeroPositive(id, "id");
+    MissingParam.checkDatabaseId(id, "id", false);
 
     DataSet result = null;
 
@@ -510,7 +510,7 @@ public class DataSetDB {
     throws DatabaseException, MissingParamException, RecordNotFoundException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(id, "id");
+    MissingParam.checkDatabaseId(id, "id", false);
 
     DataSet result = null;
 
@@ -599,7 +599,7 @@ public class DataSetDB {
   public static void setDatasetStatus(DataSource dataSource, long datasetId,
     int status) throws MissingParamException, InvalidDataSetStatusException,
     DatabaseException, RecordNotFoundException, CoordinateException {
-    MissingParam.checkZeroPositive(datasetId, "datasetId");
+    MissingParam.checkDatabaseId(datasetId, "datasetId", false);
     setDatasetStatus(dataSource, getDataSet(dataSource, datasetId), status);
   }
 
@@ -739,7 +739,7 @@ public class DataSetDB {
     DataSet result = null;
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     try (PreparedStatement stmt = conn
       .prepareStatement(makeGetDatasetsQuery("instrument_id", "nrt"))) {

@@ -943,7 +943,7 @@ public class InstrumentDB {
     long instrumentId) throws MissingParamException, DatabaseException,
     RecordNotFoundException, InstrumentException {
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     InstrumentFileSet fileSet = new InstrumentFileSet();
 
@@ -1024,7 +1024,7 @@ public class InstrumentDB {
     throws MissingParamException, VariableNotFoundException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     List<Variable> variables = new ArrayList<Variable>();
     SensorsConfiguration sensorConfig = ResourceManager.getInstance()
@@ -1108,7 +1108,7 @@ public class InstrumentDB {
     RecordNotFoundException, InstrumentException, MissingParamException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
     MissingParam.checkMissing(files, "files");
 
     SensorAssignments assignments = SensorAssignments
@@ -1524,7 +1524,7 @@ public class InstrumentDB {
   public static boolean instrumentExists(Connection conn, long id)
     throws MissingParamException, DatabaseException {
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(id, "id");
+    MissingParam.checkDatabaseId(id, "id", false);
 
     boolean exists = false;
 
@@ -1565,7 +1565,7 @@ public class InstrumentDB {
   public static boolean isNrtInstrument(Connection conn, long id)
     throws MissingParamException, DatabaseException, RecordNotFoundException {
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(id, "id");
+    MissingParam.checkDatabaseId(id, "id", false);
 
     boolean result = false;
 
@@ -1610,7 +1610,7 @@ public class InstrumentDB {
   public static User getInstrumentOwner(Connection conn, long id)
     throws MissingParamException, DatabaseException, RecordNotFoundException {
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(id, "id");
+    MissingParam.checkDatabaseId(id, "id", false);
 
     User result = null;
 

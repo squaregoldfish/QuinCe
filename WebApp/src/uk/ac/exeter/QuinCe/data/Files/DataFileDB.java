@@ -1104,7 +1104,7 @@ public class DataFileDB {
     boolean result = false;
 
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkZeroPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
     MissingParam.checkMissing(filename, "filename");
 
     Connection conn = null;
@@ -1137,7 +1137,7 @@ public class DataFileDB {
     throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkZeroPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     int fileCount = 0;
 
@@ -1196,7 +1196,7 @@ public class DataFileDB {
     long instrumentId) throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(instrumentId, "instrumentId");
+    MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
     LocalDateTime result = null;
 

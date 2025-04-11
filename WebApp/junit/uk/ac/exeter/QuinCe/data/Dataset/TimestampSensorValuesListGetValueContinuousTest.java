@@ -85,8 +85,9 @@ public class TimestampSensorValuesListGetValueContinuousTest
 
     Instrument instrument = InstrumentDB.getInstrument(getConnection(),
       DATASET_ID);
-    DatasetSensorValues allSensorValues = new DatasetSensorValues(
-      Mockito.mock(DataSet.class));
+    DataSet dataSet = Mockito.mock(DataSet.class);
+    Mockito.when(dataSet.getId()).thenReturn(DATASET_ID);
+    DatasetSensorValues allSensorValues = new DatasetSensorValues(dataSet);
     Mockito.when(allSensorValues.getInstrument()).thenReturn(instrument);
 
     buildSensorValues(allSensorValues, line);

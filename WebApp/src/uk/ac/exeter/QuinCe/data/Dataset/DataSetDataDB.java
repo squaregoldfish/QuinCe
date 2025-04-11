@@ -491,7 +491,7 @@ public class DataSetDataDB {
     throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(datasetId, "datasetId");
+    MissingParam.checkDatabaseId(datasetId, "datasetId", false);
 
     PreparedStatement stmt = null;
 
@@ -985,7 +985,7 @@ public class DataSetDataDB {
     throws DatabaseException, MissingParamException {
 
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkZeroPositive(datasetId, "datasetId");
+    MissingParam.checkDatabaseId(datasetId, "datasetId", false);
 
     Connection conn = null;
 
@@ -1016,7 +1016,7 @@ public class DataSetDataDB {
     throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkZeroPositive(datasetId, "datasetId");
+    MissingParam.checkDatabaseId(datasetId, "datasetId", false);
 
     PreparedStatement delDataReductionStmt = null;
     PreparedStatement delMeasurementValuesStmt = null;
@@ -1061,7 +1061,7 @@ public class DataSetDataDB {
     throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkZeroPositive(datasetId, "dataSetId");
+    MissingParam.checkDatabaseId(datasetId, "dataSetId", false);
 
     int result = 0;
 
@@ -1104,7 +1104,7 @@ public class DataSetDataDB {
     boolean result = false;
 
     MissingParam.checkMissing(dataSource, "dataSource");
-    MissingParam.checkZeroPositive(datasetId, "datasetId");
+    MissingParam.checkDatabaseId(datasetId, "datasetId", false);
 
     try (Connection conn = dataSource.getConnection();
       PreparedStatement stmt = conn

@@ -6,6 +6,7 @@ import java.util.Objects;
 import javax.sound.midi.Instrument;
 
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
+import uk.ac.exeter.QuinCe.utils.MissingParam;
 
 /**
  * Holds a coordinate that is the basic index for a {@link SensorValue} or
@@ -50,11 +51,17 @@ public abstract class Coordinate implements Comparable<Coordinate> {
   private LocalDateTime time = null;
 
   public Coordinate(long id, long datasetId) {
+    MissingParam.checkDatabaseId(id, "id", true);
+    MissingParam.checkDatabaseId(datasetId, "datasetId", true);
+
     this.id = id;
     this.datasetId = datasetId;
   }
 
   public Coordinate(long id, long datasetId, LocalDateTime time) {
+    MissingParam.checkDatabaseId(id, "id", true);
+    MissingParam.checkDatabaseId(datasetId, "datasetId", true);
+
     this.id = id;
     this.datasetId = datasetId;
     this.time = time;
