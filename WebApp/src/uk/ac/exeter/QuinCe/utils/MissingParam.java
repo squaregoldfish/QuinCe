@@ -107,7 +107,8 @@ public class MissingParam {
     if (null == collection) {
       throw new MissingParamException(collectionName);
     } else if (!canBeEmpty && collection.size() == 0) {
-      throw new EmptyMissingParamException(collectionName);
+      throw new EmptyMissingParamException(
+        collectionName + " must not be empty");
     }
   }
 
@@ -148,7 +149,7 @@ public class MissingParam {
     if (null == map) {
       throw new MissingParamException(mapName);
     } else if (!canBeEmpty && map.size() == 0) {
-      throw new EmptyMissingParamException(mapName);
+      throw new EmptyMissingParamException(mapName + " must not be empty");
     }
   }
 
@@ -275,39 +276,6 @@ public class MissingParam {
     throws MissingParamException {
     if (parameter < 0) {
       throw new MissingParamException(parameterName);
-    }
-  }
-
-  /**
-   * Check that a String value contains a comma-separated list of integers.
-   *
-   * @param list
-   *          The String value.
-   * @param parameterName
-   *          The parameter name.
-   * @throws ParameterException
-   *           If any of the comma-delimited values cannot be parsed as
-   *           integers.
-   * @see Integer#parseInt(String)
-   */
-  public static void checkListOfIntegers(String list, String parameterName)
-    throws ParameterException {
-
-    checkMissing(list, parameterName);
-
-    boolean ok = true;
-
-    try {
-      String[] entries = list.split(",");
-      for (String entry : entries) {
-        Integer.parseInt(entry);
-      }
-    } catch (NumberFormatException e) {
-      ok = false;
-    }
-
-    if (!ok) {
-      throw new ParameterException(parameterName, "is not a list of integers");
     }
   }
 
