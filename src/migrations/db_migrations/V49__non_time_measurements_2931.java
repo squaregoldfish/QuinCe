@@ -4,9 +4,18 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;
+
+import com.google.gson.Gson;
+
+import uk.ac.exeter.QuinCe.data.Files.DataFile;
+import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 
 /**
  * Migration for support for non-time-based data.
@@ -22,6 +31,7 @@ public class V49__non_time_measurements_2931 extends BaseJavaMigration {
   public void migrate(Context context) throws Exception {
     Connection conn = context.getConnection();
     createCoordinates(conn);
+    makeDatasetFiles(conn);
   }
 
   private void createCoordinates(Connection conn) throws SQLException {
@@ -112,5 +122,109 @@ public class V49__non_time_measurements_2931 extends BaseJavaMigration {
     getCoordsQuery.close();
     writeSensorValuesCoordStmt.close();
     writeMeasurementsCoordStmt.close();
+  }
+
+  private void makeDatasetFiles(Connection conn) throws SQLException {
+
+    // Create the coordinates table
+    PreparedStatement createDatasetFilesTableStatement = conn.prepareStatement(
+      "CREATE TABLE dataset_files (dataset_id INT(11) NOT NULL, "
+        + "datafile_id INT(11) NOT NULL, "
+        + "INDEX datasetfiles_datasetid (dataset_id), "
+        + "CONSTRAINT datasetfiles_datasetid FOREIGN KEY (dataset_id) REFERENCES dataset(id), "
+        + "CONSTRAINT datasetfiles_datafileid FOREIGN KEY (datafile_id) REFERENCES data_file(id)) "
+        + "ENGINE = InnoDB");
+
+    createDatasetFilesTableStatement.execute();
+    createDatasetFilesTableStatement.close();
+
+    // Get all existing DataSets
+    List<DatasetInfo> datasets = new ArrayList<DatasetInfo>();
+
+    PreparedStatement getDatasetIDsQuery = conn.prepareStatement(
+      "SELECT id, instrument_id, start, end FROM dataset ORDER BY instrument_id");
+
+    ResultSet datasetRecords = getDatasetIDsQuery.executeQuery();
+    while (datasetRecords.next()) {
+      datasets.add(new DatasetInfo(datasetRecords));
+    }
+    datasetRecords.close();
+    getDatasetIDsQuery.close();
+
+    // Get used data files for each dataset and add them to the table
+    PreparedStatement getFilesQuery = conn
+      .prepareStatement("SELECT id, start_date, end_date, properties "
+        + "FROM data_file WHERE file_definition_id IN "
+        + "(SELECT id FROM file_definition WHERE instrument_id = ?) "
+        + "ORDER BY start_date ASC");
+
+    PreparedStatement addDatasetFileStmt = conn
+      .prepareStatement("INSERT INTO dataset_files VALUES (?, ?)");
+
+    long currentInstrument = -1L;
+    List<FileInfo> currentDataFiles = null;
+
+    for (DatasetInfo dataset : datasets) {
+      // If we hit a new instrument, load its data file info
+      if (dataset.instrumentId != currentInstrument) {
+        currentInstrument = dataset.instrumentId;
+        currentDataFiles = new ArrayList<FileInfo>();
+
+        getFilesQuery.setLong(1, currentInstrument);
+        ResultSet fileRecords = getFilesQuery.executeQuery();
+        while (fileRecords.next()) {
+          currentDataFiles.add(new FileInfo(fileRecords));
+        }
+      }
+
+      for (FileInfo file : currentDataFiles) {
+        if (file.coveredBy(dataset.start, dataset.end)) {
+          addDatasetFileStmt.setLong(1, dataset.id);
+          addDatasetFileStmt.setLong(2, file.id);
+          addDatasetFileStmt.execute();
+        }
+      }
+
+    }
+
+    addDatasetFileStmt.close();
+    getFilesQuery.close();
+    conn.commit();
+  }
+
+  class DatasetInfo {
+    protected long id;
+    protected long instrumentId;
+    protected LocalDateTime start;
+    protected LocalDateTime end;
+
+    protected DatasetInfo(ResultSet record) throws SQLException {
+      id = record.getLong(1);
+      instrumentId = record.getLong(2);
+      start = DateTimeUtils.longToDate(record.getLong(3));
+      end = DateTimeUtils.longToDate(record.getLong(4));
+    }
+  }
+
+  class FileInfo {
+    protected long id;
+    private LocalDateTime rawStart;
+    private LocalDateTime rawEnd;
+    private Properties properties;
+
+    protected FileInfo(ResultSet record) throws SQLException {
+      id = record.getLong(1);
+      rawStart = DateTimeUtils.longToDate(record.getLong(2));
+      rawEnd = DateTimeUtils.longToDate(record.getLong(3));
+      properties = new Gson().fromJson(record.getString(4), Properties.class);
+    }
+
+    protected boolean coveredBy(LocalDateTime start, LocalDateTime end) {
+      int offset = Integer
+        .parseInt(properties.getProperty(DataFile.TIME_OFFSET_PROP));
+
+      return rawEnd.plusSeconds(offset).isAfter(start)
+        && rawStart.plusSeconds(offset).isBefore(end);
+    }
   }
 }
