@@ -84,6 +84,12 @@ public class DataSetDataDB {
   private static final String DELETE_SENSOR_VALUES_STATEMENT = "DELETE FROM "
     + "sensor_values WHERE coordinate_id IN (SELECT id FROM coordinates WHERE dataset_id = ?)";
 
+  /**
+   * Statement to remove all coordinates for a data set
+   */
+  private static final String DELETE_COORDINATES_STATEMENT = "DELETE FROM "
+    + "coordinates WHERE dataset_id = ?";
+
   private static final String GET_SENSOR_VALUES_FOR_DATASET_QUERY = "SELECT "
     + "sv.id, sv.coordinate_id, sv.file_column, sv.value, sv.auto_qc, "
     + "sv.user_qc_flag, sv.user_qc_message "
@@ -476,7 +482,8 @@ public class DataSetDataDB {
   }
 
   /**
-   * Remove all sensor values for a dataset
+   * Remove all {@link SensorValue}s and {@link Coordinate}s for a
+   * {@link DataSet}.
    *
    * @param conn
    *          A database connection
@@ -493,17 +500,31 @@ public class DataSetDataDB {
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkDatabaseId(datasetId, "datasetId", false);
 
-    PreparedStatement stmt = null;
+    PreparedStatement sensorValuesStmt = null;
+    PreparedStatement coordinatesStmt = null;
 
     try {
-      stmt = conn.prepareStatement(DELETE_SENSOR_VALUES_STATEMENT);
+      boolean autoCommitStatus = conn.getAutoCommit();
 
-      stmt.setLong(1, datasetId);
-      stmt.execute();
+      if (autoCommitStatus) {
+        conn.setAutoCommit(false);
+      }
+      sensorValuesStmt = conn.prepareStatement(DELETE_SENSOR_VALUES_STATEMENT);
+      sensorValuesStmt.setLong(1, datasetId);
+      sensorValuesStmt.execute();
+
+      coordinatesStmt = conn.prepareStatement(DELETE_COORDINATES_STATEMENT);
+      coordinatesStmt.setLong(1, datasetId);
+      coordinatesStmt.execute();
+
+      if (autoCommitStatus) {
+        conn.commit();
+        conn.setAutoCommit(true);
+      }
     } catch (SQLException e) {
       throw new DatabaseException("Error storing sensor values", e);
     } finally {
-      DatabaseUtils.closeStatements(stmt);
+      DatabaseUtils.closeStatements(sensorValuesStmt, coordinatesStmt);
     }
   }
 
