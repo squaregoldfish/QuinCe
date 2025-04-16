@@ -135,9 +135,10 @@ public class TimestampSensorValuesList extends SensorValuesList {
    *           If the {@link SensorType} for the column cannot be established.
    */
   protected TimestampSensorValuesList(long columnId,
-    DatasetSensorValues allSensorValues) throws RecordNotFoundException {
+    DatasetSensorValues allSensorValues, boolean forceString)
+    throws RecordNotFoundException {
 
-    super(columnId, allSensorValues);
+    super(columnId, allSensorValues, forceString);
   }
 
   /**
@@ -157,9 +158,10 @@ public class TimestampSensorValuesList extends SensorValuesList {
    *           If the {@link SensorType} for any column cannot be established.
    */
   protected TimestampSensorValuesList(Collection<Long> columnIds,
-    DatasetSensorValues allSensorValues) throws RecordNotFoundException {
+    DatasetSensorValues allSensorValues, boolean forceString)
+    throws RecordNotFoundException {
 
-    super(columnIds, allSensorValues);
+    super(columnIds, allSensorValues, forceString);
   }
 
   /**

@@ -8,28 +8,31 @@ import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 public class SensorValuesListFactory {
 
   public static SensorValuesList makeSensorValuesList(long columnId,
-    DatasetSensorValues allSensorValues) throws RecordNotFoundException {
+    DatasetSensorValues allSensorValues, boolean forceString)
+    throws RecordNotFoundException {
 
     switch (allSensorValues.getInstrument().getBasis()) {
     case Instrument.BASIS_TIME: {
-      return new TimestampSensorValuesList(columnId, allSensorValues);
+      return new TimestampSensorValuesList(columnId, allSensorValues,
+        forceString);
     }
     default: {
-      return new SensorValuesList(columnId, allSensorValues);
+      return new SensorValuesList(columnId, allSensorValues, forceString);
     }
     }
   }
 
   public static SensorValuesList makeSensorValuesList(
-    Collection<Long> columnIds, DatasetSensorValues allSensorValues)
-    throws RecordNotFoundException {
+    Collection<Long> columnIds, DatasetSensorValues allSensorValues,
+    boolean forceString) throws RecordNotFoundException {
 
     switch (allSensorValues.getInstrument().getBasis()) {
     case Instrument.BASIS_TIME: {
-      return new TimestampSensorValuesList(columnIds, allSensorValues);
+      return new TimestampSensorValuesList(columnIds, allSensorValues,
+        forceString);
     }
     default: {
-      return new SensorValuesList(columnIds, allSensorValues);
+      return new SensorValuesList(columnIds, allSensorValues, forceString);
     }
     }
   }
