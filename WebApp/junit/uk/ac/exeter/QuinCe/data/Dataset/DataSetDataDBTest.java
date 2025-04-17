@@ -5,12 +5,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.flywaydb.test.annotation.FlywayTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,9 +32,17 @@ public class DataSetDataDBTest extends BaseTest {
 
   private static final long COLUMN_ID = 1L;
 
+  private Connection conn = null;
+
   @BeforeEach
-  public void setup() {
+  public void setup() throws SQLException {
     initResourceManager();
+    conn = getConnection(false);
+  }
+
+  @AfterEach
+  public void tearDown() {
+    DatabaseUtils.closeConnection(conn);
   }
 
   /**
@@ -47,10 +59,10 @@ public class DataSetDataDBTest extends BaseTest {
   private SensorValue retrieveSingleStoredValue(Coordinate coordinate)
     throws Exception {
 
-    DataSet dataset = DataSetDB.getDataSet(getConnection(), DATASET_ID);
+    DataSet dataset = DataSetDB.getDataSet(conn, DATASET_ID);
 
-    DatasetSensorValues storedValues = DataSetDataDB
-      .getSensorValues(getConnection(), dataset, false, false);
+    DatasetSensorValues storedValues = DataSetDataDB.getSensorValues(conn,
+      dataset, false, false);
 
     assertEquals(1, storedValues.size());
 
@@ -78,8 +90,8 @@ public class DataSetDataDBTest extends BaseTest {
     SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
       value);
 
-    DataSetDataDB.storeSensorValues(getConnection(),
-      Arrays.asList(sensorValue));
+    DataSetDataDB.storeSensorValues(conn, Arrays.asList(sensorValue));
+    conn.commit();
     SensorValue storedValue = retrieveSingleStoredValue(coordinate);
 
     // Show that the SensorValue's ID has been updated
@@ -112,8 +124,9 @@ public class DataSetDataDBTest extends BaseTest {
     SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
       null);
 
-    DataSetDataDB.storeSensorValues(getConnection(),
-      Arrays.asList(sensorValue));
+    DataSetDataDB.storeSensorValues(conn, Arrays.asList(sensorValue));
+    conn.commit();
+
     SensorValue storedValue = retrieveSingleStoredValue(coordinate);
 
     assertNull(storedValue.getValue(), "Stored value not null");
@@ -134,8 +147,8 @@ public class DataSetDataDBTest extends BaseTest {
     String qcMessage = "I question this value";
     sensorValue.setUserQC(qcFlag, qcMessage);
 
-    DataSetDataDB.storeSensorValues(getConnection(),
-      Arrays.asList(sensorValue));
+    DataSetDataDB.storeSensorValues(conn, Arrays.asList(sensorValue));
+    conn.commit();
     SensorValue storedValue = retrieveSingleStoredValue(coordinate);
 
     assertEquals(qcFlag, storedValue.getUserQCFlag(), "Incorrect user QC flag");
@@ -153,8 +166,8 @@ public class DataSetDataDBTest extends BaseTest {
     SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, coordinate,
       "20");
 
-    DataSetDataDB.storeSensorValues(getConnection(),
-      Arrays.asList(sensorValue));
+    DataSetDataDB.storeSensorValues(conn, Arrays.asList(sensorValue));
+    conn.commit();
 
     SensorValue originalStoredValue = retrieveSingleStoredValue(coordinate);
 
@@ -166,8 +179,8 @@ public class DataSetDataDBTest extends BaseTest {
     originalStoredValue.setUserQC(userQCFlag, userQCMessage);
     AutoQCResult autoQC = originalStoredValue.getAutoQcResult();
 
-    DataSetDataDB.storeSensorValues(getConnection(),
-      Arrays.asList(originalStoredValue));
+    DataSetDataDB.storeSensorValues(conn, Arrays.asList(originalStoredValue));
+    conn.commit();
 
     // Check that the dirty flag is cleared
     assertFalse(originalStoredValue.isDirty(), "Dirty flag not cleared");
@@ -202,8 +215,8 @@ public class DataSetDataDBTest extends BaseTest {
     "resources/sql/testbase/dataset" })
   @Test
   public void storeSensorValuesEmptyListTest() throws Exception {
-    DataSetDataDB.storeSensorValues(getConnection(),
-      new ArrayList<SensorValue>());
+    DataSetDataDB.storeSensorValues(conn, new ArrayList<SensorValue>());
+    conn.commit();
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
@@ -212,7 +225,7 @@ public class DataSetDataDBTest extends BaseTest {
   @Test
   public void storeSensorValuesNullListTest() throws Exception {
     assertThrows(MissingParamException.class, () -> {
-      DataSetDataDB.storeSensorValues(getConnection(), null);
+      DataSetDataDB.storeSensorValues(conn, null);
     });
   }
 
@@ -228,8 +241,7 @@ public class DataSetDataDBTest extends BaseTest {
       "20");
 
     assertThrows(InvalidSensorValueException.class, () -> {
-      DataSetDataDB.storeSensorValues(getConnection(),
-        Arrays.asList(sensorValue));
+      DataSetDataDB.storeSensorValues(conn, Arrays.asList(sensorValue));
     });
   }
 
@@ -245,8 +257,7 @@ public class DataSetDataDBTest extends BaseTest {
       "20");
 
     assertThrows(InvalidSensorValueException.class, () -> {
-      DataSetDataDB.storeSensorValues(getConnection(),
-        Arrays.asList(sensorValue));
+      DataSetDataDB.storeSensorValues(conn, Arrays.asList(sensorValue));
     });
   }
 
@@ -267,16 +278,20 @@ public class DataSetDataDBTest extends BaseTest {
       "20");
     SensorValue badValue = new SensorValue(7000L, COLUMN_ID, coordinate, "20");
 
-    assertThrows(InvalidSensorValueException.class, () -> {
-      DataSetDataDB.storeSensorValues(getConnection(),
+    boolean exceptionThrown = false;
+    try {
+      DataSetDataDB.storeSensorValues(conn,
         Arrays.asList(sensorValue, badValue));
-    });
+    } catch (InvalidSensorValueException e) {
+      conn.rollback();
+      exceptionThrown = true;
+    }
+
+    assertTrue(exceptionThrown, "Expected InvalidSensorValueException");
 
     assertEquals(0,
-      DataSetDataDB
-        .getSensorValues(getConnection(),
-          DataSetDB.getDataSet(getConnection(), DATASET_ID), false, false)
-        .size(),
+      DataSetDataDB.getSensorValues(conn,
+        DataSetDB.getDataSet(conn, DATASET_ID), false, false).size(),
       "Value has been stored; should not have been");
   }
 
@@ -297,14 +312,13 @@ public class DataSetDataDBTest extends BaseTest {
       coordinate2, "21");
     flushingValue.setUserQC(Flag.FLUSHING, "Flushing");
 
-    DataSetDataDB.storeSensorValues(getConnection(),
+    DataSetDataDB.storeSensorValues(conn,
       Arrays.asList(normalValue, flushingValue));
+    conn.commit();
 
     assertEquals(2,
-      DataSetDataDB
-        .getSensorValues(getConnection(),
-          DataSetDB.getDataSet(getConnection(), DATASET_ID), false, false)
-        .size(),
+      DataSetDataDB.getSensorValues(conn,
+        DataSetDB.getDataSet(conn, DATASET_ID), false, false).size(),
       "Incorrect number of values retrieved");
   }
 
@@ -323,14 +337,13 @@ public class DataSetDataDBTest extends BaseTest {
       coordinate, "21");
     flushingValue.setUserQC(Flag.FLUSHING, "Flushing");
 
-    DataSetDataDB.storeSensorValues(getConnection(),
+    DataSetDataDB.storeSensorValues(conn,
       Arrays.asList(normalValue, flushingValue));
+    conn.commit();
 
     assertEquals(1,
-      DataSetDataDB
-        .getSensorValues(getConnection(),
-          DataSetDB.getDataSet(getConnection(), DATASET_ID), true, false)
-        .size(),
+      DataSetDataDB.getSensorValues(conn,
+        DataSetDB.getDataSet(conn, DATASET_ID), true, false).size(),
       "Incorrect number of values retrieved");
   }
 
@@ -346,23 +359,19 @@ public class DataSetDataDBTest extends BaseTest {
 
     SensorValue value2 = new SensorValue(DATASET_ID, 2L, coordinate, "21");
 
-    DataSetDataDB.storeSensorValues(getConnection(),
-      Arrays.asList(value1, value2));
+    DataSetDataDB.storeSensorValues(conn, Arrays.asList(value1, value2));
+    conn.commit();
 
     assertEquals(2,
-      DataSetDataDB
-        .getSensorValues(getConnection(),
-          DataSetDB.getDataSet(getConnection(), DATASET_ID), true, false)
-        .size(),
+      DataSetDataDB.getSensorValues(conn,
+        DataSetDB.getDataSet(conn, DATASET_ID), true, false).size(),
       "Values not stored as expected");
 
     DataSetDataDB.deleteSensorValues(getConnection(), DATASET_ID);
 
     assertEquals(0,
-      DataSetDataDB
-        .getSensorValues(getConnection(),
-          DataSetDB.getDataSet(getConnection(), DATASET_ID), true, false)
-        .size(),
+      DataSetDataDB.getSensorValues(conn,
+        DataSetDB.getDataSet(conn, DATASET_ID), true, false).size(),
       "Values not removed");
   }
 }

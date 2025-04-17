@@ -1,8 +1,10 @@
 package uk.ac.exeter.QuinCe.jobs.files;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -94,9 +96,11 @@ public class ExtractDataSetJob extends DataSetJob {
 
     try {
       conn = dataSource.getConnection();
+      conn.setAutoCommit(false);
 
       // Clear any existing data for the DataSet
       resetDataset(conn);
+      conn.commit();
 
       // Get the new data set from the database
       DataSet dataSet = getDataset(conn);
@@ -115,9 +119,11 @@ public class ExtractDataSetJob extends DataSetJob {
           DataSet.STATUS_REPROCESS);
       }
 
-      List<DataFile> files = DataFileDB.getDataFiles(conn,
-        ResourceManager.getInstance().getConfig(),
-        dataSet.getSourceFiles(conn));
+      List<DataFile> potentialFiles = DataFileDB.getFilesWithinDates(conn,
+        dataSet.getInstrument(), dataSet.getStartTime(), dataSet.getEndTime(),
+        true);
+
+      Set<DataFile> usedFiles = new HashSet<DataFile>(potentialFiles.size());
 
       TreeSet<SensorValue> sensorValues = new TreeSet<SensorValue>();
 
@@ -133,14 +139,13 @@ public class ExtractDataSetJob extends DataSetJob {
       instrument.getFileDefinitions()
         .forEach(fd -> fileDefinitionRanges.put(fd, new TimeRangeBuilder()));
 
-      files
+      potentialFiles
         .forEach(f -> fileDefinitionRanges.get(f.getFileDefinition()).add(f));
 
       LocalDateTime filesLatestStart = TimeRange
         .getLatestStart(fileDefinitionRanges.values());
       if (filesLatestStart.isAfter(dataSet.getStartTime())) {
         dataSet.setStartTime(filesLatestStart);
-
       }
 
       LocalDateTime filesEarliestEnd = TimeRange
@@ -158,13 +163,12 @@ public class ExtractDataSetJob extends DataSetJob {
       // Initialise the coordinates cache
       Set<Coordinate> coordinates = new TreeSet<Coordinate>();
 
-      for (DataFile file : files) {
+      for (DataFile file : potentialFiles) {
         FileDefinition fileDefinition = file.getFileDefinition();
         int currentLine = file.getFirstDataLine();
         while (currentLine < file.getContentLineCount()) {
 
           try {
-
             List<String> line = file.getLine(currentLine);
 
             // Check the number of columns on the line
@@ -207,6 +211,9 @@ public class ExtractDataSetJob extends DataSetJob {
               && (time.isBefore(dataSet.getEndTime())
                 || time.isEqual(dataSet.getEndTime()))) {
 
+              // We're using this file
+              usedFiles.add(file);
+
               if (!dataSet.fixedPosition() && fileDefinition.hasPosition()) {
 
                 String longitude = null;
@@ -218,8 +225,8 @@ public class ExtractDataSetJob extends DataSetJob {
 
                 if (null != longitude) {
                   sensorValues.add(new SensorValue(dataSet.getId(),
-                    FileDefinition.LONGITUDE_COLUMN_ID,
-                    TimeCoordinate.getCoordinate(time, coordinates),
+                    FileDefinition.LONGITUDE_COLUMN_ID, TimeCoordinate
+                      .getCoordinate(time, dataSet.getId(), coordinates),
                     longitude));
 
                   // Update the dataset bounds
@@ -246,8 +253,9 @@ public class ExtractDataSetJob extends DataSetJob {
 
                 if (null != latitude) {
                   sensorValues.add(new SensorValue(dataSet.getId(),
-                    FileDefinition.LATITUDE_COLUMN_ID,
-                    TimeCoordinate.getCoordinate(time, coordinates), latitude));
+                    FileDefinition.LATITUDE_COLUMN_ID, TimeCoordinate
+                      .getCoordinate(time, dataSet.getId(), coordinates),
+                    latitude));
 
                   // Update the dataset bounds
                   try {
@@ -284,12 +292,12 @@ public class ExtractDataSetJob extends DataSetJob {
                         String runType = runTypeValue.getRunName();
 
                         sensorValues.add(new SensorValue(dataSet.getId(),
-                          assignment.getDatabaseId(),
-                          TimeCoordinate.getCoordinate(time, coordinates),
+                          assignment.getDatabaseId(), TimeCoordinate
+                            .getCoordinate(time, dataSet.getId(), coordinates),
                           runType));
 
-                        runTypePeriods.add(runType,
-                          TimeCoordinate.getCoordinate(time, coordinates));
+                        runTypePeriods.add(runType, TimeCoordinate
+                          .getCoordinate(time, dataSet.getId(), coordinates));
                       }
                     } else {
 
@@ -302,8 +310,8 @@ public class ExtractDataSetJob extends DataSetJob {
 
                       if (null != fieldValue) {
                         SensorValue value = new SensorValue(dataSet.getId(),
-                          assignment.getDatabaseId(),
-                          TimeCoordinate.getCoordinate(time, coordinates),
+                          assignment.getDatabaseId(), TimeCoordinate
+                            .getCoordinate(time, dataSet.getId(), coordinates),
                           fieldValue);
 
                         // Apply calibration if required
@@ -389,13 +397,16 @@ public class ExtractDataSetJob extends DataSetJob {
 
       // Store the remaining values
       if (sensorValues.size() > 0) {
-        conn.setAutoCommit(false);
         DataSetDataDB.storeSensorValues(conn, sensorValues);
-        conn.commit();
-        conn.setAutoCommit(true);
       }
 
+      conn.commit();
+      conn.setAutoCommit(true);
+
       dataSet.setBounds(minLon, minLat, maxLon, maxLat);
+
+      // Store the used files
+      DataSetDB.storeDatasetFiles(conn, dataSet, usedFiles);
 
       // Trigger the Auto QC job
       dataSet.setStatus(DataSet.STATUS_SENSOR_QC);
@@ -428,6 +439,13 @@ public class ExtractDataSetJob extends DataSetJob {
       }
       throw new JobFailedException(id, e);
     } finally {
+      try {
+        if (!conn.getAutoCommit()) {
+          conn.setAutoCommit(true);
+        }
+      } catch (SQLException e) {
+        // NOOP
+      }
       DatabaseUtils.closeConnection(conn);
     }
   }

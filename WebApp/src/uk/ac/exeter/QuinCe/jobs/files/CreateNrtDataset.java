@@ -67,6 +67,7 @@ public class CreateNrtDataset extends Job {
 
     try {
       conn = dataSource.getConnection();
+      conn.setAutoCommit(false);
       long instrumentId = Long.parseLong(properties.getProperty(ID_PARAM));
 
       Instrument instrument = InstrumentDB.getInstrument(conn, instrumentId);
@@ -128,6 +129,7 @@ public class CreateNrtDataset extends Job {
         }
       }
 
+      conn.commit();
     } catch (Exception e) {
       ExceptionUtils.printStackTrace(e);
       DatabaseUtils.rollBack(conn);

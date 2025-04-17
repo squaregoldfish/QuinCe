@@ -708,11 +708,6 @@ public abstract class CalibrationDB {
       DatabaseUtils.rollBack(conn);
       throw new DatabaseException("Error storing calibration edits", e);
     } finally {
-      try {
-        conn.setAutoCommit(true);
-      } catch (Exception e) {
-        // NOOP
-      }
       DatabaseUtils.closeConnection(conn);
     }
   }

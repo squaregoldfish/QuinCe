@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,6 +28,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
+import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
@@ -117,6 +119,12 @@ public class DataSetDB {
     + "last_nrt_export = ? WHERE id = ?";
 
   private static final String SENSOR_OFFSETS_PROPERTY = "__SENSOR_OFFSETS";
+
+  private static final String DELETE_DATASET_FILES_STATEMENT = "DELETE "
+    + "FROM dataset_files WHERE dataset_id = ?";
+
+  private static final String ADD_DATASET_FILE_STATEMENT = "INSERT INTO "
+    + "dataset_files VALUES (?, ?)";
 
   /**
    * Make an SQL query for retrieving complete datasets using a specified WHERE
@@ -361,7 +369,7 @@ public class DataSetDB {
   }
 
   private static void saveDataSet(DataSource dataSource, DataSet dataSet)
-    throws DatabaseException, MissingParamException, CoordinateException {
+    throws DatabaseException, CoordinateException {
     MissingParam.checkMissing(dataSource, "dataSource");
     Connection conn = null;
     try {
@@ -369,8 +377,8 @@ public class DataSetDB {
       conn.setAutoCommit(false);
       saveDataSet(conn, dataSet);
       conn.commit();
-      conn.setAutoCommit(true);
     } catch (SQLException e) {
+      DatabaseUtils.rollBack(conn);
       throw new DatabaseException("Error opening database connection", e);
     } finally {
       DatabaseUtils.closeConnection(conn);
@@ -835,44 +843,26 @@ public class DataSetDB {
     throws MissingParamException, DatabaseException,
     InvalidDataSetStatusException, RecordNotFoundException {
 
-    boolean currentAutoCommitStatus = false;
+    PreparedStatement datasetFilesStatement = null;
     PreparedStatement datasetStatement = null;
-
     try {
-      currentAutoCommitStatus = conn.getAutoCommit();
       setDatasetStatus(conn, dataSet.getId(), DataSet.STATUS_DELETING);
-      if (!currentAutoCommitStatus) {
-        conn.commit();
-      }
-
-      if (currentAutoCommitStatus) {
-        conn.setAutoCommit(false);
-      }
 
       DataSetDataDB.deleteMeasurements(conn, dataSet.getId());
       DataSetDataDB.deleteSensorValues(conn, dataSet.getId());
 
+      datasetFilesStatement = conn
+        .prepareStatement(DELETE_DATASET_FILES_STATEMENT);
+      datasetFilesStatement.setLong(1, dataSet.getId());
+      datasetFilesStatement.execute();
+
       datasetStatement = conn.prepareStatement(DELETE_DATASET_QUERY);
       datasetStatement.setLong(1, dataSet.getId());
       datasetStatement.execute();
-
-      if (currentAutoCommitStatus) {
-        // Return the connection to its non-transaction state
-        conn.commit();
-        conn.setAutoCommit(true);
-      }
     } catch (Exception e) {
       ExceptionUtils.printStackTrace(e);
-      if (currentAutoCommitStatus) {
-        try {
-          conn.rollback();
-          conn.setAutoCommit(true);
-        } catch (SQLException e2) {
-          ExceptionUtils.printStackTrace(e2);
-        }
-      }
     } finally {
-      DatabaseUtils.closeStatements(datasetStatement);
+      DatabaseUtils.closeStatements(datasetStatement, datasetFilesStatement);
     }
   }
 
@@ -1198,8 +1188,6 @@ public class DataSetDB {
     PreparedStatement setLastNrtStmt = null;
 
     try {
-      conn.setAutoCommit(false);
-
       setExportedStmt = conn.prepareStatement(DATASET_EXPORTED_STATEMENT);
       setExportedStmt.setLong(1, datasetId);
       setExportedStmt.execute();
@@ -1215,20 +1203,56 @@ public class DataSetDB {
           setLastNrtStmt.execute();
         }
       }
-
-      conn.commit();
     } catch (SQLException e) {
       throw new DatabaseException("Error setting dataset export status", e);
     } finally {
       DatabaseUtils.closeStatements(setExportedStmt, setLastNrtStmt);
+    }
+  }
 
-      try {
-        conn.setAutoCommit(true);
-      } catch (SQLException e) {
-        // Close the connection so it can't be reused
-        DatabaseUtils.closeConnection(conn);
-        throw new DatabaseException("Error setting dataset export status", e);
+  /**
+   * Store the set of {@link DataFile}s used in a {@link DataSet}.
+   * 
+   * <p>
+   * The database is updated to exactly match the contents of the supplied
+   * collection: links in the database that are not in this collection are
+   * removed.
+   * </p>
+   * 
+   * @param conn
+   *          A database connection.
+   * @param dataset
+   *          The {@link DataSet}.
+   * @param files
+   *          The {@link DataSet}'s files.
+   * @throws DatabaseException
+   */
+  public static void storeDatasetFiles(Connection conn, DataSet dataset,
+    Collection<DataFile> files) throws DatabaseException {
+    MissingParam.checkMissing(conn, "conn");
+    MissingParam.checkMissing(dataset, "dataset");
+    MissingParam.checkMissing(files, "files");
+
+    try (
+      PreparedStatement deleteDatasetFilesStmt = conn
+        .prepareStatement(DELETE_DATASET_FILES_STATEMENT);
+      PreparedStatement addDatasetFileStatement = conn
+        .prepareStatement(ADD_DATASET_FILE_STATEMENT);) {
+
+      // Delete the existing links
+      deleteDatasetFilesStmt.setLong(1, dataset.getId());
+      deleteDatasetFilesStmt.execute();
+
+      // Create the supplied links
+      for (DataFile file : files) {
+        addDatasetFileStatement.setLong(1, dataset.getId());
+        addDatasetFileStatement.setLong(2, file.getDatabaseId());
+        addDatasetFileStatement.addBatch();
       }
+
+      addDatasetFileStatement.executeBatch();
+    } catch (Exception e) {
+      throw new DatabaseException("Error storing dataset files", e);
     }
   }
 }

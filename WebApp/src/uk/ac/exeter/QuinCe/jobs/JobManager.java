@@ -275,8 +275,8 @@ public class JobManager {
    *           If an unknown problem is found with the specified job class
    */
   public static long addJob(Connection conn, User owner, String jobClass,
-    Properties properties) throws DatabaseException, MissingParamException,
-    NoSuchUserException, JobClassNotFoundException,
+    Properties properties)
+    throws DatabaseException, NoSuchUserException, JobClassNotFoundException,
     InvalidJobClassTypeException, InvalidJobConstructorException, JobException {
 
     MissingParam.checkMissing(conn, "conn");
@@ -486,8 +486,7 @@ public class JobManager {
    *           If any required parameters are missing
    */
   private static void setStatus(Connection conn, long jobID, String status)
-    throws MissingParamException, UnrecognisedStatusException,
-    DatabaseException, NoSuchJobException {
+    throws UnrecognisedStatusException, DatabaseException, NoSuchJobException {
     MissingParam.checkMissing(conn, "conn");
 
     if (!checkJobStatus(status)) {
@@ -532,8 +531,7 @@ public class JobManager {
    *           If the specified job doesn't exist
    */
   public static void logJobStarted(Connection conn, long jobID,
-    String threadName)
-    throws MissingParamException, DatabaseException, NoSuchJobException {
+    String threadName) throws DatabaseException, NoSuchJobException {
 
     MissingParam.checkMissing(conn, "conn");
 
@@ -671,7 +669,7 @@ public class JobManager {
    *           If the specified job doesn't exist
    */
   public static void logJobFinished(Connection conn, long jobID)
-    throws MissingParamException, DatabaseException, NoSuchJobException {
+    throws DatabaseException, NoSuchJobException {
 
     MissingParam.checkMissing(conn, "conn");
 
@@ -711,7 +709,7 @@ public class JobManager {
    *           If the specified job doesn't exist
    */
   public static void logJobKilled(Connection conn, long jobID)
-    throws MissingParamException, DatabaseException, NoSuchJobException {
+    throws DatabaseException, NoSuchJobException {
 
     MissingParam.checkMissing(conn, "conn");
 
@@ -751,7 +749,7 @@ public class JobManager {
    *           If the specified job does not exist
    */
   public static void logJobError(Connection conn, long jobID, Throwable error)
-    throws MissingParamException, DatabaseException, NoSuchJobException {
+    throws DatabaseException, NoSuchJobException {
 
     MissingParam.checkMissing(conn, "conn");
 
@@ -798,8 +796,7 @@ public class JobManager {
    *           If an error occurs while storing the progress in the database
    */
   public static void setProgress(Connection conn, long jobID, double progress)
-    throws MissingParamException, BadProgressException, NoSuchJobException,
-    DatabaseException {
+    throws BadProgressException, NoSuchJobException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkDatabaseId(jobID, "jobID", false);
@@ -842,7 +839,7 @@ public class JobManager {
    *           If any required parameters are missing
    */
   private static boolean jobExists(Connection conn, long jobID)
-    throws MissingParamException, DatabaseException {
+    throws DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
 
@@ -1268,7 +1265,7 @@ public class JobManager {
    *           If a database error occurs
    */
   private static String getJobStatus(Connection conn, long jobId)
-    throws NoSuchJobException, MissingParamException, DatabaseException {
+    throws NoSuchJobException, DatabaseException {
 
     String result = null;
 
@@ -1352,7 +1349,7 @@ public class JobManager {
    *           If the job does not exist
    */
   public static User getJobOwner(Connection conn, long jobId)
-    throws MissingParamException, DatabaseException, NoSuchJobException {
+    throws DatabaseException, NoSuchJobException {
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkDatabaseId(jobId, "jobId", false);
 
@@ -1400,7 +1397,7 @@ public class JobManager {
    *           If a database error occurs
    */
   public static void requeueJobs(Connection conn, List<Long> jobIds)
-    throws MissingParamException, DatabaseException {
+    throws DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkMissing(jobIds, "jobIds");

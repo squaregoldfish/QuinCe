@@ -30,6 +30,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
+import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.ValueCounter;
@@ -281,10 +282,17 @@ public class InternalCalibrationData extends PlotPageData {
     }
 
     // Store the updated sensor values
-    try (Connection conn = dataSource.getConnection()) {
+    Connection conn = null;
+    try {
+      conn = dataSource.getConnection();
+      conn.setAutoCommit(false);
       DataSetDataDB.storeSensorValues(conn, sensorValues);
+      conn.commit();
     } catch (Exception e) {
+      DatabaseUtils.rollBack(conn);
       throw new DatabaseException("Error while applying QC flag", e);
+    } finally {
+      DatabaseUtils.closeConnection(conn);
     }
 
     initPlots();
@@ -300,6 +308,8 @@ public class InternalCalibrationData extends PlotPageData {
    * @throws MissingParamException
    */
   public void acceptAutoQC() {
+
+    Connection conn = null;
     try {
       List<SensorValue> sensorValues = getSelectedSensorValues();
 
@@ -314,12 +324,17 @@ public class InternalCalibrationData extends PlotPageData {
         }
       }
 
-      try (Connection conn = dataSource.getConnection()) {
-        DataSetDataDB.storeSensorValues(conn, sensorValues);
-      }
+      conn = dataSource.getConnection();
+      conn.setAutoCommit(false);
+      DataSetDataDB.storeSensorValues(conn, sensorValues);
+      conn.commit();
+
       initPlots();
     } catch (Exception e) {
+      DatabaseUtils.rollBack(conn);
       error("Error while updating QC flags", e);
+    } finally {
+      DatabaseUtils.closeConnection(conn);
     }
   }
 

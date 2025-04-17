@@ -73,6 +73,7 @@ then
 
     DELETE FROM sensor_values WHERE coordinate_id IN (SELECT id FROM coordinates WHERE dataset_id IN (SELECT id FROM dataset WHERE instrument_id = $instrument_id));
     DELETE FROM coordinates WHERE dataset_id IN (SELECT id FROM dataset WHERE instrument_id = $instrument_id);
+    DELETE FROM dataset_files WHERE dataset_id IN (SELECT id FROM dataset WHERE instrument_id = $instrument_id);
 
     DELETE FROM dataset WHERE instrument_id = $instrument_id;
 

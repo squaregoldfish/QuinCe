@@ -14,6 +14,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
@@ -159,6 +160,7 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
       return measurements;
 
     } catch (Exception e) {
+      DatabaseUtils.rollBack(conn);
       throw new MeasurementLocatorException(e);
     }
   }

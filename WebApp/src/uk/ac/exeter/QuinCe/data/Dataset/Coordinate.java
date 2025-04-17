@@ -30,12 +30,6 @@ import uk.ac.exeter.QuinCe.utils.MissingParam;
 public abstract class Coordinate implements Comparable<Coordinate> {
 
   /**
-   * A special instance of a {@link Coordinate} that is larger than all other
-   * {@link Coordinate}s.
-   */
-  public static final Coordinate MAX = MaxCoordinate.getInstance();
-
-  /**
    * The coordinate's database ID.
    */
   private long id;
@@ -168,9 +162,13 @@ public abstract class Coordinate implements Comparable<Coordinate> {
     if (getClass() != obj.getClass())
       return false;
     Coordinate other = (Coordinate) obj;
-    return datasetId == other.datasetId && id == other.id
-      && Objects.equals(time, other.time);
+    if (datasetId != other.datasetId) {
+      return false;
+    }
+    return equalsWorker(other);
   }
+
+  protected abstract boolean equalsWorker(Coordinate other);
 
   protected abstract int compareToWorker(Coordinate other);
 

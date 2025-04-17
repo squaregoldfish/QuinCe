@@ -174,7 +174,8 @@ public class BaseTest {
   }
 
   /**
-   * Get a connection to the H2 test database defined in the {@link #context}.
+   * Get a {@link Connection} to the H2 test database defined in the
+   * {@link #context}.
    *
    * @return A database connection.
    * @throws SQLException
@@ -182,6 +183,23 @@ public class BaseTest {
    */
   protected Connection getConnection() throws SQLException {
     return getDataSource().getConnection();
+  }
+
+  /**
+   * Get a {@link Connection} to the H2 test database with the specified
+   * {@code autoCommit} status.
+   * 
+   * @param autoCommit
+   *          The {@code autoCommit} status.
+   * @return A database connection.
+   * @throws SQLException
+   *           If the connection cannot be retrieved.
+   * @see #getConnection()
+   */
+  protected Connection getConnection(boolean autoCommit) throws SQLException {
+    Connection conn = getConnection();
+    conn.setAutoCommit(autoCommit);
+    return conn;
   }
 
   /**

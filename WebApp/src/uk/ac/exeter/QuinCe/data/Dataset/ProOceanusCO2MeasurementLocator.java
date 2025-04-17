@@ -11,6 +11,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
@@ -194,6 +195,7 @@ public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
 
       return measurements;
     } catch (Exception e) {
+      DatabaseUtils.rollBack(conn);
       if (e instanceof MeasurementLocatorException) {
         throw (MeasurementLocatorException) e;
       } else {

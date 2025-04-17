@@ -346,6 +346,7 @@ public class SensorOffsetsTest extends BaseTest {
     DatasetSensorValues allSensorValues = new DatasetSensorValues(
       Mockito.mock(DataSet.class));
     Mockito.when(allSensorValues.getInstrument()).thenReturn(instrument);
+    Mockito.when(allSensorValues.getDatasetId()).thenReturn(1L);
 
     for (SensorValue sensorValue : sensorValues) {
       allSensorValues.add(sensorValue);
@@ -406,6 +407,7 @@ public class SensorOffsetsTest extends BaseTest {
     DatasetSensorValues allSensorValues = new DatasetSensorValues(
       Mockito.mock(DataSet.class));
     Mockito.when(allSensorValues.getInstrument()).thenReturn(instrument);
+    Mockito.when(allSensorValues.getDatasetId()).thenReturn(1L);
 
     for (SensorValue sensorValue : sensorValues) {
       allSensorValues.add(sensorValue);

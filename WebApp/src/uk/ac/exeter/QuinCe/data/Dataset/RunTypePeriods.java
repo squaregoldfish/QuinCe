@@ -44,7 +44,7 @@ public class RunTypePeriods extends ArrayList<RunTypePeriod> {
    */
   public void finish() {
     if (size() > 0) {
-      get(size() - 1).setEnd(Coordinate.MAX);
+      get(size() - 1).setEnd(TimeCoordinate.MAX);
     }
 
     finished = true;

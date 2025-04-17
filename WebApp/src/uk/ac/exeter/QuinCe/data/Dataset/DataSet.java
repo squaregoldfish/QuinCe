@@ -1,6 +1,5 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
-import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +11,6 @@ import java.util.Properties;
 import com.google.gson.JsonArray;
 
 import uk.ac.exeter.QuinCe.data.Files.DataFile;
-import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariableNotFoundException;
@@ -742,11 +740,13 @@ public class DataSet implements Comparable<DataSet> {
    * @throws DatabaseException
    *           If a database error occurs
    */
-  public List<Long> getSourceFiles(Connection conn)
-    throws MissingParamException, DatabaseException {
-    return DataFileDB.getFilesWithinDates(conn, instrument, startTime, endTime,
-      true);
-  }
+
+  /*
+   * public List<Long> getSourceFiles(Connection conn) throws
+   * MissingParamException, DatabaseException { return
+   * DataFileDB.getFilesWithinDates(conn, instrument, startTime, endTime, true);
+   * }
+   */
 
   /**
    * Determine whether or not this is a NRT dataset

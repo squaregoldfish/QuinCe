@@ -87,8 +87,10 @@ public class SensorOffsets {
             sensorValue.getCoordinate().getTime());
           LocalDateTime newTime = sensorValue.getCoordinate().getTime()
             .minus(offset, ChronoUnit.MILLIS);
-          result.add(new SensorValue(sensorValue, TimeCoordinate
-            .getCoordinate(newTime, allSensorValues.getCoordinates())));
+          result.add(new SensorValue(sensorValue,
+            TimeCoordinate.getCoordinate(newTime,
+              allSensorValues.getDatasetId(),
+              allSensorValues.getCoordinates())));
         }
       }
     } catch (CoordinateException e) {
@@ -212,7 +214,7 @@ public class SensorOffsets {
 
     }
 
-    return TimeCoordinate.getCoordinate(resultTime,
+    return TimeCoordinate.getCoordinate(resultTime, source.getDatasetId(),
       allSensorValues.getCoordinates());
   }
 

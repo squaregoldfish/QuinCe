@@ -46,6 +46,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
+import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
@@ -570,6 +571,7 @@ public class ManualQCData extends PlotPageData {
    */
   public void acceptAutoQC() {
 
+    Connection conn = null;
     try {
       List<SensorValue> selectedValues = getSelectedSensorValues();
 
@@ -607,13 +609,17 @@ public class ManualQCData extends PlotPageData {
         }
       }
 
-      try (Connection conn = dataSource.getConnection()) {
-        DataSetDataDB.storeSensorValues(conn, changedValues);
-      }
+      conn = dataSource.getConnection();
+      conn.setAutoCommit(false);
+      DataSetDataDB.storeSensorValues(conn, changedValues);
+      conn.commit();
       clearSelection();
       initPlots();
     } catch (Exception e) {
+      DatabaseUtils.rollBack(conn);
       error("Error while updating QC flags", e);
+    } finally {
+      DatabaseUtils.closeConnection(conn);
     }
   }
 
@@ -687,6 +693,7 @@ public class ManualQCData extends PlotPageData {
   }
 
   public void applyManualFlag() {
+    Connection conn = null;
     try {
       Set<SensorValue> changedValues = new HashSet<SensorValue>();
 
@@ -720,15 +727,19 @@ public class ManualQCData extends PlotPageData {
       }
 
       // Store the updated sensor values
-      try (Connection conn = dataSource.getConnection()) {
-        DataSetDataDB.storeSensorValues(conn, changedValues);
-      }
+      conn = dataSource.getConnection();
+      conn.setAutoCommit(false);
+      DataSetDataDB.storeSensorValues(conn, changedValues);
+      conn.commit();
 
       clearSelection();
       initPlots();
 
     } catch (Exception e) {
+      DatabaseUtils.rollBack(conn);
       error("Error storing QC data", e);
+    } finally {
+      DatabaseUtils.closeConnection(conn);
     }
   }
 

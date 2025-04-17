@@ -75,6 +75,7 @@ then
     DELETE FROM measurements WHERE coordinate_id IN (SELECT id FROM coordinates WHERE dataset_id = $dataset_id);
     DELETE FROM sensor_values WHERE coordinate_id IN (SELECT id FROM coordinates WHERE dataset_id = $dataset_id);
     DELETE FROM coordinates WHERE dataset_id = $dataset_id;
+    DELETE FROM dataset_files WHERE dataset_id = $dataset_id;
     DELETE FROM dataset WHERE id = $dataset_id;
 EOF
 

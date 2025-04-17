@@ -15,6 +15,14 @@ import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 public class TimeCoordinate extends Coordinate {
 
   /**
+   * A special instance of a {@link Coordinate} that is larger than all other
+   * {@link Coordinate}s.
+   */
+  public static final TimeCoordinate MAX = new TimeCoordinate(
+    DatabaseUtils.NO_DATABASE_RECORD, DatabaseUtils.NO_DATABASE_RECORD,
+    LocalDateTime.MAX);
+
+  /**
    * Constructor. Time is required.
    *
    * @param id
@@ -79,6 +87,11 @@ public class TimeCoordinate extends Coordinate {
   }
 
   @Override
+  protected boolean equalsWorker(Coordinate other) {
+    return this.getTime().equals(other.getTime());
+  }
+
+  @Override
   public String toString() {
     return DateTimeUtils.formatDateTime(getTime());
   }
@@ -119,13 +132,12 @@ public class TimeCoordinate extends Coordinate {
    * @throws CoordinateException
    *           If a new coordinate is required but cannot be created.
    */
-  public static TimeCoordinate getCoordinate(LocalDateTime time,
+  public static TimeCoordinate getCoordinate(LocalDateTime time, long datasetId,
     Collection<Coordinate> existingCoordinates) throws CoordinateException {
 
     return (TimeCoordinate) existingCoordinates.stream()
       .filter(c -> c.getTime().equals(time)).findAny()
-      .orElse(new TimeCoordinate(
-        existingCoordinates.stream().findFirst().get().getDatasetId(), time));
+      .orElse(new TimeCoordinate(datasetId, time));
   }
 
   /**

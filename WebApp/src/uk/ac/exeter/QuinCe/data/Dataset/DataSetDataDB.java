@@ -143,14 +143,17 @@ public class DataSetDataDB {
 
   private static final String DELETE_DATA_REDUCTION_STATEMENT = "DELETE FROM "
     + "data_reduction WHERE measurement_id IN "
-    + "(SELECT id FROM measurements WHERE dataset_id = ?)";
+    + "(SELECT id FROM measurements WHERE coordinate_id IN "
+    + "(SELECT id FROM coordinates WHERE dataset_id = ?))";
 
   private static final String DELETE_MEASUREMENT_RUN_TYPES_STATEMENT = "DELETE FROM "
     + "measurement_run_types WHERE measurement_id IN "
-    + "(SELECT id FROM measurements WHERE dataset_id = ?)";
+    + "(SELECT id FROM measurements WHERE coordinate_id IN "
+    + "(SELECT id FROM coordinates WHERE dataset_id = ?))";
 
   private static final String DELETE_MEASUREMENTS_STATEMENT = "DELETE FROM "
-    + "measurements WHERE dataset_id = ?";
+    + "measurements WHERE coordinate_id IN "
+    + "(SELECT id FROM coordinates WHERE dataset_id = ?)";
 
   private static final String GET_REQUIRED_FLAGS_QUERY = "SELECT "
     + "COUNT(*) FROM sensor_values sv INNER JOIN coordinates c ON sv.coordinate_id = c.id "
@@ -164,9 +167,9 @@ public class DataSetDataDB {
     + "WHERE c.dataset_id = ? ORDER BY dr.measurement_id ASC";
 
   private static final String GET_RUN_TYPES_QUERY = "SELECT "
-    + "sv.coordinate_id, sv.value FROM sensor_values "
+    + "sv.coordinate_id, sv.value "
     + "FROM sensor_values sv INNER JOIN coordinates c ON sv.coordinate_id = c.id "
-    + "WHERE c.dataset_id = ? AND file_column IN "
+    + "WHERE c.dataset_id = ? AND sv.file_column IN "
     + DatabaseUtils.IN_PARAMS_TOKEN + " ORDER BY date ASC";
 
   private static final String STORE_MEASUREMENT_VALUES_STATEMENT = "UPDATE measurements "
@@ -339,17 +342,15 @@ public class DataSetDataDB {
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkMissing(sensorValues, "sensorValues", true);
 
-    boolean autoCommitStatus = true;
-
     PreparedStatement addStmt = null;
     PreparedStatement updateStmt = null;
     ResultSet generatedKeys;
 
     try {
 
-      autoCommitStatus = conn.getAutoCommit();
-
-      conn.setAutoCommit(false);
+      if (conn.getAutoCommit()) {
+        throw new DatabaseException("Connection must be autoCommit=false");
+      }
 
       // Extract the Coordinate objects and ensure they are stored
       // in the database.
@@ -453,28 +454,11 @@ public class DataSetDataDB {
       }
 
       DatabaseUtils.closeStatements(addStmt, updateStmt);
-
-      conn.commit();
-    } catch (
-
-    SQLException e) {
+    } catch (SQLException e) {
       throw new DatabaseException("Error storing sensor values", e);
     } catch (Exception e) {
-      try {
-        DatabaseUtils.closeStatements(addStmt, updateStmt);
-        conn.rollback();
-        conn.setAutoCommit(autoCommitStatus);
-      } catch (SQLException e2) {
-        ; // Ignore exceptions
-      }
-
+      DatabaseUtils.closeStatements(addStmt, updateStmt);
       throw e;
-    } finally {
-      try {
-        conn.setAutoCommit(autoCommitStatus);
-      } catch (SQLException e) {
-        ; // Ignore expception
-      }
     }
 
     // Clear the dirty flag on all the sensor values
@@ -504,11 +488,6 @@ public class DataSetDataDB {
     PreparedStatement coordinatesStmt = null;
 
     try {
-      boolean autoCommitStatus = conn.getAutoCommit();
-
-      if (autoCommitStatus) {
-        conn.setAutoCommit(false);
-      }
       sensorValuesStmt = conn.prepareStatement(DELETE_SENSOR_VALUES_STATEMENT);
       sensorValuesStmt.setLong(1, datasetId);
       sensorValuesStmt.execute();
@@ -516,11 +495,6 @@ public class DataSetDataDB {
       coordinatesStmt = conn.prepareStatement(DELETE_COORDINATES_STATEMENT);
       coordinatesStmt.setLong(1, datasetId);
       coordinatesStmt.execute();
-
-      if (autoCommitStatus) {
-        conn.commit();
-        conn.setAutoCommit(true);
-      }
     } catch (SQLException e) {
       throw new DatabaseException("Error storing sensor values", e);
     } finally {
@@ -1034,7 +1008,7 @@ public class DataSetDataDB {
    *           If any required parameters are missing
    */
   public static void deleteMeasurements(Connection conn, long datasetId)
-    throws MissingParamException, DatabaseException {
+    throws DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkDatabaseId(datasetId, "datasetId", false);
@@ -1045,11 +1019,6 @@ public class DataSetDataDB {
     PreparedStatement delMeasurementsStmt = null;
 
     try {
-      boolean initialAutoCommitState = conn.getAutoCommit();
-      if (initialAutoCommitState) {
-        conn.setAutoCommit(false);
-      }
-
       delDataReductionStmt = conn
         .prepareStatement(DELETE_DATA_REDUCTION_STATEMENT);
       delDataReductionStmt.setLong(1, datasetId);
@@ -1064,12 +1033,6 @@ public class DataSetDataDB {
         .prepareStatement(DELETE_MEASUREMENTS_STATEMENT);
       delMeasurementsStmt.setLong(1, datasetId);
       delMeasurementsStmt.execute();
-
-      conn.commit();
-
-      if (initialAutoCommitState) {
-        conn.setAutoCommit(true);
-      }
     } catch (SQLException e) {
       throw new DatabaseException("Error while deleting measurements", e);
     } finally {
@@ -1435,11 +1398,7 @@ public class DataSetDataDB {
   public static void updateMeasurementCoordinate(Connection conn,
     Measurement measurement) throws CoordinateException, DatabaseException {
 
-    boolean autoCommitStatus = true;
-
     try {
-      conn.setAutoCommit(false);
-
       if (!measurement.getCoordinate().isInDatabase()) {
         CoordinateDB.saveCoordinate(conn, measurement.getCoordinate());
       }
@@ -1451,15 +1410,8 @@ public class DataSetDataDB {
 
         stmt.execute();
       }
-      conn.commit();
     } catch (SQLException e) {
       throw new DatabaseException("Error updating measurement coordinate", e);
-    } finally {
-      try {
-        conn.setAutoCommit(autoCommitStatus);
-      } catch (SQLException e) {
-        ; // Ignore exception
-      }
     }
   }
 }

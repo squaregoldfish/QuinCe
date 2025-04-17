@@ -110,7 +110,7 @@ public class FlagCascadeTest extends TestSetTest {
     ResourceManager.destroy();
     initResourceManager();
 
-    try (Connection conn = getConnection()) {
+    try (Connection conn = getConnection(false)) {
       Instrument instrument = InstrumentDB.getInstrument(conn, 1L);
       Variable variable = instrument.getVariables().get(0);
       DataSet dataset = DataSetDB.getDataSet(conn, 1L);
@@ -126,6 +126,7 @@ public class FlagCascadeTest extends TestSetTest {
       salVal.setUserQC(new Flag(line.getIntField(SAL_FLAG_COL)), "Comment");
 
       DataSetDataDB.storeSensorValues(conn, Arrays.asList(sstVal, salVal));
+      conn.commit();
 
       // Create the measurements for the dataset by running the
       // MeasurementLocator job

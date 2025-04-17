@@ -333,7 +333,7 @@ public class AutoDiagnosticFlagTest extends AbstractDiagnosticFlagTest {
 
     initResourceManager();
 
-    try (Connection conn = getConnection()) {
+    try (Connection conn = getConnection(false)) {
 
       // Load Dataset data
       Instrument instrument = InstrumentDB.getInstrument(conn, 1L);
@@ -365,6 +365,7 @@ public class AutoDiagnosticFlagTest extends AbstractDiagnosticFlagTest {
       // Write updated values to DB
       DataSetDataDB.storeSensorValues(conn,
         Arrays.asList(sst, salinity, co2, runType));
+      conn.commit();
 
       // Set the Diagnostic Auto QC limits
       diagnosticQCConfig.setRangeMin(diagnosticWater,

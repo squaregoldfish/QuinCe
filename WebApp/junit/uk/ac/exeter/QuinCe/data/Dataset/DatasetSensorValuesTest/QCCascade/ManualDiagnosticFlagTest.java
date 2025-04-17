@@ -281,7 +281,7 @@ public class ManualDiagnosticFlagTest extends AbstractDiagnosticFlagTest {
 
     initResourceManager();
 
-    try (Connection conn = getConnection()) {
+    try (Connection conn = getConnection(false)) {
 
       // Load Dataset data
       Instrument instrument = InstrumentDB.getInstrument(conn, 1L);
@@ -307,6 +307,7 @@ public class ManualDiagnosticFlagTest extends AbstractDiagnosticFlagTest {
       // Write updated values to DB
       DataSetDataDB.storeSensorValues(conn,
         Arrays.asList(sst, salinity, co2, runType));
+      conn.commit();
 
       // Set the Diagnostic QC flags and apply the cascade
       RunTypePeriods runTypePeriods = makeRunTypePeriods(runType);
@@ -324,6 +325,7 @@ public class ManualDiagnosticFlagTest extends AbstractDiagnosticFlagTest {
       allSensorValues.applyQCCascade(gasFlow, runTypePeriods);
 
       DataSetDataDB.storeSensorValues(conn, allSensorValues.getAll());
+      conn.commit();
 
       // Run the Data Reduction
       DataReductionRecord dataReductionRecord = runDataReduction(conn,
@@ -378,6 +380,7 @@ public class ManualDiagnosticFlagTest extends AbstractDiagnosticFlagTest {
         allSensorValues.applyQCCascade(gasFlow, runTypePeriods);
 
         DataSetDataDB.storeSensorValues(conn, allSensorValues.getAll());
+        conn.commit();
 
         // Run the Data Reduction
         DataReductionRecord newDataReductionRecord = runDataReduction(conn,

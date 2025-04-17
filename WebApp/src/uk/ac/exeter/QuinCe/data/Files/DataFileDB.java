@@ -21,6 +21,7 @@ import javax.sql.DataSource;
 import com.google.gson.Gson;
 
 import uk.ac.exeter.QuinCe.User.User;
+import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
@@ -169,6 +170,9 @@ public class DataFileDB {
     + "(SELECT id FROM file_definition WHERE instrument_id = ?) "
     + "ORDER BY modified DESC LIMIT 1";
 
+  private static final String GET_USED_FILES_QUERY = "SELECT "
+    + "datafile_id FROM dataset_files WHERE dataset_id = ?";
+
   /**
    * Store a file in the database and in the file store
    *
@@ -251,12 +255,6 @@ public class DataFileDB {
           dataFile.getRawStartTime(), dataFile.getRawEndTime());
       }
 
-      boolean initialAutoCommit = conn.getAutoCommit();
-
-      if (initialAutoCommit) {
-        conn.setAutoCommit(false);
-      }
-
       stmt = conn.prepareStatement(ADD_FILE_STATEMENT,
         Statement.RETURN_GENERATED_KEYS);
       stmt.setLong(1, dataFile.getFileDefinition().getDatabaseId());
@@ -270,17 +268,10 @@ public class DataFileDB {
 
       generatedKeys = stmt.getGeneratedKeys();
       if (generatedKeys.next()) {
-
         dataFile.setDatabaseId(generatedKeys.getLong(1));
 
         // Store the file
         FileStore.storeFile(appConfig.getProperty("filestore"), dataFile);
-
-        conn.commit();
-      }
-
-      if (initialAutoCommit) {
-        conn.setAutoCommit(true);
       }
     } catch (FileExistsException e) {
       throw e;
@@ -357,25 +348,14 @@ public class DataFileDB {
 
         // Store the file - automatically replaces the old one
         FileStore.storeFile(appConfig.getProperty("filestore"), dataFile);
-
-        conn.commit();
-
-        if (initialAutoCommit) {
-          conn.setAutoCommit(true);
-        }
       }
     } catch (Exception e) {
-      try {
-        DatabaseUtils.rollBack(conn);
-      } catch (Exception e2) {
-        // Do nothing
-      }
+      DatabaseUtils.rollBack(conn);
 
       throw new DatabaseException("An error occurred while storing the file",
         e);
     } finally {
       DatabaseUtils.closeStatements(stmt);
-      DatabaseUtils.closeConnection(conn);
     }
   }
 
@@ -786,19 +766,11 @@ public class DataFileDB {
 
       // Delete the file from the file store
       FileStore.deleteFile(appConfig.getProperty("filestore"), dataFile);
-
-      conn.commit();
-
     } catch (SQLException e) {
       DatabaseUtils.rollBack(conn);
       throw new DatabaseException(
         "An error occurred while deleting the data file", e);
     } finally {
-      try {
-        conn.setAutoCommit(true);
-      } catch (SQLException e) {
-        throw new DatabaseException("Unable to reset connection autocommit", e);
-      }
       DatabaseUtils.closeStatements(stmt);
     }
   }
@@ -916,7 +888,7 @@ public class DataFileDB {
    * @throws DatabaseException
    *           If a database error occurs
    */
-  public static List<Long> getFilesWithinDates(Connection conn,
+  public static List<DataFile> getFilesWithinDates(Connection conn,
     Instrument instrument, LocalDateTime start, LocalDateTime end,
     boolean applyOffset) throws MissingParamException, DatabaseException {
 
@@ -928,11 +900,7 @@ public class DataFileDB {
     List<DataFile> allInstrumentFiles = getFiles(conn,
       ResourceManager.getInstance().getConfig(), instrument);
 
-    List<DataFile> dateFiles = filterFilesByDates(allInstrumentFiles, start,
-      end, applyOffset);
-
-    return dateFiles.stream().map(f -> f.getDatabaseId())
-      .collect(Collectors.toList());
+    return filterFilesByDates(allInstrumentFiles, start, end, applyOffset);
   }
 
   /**
@@ -954,8 +922,7 @@ public class DataFileDB {
    */
   public static boolean completeFilesAfter(Connection conn,
     Properties appConfig, Instrument instrument, LocalDateTime time)
-    throws MissingParamException, DatabaseException, RecordNotFoundException,
-    InstrumentException {
+    throws DatabaseException, RecordNotFoundException, InstrumentException {
 
     boolean result = true;
 
@@ -1048,8 +1015,7 @@ public class DataFileDB {
    * @throws MissingParamException
    */
   public static LocalDateTime getLastFileDate(Connection conn,
-    long instrumentId, boolean applyOffset)
-    throws MissingParamException, DatabaseException {
+    long instrumentId, boolean applyOffset) throws DatabaseException {
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
@@ -1193,7 +1159,7 @@ public class DataFileDB {
    * @throws DatabaseException
    */
   public static LocalDateTime getLastFileModification(Connection conn,
-    long instrumentId) throws MissingParamException, DatabaseException {
+    long instrumentId) throws DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
@@ -1216,5 +1182,45 @@ public class DataFileDB {
     }
 
     return result;
+  }
+
+  /**
+   * Get the files used by a {@link DataSet}.
+   * 
+   * @param conn
+   *          A database connection.
+   * @param config
+   *          The application configuration.
+   * @param dataset
+   *          The {@link DataSet}.
+   * @return The files used by the {@link DataSet}.
+   * @throws DatabaseException
+   * @throws RecordNotFoundException
+   */
+  public static List<DataFile> getDatasetFiles(Connection conn,
+    Properties appConfig, DataSet dataset)
+    throws DatabaseException, RecordNotFoundException {
+
+    PreparedStatement usedFilesStmt = null;
+    ResultSet records = null;
+
+    try {
+      usedFilesStmt = conn.prepareStatement(GET_USED_FILES_QUERY);
+      usedFilesStmt.setLong(1, dataset.getId());
+
+      List<Long> fileIds = new ArrayList<Long>();
+
+      records = usedFilesStmt.executeQuery();
+      while (records.next()) {
+        fileIds.add(records.getLong(1));
+      }
+
+      return getDataFiles(conn, appConfig, fileIds);
+    } catch (SQLException e) {
+      throw new DatabaseException("Error getting dataset files", e);
+    } finally {
+      DatabaseUtils.closeResultSets(records);
+      DatabaseUtils.closeStatements(usedFilesStmt);
+    }
   }
 }
