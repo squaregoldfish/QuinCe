@@ -64,6 +64,11 @@ public class DatasetSensorValues {
   private SensorValuesList latitudes = null;
 
   /**
+   * Cache of all the {@link Coordinate}s in the {@link DataSet}.
+   */
+  private List<Coordinate> coordinatesCache = null;
+
+  /**
    * A special {@link Map} key used to indicate a summed total of flag values.
    *
    * <p>
@@ -187,6 +192,8 @@ public class DatasetSensorValues {
       addById(sensorValue);
       addByColumn(sensorValue);
     }
+
+    coordinatesCache = null;
   }
 
   /**
@@ -452,13 +459,17 @@ public class DatasetSensorValues {
    * @return The coordinates.
    */
   public List<Coordinate> getCoordinates() {
-    TreeSet<Coordinate> coordinates = new TreeSet<Coordinate>();
+    if (null == coordinatesCache) {
+      TreeSet<Coordinate> coordinates = new TreeSet<Coordinate>();
 
-    for (SensorValuesList sensorValues : valuesByColumn.values()) {
-      coordinates.addAll(sensorValues.getRawCoordinates());
+      for (SensorValuesList sensorValues : valuesByColumn.values()) {
+        coordinates.addAll(sensorValues.getRawCoordinates());
+      }
+
+      coordinatesCache = new ArrayList<Coordinate>(coordinates);
     }
 
-    return new ArrayList<Coordinate>(coordinates);
+    return coordinatesCache;
   }
 
   public List<Coordinate> getPositionValueCoordinates()

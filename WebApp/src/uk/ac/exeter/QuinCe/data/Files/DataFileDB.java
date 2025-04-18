@@ -1186,7 +1186,7 @@ public class DataFileDB {
 
   /**
    * Get the files used by a {@link DataSet}.
-   * 
+   *
    * @param conn
    *          A database connection.
    * @param config

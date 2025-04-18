@@ -1212,13 +1212,13 @@ public class DataSetDB {
 
   /**
    * Store the set of {@link DataFile}s used in a {@link DataSet}.
-   * 
+   *
    * <p>
    * The database is updated to exactly match the contents of the supplied
    * collection: links in the database that are not in this collection are
    * removed.
    * </p>
-   * 
+   *
    * @param conn
    *          A database connection.
    * @param dataset

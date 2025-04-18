@@ -188,7 +188,7 @@ public class BaseTest {
   /**
    * Get a {@link Connection} to the H2 test database with the specified
    * {@code autoCommit} status.
-   * 
+   *
    * @param autoCommit
    *          The {@code autoCommit} status.
    * @return A database connection.
