@@ -17,6 +17,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReducerFactory;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReductionException;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReductionRecord;
@@ -237,7 +238,9 @@ public class ExportData extends ManualQCData {
 
     // The time is just the time
     if (columnId == FileDefinition.TIME_COLUMN_ID) {
-      value = new SimplePlotPageTableValue(coordinates.get(rowId));
+      TimeCoordinate coordinate = (TimeCoordinate) coordinates.get(rowId);
+      coordinate.setFormatter(exportOption.getTimestampFormatter());
+      value = new SimplePlotPageTableValue(coordinate);
     } else if (columnId == FIXED_LON_ID) {
       value = lonValue;
     } else if (columnId == FIXED_LAT_ID) {

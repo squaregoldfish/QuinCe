@@ -36,19 +36,14 @@ public class DateTimeUtils {
   /**
    * A formatter for generating ISO format dates
    */
-  private static java.time.format.DateTimeFormatter isoDateTimeFormatter = null;
+  public static java.time.format.DateTimeFormatter isoDateTimeFormatter = java.time.format.DateTimeFormatter
+    .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC);
 
   /**
    * For formatting LocalDateTime - dates and parsing date time strings
    */
-  private static java.time.format.DateTimeFormatter displayDateTimeFormatter = null;
-
-  static {
-    isoDateTimeFormatter = java.time.format.DateTimeFormatter
-      .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC);
-    displayDateTimeFormatter = java.time.format.DateTimeFormatter
-      .ofPattern(DISPLAY_DATE_TIME_FORMAT).withZone(ZoneOffset.UTC);
-  }
+  private static java.time.format.DateTimeFormatter displayDateTimeFormatter = java.time.format.DateTimeFormatter
+    .ofPattern(DISPLAY_DATE_TIME_FORMAT).withZone(ZoneOffset.UTC);
 
   /**
    * Determines whether or not the current time is within a given number of

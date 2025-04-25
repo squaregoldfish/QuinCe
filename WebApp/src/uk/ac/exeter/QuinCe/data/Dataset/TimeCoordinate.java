@@ -1,6 +1,7 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -13,6 +14,20 @@ import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
  * @see uk.ac.exeter.QuinCe.data.Instrument.Instrument#BASIS_TIME
  */
 public class TimeCoordinate extends Coordinate {
+
+  /**
+   * The formatter for the time.
+   *
+   * <p>
+   * This is used by {@link #toString()} to present the time in the desired
+   * format. The default format (including when the formatter is {@code null} is
+   * ISO, but can be overridden by {@link #setFormatter(DateTimeFormatter)}.
+   * </p>
+   *
+   * @see DateTimeUtils#toIsoDate(LocalDateTime)
+   * @see #setFormatter(DateTimeFormatter)
+   */
+  private DateTimeFormatter formatter = null;
 
   /**
    * A special instance of a {@link Coordinate} that is larger than all other
@@ -93,7 +108,8 @@ public class TimeCoordinate extends Coordinate {
 
   @Override
   public String toString() {
-    return DateTimeUtils.formatDateTime(getTime());
+    return null != formatter ? formatter.format(getTime())
+      : DateTimeUtils.toIsoDate(getTime());
   }
 
   /**
@@ -101,7 +117,7 @@ public class TimeCoordinate extends Coordinate {
    *
    * <p>
    * The result of calling {@link #getId()} and {@link #getDatasetId()} on the
-   * returned object will be {@link DatabaseUtils#NO_DATABASE_RECORD}. *
+   * returned object will be {@link DatabaseUtils#NO_DATABASE_RECORD}.
    * </p>
    *
    * @param time
@@ -164,5 +180,16 @@ public class TimeCoordinate extends Coordinate {
    */
   public boolean isAfter(LocalDateTime time) {
     return getTime().isAfter(time);
+  }
+
+  /**
+   * Set the formatter for the timestamp.
+   *
+   * @param formatter
+   *          The formatter.
+   * @see #formatter
+   */
+  public void setFormatter(DateTimeFormatter formatter) {
+    this.formatter = formatter;
   }
 }
