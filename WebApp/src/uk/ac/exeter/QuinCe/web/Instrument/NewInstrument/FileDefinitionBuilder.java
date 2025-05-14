@@ -251,11 +251,16 @@ public class FileDefinitionBuilder extends FileDefinition {
       matchCount++;
     }
 
-    // If the string ends with a separator, ignore it
-    if (searchString.endsWith(separator)) {
-      matchCount--;
-    }
+    /*
+     * This was implemented for early attempts at SubCTech support. The latest
+     * SubCTech data I have doesn't seem to have a problem that requires this
+     * fix, and it interferes with other data formats, so I'm taking it out.
+     */
 
+    // If the string ends with a separator, ignore it
+    /*
+     * if (searchString.endsWith(separator)) { matchCount--; }
+     */
     return matchCount;
   }
 
