@@ -17,7 +17,7 @@ public class SensorValuesListFactory {
         forceString);
     }
     default: {
-      return new SensorValuesList(columnId, allSensorValues, forceString);
+      return new SimpleSensorValuesList(columnId, allSensorValues, forceString);
     }
     }
   }
@@ -32,7 +32,8 @@ public class SensorValuesListFactory {
         forceString);
     }
     default: {
-      return new SensorValuesList(columnIds, allSensorValues, forceString);
+      return new SimpleSensorValuesList(columnIds, allSensorValues,
+        forceString);
     }
     }
   }

@@ -13,8 +13,6 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 
 import org.flywaydb.test.annotation.FlywayTest;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -22,73 +20,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
-import uk.ac.exeter.QuinCe.TestBase.BaseTest;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.DateTimeFormatsBean;
-import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
-public class TimestampSensorValuesListTest extends BaseTest {
-
-  private static final long DATASET_ID = 1L;
-
-  private long sensorValueId = 0L;
-
-  @BeforeEach
-  public void setUp() {
-    initResourceManager();
-    sensorValueId = 0L;
-  }
-
-  @AfterEach
-  public void tearDown() {
-    ResourceManager.destroy();
-  }
-
-  private long getSensorValueId() {
-    sensorValueId++;
-    return sensorValueId;
-  }
-
-  /**
-   * Create a {@link DatasetSensorValues} object.
-   *
-   * @return The {@link DatasetSensorValues}.
-   * @throws Exception
-   *           If the construction fails.
-   */
-  private DatasetSensorValues getDatasetSensorValues() throws Exception {
-    DatasetSensorValues result = new DatasetSensorValues(
-      Mockito.mock(DataSet.class));
-    Mockito.when(result.getInstrument())
-      .thenReturn(InstrumentDB.getInstrument(getConnection(), DATASET_ID));
-    return result;
-  }
-
-  /**
-   * Make a {@link SensorValue} for a given column, hour and minute.
-   *
-   * <p>
-   * The time will always have the same date - just the time will change
-   * according to the parameters. The value will always be the same.
-   * </p>
-   *
-   * @param column
-   *          The column ID
-   * @param hour
-   *          The hour.
-   * @param minute
-   *          The minute.
-   * @return The {@link SensorValue}.
-   * @throws CoordinateException
-   */
-  private SensorValue makeSensorValue(long column, int hour, int minute)
-    throws CoordinateException {
-    return new SensorValue(1L, column, new TimeCoordinate(DATASET_ID,
-      LocalDateTime.of(2023, 1, 1, hour, minute, 0)), "12");
-  }
+public class TimestampSensorValuesListTest extends SensorValuesListTest {
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
     "resources/sql/testbase/instrument" })
@@ -132,28 +70,6 @@ public class TimestampSensorValuesListTest extends BaseTest {
     assertThrows(IllegalArgumentException.class, () -> {
       list.add(makeSensorValue(1L, 1, 1));
     });
-  }
-
-  @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument" })
-  @Test
-  public void maintainsOrderTest() throws Exception {
-    SensorValuesList list = new SensorValuesList(1L, getDatasetSensorValues(),
-      false);
-
-    // First value
-    list.add(makeSensorValue(1L, 1, 5));
-
-    // End
-    list.add(makeSensorValue(1L, 1, 10));
-
-    // Start
-    list.add(makeSensorValue(1L, 1, 1));
-
-    // Middle
-    list.add(makeSensorValue(1L, 1, 3));
-
-    assertTrue(timeCoordinatesOrdered(list.getRawCoordinates()));
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
@@ -290,6 +206,7 @@ public class TimestampSensorValuesListTest extends BaseTest {
     DatasetSensorValues result = new DatasetSensorValues(
       Mockito.mock(DataSet.class));
     Mockito.when(result.getInstrument()).thenReturn(instrument);
+    Mockito.when(result.getDatasetId()).thenReturn(DATASET_ID);
 
     BufferedReader in = new BufferedReader(new FileReader(file));
     String line;
@@ -356,7 +273,7 @@ public class TimestampSensorValuesListTest extends BaseTest {
       "stringValuesPeriodic.csv", 6L, Flag.GOOD);
 
     SensorValuesList list = allSensorValues.getColumnValues(6L);
-    assertEquals(50, list.valuesSize());
+    assertEquals(5, list.valuesSize());
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
@@ -382,7 +299,7 @@ public class TimestampSensorValuesListTest extends BaseTest {
       "numericValuesPeriodic.csv", 6L, Flag.GOOD);
 
     SensorValuesList list = allSensorValues.getColumnValues(6L);
-    assertEquals(50, list.valuesSize());
+    assertEquals(3, list.valuesSize());
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",

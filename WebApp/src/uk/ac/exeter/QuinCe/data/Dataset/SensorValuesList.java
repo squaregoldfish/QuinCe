@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignments;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
@@ -41,7 +40,7 @@ import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
  * reduction will access the {@code values} methods.
  * </p>
  */
-public class SensorValuesList {
+public abstract class SensorValuesList {
 
   /**
    * Pre-defined exception thrown when an attempt is made to a
@@ -92,11 +91,6 @@ public class SensorValuesList {
    * stored in {@link #list}.
    */
   protected List<Coordinate> rawCoordinates = null;
-
-  /**
-   * The output values.
-   */
-  private List<SingleSensorValuesListValue> outputValues = null;
 
   /**
    * A cached copy of the {@link Coordinate}s from the {@link #outputValues}.
@@ -350,44 +344,34 @@ public class SensorValuesList {
    * @throws SensorValuesListException
    *
    */
-  public SensorValuesListValue getValue(Coordinate coordinate,
-    boolean interpolate) throws SensorValuesListException {
-
-    int index = Collections.binarySearch(outputCoordinates, coordinate);
-
-    return index >= 0 ? outputValues.get(index) : null;
-  }
+  public abstract SensorValuesListValue getValue(Coordinate coordinate,
+    boolean interpolate) throws SensorValuesListException;
 
   /**
-   * Get the set of output values for the list.
-   *
-   * <p>
-   * The output values are constructed according to the measurement mode of the
-   * list and the QC flags of the member {@link SensorValue}s.
-   * </p>
+   * Get the output values for the list.
    *
    * @return The output values.
    * @throws SensorValuesListException
    *
-   * @see #buildOutputValues()
+   * @see #getOutputValues()
    */
   public List<SensorValuesListValue> getValues()
     throws SensorValuesListException {
-    if (null == outputValues) {
-      buildOutputValues();
-    }
 
-    return Collections
-      .unmodifiableList(new ArrayList<SensorValuesListValue>(outputValues));
+    return Collections.unmodifiableList(getOutputValues());
   }
 
+  /**
+   * Get the {@link Coordinate}s of the output values for the list.
+   * 
+   * @return The output coordinates.
+   * @throws SensorValuesListException
+   * @see #getOutputCoordinates()
+   */
   public List<Coordinate> getValueCoordinates()
     throws SensorValuesListException {
-    if (null == outputCoordinates) {
-      buildOutputValues();
-    }
 
-    return outputCoordinates;
+    return Collections.unmodifiableList(getOutputCoordinates());
   }
 
   /**
@@ -399,27 +383,7 @@ public class SensorValuesList {
    *           If the output values cannot be constructed.
    */
   public int valuesSize() throws SensorValuesListException {
-    if (null == outputValues) {
-      buildOutputValues();
-    }
-
-    return outputValues.size();
-  }
-
-  private void buildOutputValues() throws SensorValuesListException {
-
-    outputValues = new ArrayList<SingleSensorValuesListValue>(list.size());
-    outputCoordinates = new ArrayList<Coordinate>(list.size());
-
-    for (SensorValue value : list) {
-      try {
-        outputValues.add(
-          new SingleSensorValuesListValue(value, sensorType, allSensorValues));
-      } catch (RoutineException e) {
-        throw new SensorValuesListException(e);
-      }
-      outputCoordinates.add(value.getCoordinate());
-    }
+    return getOutputValues().size();
   }
 
   /**
@@ -570,10 +534,6 @@ public class SensorValuesList {
   public SensorValuesListValue getValueOnOrBefore(Coordinate coordinate)
     throws SensorValuesListException {
 
-    if (null == outputValues) {
-      buildOutputValues();
-    }
-
     SensorValuesListValue result = null;
 
     List<Coordinate> coordinates = getValueCoordinates();
@@ -581,7 +541,7 @@ public class SensorValuesList {
 
     // A >= 0 = an exact match
     if (searchIndex >= 0) {
-      result = outputValues.get(searchIndex);
+      result = getOutputValues().get(searchIndex);
     } else {
 
       /*
@@ -592,7 +552,7 @@ public class SensorValuesList {
       if (searchIndex < -1) {
         int getIndex = Math.abs(searchIndex) - 2;
         if (getIndex >= 0) {
-          result = outputValues.get(getIndex);
+          result = getOutputValues().get(getIndex);
         }
       }
     }
@@ -606,8 +566,52 @@ public class SensorValuesList {
    */
   public void resetOutput() {
     rawCoordinates = null;
-    outputValues = null;
+    listContentsUpdated();
   }
+
+  /**
+   * Retrieve the constructed output values from the list.
+   * 
+   * <p>
+   * Most instances of this class do not simply return a list of values that
+   * directly corresponds to the individual members supplied through the
+   * {@code add} methods. This method must be implemented to ensure that the
+   * outputs from the list have the necessary processing applied.
+   * </p>
+   * 
+   * @return The computed output values of the list.
+   */
+  protected abstract List<? extends SensorValuesListValue> getOutputValues()
+    throws SensorValuesListException;
+
+  /**
+   * The {@link Coordinate}s of the constructed output values from the list.
+   * 
+   * @return The {@link Coordinate}s of the computed output values of the list.
+   * @throws SensorValuesListException
+   * @see #getOutputValues()
+   */
+  protected List<Coordinate> getOutputCoordinates()
+    throws SensorValuesListException {
+    if (null == outputCoordinates) {
+      outputCoordinates = getOutputValues().stream().map(v -> v.getCoordinate())
+        .toList();
+    }
+
+    return outputCoordinates;
+  };
+
+  /**
+   * Method to broadcast the fact that the base contents of the list have been
+   * changed.
+   * 
+   * <p>
+   * When the contents of the list are changed, this method is called to signal
+   * that any previously computed output values may now be invalid and should be
+   * recalculated.
+   * </p>
+   */
+  protected abstract void listContentsUpdated();
 }
 
 /**

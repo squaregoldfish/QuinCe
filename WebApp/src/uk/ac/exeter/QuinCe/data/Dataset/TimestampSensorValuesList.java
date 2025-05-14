@@ -1350,14 +1350,18 @@ public class TimestampSensorValuesList extends SensorValuesList {
     }
   }
 
-  /**
-   * Clear any already calculated output values, forcing them to be recalculated
-   * at the next call to {@code getValue} methods.
-   */
   @Override
-  public void resetOutput() {
-    measurementMode = -1;
+  protected List<? extends SensorValuesListValue> getOutputValues()
+    throws SensorValuesListException {
+    if (null == outputValues) {
+      buildOutputValues();
+    }
+
+    return outputValues;
+  }
+
+  @Override
+  protected void listContentsUpdated() {
     outputValues = null;
-    valueCoordinatesCache = null;
   }
 }
