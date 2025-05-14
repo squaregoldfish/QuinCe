@@ -202,6 +202,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * </p>
    *
    * @throws SensorValuesListException
+   * @throws CoordinateException
    */
   private void buildOutputValues() throws SensorValuesListException {
 
@@ -213,7 +214,11 @@ public class TimestampSensorValuesList extends SensorValuesList {
       break;
     }
     case MODE_PERIODIC: {
-      buildPeriodicOutputValues();
+      try {
+        buildPeriodicOutputValues();
+      } catch (CoordinateException e) {
+        throw new SensorValuesListException("Error building list output", e);
+      }
       break;
     }
     default: {
@@ -265,8 +270,10 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * </p>
    *
    * @throws SensorValuesListException
+   * @throws CoordinateException
    */
-  private void buildPeriodicOutputValues() throws SensorValuesListException {
+  private void buildPeriodicOutputValues()
+    throws SensorValuesListException, CoordinateException {
     if (containsStringValue()) {
       buildPeriodicStringOutputValues();
     } else {
@@ -308,9 +315,10 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * </p>
    *
    * @throws SensorValuesListException
+   * @throws CoordinateException
    */
   private void buildPeriodicNumericOutputValues()
-    throws SensorValuesListException {
+    throws SensorValuesListException, CoordinateException {
 
     // Collect the members of a group together
     List<SensorValue> groupMembers = new ArrayList<SensorValue>();
@@ -1287,9 +1295,10 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * @param end
    *          The end time.
    * @return The {@link SensorValue}s between the given times.
+   * @throws CoordinateException
    */
-  public List<SensorValue> getRawValues(LocalDateTime start,
-    LocalDateTime end) {
+  public List<SensorValue> getRawValues(LocalDateTime start, LocalDateTime end)
+    throws CoordinateException {
 
     return getRawValues(TimeCoordinate.dummyCoordinate(start),
       TimeCoordinate.dummyCoordinate(end));
@@ -1305,8 +1314,10 @@ public class TimestampSensorValuesList extends SensorValuesList {
    *
    * @param time
    * @return
+   * @throws CoordinateException
    */
-  public TimeCoordinate getCoordinate(LocalDateTime time) {
+  public TimeCoordinate getCoordinate(LocalDateTime time)
+    throws CoordinateException {
     TimeCoordinate result;
 
     TimeCoordinate dummyCoordinate = new TimeCoordinate(

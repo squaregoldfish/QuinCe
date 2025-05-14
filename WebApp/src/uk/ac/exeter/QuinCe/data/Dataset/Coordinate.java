@@ -168,14 +168,57 @@ public abstract class Coordinate implements Comparable<Coordinate> {
     return equalsWorker(other);
   }
 
+  /**
+   * Perform the necessary comparison for the {@link #equals(Object)} method.
+   * 
+   * @param other
+   *          The object to compare.
+   * @return The {@code equals} result.
+   */
   protected abstract boolean equalsWorker(Coordinate other);
 
+  /**
+   * Perform the necessary comparison for the {@link #compareTo(Coordinate)}
+   * method.
+   * 
+   * @param other
+   *          The object to compare.
+   * @return The comparison result.
+   */
   protected abstract int compareToWorker(Coordinate other);
 
+  /**
+   * Determines whether or not this Coordinate is before the specified
+   * Coordinate.
+   * 
+   * <p>
+   * The definition of 'before' will depend on the specific implementation.
+   * </p>
+   * 
+   * @param other
+   *          The Coordinate to compare.
+   * @return {@code true} if this Coordinate is before the specified Coordinate;
+   *         {@code false} otherwise.
+   * @see #compareToWorker(Coordinate)
+   */
   public boolean isBefore(Coordinate other) {
     return compareTo(other) < 0;
   }
 
+  /**
+   * Determines whether or not this Coordinate is after the specified
+   * Coordinate.
+   * 
+   * <p>
+   * The definition of 'after' will depend on the specific implementation.
+   * </p>
+   * 
+   * @param other
+   *          The Coordinate to compare.
+   * @return {@code true} if this Coordinate is after the specified Coordinate;
+   *         {@code false} otherwise.
+   * @see #compareToWorker(Coordinate)
+   */
   public boolean isAfter(Coordinate other) {
     return compareTo(other) > 0;
   }

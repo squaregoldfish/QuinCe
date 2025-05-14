@@ -33,9 +33,16 @@ public class TimeCoordinate extends Coordinate {
    * A special instance of a {@link Coordinate} that is larger than all other
    * {@link Coordinate}s.
    */
-  public static final TimeCoordinate MAX = new TimeCoordinate(
-    DatabaseUtils.NO_DATABASE_RECORD, DatabaseUtils.NO_DATABASE_RECORD,
-    LocalDateTime.MAX);
+  public static TimeCoordinate MAX;
+
+  static {
+    try {
+      MAX = new TimeCoordinate(DatabaseUtils.NO_DATABASE_RECORD,
+        DatabaseUtils.NO_DATABASE_RECORD, LocalDateTime.MAX);
+    } catch (CoordinateException e) {
+      // This won't happen. Honest.
+    }
+  }
 
   /**
    * Constructor. Time is required.
@@ -50,10 +57,11 @@ public class TimeCoordinate extends Coordinate {
    * @throws CoordinateException
    *           If the timestamp is null.
    */
-  public TimeCoordinate(long id, long datasetId, LocalDateTime time) {
+  public TimeCoordinate(long id, long datasetId, LocalDateTime time)
+    throws CoordinateException {
     super(id, datasetId, time);
     if (null == time) {
-      throw new NullPointerException("Time cannot be null");
+      throw new CoordinateException("Time cannot be null");
     }
   }
 
@@ -70,8 +78,7 @@ public class TimeCoordinate extends Coordinate {
    * @param time
    *          The time.
    */
-  public TimeCoordinate(long datasetId, LocalDateTime time)
-    throws CoordinateException {
+  public TimeCoordinate(long datasetId, LocalDateTime time) {
     super(DatabaseUtils.NO_DATABASE_RECORD, datasetId, time);
   }
 
@@ -123,8 +130,10 @@ public class TimeCoordinate extends Coordinate {
    * @param time
    *          The time for the coordinate.
    * @return The coordinate.
+   * @throws CoordinateException
    */
-  public static TimeCoordinate dummyCoordinate(LocalDateTime time) {
+  public static TimeCoordinate dummyCoordinate(LocalDateTime time)
+    throws CoordinateException {
     return new TimeCoordinate(DatabaseUtils.NO_DATABASE_RECORD,
       DatabaseUtils.NO_DATABASE_RECORD, time);
   }

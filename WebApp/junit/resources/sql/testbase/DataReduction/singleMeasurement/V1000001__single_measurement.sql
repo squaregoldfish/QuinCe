@@ -1,7 +1,7 @@
 -- Create sensor values and a measurement all for a single timestamp
 
 -- Coordinates
-INSERT INTO coordinates VALUES (1,1,1704067200000,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO coordinates (id, dataset_id, date) VALUES (1,1,1704067200000);
 
 -- Run Type
 INSERT INTO sensor_values VALUES (1,1,1,'var_1',NULL,-2,NULL);

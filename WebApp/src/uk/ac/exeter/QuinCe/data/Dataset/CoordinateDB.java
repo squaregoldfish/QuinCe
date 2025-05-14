@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,8 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.lang3.NotImplementedException;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
@@ -27,8 +27,12 @@ import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
  */
 public class CoordinateDB {
 
-  private static final String STORE_SURFACE_COORDINATE_STMT = "INSERT INTO coordinates "
-    + "(dataset_id, date) VALUES (?, ?)";
+  private static final String STORE_ARGO_COORDINATE_STMT = "INSERT INTO coordinates "
+    + "(dataset_id, date, cycle_number, nprof, direction, nlevel, pres, source_file) "
+    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+  private static final String STORE_TIME_COORDINATE_STMT = "INSERT INTO coordinates "
+    + "(dataset_id, date, ) VALUES (?, ?)";
 
   private static final String GET_SENSOR_VALUE_COORDINATES_QUERY = "SELECT "
     + "sv.coordinate_id FROM sensor_values sv "
@@ -41,7 +45,8 @@ public class CoordinateDB {
     + "WHERE c.dataset_id = ?";
 
   private static final String GET_COORDINATES_QUERY = "SELECT "
-    + "id, dataset_id, date, depth, station, cast, bottle, replicate, cycle "
+    + "id, dataset_id, date, depth, station, cast, bottle, replicate, "
+    + "cycle_number, nprof, direction, nlevel, pres, source_file "
     + "FROM coordinates WHERE id IN " + DatabaseUtils.IN_PARAMS_TOKEN;
 
   /**
@@ -129,8 +134,7 @@ public class CoordinateDB {
         break;
       }
       case Instrument.BASIS_ARGO: {
-        throw new NotImplementedException(
-          "Argo coordinates not yet implemented");
+        storeArgoCoordinates(conn, coordinates);
       }
       default: {
         throw new CoordinateException("Unrecognised coordinate type");
@@ -151,13 +155,63 @@ public class CoordinateDB {
     Collection<Coordinate> coordinates)
     throws DatabaseException, CoordinateException {
 
-    try (PreparedStatement stmt = conn.prepareStatement(
-      STORE_SURFACE_COORDINATE_STMT, Statement.RETURN_GENERATED_KEYS)) {
+    try (
+      PreparedStatement stmt = conn.prepareStatement(STORE_TIME_COORDINATE_STMT,
+        Statement.RETURN_GENERATED_KEYS)) {
 
       for (Coordinate coordinate : coordinates) {
         if (coordinate.getId() == DatabaseUtils.NO_DATABASE_RECORD) {
           stmt.setLong(1, coordinate.getDatasetId());
           stmt.setLong(2, DateTimeUtils.dateToLong(coordinate.getTime()));
+
+          stmt.execute();
+
+          try (ResultSet keys = stmt.getGeneratedKeys()) {
+            keys.next();
+            coordinate.setId(keys.getLong(1));
+          }
+        }
+      }
+    } catch (SQLException e) {
+      throw new DatabaseException("Error while storing coordinates", e);
+    }
+  }
+
+  /**
+   * Store the provided surface coordinates in the database
+   *
+   * @param conn
+   * @param coordinates
+   * @throws DatabaseException
+   * @throws CoordinateException
+   */
+  private static void storeArgoCoordinates(Connection conn,
+    Collection<Coordinate> coordinates)
+    throws DatabaseException, CoordinateException {
+
+    try (
+      PreparedStatement stmt = conn.prepareStatement(STORE_ARGO_COORDINATE_STMT,
+        Statement.RETURN_GENERATED_KEYS)) {
+
+      for (Coordinate coordinate : coordinates) {
+        if (coordinate.getId() == DatabaseUtils.NO_DATABASE_RECORD) {
+
+          ArgoCoordinate coord = (ArgoCoordinate) coordinate;
+
+          stmt.setLong(1, coordinate.getDatasetId());
+
+          if (null == coordinate.getTime()) {
+            stmt.setNull(2, Types.BIGINT);
+          } else {
+            stmt.setLong(2, DateTimeUtils.dateToLong(coordinate.getTime()));
+          }
+
+          stmt.setLong(3, coord.getCycleNumber());
+          stmt.setLong(4, coord.getNProf());
+          stmt.setString(5, String.valueOf(coord.getDirection()));
+          stmt.setLong(6, coord.getNLevel());
+          stmt.setDouble(7, coord.getPres());
+          stmt.setString(8, coord.getSourceFile());
 
           stmt.execute();
 
@@ -345,7 +399,16 @@ public class CoordinateDB {
       break;
     }
     case Instrument.BASIS_ARGO: {
-      throw new NotImplementedException("Argo basis not yet implemented");
+
+      LocalDateTime timestamp = null;
+      long millis = record.getLong(3);
+      if (!record.wasNull()) {
+        timestamp = DateTimeUtils.longToDate(millis);
+      }
+
+      result = new ArgoCoordinate(coordinateId, datasetId, record.getInt(9),
+        record.getInt(10), record.getString(11).charAt(0), record.getInt(12),
+        record.getDouble(13), record.getString(14), timestamp);
     }
     default: {
       throw new CoordinateException("Basis not recognised");
