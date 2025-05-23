@@ -39,7 +39,7 @@ public class RunTypeMeasurementLocator extends MeasurementLocator {
       }
 
       SensorValuesList sensorValues = allSensorValues
-        .getSensorValues(measurementColumnIds);
+        .getSensorValues(measurementColumnIds, true);
 
       // Now log all the coordinates as new measurements, with the run type from
       // the same coordinate or immediately before.

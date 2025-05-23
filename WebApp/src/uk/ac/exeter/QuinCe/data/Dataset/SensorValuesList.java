@@ -128,7 +128,7 @@ public abstract class SensorValuesList {
    * @throws RecordNotFoundException
    *           If the {@link SensorType} for the column cannot be established.
    */
-  protected SensorValuesList(long columnId, DatasetSensorValues allSensorValues,
+  public SensorValuesList(long columnId, DatasetSensorValues allSensorValues,
     boolean forceString) throws RecordNotFoundException {
     columnIds = new TreeSet<Long>();
     columnIds.add(columnId);
@@ -154,7 +154,7 @@ public abstract class SensorValuesList {
    * @throws RecordNotFoundException
    *           If the {@link SensorType} for any column cannot be established.
    */
-  protected SensorValuesList(Collection<Long> columnIds,
+  public SensorValuesList(Collection<Long> columnIds,
     DatasetSensorValues allSensorValues, boolean forceString)
     throws RecordNotFoundException {
 
@@ -349,7 +349,7 @@ public abstract class SensorValuesList {
 
   /**
    * Get the output values for the list.
-   *
+   * 
    * @return The output values.
    * @throws SensorValuesListException
    *

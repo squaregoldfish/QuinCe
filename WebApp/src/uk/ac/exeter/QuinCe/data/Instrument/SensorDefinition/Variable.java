@@ -396,4 +396,8 @@ public class Variable implements Comparable<Variable> {
   public boolean basisAllowed(int basis) {
     return (basis & allowedBasis) > 0;
   }
+
+  public Map<Long, Boolean> getDependsQuestionAnswers() {
+    return properties.getDependsQuestionAnswers();
+  }
 }

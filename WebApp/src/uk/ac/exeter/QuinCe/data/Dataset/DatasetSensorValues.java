@@ -1015,8 +1015,8 @@ public class DatasetSensorValues {
     return result;
   }
 
-  public SensorValuesList getSensorValues(Collection<Long> columnIds)
-    throws RecordNotFoundException {
+  public SensorValuesList getSensorValues(Collection<Long> columnIds,
+    boolean forceString) throws RecordNotFoundException {
 
     SensorValuesList result = SensorValuesListFactory
       .makeSensorValuesList(columnIds, this, false);
@@ -1034,7 +1034,7 @@ public class DatasetSensorValues {
 
   public SensorValuesList getRunTypes() throws RecordNotFoundException {
     return getSensorValues(
-      getInstrument().getSensorAssignments().getRunTypeColumnIDs());
+      getInstrument().getSensorAssignments().getRunTypeColumnIDs(), true);
   }
 
   public long getDatasetId() {
