@@ -22,8 +22,8 @@ import com.google.gson.JsonObject;
 import uk.ac.exeter.QuinCe.User.User;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
-import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
+import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficientDB;
@@ -280,13 +280,13 @@ public class DataSetsBean extends BaseManagedBean {
       fileDefinitionsJson = fdJson.toString();
 
       // Now the actual files
-      List<DataFile> dataFiles = DataFileDB.getFiles(getDataSource(),
+      List<TimeDataFile> dataFiles = DataFileDB.getFiles(getDataSource(),
         getAppConfig(), getCurrentInstrument());
 
       JsonArray entriesJson = new JsonArray();
 
       for (int i = 0; i < dataFiles.size(); i++) {
-        DataFile file = dataFiles.get(i);
+        TimeDataFile file = dataFiles.get(i);
 
         JsonObject entry = new JsonObject();
 

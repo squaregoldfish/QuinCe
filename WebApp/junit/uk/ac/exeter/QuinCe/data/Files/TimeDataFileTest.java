@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ import uk.ac.exeter.QuinCe.utils.MissingParamException;
 /**
  * Tests for the {@link DataFile} class.
  */
-public class DataFileTest {
+public class TimeDataFileTest {
 
   /**
    * Create a mock {@link FileDefinition} with the specified ID and name.
@@ -83,6 +84,16 @@ public class DataFileTest {
     return LocalDateTime.of(2024, 12, day, 0, 0, 0);
   }
 
+  private FileContents mockContents() {
+    return Mockito.mock(FileContents.class);
+  }
+
+  private Properties makeProperties() {
+    Properties result = new Properties();
+    result.setProperty(TimeDataFile.TIME_OFFSET_PROP, "0");
+    return result;
+  }
+
   @Test
   public void hasConcurrentFilesSingleDefMissBeforeTest()
     throws MissingParamException, DataFileException {
@@ -92,12 +103,12 @@ public class DataFileTest {
     InstrumentFileSet fileDefinitions = makeFileDefinitions(fileDef);
     Instrument instrument = makeInstrument(fileDefinitions);
 
-    List<DataFile> files = new ArrayList<DataFile>();
-    files.add(new TestDataFile(1L, instrument, fileDef, "file", makeTime(5),
-      makeTime(10)));
+    List<TimeDataFile> files = new ArrayList<TimeDataFile>();
+    files.add(new TimeDataFile(1L, instrument, fileDef, "file", mockContents(),
+      makeTime(5), makeTime(10), 1, makeProperties()));
 
-    assertFalse(
-      DataFile.hasConcurrentFiles(instrument, files, makeTime(1), makeTime(2)));
+    assertFalse(TimeDataFile.hasConcurrentFiles(instrument, files, makeTime(1),
+      makeTime(2)));
   }
 
   @Test
@@ -109,11 +120,11 @@ public class DataFileTest {
     InstrumentFileSet fileDefinitions = makeFileDefinitions(fileDef);
     Instrument instrument = makeInstrument(fileDefinitions);
 
-    List<DataFile> files = new ArrayList<DataFile>();
-    files.add(new TestDataFile(1L, instrument, fileDef, "file", makeTime(5),
-      makeTime(10)));
+    List<TimeDataFile> files = new ArrayList<TimeDataFile>();
+    files.add(new TimeDataFile(1L, instrument, fileDef, "file", mockContents(),
+      makeTime(5), makeTime(10), 1, makeProperties()));
 
-    assertFalse(DataFile.hasConcurrentFiles(instrument, files, makeTime(12),
+    assertFalse(TimeDataFile.hasConcurrentFiles(instrument, files, makeTime(12),
       makeTime(20)));
   }
 
@@ -126,12 +137,12 @@ public class DataFileTest {
     InstrumentFileSet fileDefinitions = makeFileDefinitions(fileDef);
     Instrument instrument = makeInstrument(fileDefinitions);
 
-    List<DataFile> files = new ArrayList<DataFile>();
-    files.add(new TestDataFile(1L, instrument, fileDef, "file", makeTime(5),
-      makeTime(10)));
+    List<TimeDataFile> files = new ArrayList<TimeDataFile>();
+    files.add(new TimeDataFile(1L, instrument, fileDef, "file", mockContents(),
+      makeTime(5), makeTime(10), 1, makeProperties()));
 
-    assertTrue(
-      DataFile.hasConcurrentFiles(instrument, files, makeTime(2), makeTime(6)));
+    assertTrue(TimeDataFile.hasConcurrentFiles(instrument, files, makeTime(2),
+      makeTime(6)));
   }
 
   @Test
@@ -143,11 +154,11 @@ public class DataFileTest {
     InstrumentFileSet fileDefinitions = makeFileDefinitions(fileDef);
     Instrument instrument = makeInstrument(fileDefinitions);
 
-    List<DataFile> files = new ArrayList<DataFile>();
-    files.add(new TestDataFile(1L, instrument, fileDef, "file", makeTime(5),
-      makeTime(10)));
+    List<TimeDataFile> files = new ArrayList<TimeDataFile>();
+    files.add(new TimeDataFile(1L, instrument, fileDef, "file", mockContents(),
+      makeTime(5), makeTime(10), 1, makeProperties()));
 
-    assertTrue(DataFile.hasConcurrentFiles(instrument, files, makeTime(8),
+    assertTrue(TimeDataFile.hasConcurrentFiles(instrument, files, makeTime(8),
       makeTime(12)));
   }
 
@@ -160,11 +171,11 @@ public class DataFileTest {
     InstrumentFileSet fileDefinitions = makeFileDefinitions(fileDef);
     Instrument instrument = makeInstrument(fileDefinitions);
 
-    List<DataFile> files = new ArrayList<DataFile>();
-    files.add(new TestDataFile(1L, instrument, fileDef, "file", makeTime(5),
-      makeTime(10)));
+    List<TimeDataFile> files = new ArrayList<TimeDataFile>();
+    files.add(new TimeDataFile(1L, instrument, fileDef, "file", mockContents(),
+      makeTime(5), makeTime(10), 1, makeProperties()));
 
-    assertTrue(DataFile.hasConcurrentFiles(instrument, files, makeTime(1),
+    assertTrue(TimeDataFile.hasConcurrentFiles(instrument, files, makeTime(1),
       makeTime(20)));
   }
 
@@ -177,12 +188,12 @@ public class DataFileTest {
     InstrumentFileSet fileDefinitions = makeFileDefinitions(fileDef);
     Instrument instrument = makeInstrument(fileDefinitions);
 
-    List<DataFile> files = new ArrayList<DataFile>();
-    files.add(new TestDataFile(1L, instrument, fileDef, "file", makeTime(5),
-      makeTime(10)));
+    List<TimeDataFile> files = new ArrayList<TimeDataFile>();
+    files.add(new TimeDataFile(1L, instrument, fileDef, "file", mockContents(),
+      makeTime(5), makeTime(10), 1, makeProperties()));
 
-    assertTrue(
-      DataFile.hasConcurrentFiles(instrument, files, makeTime(6), makeTime(7)));
+    assertTrue(TimeDataFile.hasConcurrentFiles(instrument, files, makeTime(6),
+      makeTime(7)));
   }
 
   private static Stream<Arguments> hasConcurrentFilesMultipleFileDefsTestParams() {
@@ -206,20 +217,20 @@ public class DataFileTest {
       fileDef3);
     Instrument instrument = makeInstrument(fileDefinitions);
 
-    List<DataFile> files = new ArrayList<DataFile>();
-    files.add(new TestDataFile(1L, instrument, fileDef1, "one", makeTime(2),
-      makeTime(3)));
-    files.add(new TestDataFile(2L, instrument, fileDef1, "two", makeTime(10),
-      makeTime(11)));
-    files.add(new TestDataFile(3L, instrument, fileDef2, "three", makeTime(4),
-      makeTime(6)));
-    files.add(new TestDataFile(4L, instrument, fileDef2, "four", makeTime(9),
-      makeTime(10)));
-    files.add(new TestDataFile(5L, instrument, fileDef3, "five", makeTime(7),
-      makeTime(10)));
+    List<TimeDataFile> files = new ArrayList<TimeDataFile>();
+    files.add(new TimeDataFile(1L, instrument, fileDef1, "one", mockContents(),
+      makeTime(2), makeTime(3), 1, makeProperties()));
+    files.add(new TimeDataFile(2L, instrument, fileDef1, "two", mockContents(),
+      makeTime(10), makeTime(11), 1, makeProperties()));
+    files.add(new TimeDataFile(3L, instrument, fileDef2, "three",
+      mockContents(), makeTime(4), makeTime(6), 1, makeProperties()));
+    files.add(new TimeDataFile(4L, instrument, fileDef2, "four", mockContents(),
+      makeTime(9), makeTime(10), 1, makeProperties()));
+    files.add(new TimeDataFile(5L, instrument, fileDef3, "five", mockContents(),
+      makeTime(7), makeTime(10), 1, makeProperties()));
 
     assertEquals(expectedResult,
-      DataFile.hasConcurrentFiles(makeInstrument(fileDefinitions), files,
+      TimeDataFile.hasConcurrentFiles(makeInstrument(fileDefinitions), files,
         makeTime(periodStart), makeTime(periodEnd)));
   }
 }

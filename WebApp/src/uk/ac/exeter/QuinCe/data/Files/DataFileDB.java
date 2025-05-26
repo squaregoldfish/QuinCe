@@ -193,7 +193,7 @@ public class DataFileDB {
    * @see FileStore#storeFile(String, DataFile)
    */
   public static void storeFile(DataSource dataSource, Properties appConfig,
-    Instrument instrument, DataFile dataFile, long replacementId)
+    Instrument instrument, TimeDataFile dataFile, long replacementId)
     throws MissingParamException, FileExistsException, DatabaseException,
     RecordNotFoundException {
 
@@ -241,7 +241,7 @@ public class DataFileDB {
    * @see FileStore#storeFile(String, DataFile)
    */
   private static void storeNewFile(Connection conn, Properties appConfig,
-    Instrument instrument, DataFile dataFile)
+    Instrument instrument, TimeDataFile dataFile)
     throws DatabaseException, FileExistsException {
 
     PreparedStatement stmt = null;
@@ -307,7 +307,7 @@ public class DataFileDB {
    * @see FileStore#storeFile(String, DataFile)
    */
   private static void replaceFile(Connection conn, Properties appConfig,
-    DataFile dataFile, long replacementId)
+    TimeDataFile dataFile, long replacementId)
     throws DatabaseException, FileExistsException {
 
     PreparedStatement stmt = null;
@@ -323,7 +323,7 @@ public class DataFileDB {
         DataFile fileToReplace = getDataFiles(conn, appConfig, idList).get(0);
 
         byte[] existingFile = fileToReplace.getBytes();
-        byte[] newFile = dataFile.getContents().getBytes();
+        byte[] newFile = dataFile.getBytes();
         storeFile = !Arrays.equals(existingFile, newFile);
       }
 
@@ -423,7 +423,7 @@ public class DataFileDB {
    * @see #GET_USER_FILES_BY_INSTRUMENT_QUERY
    * @see #makeDataFile(ResultSet, String, Connection)
    */
-  public static List<DataFile> getFiles(DataSource dataSource,
+  public static List<TimeDataFile> getFiles(DataSource dataSource,
     Properties appConfig, Instrument instrument) throws DatabaseException {
 
     try (Connection conn = dataSource.getConnection()) {
@@ -453,12 +453,12 @@ public class DataFileDB {
    * @see #GET_USER_FILES_BY_INSTRUMENT_QUERY
    * @see #makeDataFile(ResultSet, String, Connection)
    */
-  public static List<DataFile> getFiles(Connection conn, Properties appConfig,
-    Instrument instrument) throws DatabaseException {
+  public static List<TimeDataFile> getFiles(Connection conn,
+    Properties appConfig, Instrument instrument) throws DatabaseException {
 
     PreparedStatement stmt = null;
     ResultSet records = null;
-    List<DataFile> fileInfo = new ArrayList<DataFile>();
+    List<TimeDataFile> fileInfo = new ArrayList<TimeDataFile>();
 
     try {
       if (null != instrument) {
@@ -505,7 +505,7 @@ public class DataFileDB {
    * @see #GET_USER_FILES_BY_INSTRUMENT_QUERY
    * @see #makeDataFile(ResultSet, String, Connection)
    */
-  public static List<DataFile> getFiles(DataSource dataSource,
+  public static List<TimeDataFile> getFiles(DataSource dataSource,
     Properties appConfig, Instrument instrument, FileDefinition fileDefinition)
     throws DatabaseException {
 
@@ -531,13 +531,13 @@ public class DataFileDB {
    *           If an error occurs during the search
    * @see #makeDataFile(ResultSet, String, Connection)
    */
-  public static List<DataFile> getFiles(Connection conn, Properties appConfig,
-    Instrument instrument, FileDefinition fileDefinition)
+  public static List<TimeDataFile> getFiles(Connection conn,
+    Properties appConfig, Instrument instrument, FileDefinition fileDefinition)
     throws DatabaseException {
 
     PreparedStatement stmt = null;
     ResultSet records = null;
-    List<DataFile> fileInfo = new ArrayList<DataFile>();
+    List<TimeDataFile> fileInfo = new ArrayList<TimeDataFile>();
 
     try {
       stmt = conn.prepareStatement(GET_FILES_BY_DEFINITION_QUERY);
@@ -578,7 +578,7 @@ public class DataFileDB {
    * @throws RecordNotFoundException
    *           If any files are not in the database
    */
-  public static List<DataFile> getDataFiles(Connection conn,
+  public static List<TimeDataFile> getDataFiles(Connection conn,
     Properties appConfig, List<Long> ids)
     throws DatabaseException, MissingParamException, RecordNotFoundException {
 
@@ -586,7 +586,7 @@ public class DataFileDB {
     MissingParam.checkMissing(appConfig, "appConfig");
     MissingParam.checkMissing(ids, "ids");
 
-    List<DataFile> files = new ArrayList<DataFile>(ids.size());
+    List<TimeDataFile> files = new ArrayList<TimeDataFile>(ids.size());
     PreparedStatement stmt = null;
     ResultSet records = null;
 
@@ -633,9 +633,9 @@ public class DataFileDB {
    * @throws DatabaseException
    *           If any sub-queries fail
    */
-  private static DataFile makeDataFile(ResultSet record, String fileStore,
+  private static TimeDataFile makeDataFile(ResultSet record, String fileStore,
     Connection conn) throws SQLException, DatabaseException {
-    DataFile result = null;
+    TimeDataFile result = null;
 
     try {
       long instrumentId = record.getLong(8);
@@ -666,9 +666,9 @@ public class DataFileDB {
    * @throws DatabaseException
    *           If any sub-queries fail
    */
-  private static DataFile makeDataFile(ResultSet record, String fileStore,
+  private static TimeDataFile makeDataFile(ResultSet record, String fileStore,
     Instrument instrument) throws SQLException, DatabaseException {
-    DataFile result = null;
+    TimeDataFile result = null;
 
     try {
       long fileDefinitionId = record.getLong(2);
@@ -697,9 +697,9 @@ public class DataFileDB {
    * @throws SQLException
    *           If the data cannot be extracted from the record
    */
-  private static DataFile makeDataFile(ResultSet record, String fileStore,
+  private static TimeDataFile makeDataFile(ResultSet record, String fileStore,
     Instrument instrument, FileDefinition fileDefinition) throws SQLException {
-    DataFile result = null;
+    TimeDataFile result = null;
 
     try {
       long id = record.getLong(1);
@@ -710,8 +710,12 @@ public class DataFileDB {
       Properties properties = new Gson().fromJson(record.getString(7),
         Properties.class);
 
-      result = new FileStoreDataFile(fileStore, id, instrument, fileDefinition,
-        filename, startDate, endDate, recordCount, properties);
+      FileContents contents = new FileStoreFileContents(fileStore,
+        fileDefinition.getDatabaseId(), id);
+
+      // fileStore needs to go to the Contents when we make it
+      result = new TimeDataFile(id, instrument, fileDefinition, filename,
+        contents, startDate, endDate, recordCount, properties);
     } catch (SQLException e) {
       throw e;
     }
@@ -793,7 +797,7 @@ public class DataFileDB {
    * @throws DatabaseException
    *           If a database error occurs
    */
-  public static List<DataFile> getFilesWithinDates(DataSource dataSource,
+  public static List<TimeDataFile> getFilesWithinDates(DataSource dataSource,
     Instrument instrument, FileDefinition fileDefinition, LocalDateTime start,
     LocalDateTime end, boolean applyOffset)
     throws MissingParamException, DatabaseException {
@@ -824,7 +828,7 @@ public class DataFileDB {
    * @throws DatabaseException
    *           If a database error occurs
    */
-  public static List<DataFile> getFilesWithinDates(Connection conn,
+  public static List<TimeDataFile> getFilesWithinDates(Connection conn,
     Instrument instrument, FileDefinition fileDefinition, LocalDateTime start,
     LocalDateTime end, boolean applyOffset)
     throws MissingParamException, DatabaseException {
@@ -834,7 +838,7 @@ public class DataFileDB {
     MissingParam.checkMissing(start, "start");
     MissingParam.checkMissing(end, "end");
 
-    List<DataFile> allInstrumentFiles = getFiles(conn,
+    List<TimeDataFile> allInstrumentFiles = getFiles(conn,
       ResourceManager.getInstance().getConfig(), instrument, fileDefinition);
 
     return filterFilesByDates(allInstrumentFiles, start, end, applyOffset);
@@ -858,7 +862,7 @@ public class DataFileDB {
    *          applied.
    * @return The filtered file list.
    */
-  private static List<DataFile> filterFilesByDates(List<DataFile> files,
+  private static List<TimeDataFile> filterFilesByDates(List<TimeDataFile> files,
     LocalDateTime start, LocalDateTime end, boolean applyOffset) {
 
     if (end.isBefore(start)) {
@@ -888,7 +892,7 @@ public class DataFileDB {
    * @throws DatabaseException
    *           If a database error occurs
    */
-  public static List<DataFile> getFilesWithinDates(Connection conn,
+  public static List<TimeDataFile> getFilesWithinDates(Connection conn,
     Instrument instrument, LocalDateTime start, LocalDateTime end,
     boolean applyOffset) throws MissingParamException, DatabaseException {
 
@@ -897,7 +901,7 @@ public class DataFileDB {
     MissingParam.checkMissing(start, "start");
     MissingParam.checkMissing(end, "end");
 
-    List<DataFile> allInstrumentFiles = getFiles(conn,
+    List<TimeDataFile> allInstrumentFiles = getFiles(conn,
       ResourceManager.getInstance().getConfig(), instrument);
 
     return filterFilesByDates(allInstrumentFiles, start, end, applyOffset);
@@ -934,11 +938,11 @@ public class DataFileDB {
     List<PreparedStatement> statements = new ArrayList<PreparedStatement>();
     List<ResultSet> resultSets = new ArrayList<ResultSet>();
     try {
-      Map<FileDefinition, List<DataFile>> filesAfterDate = new HashMap<FileDefinition, List<DataFile>>();
+      Map<FileDefinition, List<TimeDataFile>> filesAfterDate = new HashMap<FileDefinition, List<TimeDataFile>>();
 
       // Get all the files after the specified date, grouped by file definition
       for (FileDefinition fileDefinition : instrument.getFileDefinitions()) {
-        List<DataFile> foundFiles = new ArrayList<DataFile>();
+        List<TimeDataFile> foundFiles = new ArrayList<TimeDataFile>();
 
         PreparedStatement stmt = conn
           .prepareStatement(GET_FILES_AFTER_DATE_QUERY);
@@ -970,17 +974,17 @@ public class DataFileDB {
 
         result = false;
 
-        List<DataFile> rootFiles = filesAfterDate
+        List<TimeDataFile> rootFiles = filesAfterDate
           .get(instrument.getFileDefinitions().get(0));
 
-        for (DataFile rootFile : rootFiles) {
+        for (TimeDataFile rootFile : rootFiles) {
           for (int i = 1; i < instrument.getFileDefinitions().size()
             && !result; i++) {
-            List<DataFile> compareFiles = filesAfterDate
+            List<TimeDataFile> compareFiles = filesAfterDate
               .get(instrument.getFileDefinitions().get(i));
 
             for (int j = 0; j < compareFiles.size() && !result; j++) {
-              DataFile compareFile = compareFiles.get(j);
+              TimeDataFile compareFile = compareFiles.get(j);
               if (compareFile.getRawStartTime()
                 .compareTo(rootFile.getRawEndTime()) < 0
                 && compareFile.getRawEndTime()
@@ -1130,8 +1134,8 @@ public class DataFileDB {
     Instrument instrument, boolean deleteFolders)
     throws DatabaseException, FileStoreException, IOException {
 
-    List<DataFile> files = getFiles(conn, appConfig, instrument);
-    for (DataFile file : files) {
+    List<TimeDataFile> files = getFiles(conn, appConfig, instrument);
+    for (TimeDataFile file : files) {
       deleteFile(conn, appConfig, file);
     }
 
@@ -1197,7 +1201,7 @@ public class DataFileDB {
    * @throws DatabaseException
    * @throws RecordNotFoundException
    */
-  public static List<DataFile> getDatasetFiles(Connection conn,
+  public static List<TimeDataFile> getDatasetFiles(Connection conn,
     Properties appConfig, DataSet dataset)
     throws DatabaseException, RecordNotFoundException {
 

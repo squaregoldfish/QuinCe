@@ -20,8 +20,9 @@ import com.google.gson.JsonObject;
 import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Files.DataFileException;
-import uk.ac.exeter.QuinCe.data.Files.DataFileFromUpload;
 import uk.ac.exeter.QuinCe.data.Files.DataFileMessage;
+import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
+import uk.ac.exeter.QuinCe.data.Files.UploadedFileContents;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentFileSet;
@@ -50,7 +51,7 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
   /**
    * The processed file
    */
-  private DataFile dataFile = null;
+  private TimeDataFile dataFile = null;
 
   /**
    * Error messages for the file
@@ -116,7 +117,7 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
   /**
    * @return the dataFile
    */
-  public DataFile getDataFile() {
+  public TimeDataFile getDataFile() {
     return dataFile;
   }
 
@@ -340,8 +341,9 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
           throw new NoSuchElementException();
         }
 
-        dataFile = new DataFileFromUpload(instrument, matchedDefinition,
-          getName(), this);
+        dataFile = new TimeDataFile(instrument, matchedDefinition, getName(),
+          new UploadedFileContents(this));
+
         if (getDataFile().getFirstDataLine() >= getDataFile()
           .getContentLineCount()) {
           if (allowEmpty) {
@@ -368,10 +370,10 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
               + " could not be processed (see messages below). Please fix these problems and upload the file again.",
               FacesMessage.SEVERITY_ERROR);
           } else {
-            List<DataFile> overlappingFiles = DataFileDB.getFilesWithinDates(
-              dataSource, instrument, matchedDefinition,
-              getDataFile().getRawStartTime(), getDataFile().getRawEndTime(),
-              false);
+            List<TimeDataFile> overlappingFiles = DataFileDB
+              .getFilesWithinDates(dataSource, instrument, matchedDefinition,
+                getDataFile().getRawStartTime(), getDataFile().getRawEndTime(),
+                false);
 
             boolean fileOK = true;
             String fileMessage = null;
@@ -390,8 +392,8 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
                 fileMessage = "This file overlaps an existing file with a different name";
                 fileStatus = Status.CONFLICT.getStatusCode();
               } else {
-                String oldContents = existingFile.getContents();
-                String newContents = newFile.getContents();
+                String oldContents = existingFile.getContentsAsString();
+                String newContents = newFile.getContentsAsString();
 
                 if (newContents.length() < oldContents.length()) {
                   fileOK = false;

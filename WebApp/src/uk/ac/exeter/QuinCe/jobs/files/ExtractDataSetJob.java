@@ -27,6 +27,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
+import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinitionException;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -119,7 +120,7 @@ public class ExtractDataSetJob extends DataSetJob {
           DataSet.STATUS_REPROCESS);
       }
 
-      List<DataFile> potentialFiles = DataFileDB.getFilesWithinDates(conn,
+      List<TimeDataFile> potentialFiles = DataFileDB.getFilesWithinDates(conn,
         dataSet.getInstrument(), dataSet.getStartTime(), dataSet.getEndTime(),
         true);
 
@@ -163,7 +164,7 @@ public class ExtractDataSetJob extends DataSetJob {
       // Initialise the coordinates cache
       Set<Coordinate> coordinates = new TreeSet<Coordinate>();
 
-      for (DataFile file : potentialFiles) {
+      for (TimeDataFile file : potentialFiles) {
         FileDefinition fileDefinition = file.getFileDefinition();
         int currentLine = file.getFirstDataLine();
         while (currentLine < file.getContentLineCount()) {

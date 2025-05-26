@@ -8,8 +8,8 @@ import java.util.Properties;
 import uk.ac.exeter.QuinCe.User.User;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
-import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
+import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.jobs.InvalidJobParametersException;
@@ -85,7 +85,7 @@ public class CreateNrtDataset extends Job {
       DataSet lastDataset = DataSetDB.getLastDataSet(conn, instrument.getId(),
         false);
 
-      List<DataFile> instrumentFiles = DataFileDB.getFiles(conn,
+      List<TimeDataFile> instrumentFiles = DataFileDB.getFiles(conn,
         ResourceManager.getInstance().getConfig(), instrument);
 
       if (null != lastDataset) {
@@ -105,7 +105,7 @@ public class CreateNrtDataset extends Job {
 
         if (!endDate.isAfter(nrtStartDate)) {
           canCreateNrt = false;
-        } else if (!DataFile.hasConcurrentFiles(instrument, instrumentFiles,
+        } else if (!TimeDataFile.hasConcurrentFiles(instrument, instrumentFiles,
           nrtStartDate, endDate)) {
           canCreateNrt = false;
         }

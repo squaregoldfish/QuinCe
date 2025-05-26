@@ -36,9 +36,9 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Export.ExportConfig;
 import uk.ac.exeter.QuinCe.data.Export.ExportException;
 import uk.ac.exeter.QuinCe.data.Export.ExportOption;
-import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Files.DataFileException;
+import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficientDB;
@@ -767,7 +767,7 @@ public class ExportBean extends BaseManagedBean {
     throws Exception {
 
     // Get the list of raw files
-    List<DataFile> files = DataFileDB.getDatasetFiles(conn,
+    List<TimeDataFile> files = DataFileDB.getDatasetFiles(conn,
       ResourceManager.getInstance().getConfig(), dataset);
 
     // Get the base manifest. We will add to it as we go.
@@ -833,13 +833,13 @@ public class ExportBean extends BaseManagedBean {
     manifest.getAsJsonObject("manifest").add("exportFiles", exportFilesJson);
 
     // Add the raw files
-    Map<FileDefinition, List<DataFile>> groupedFiles = files.stream()
-      .collect(Collectors.groupingBy(DataFile::getFileDefinition));
+    Map<FileDefinition, List<TimeDataFile>> groupedFiles = files.stream()
+      .collect(Collectors.groupingBy(TimeDataFile::getFileDefinition));
 
     JsonArray rawManifest = new JsonArray();
 
     for (FileDefinition fileDefinition : groupedFiles.keySet()) {
-      double meanFileLength = DataFile
+      double meanFileLength = TimeDataFile
         .getMeanFileLength(groupedFiles.get(fileDefinition));
 
       boolean combineFiles = !fileDefinition.hasHeader()
@@ -871,10 +871,10 @@ public class ExportBean extends BaseManagedBean {
   }
 
   private static void addRawFilesToZip(ZipOutputStream zip,
-    JsonArray rawManifest, String dirRoot, List<DataFile> files)
+    JsonArray rawManifest, String dirRoot, List<TimeDataFile> files)
     throws IOException {
 
-    for (DataFile file : files) {
+    for (TimeDataFile file : files) {
       String filePath = dirRoot + "/raw/" + file.getFilename();
 
       ZipEntry rawEntry = new ZipEntry(filePath);
@@ -889,7 +889,7 @@ public class ExportBean extends BaseManagedBean {
 
   private static void combineAndAddRawFilesToZip(ZipOutputStream zip,
     JsonArray rawManifest, String dirRoot, FileDefinition fileDefinition,
-    List<DataFile> files) throws IOException, DataFileException {
+    List<TimeDataFile> files) throws IOException, DataFileException {
 
     LocalDate currentDate = null;
     String filePath = null;
@@ -897,7 +897,7 @@ public class ExportBean extends BaseManagedBean {
     LocalDateTime endTime = null;
     ZipEntry currentEntry = null;
 
-    for (DataFile file : files) {
+    for (TimeDataFile file : files) {
 
       LocalDate fileDate = file.getRawStartTime().toLocalDate();
       if (!fileDate.equals(currentDate)) {
@@ -917,7 +917,7 @@ public class ExportBean extends BaseManagedBean {
       }
 
       zip.write(file.getBytes());
-      if (!file.getContents().endsWith("\n")) {
+      if (!file.getContentsAsString().endsWith("\n")) {
         zip.write("\n".getBytes());
       }
 
