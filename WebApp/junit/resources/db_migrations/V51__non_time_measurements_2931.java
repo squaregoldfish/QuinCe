@@ -1,4 +1,4 @@
-package db_migrations;
+package resources.db_migrations;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,14 +18,9 @@ import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 
 /**
- * Migration for support for non-time-based data.
- * 
- * <p>
- * This assumes that the data integrity is sound, and doesn't check anything. An
- * error will be thrown if anything is amiss.
- * </p>
+ * Migration for support for non-time-based data
  */
-public class V50__non_time_measurements_2931 extends BaseJavaMigration {
+public class V51__non_time_measurements_2931 extends BaseJavaMigration {
 
   @Override
   public void migrate(Context context) throws Exception {
@@ -43,7 +38,7 @@ public class V50__non_time_measurements_2931 extends BaseJavaMigration {
         + "depth MEDIUMINT NULL, station VARCHAR(10) NULL, "
         + "cast VARCHAR(10) NULL, bottle VARCHAR(10) NULL, "
         + "replicate VARCHAR(10) NULL, cycle VARCHAR(10) NULL, "
-        + "PRIMARY KEY(id), INDEX coord_datasetid (dataset_id), "
+        + "PRIMARY KEY(id), "
         + "CONSTRAINT coord_dataset FOREIGN KEY (dataset_id) REFERENCES dataset(id))"
         + "ENGINE = InnoDB");
 
@@ -130,8 +125,7 @@ public class V50__non_time_measurements_2931 extends BaseJavaMigration {
     PreparedStatement createDatasetFilesTableStatement = conn.prepareStatement(
       "CREATE TABLE dataset_files (dataset_id INT(11) NOT NULL, "
         + "datafile_id INT(11) NOT NULL, "
-        + "INDEX datasetfiles_datasetid (dataset_id), "
-        + "CONSTRAINT datasetfiles_datasetid FOREIGN KEY (dataset_id) REFERENCES dataset(id), "
+        + "CONSTRAINT datasetfiles_datasetid_c FOREIGN KEY (dataset_id) REFERENCES dataset(id), "
         + "CONSTRAINT datasetfiles_datafileid FOREIGN KEY (datafile_id) REFERENCES data_file(id)) "
         + "ENGINE = InnoDB");
 
@@ -227,4 +221,5 @@ public class V50__non_time_measurements_2931 extends BaseJavaMigration {
         && rawStart.plusSeconds(offset).isBefore(end);
     }
   }
+
 }
