@@ -22,6 +22,9 @@ import javax.faces.bean.SessionScoped;
 
 import org.apache.commons.lang3.StringUtils;
 import org.primefaces.model.TreeNode;
+import org.primefaces.model.menu.DefaultMenuItem;
+import org.primefaces.model.menu.DefaultMenuModel;
+import org.primefaces.model.menu.MenuModel;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -503,13 +506,31 @@ public class NewInstrumentBean extends FileUploadBean {
   private boolean runTypesGuessed = false;
 
   /**
+   * The setup steps for the instrument.
+   * 
+   * <p>
+   * The steps will vary depending on the type of instrument being created.
+   * </p>
+   */
+  private MenuModel setupSteps = null;
+
+  /**
+   * The current step in the instrument setup.
+   * 
+   * @see #setupSteps
+   */
+  private int setupStep = 0;
+
+  /**
    * Begin a new instrument definition
    *
    * @return The navigation to the start page
    */
   public String start() throws Exception {
     clearAllData();
+    makeSetupSteps();
     existingPlatforms = InstrumentDB.getPlatforms(getDataSource(), getUser());
+    setSetupStep(NAV_NAME);
     return NAV_NAME;
   }
 
@@ -530,10 +551,12 @@ public class NewInstrumentBean extends FileUploadBean {
    */
   public String goToName() {
     clearFile();
+    setSetupStep(NAV_NAME);
     return NAV_NAME;
   }
 
   public String goToVariables() {
+    setSetupStep(NAV_VARIABLES);
     return NAV_VARIABLES;
   }
 
@@ -566,6 +589,7 @@ public class NewInstrumentBean extends FileUploadBean {
       result = NAV_ASSIGN_VARIABLES;
     }
 
+    setSetupStep(result);
     return result;
   }
 
@@ -1728,6 +1752,7 @@ public class NewInstrumentBean extends FileUploadBean {
       result = NAV_SENSOR_GROUPS;
     }
 
+    setSetupStep(result);
     return result;
   }
 
@@ -1769,6 +1794,7 @@ public class NewInstrumentBean extends FileUploadBean {
   }
 
   public String goToSensorGroups() {
+    setSetupStep(NAV_SENSOR_GROUPS);
     return NAV_SENSOR_GROUPS;
   }
 
@@ -1788,6 +1814,7 @@ public class NewInstrumentBean extends FileUploadBean {
       }
     }
 
+    setSetupStep(result);
     return result;
   }
 
@@ -1831,8 +1858,13 @@ public class NewInstrumentBean extends FileUploadBean {
    * @return The navigation target
    */
   public String goToVariableInfo() {
-    return instrumentVariables.stream().filter(v -> v.hasAttributes()).findAny()
-      .isPresent() ? NAV_VARIABLE_INFO : NAV_UPLOAD_FILE;
+
+    String result = instrumentVariables.stream().filter(v -> v.hasAttributes())
+      .findAny().isPresent() ? NAV_VARIABLE_INFO : NAV_UPLOAD_FILE;
+
+    setSetupStep(result);
+
+    return result;
   }
 
   /**
@@ -2736,5 +2768,110 @@ public class NewInstrumentBean extends FileUploadBean {
 
   public void setBasis(int basis) {
     this.basis = basis;
+    makeSetupSteps();
+  }
+
+  public int getSetupStep() {
+    return setupStep;
+  }
+
+  private void makeSetupSteps() {
+    setupSteps = new DefaultMenuModel();
+
+    switch (basis) {
+    case Instrument.BASIS_TIME: {
+      setupSteps.getElements()
+        .add(DefaultMenuItem.builder().value("Name").build());
+      setupSteps.getElements()
+        .add(DefaultMenuItem.builder().value("Info").build());
+      setupSteps.getElements()
+        .add(DefaultMenuItem.builder().value("Variables").build());
+      setupSteps.getElements()
+        .add(DefaultMenuItem.builder().value("Data Files").build());
+      setupSteps.getElements()
+        .add(DefaultMenuItem.builder().value("Run Types").build());
+      setupSteps.getElements()
+        .add(DefaultMenuItem.builder().value("Sensor Groups").build());
+      break;
+    }
+    case Instrument.BASIS_ARGO: {
+      setupSteps.getElements()
+        .add(DefaultMenuItem.builder().value("Name").build());
+      setupSteps.getElements()
+        .add(DefaultMenuItem.builder().value("Variables").build());
+      setupSteps.getElements()
+        .add(DefaultMenuItem.builder().value("Data Files").build());
+      break;
+    }
+    default: {
+      throw new IllegalArgumentException("Invalid basis " + basis);
+    }
+    }
+  }
+
+  public MenuModel getSetupSteps() {
+    return setupSteps;
+  }
+
+  private void setSetupStep(String nav) {
+    switch (nav) {
+    case NAV_NAME: {
+      // Same for all bases
+      setupStep = 0;
+      break;
+    }
+    case NAV_GENERAL_INFO: {
+      // Only Time basis gets this, so we can safely set it directly
+      setupStep = 1;
+      break;
+    }
+    case NAV_VARIABLES:
+    case NAV_VARIABLE_INFO: {
+      switch (basis) {
+      case Instrument.BASIS_TIME: {
+        setupStep = 2;
+        break;
+      }
+      case Instrument.BASIS_ARGO: {
+        setupStep = 1;
+        break;
+      }
+      default: {
+        throw new IllegalArgumentException("Invalid basis " + basis);
+      }
+      }
+      break;
+    }
+    case NAV_UPLOAD_FILE:
+    case NAV_ASSIGN_VARIABLES: {
+      switch (basis) {
+      case Instrument.BASIS_TIME: {
+        setupStep = 3;
+        break;
+      }
+      case Instrument.BASIS_ARGO: {
+        setupStep = 2;
+        break;
+      }
+      default: {
+        throw new IllegalArgumentException("Invalid basis " + basis);
+      }
+      }
+      break;
+    }
+    case NAV_RUN_TYPES: {
+      // Only Time basis gets this, so we can safely set it directly
+      setupStep = 4;
+      break;
+    }
+    case NAV_SENSOR_GROUPS: {
+      // Only Time basis gets this, so we can safely set it directly
+      setupStep = 5;
+      break;
+    }
+    default: {
+      throw new IllegalArgumentException("Invalid navigation " + nav);
+    }
+    }
   }
 }

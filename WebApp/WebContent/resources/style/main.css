@@ -223,6 +223,7 @@ form ul {
 form li {
   margin-top: 10px;
 }
+
 form li:first-child {
   margin-top: 0px;
 }
@@ -776,6 +777,11 @@ table.dialogTable td.dialogTableCell {
 
 .ui-steps.custom .ui-state-default {
   font-weight: 700;
+}
+
+/* Override 'form li:first-child' */
+.ui-steps.custom li:first-child {
+  margin-top: 10px;
 }
 
 .ui-tabs .ui-tabs-nav li a {
