@@ -65,7 +65,8 @@ public class DefaultMeasurementValueCalculator
     DataSet dataSet, SensorValuesListValue timeReference, Variable variable,
     SensorType requiredSensorType, DatasetMeasurements allMeasurements,
     DatasetSensorValues allSensorValues, Connection conn)
-    throws MeasurementValueCalculatorException, SensorValuesListException {
+    throws MeasurementValueCalculatorException, SensorValuesListException,
+    RecordNotFoundException {
 
     return getSensorValue(instrument, dataSet, timeReference, variable,
       requiredSensorType, allMeasurements, allSensorValues, true, conn);
@@ -75,8 +76,8 @@ public class DefaultMeasurementValueCalculator
     DataSet dataSet, SensorValuesListValue baseValue, Variable variable,
     SensorType requiredSensorType, DatasetMeasurements allMeasurements,
     DatasetSensorValues allSensorValues, boolean allowCalibration,
-    Connection conn)
-    throws MeasurementValueCalculatorException, SensorValuesListException {
+    Connection conn) throws MeasurementValueCalculatorException,
+    SensorValuesListException, RecordNotFoundException {
 
     SensorAssignment requiredAssignment = instrument.getSensorAssignments()
       .get(requiredSensorType).first();
@@ -160,12 +161,14 @@ public class DefaultMeasurementValueCalculator
    *           If {@link SensorValue}s cannot be retrieved for the position.
    * @throws MeasurementValueCalculatorException
    *           If the value cannot be constructed.
+   * @throws RecordNotFoundException
    */
   private MeasurementValue getPositionValue(Instrument instrument,
     DataSet dataSet, SensorValuesListValue baseValue, Variable variable,
     SensorType requiredSensorType, DatasetMeasurements allMeasurements,
     DatasetSensorValues allSensorValues, Connection conn)
-    throws SensorValuesListException, MeasurementValueCalculatorException {
+    throws SensorValuesListException, MeasurementValueCalculatorException,
+    RecordNotFoundException {
 
     MeasurementValue result;
 

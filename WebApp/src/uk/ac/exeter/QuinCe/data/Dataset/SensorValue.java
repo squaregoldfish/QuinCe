@@ -9,6 +9,7 @@ import java.util.TreeSet;
 
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.InvalidFlagException;
+import uk.ac.exeter.QuinCe.data.Dataset.QC.Routine;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineFlag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
@@ -339,6 +340,26 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
   }
 
   /**
+   * Remove the automatic QC information related to a specified {@Link Routine}.
+   *
+   * @param routine
+   *          The routine whose information is to be removed.
+   */
+  public boolean removeAutoQCFlag(Routine routine) {
+    boolean result = autoQC.remove(routine);
+
+    if (result) {
+      if (autoQC.size() == 0 && userQCFlag.equals(Flag.NEEDED)) {
+        userQCFlag = Flag.ASSUMED_GOOD;
+        userQCMessage = null;
+      }
+      dirty = true;
+    }
+
+    return result;
+  }
+
+  /**
    * Set the User QC information. If this will override an existing position QC,
    * only set it if the flag is worse than the position flag.
    *
@@ -353,7 +374,10 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
 
     boolean setQC = true;
 
-    if (flag.equals(Flag.LOOKUP)) {
+    // We always simplify user QC flags to the basic flag.
+    Flag simpleFlag = flag.getSimpleFlag();
+
+    if (simpleFlag.equals(Flag.LOOKUP)) {
       throw new InvalidFlagException(
         "Cannot manually set " + flag.toString() + " flag");
     }
@@ -366,7 +390,7 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
     }
 
     if (setQC && isNumeric() && !isNaN()) {
-      setUserQCAction(flag, message);
+      setUserQCAction(simpleFlag, message);
     }
   }
 
@@ -407,6 +431,7 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
   public void setUserQC(SensorValue source) {
     userQCFlag = source.userQCFlag;
     userQCMessage = source.userQCMessage;
+    dirty = true;
   }
 
   private void setUserQCAction(Flag flag, String message) {
@@ -597,7 +622,7 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
       result = StringUtils.collectionToDelimited(messages, ";");
 
     } else {
-      result = flagNeeded() ? autoQC.getAllMessages() : userQCMessage;
+      result = flagNeeded() ? autoQC.getAllMessages() : getUserQCMessage();
     }
 
     return result;
