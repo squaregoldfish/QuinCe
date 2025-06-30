@@ -40,8 +40,9 @@ public class PositionQCCascadeRoutine {
             // Don't set the flag for non-measurement calibration values - the
             // quality of the position doesn't matter if we're just calibrating
             // or whatever.
-            if (sensorType.hasInternalCalibration() && !instrument
-              .isMeasurementRunType(runTypePeriods.getRunType(coordinate))) {
+            if (sensorType.hasInternalCalibration()
+              && !instrument.isMeasurementRunType(
+                runTypePeriods.getRunType(coordinate.getTime()))) {
               setCascade = false;
             }
 

@@ -125,7 +125,7 @@ public class FlagCascadeTest extends TestSetTest {
       sstVal.setUserQC(new Flag(line.getIntField(SST_FLAG_COL)), "Comment");
       salVal.setUserQC(new Flag(line.getIntField(SAL_FLAG_COL)), "Comment");
 
-      DataSetDataDB.storeSensorValues(conn, Arrays.asList(sstVal, salVal));
+      DataSetDataDB.updateSensorValues(conn, Arrays.asList(sstVal, salVal));
       conn.commit();
 
       // Create the measurements for the dataset by running the

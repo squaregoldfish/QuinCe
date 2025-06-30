@@ -156,7 +156,7 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
         }
       }
 
-      DataSetDataDB.storeSensorValues(conn, flaggedSensorValues);
+      DataSetDataDB.updateSensorValues(conn, flaggedSensorValues);
       return measurements;
 
     } catch (Exception e) {

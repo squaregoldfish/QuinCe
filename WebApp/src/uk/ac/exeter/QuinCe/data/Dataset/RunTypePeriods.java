@@ -1,5 +1,6 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
@@ -14,27 +15,25 @@ public class RunTypePeriods extends ArrayList<RunTypePeriod> {
     super();
   }
 
-  public void add(String runType, Coordinate coordinate)
-    throws DataSetException {
+  public void add(String runType, LocalDateTime time) throws DataSetException {
 
     if (finished) {
       throw new DataSetException("RunTypePeriods is finished");
     }
 
     if (size() == 0) {
-      add(new RunTypePeriod(runType, coordinate));
+      add(new RunTypePeriod(runType, time));
     } else {
-      if (coordinate.isBefore(getLastCoordinate())
-        || coordinate.equals(getLastCoordinate())) {
+      if (time.isBefore(getLastTime()) || time.equals(getLastTime())) {
         throw new DataSetException(
           "Added time must be after last period end time");
       }
 
       RunTypePeriod currentPeriod = get(size() - 1);
       if (!currentPeriod.getRunType().equals(runType)) {
-        add(new RunTypePeriod(runType, coordinate));
+        add(new RunTypePeriod(runType, time));
       } else {
-        currentPeriod.setEnd(coordinate);
+        currentPeriod.setEnd(time);
       }
     }
   }
@@ -44,17 +43,17 @@ public class RunTypePeriods extends ArrayList<RunTypePeriod> {
    */
   public void finish() {
     if (size() > 0) {
-      get(size() - 1).setEnd(TimeCoordinate.MAX);
+      get(size() - 1).setEnd(LocalDateTime.MAX);
     }
 
     finished = true;
   }
 
-  public boolean contains(Coordinate coordinate) {
+  public boolean contains(LocalDateTime time) {
     boolean result = false;
 
     for (RunTypePeriod period : this) {
-      if (period.encompasses(coordinate)) {
+      if (period.encompasses(time)) {
         result = true;
         break;
       }
@@ -63,9 +62,9 @@ public class RunTypePeriods extends ArrayList<RunTypePeriod> {
     return result;
   }
 
-  public String getRunType(Coordinate coordinate) {
-    Optional<RunTypePeriod> period = stream()
-      .filter(p -> p.encompasses(coordinate)).findAny();
+  public String getRunType(LocalDateTime time) {
+    Optional<RunTypePeriod> period = stream().filter(p -> p.encompasses(time))
+      .findAny();
 
     return period.isEmpty() ? null : period.get().getRunType();
   }
@@ -81,8 +80,8 @@ public class RunTypePeriods extends ArrayList<RunTypePeriod> {
       .collect(Collectors.toSet());
   }
 
-  private Coordinate getLastCoordinate() {
-    Coordinate result = null;
+  private LocalDateTime getLastTime() {
+    LocalDateTime result = null;
 
     if (size() > 0) {
       result = get(size() - 1).getEnd();

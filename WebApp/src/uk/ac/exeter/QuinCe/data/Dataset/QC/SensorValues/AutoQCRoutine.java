@@ -129,7 +129,7 @@ public abstract class AutoQCRoutine extends AbstractAutoQCRoutine {
     RunTypePeriod currentPeriod = runTypePeriods.get(currentPeriodIndex);
 
     for (SensorValue value : values) {
-      while (!currentPeriod.encompasses(value.getCoordinate())) {
+      while (!currentPeriod.encompasses(value.getCoordinate().getTime())) {
         currentPeriodIndex++;
         currentPeriod = runTypePeriods.get(currentPeriodIndex);
       }

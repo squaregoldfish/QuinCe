@@ -286,7 +286,7 @@ public class InternalCalibrationData extends PlotPageData {
     try {
       conn = dataSource.getConnection();
       conn.setAutoCommit(false);
-      DataSetDataDB.storeSensorValues(conn, sensorValues);
+      DataSetDataDB.updateSensorValues(conn, sensorValues);
       conn.commit();
     } catch (Exception e) {
       DatabaseUtils.rollBack(conn);
@@ -326,7 +326,7 @@ public class InternalCalibrationData extends PlotPageData {
 
       conn = dataSource.getConnection();
       conn.setAutoCommit(false);
-      DataSetDataDB.storeSensorValues(conn, sensorValues);
+      DataSetDataDB.updateSensorValues(conn, sensorValues);
       conn.commit();
 
       initPlots();

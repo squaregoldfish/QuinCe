@@ -20,6 +20,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDataDB;
 import uk.ac.exeter.QuinCe.data.Dataset.InvalidDataSetStatusException;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
+import uk.ac.exeter.QuinCe.data.Dataset.NewSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriod;
 import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriods;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
@@ -126,7 +127,7 @@ public class ExtractDataSetJob extends DataSetJob {
 
       Set<DataFile> usedFiles = new HashSet<DataFile>(potentialFiles.size());
 
-      TreeSet<SensorValue> sensorValues = new TreeSet<SensorValue>();
+      NewSensorValues sensorValues = new NewSensorValues(dataSet);
 
       // We want to store when run types begin and end
       RunTypePeriods runTypePeriods = new RunTypePeriods();
@@ -160,9 +161,6 @@ public class ExtractDataSetJob extends DataSetJob {
       double maxLon = -Double.MAX_VALUE;
       double minLat = Double.MAX_VALUE;
       double maxLat = -Double.MAX_VALUE;
-
-      // Initialise the coordinates cache
-      Set<Coordinate> coordinates = new TreeSet<Coordinate>();
 
       for (TimeDataFile file : potentialFiles) {
         FileDefinition fileDefinition = file.getFileDefinition();
@@ -225,10 +223,8 @@ public class ExtractDataSetJob extends DataSetJob {
                 }
 
                 if (null != longitude) {
-                  sensorValues.add(new SensorValue(dataSet.getId(),
-                    FileDefinition.LONGITUDE_COLUMN_ID, TimeCoordinate
-                      .getCoordinate(time, dataSet.getId(), coordinates),
-                    longitude));
+                  sensorValues.create(FileDefinition.LONGITUDE_COLUMN_ID, time,
+                    longitude);
 
                   // Update the dataset bounds
                   try {
@@ -253,10 +249,8 @@ public class ExtractDataSetJob extends DataSetJob {
                 }
 
                 if (null != latitude) {
-                  sensorValues.add(new SensorValue(dataSet.getId(),
-                    FileDefinition.LATITUDE_COLUMN_ID, TimeCoordinate
-                      .getCoordinate(time, dataSet.getId(), coordinates),
-                    latitude));
+                  sensorValues.create(FileDefinition.LATITUDE_COLUMN_ID, time,
+                    latitude);
 
                   // Update the dataset bounds
                   try {
@@ -292,13 +286,10 @@ public class ExtractDataSetJob extends DataSetJob {
                       if (null != runTypeValue) {
                         String runType = runTypeValue.getRunName();
 
-                        sensorValues.add(new SensorValue(dataSet.getId(),
-                          assignment.getDatabaseId(), TimeCoordinate
-                            .getCoordinate(time, dataSet.getId(), coordinates),
-                          runType));
+                        sensorValues.create(assignment.getDatabaseId(), time,
+                          runType);
 
-                        runTypePeriods.add(runType, TimeCoordinate
-                          .getCoordinate(time, dataSet.getId(), coordinates));
+                        runTypePeriods.add(runType, time);
                       }
                     } else {
 
@@ -310,10 +301,8 @@ public class ExtractDataSetJob extends DataSetJob {
                         assignment.getMissingValue());
 
                       if (null != fieldValue) {
-                        SensorValue value = new SensorValue(dataSet.getId(),
-                          assignment.getDatabaseId(), TimeCoordinate
-                            .getCoordinate(time, dataSet.getId(), coordinates),
-                          fieldValue);
+                        SensorValue sensorValue = sensorValues
+                          .create(assignment.getDatabaseId(), time, fieldValue);
 
                         // Apply calibration if required
                         Calibration sensorCalibration = sensorCalibrations
@@ -321,11 +310,8 @@ public class ExtractDataSetJob extends DataSetJob {
                           .get(String.valueOf(assignment.getDatabaseId()));
 
                         if (null != sensorCalibration) {
-                          value.calibrateValue(sensorCalibration);
+                          sensorValue.calibrateValue(sensorCalibration);
                         }
-
-                        // Add to storage list
-                        sensorValues.add(value);
                       }
                     }
                   }
@@ -369,8 +355,10 @@ public class ExtractDataSetJob extends DataSetJob {
               //
               // In this case, simply use the next known run type. Otherwise we
               // find the run type that the timestamp is in.
-              if (value.getCoordinate().isBefore(currentPeriod.getStart())
-                || currentPeriod.encompasses(value.getCoordinate())) {
+              if (((TimeCoordinate) value.getCoordinate())
+                .isBefore(currentPeriod.getStart())
+                || currentPeriod.encompasses(
+                  ((TimeCoordinate) value.getCoordinate()).getTime())) {
                 periodFound = true;
               } else {
                 currentPeriodIndex++;
@@ -398,7 +386,7 @@ public class ExtractDataSetJob extends DataSetJob {
 
       // Store the remaining values
       if (sensorValues.size() > 0) {
-        DataSetDataDB.storeSensorValues(conn, sensorValues);
+        DataSetDataDB.storeNewSensorValues(conn, sensorValues);
       }
 
       conn.commit();
@@ -418,7 +406,7 @@ public class ExtractDataSetJob extends DataSetJob {
         .valueOf(Long.parseLong(properties.getProperty(DataSetJob.ID_PARAM))));
       NextJobInfo nextJob = new NextJobInfo(AutoQCJob.class.getCanonicalName(),
         jobProperties);
-      nextJob.putTransferData(SENSOR_VALUES, sensorValues);
+      nextJob.putTransferData(SENSOR_VALUES, sensorValues.toSet());
       return nextJob;
     } catch (Exception e) {
       ExceptionUtils.printStackTrace(e);
@@ -462,12 +450,12 @@ public class ExtractDataSetJob extends DataSetJob {
       .getIntProperty(Instrument.PROP_POST_FLUSHING_TIME);
 
     if (null != preFlushingTime && preFlushingTime > 0
-      && DateTimeUtils.secondsBetween(runTypePeriod.getStart().getTime(),
+      && DateTimeUtils.secondsBetween(runTypePeriod.getStart(),
         coordinate.getTime()) <= preFlushingTime) {
       result = true;
     } else if (null != postFlushingTime && postFlushingTime > 0
       && DateTimeUtils.secondsBetween(coordinate.getTime(),
-        runTypePeriod.getEnd().getTime()) <= postFlushingTime) {
+        runTypePeriod.getEnd()) <= postFlushingTime) {
       result = true;
     }
 

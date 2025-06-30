@@ -543,6 +543,24 @@ public class DataSetDB {
     return result;
   }
 
+  public static boolean datasetExists(Connection conn, long id)
+    throws DatabaseException {
+    MissingParam.checkMissing(conn, "conn");
+    MissingParam.checkDatabaseId(id, "id", false);
+
+    try (PreparedStatement stmt = conn
+      .prepareStatement("SELECT id FROM dataset WHERE id = ?")) {
+
+      stmt.setLong(1, id);
+      try (ResultSet records = stmt.executeQuery()) {
+        return records.next();
+      }
+
+    } catch (Exception e) {
+      throw new DatabaseException("Error while searching for DataSet", e);
+    }
+  }
+
   public static void setNrtDatasetStatus(DataSource dataSource,
     Instrument instrument, int status) throws DatabaseException,
     MissingParamException, InvalidDataSetStatusException,

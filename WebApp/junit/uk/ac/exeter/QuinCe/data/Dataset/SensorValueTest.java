@@ -31,8 +31,8 @@ public class SensorValueTest extends BaseTest {
 
   private SensorValue makeDBSensorValue() {
     SensorValue sensorValue = new SensorValue(1L, 1L, 1L,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", null, Flag.ASSUMED_GOOD,
-      null);
+      new TimeCoordinate(LocalDateTime.of(2021, 1, 1, 0, 0, 0)), "20", null,
+      Flag.ASSUMED_GOOD, null);
     return sensorValue;
   }
 

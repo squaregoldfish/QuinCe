@@ -20,6 +20,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.MissingParam;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**
@@ -32,7 +33,7 @@ public class CoordinateDB {
     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
   private static final String STORE_TIME_COORDINATE_STMT = "INSERT INTO coordinates "
-    + "(dataset_id, date, ) VALUES (?, ?)";
+    + "(dataset_id, date) VALUES (?, ?)";
 
   private static final String GET_SENSOR_VALUE_COORDINATES_QUERY = "SELECT "
     + "sv.coordinate_id FROM sensor_values sv "
@@ -60,10 +61,11 @@ public class CoordinateDB {
    *           If the coordinate is invalid.
    * @throws DatabaseException
    *           If a database error occurs.
+   * @throws RecordNotFoundException
    * @see #saveCoordinates(Connection, Collection)
    */
   protected static void saveCoordinate(Connection conn, Coordinate coordinate)
-    throws CoordinateException, DatabaseException {
+    throws CoordinateException, DatabaseException, RecordNotFoundException {
     saveCoordinates(conn, Collections.singleton(coordinate));
   }
 
@@ -82,10 +84,12 @@ public class CoordinateDB {
    *           If any of the coordinates are invalid.
    * @throws DatabaseException
    *           If a database error occurs.
+   * @throws RecordNotFoundException
    * @see #saveCoordinates(Connection, Collection)
    */
   protected static void saveCoordinates(Connection conn,
-    Coordinate... coordinates) throws CoordinateException, DatabaseException {
+    Coordinate... coordinates)
+    throws CoordinateException, DatabaseException, RecordNotFoundException {
     saveCoordinates(conn, Arrays.asList(coordinates));
   }
 
@@ -115,10 +119,14 @@ public class CoordinateDB {
    *           coordinate is invalid.
    * @throws DatabaseException
    *           If a database error occurs.
+   * @throws RecordNotFoundException
    */
   protected static void saveCoordinates(Connection conn,
     Collection<Coordinate> coordinates)
-    throws CoordinateException, DatabaseException {
+    throws CoordinateException, DatabaseException, RecordNotFoundException {
+
+    MissingParam.checkMissing(conn, "conn");
+    MissingParam.checkMissing(coordinates, "coordinates", false);
 
     if (coordinates.size() > 0) {
       // Make sure all coordinates are of the same type
@@ -126,6 +134,17 @@ public class CoordinateDB {
         .count() > 1) {
         throw new CoordinateException(
           "All coordinates must be of the same type");
+      }
+
+      if (coordinates.stream().map(c -> c.getDatasetId()).distinct().limit(2)
+        .count() > 1) {
+        throw new CoordinateException(
+          "All coordinates must be for the same DataSet");
+      }
+
+      if (!DataSetDB.datasetExists(conn,
+        coordinates.stream().findAny().get().getDatasetId())) {
+        throw new RecordNotFoundException("DataSet does not exist");
       }
 
       switch (coordinates.stream().findAny().get().getType()) {
@@ -144,8 +163,8 @@ public class CoordinateDB {
   }
 
   /**
-   * Store the provided surface coordinates in the database
-   *
+   * Store the provided surface coordinates in the database.
+   * 
    * @param conn
    * @param coordinates
    * @throws DatabaseException

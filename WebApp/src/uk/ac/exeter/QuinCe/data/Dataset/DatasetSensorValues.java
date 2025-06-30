@@ -317,7 +317,7 @@ public class DatasetSensorValues {
     } else {
       values = valuesByColumn.get(columnId);
       if (null == values) {
-        values = new SensorValuesList(columnId, this, false);
+        values = new TimestampSensorValuesList(columnId, this, false);
       }
     }
 
@@ -469,6 +469,14 @@ public class DatasetSensorValues {
 
       for (SensorValuesList sensorValues : valuesByColumn.values()) {
         coordinates.addAll(sensorValues.getRawCoordinates());
+      }
+
+      if (null != longitudes) {
+        coordinates.addAll(longitudes.getRawCoordinates());
+      }
+
+      if (null != latitudes) {
+        coordinates.addAll(latitudes.getRawCoordinates());
       }
 
       coordinatesCache = new ArrayList<Coordinate>(coordinates);
@@ -794,7 +802,7 @@ public class DatasetSensorValues {
 
         for (SensorValue value : affectedSensorValues) {
           String valueRunType = runTypePeriods
-            .getRunType(value.getCoordinate());
+            .getRunType(value.getCoordinate().getTime());
           if (null == valueRunType || affectedSensorAssignments.get(assignment)
             .contains(valueRunType)) {
 

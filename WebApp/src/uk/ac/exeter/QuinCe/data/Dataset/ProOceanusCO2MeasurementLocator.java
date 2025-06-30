@@ -151,7 +151,7 @@ public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
         }
 
         // Store the updated flags
-        DataSetDataDB.storeSensorValues(conn, flaggedSensorValues);
+        DataSetDataDB.updateSensorValues(conn, flaggedSensorValues);
 
         // Force the CO2 output values to be recalculated now that
         // some values have had their flags changed.

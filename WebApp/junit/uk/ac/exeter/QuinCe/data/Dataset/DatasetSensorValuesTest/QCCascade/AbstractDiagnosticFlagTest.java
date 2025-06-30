@@ -203,7 +203,7 @@ public abstract class AbstractDiagnosticFlagTest extends TestSetTest {
   protected RunTypePeriods makeRunTypePeriods(SensorValue source)
     throws Exception {
     RunTypePeriods result = new RunTypePeriods();
-    result.add(source.getValue(), source.getCoordinate());
+    result.add(source.getValue(), source.getCoordinate().getTime());
     return result;
   }
 

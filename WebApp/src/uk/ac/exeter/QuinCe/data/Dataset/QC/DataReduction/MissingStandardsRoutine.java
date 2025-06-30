@@ -67,7 +67,7 @@ public class MissingStandardsRoutine extends DataReductionQCRoutine {
                 .isOfSensorType(ssValue.getColumnId(), sensorType)) {
 
                 String runType = runTypePeriods
-                  .getRunType(ssValue.getCoordinate());
+                  .getRunType(ssValue.getCoordinate().getTime());
                 if (instrument.getRunTypeCategory(variable.getId(), runType)
                   .equals(RunTypeCategory.INTERNAL_CALIBRATION)) {
 

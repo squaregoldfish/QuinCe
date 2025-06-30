@@ -295,7 +295,7 @@ public class AutoQCJob extends DataSetJob {
 
       // Send all sensor values to be stored. The storeSensorValues method only
       // writes those values whose 'dirty' flag is set.
-      DataSetDataDB.storeSensorValues(conn, sensorValues.getAll());
+      DataSetDataDB.updateSensorValues(conn, sensorValues.getAll());
 
       // Trigger the Locate Measurements job
       dataSet.setStatus(DataSet.STATUS_DATA_REDUCTION);

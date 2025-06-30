@@ -23,17 +23,16 @@ public class RunTypePeriodTest extends BaseTest {
   @Test
   public void creationTest() throws Exception {
 
-    TimeCoordinate coordinate = new TimeCoordinate(
-      LocalDateTime.of(2000, 1, 1, 0, 0, 0));
+    LocalDateTime time = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
 
     RunTypePeriods periods = new RunTypePeriods();
-    periods.add("RunType", coordinate);
+    periods.add("RunType", time);
 
     RunTypePeriod period = periods.get(0);
 
     assertEquals("RunType", period.getRunType());
-    assertEquals(coordinate, period.getStart());
-    assertEquals(coordinate, period.getEnd());
+    assertEquals(time, period.getStart());
+    assertEquals(time, period.getEnd());
   }
 
   /**
@@ -42,10 +41,8 @@ public class RunTypePeriodTest extends BaseTest {
   @Test
   public void endSetTest() throws Exception {
 
-    TimeCoordinate start = new TimeCoordinate(
-      LocalDateTime.of(2000, 1, 1, 0, 0, 0));
-    TimeCoordinate end = new TimeCoordinate(
-      LocalDateTime.of(2000, 1, 1, 1, 0, 0));
+    LocalDateTime start = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    LocalDateTime end = LocalDateTime.of(2000, 1, 1, 1, 0, 0);
 
     RunTypePeriods periods = new RunTypePeriods();
     periods.add("RunType", start);
@@ -59,10 +56,8 @@ public class RunTypePeriodTest extends BaseTest {
    */
   @Test
   public void encompassesTest() throws Exception {
-    TimeCoordinate start = new TimeCoordinate(
-      LocalDateTime.of(2000, 1, 1, 0, 0, 0));
-    TimeCoordinate end = new TimeCoordinate(
-      LocalDateTime.of(2000, 1, 1, 1, 0, 0));
+    LocalDateTime start = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    LocalDateTime end = LocalDateTime.of(2000, 1, 1, 1, 0, 0);
 
     RunTypePeriods periods = new RunTypePeriods();
     periods.add("RunType", start);
@@ -72,30 +67,23 @@ public class RunTypePeriodTest extends BaseTest {
 
     assertTrue(period.encompasses(start));
     assertTrue(period.encompasses(end));
-    assertTrue(period
-      .encompasses(new TimeCoordinate(LocalDateTime.of(2000, 1, 1, 0, 30, 0))));
+    assertTrue(period.encompasses(LocalDateTime.of(2000, 1, 1, 0, 30, 0)));
 
-    assertFalse(period.encompasses(
-      new TimeCoordinate(LocalDateTime.of(1999, 12, 31, 23, 59, 59))));
-    assertFalse(period
-      .encompasses(new TimeCoordinate(LocalDateTime.of(2000, 2, 1, 0, 0, 0))));
+    assertFalse(period.encompasses(LocalDateTime.of(1999, 12, 31, 23, 59, 59)));
+    assertFalse(period.encompasses(LocalDateTime.of(2000, 2, 1, 0, 0, 0)));
   }
 
   @Test
   public void singleTimeEncompassesTest() throws Exception {
-    TimeCoordinate start = new TimeCoordinate(
-      LocalDateTime.of(2000, 1, 1, 0, 0, 0));
+    LocalDateTime start = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
     RunTypePeriods periods = new RunTypePeriods();
     periods.add("RunType", start);
 
     RunTypePeriod period = periods.get(0);
 
     assertTrue(period.encompasses(start));
-    assertFalse(period
-      .encompasses(new TimeCoordinate(LocalDateTime.of(2000, 1, 1, 0, 30, 0))));
-    assertFalse(period.encompasses(
-      new TimeCoordinate(LocalDateTime.of(1999, 12, 31, 23, 59, 59))));
-    assertFalse(period
-      .encompasses(new TimeCoordinate(LocalDateTime.of(2000, 2, 1, 0, 0, 0))));
+    assertFalse(period.encompasses(LocalDateTime.of(2000, 1, 1, 0, 30, 0)));
+    assertFalse(period.encompasses(LocalDateTime.of(1999, 12, 31, 23, 59, 59)));
+    assertFalse(period.encompasses(LocalDateTime.of(2000, 2, 1, 0, 0, 0)));
   }
 }

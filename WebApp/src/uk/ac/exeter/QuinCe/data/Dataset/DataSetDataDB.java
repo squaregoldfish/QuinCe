@@ -103,7 +103,7 @@ public class DataSetDataDB {
     + "WHERE c.dataset_id = ? AND user_qc_flag != " + Flag.VALUE_FLUSHING;
 
   private static final String GET_POSITION_SENSOR_VALUES_QUERY = "SELECT "
-    + "sv.id, sv.file_column, sv.value, av.auto_qc, sv.user_qc_flag, sv.user_qc_message "
+    + "sv.id, sv.coordinate_id, sv.file_column, sv.value, sv.auto_qc, sv.user_qc_flag, sv.user_qc_message "
     + "FROM sensor_values sv INNER JOIN coordinates c ON sv.coordinate_id = c.id "
     + "WHERE c.dataset_id = ? AND sv.file_column IN (" + SensorType.LONGITUDE_ID
     + ", " + SensorType.LATITUDE_ID + ")";
@@ -179,7 +179,7 @@ public class DataSetDataDB {
     + "sv.id, sv.coordinate_id, sv.file_column, sv.value, sv.auto_qc, "
     + "sv.user_qc_flag, sv.user_qc_message, mrt.run_type "
     + "FROM sensor_values sv "
-    + "INNER JOIN measurements m ON m.date = sv.date "
+    + "INNER JOIN measurements m ON m.coordinate_id = sv.coordinate_id "
     + "INNER JOIN measurement_run_types mrt ON m.id = mrt.measurement_id "
     + "INNER JOIN coordinates c ON sv.coordinate_id = c.id "
     + "WHERE c.dataset_id = ? AND mrt.run_type IN "
@@ -319,6 +319,11 @@ public class DataSetDataDB {
    * database ID, it will be updated. Otherwise it will be stored as a new
    * record, and its ID set to the generated key.
    * </p>
+   * 
+   * <p>
+   * The passed in {@link Connection} must have {@code autoCommit == false}. The
+   * calling method is responsible for managing the transaction.
+   * </p>
    *
    * @param conn
    *          A database connection.
@@ -334,16 +339,15 @@ public class DataSetDataDB {
    *           If any sensor value contains invalid dataset/column IDs.
    * @throws SensorGroupsException
    */
-  public static void storeSensorValues(Connection conn,
-    Collection<SensorValue> sensorValues) throws DatabaseException,
-    CoordinateException, InvalidSensorValueException, RecordNotFoundException,
-    InstrumentException, SensorGroupsException, IllegalAccessException {
+  public static void storeNewSensorValues(Connection conn,
+    NewSensorValues sensorValues) throws DatabaseException, CoordinateException,
+    InvalidSensorValueException, RecordNotFoundException, InstrumentException,
+    SensorGroupsException, IllegalAccessException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkMissing(sensorValues, "sensorValues", true);
+    MissingParam.checkMissing(sensorValues, "sensorValues");
 
     PreparedStatement addStmt = null;
-    PreparedStatement updateStmt = null;
     ResultSet generatedKeys;
 
     try {
@@ -354,11 +358,124 @@ public class DataSetDataDB {
 
       // Extract the Coordinate objects and ensure they are stored
       // in the database.
-      CoordinateDB.saveCoordinates(conn,
-        sensorValues.stream().map(sv -> sv.getCoordinate()).toList());
+      CoordinateDB.saveCoordinates(conn, sensorValues.getCoordinates());
 
       addStmt = conn.prepareStatement(STORE_NEW_SENSOR_VALUE_STATEMENT,
         Statement.RETURN_GENERATED_KEYS);
+
+      DataSet dataSet = null;
+      Instrument instrument = null;
+
+      // Set of dataset IDs/columns we know to be valid
+      HashSet<DatasetColumn> verifiedColumns = new HashSet<DatasetColumn>();
+
+      for (SensorValue value : sensorValues.getSensorValues()) {
+
+        if (!value.canBeSaved()) {
+          throw new InvalidSensorValueException(
+            "Attempt to store SensorValue but canBeSaved = false", value);
+        }
+
+        DatasetColumn dsCol = new DatasetColumn(value);
+
+        if (!verifiedColumns.contains(dsCol)) {
+
+          // Make sure the dataset exists
+          if (null == dataSet || dataSet.getId() != value.getDatasetId()) {
+            try {
+              dataSet = DataSetDB.getDataSet(conn, value.getDatasetId());
+            } catch (RecordNotFoundException e) {
+              throw new InvalidSensorValueException(
+                "Dataset specified in SensorValue does not exist", value);
+            }
+          }
+
+          // Make sure the column ID is valid for the dataset's instrument
+          if (null == instrument
+            || instrument.getId() != dataSet.getInstrumentId()) {
+            instrument = InstrumentDB.getInstrument(conn,
+              dataSet.getInstrumentId());
+          }
+
+          if (!instrument.columnValid(value.getColumnId())) {
+            throw new InvalidSensorValueException(
+              "Column specified in SensorValue is not valid for the instrument",
+              value);
+          }
+
+          // If we got to here, we are good to go
+          verifiedColumns.add(dsCol);
+        }
+
+        if (value.isDirty()) {
+          addStmt.setLong(1, value.getCoordinate().getId());
+          addStmt.setLong(2, value.getColumnId());
+          if (null == value.getValue()) {
+            addStmt.setNull(3, Types.VARCHAR);
+          } else {
+            addStmt.setString(3, value.getValue());
+          }
+
+          addStmt.setString(4, value.getAutoQcResult().toJson());
+          addStmt.setInt(5, value.getUserQCFlag().getFlagValue());
+          addStmt.setString(6, value.getUserQCMessage());
+
+          addStmt.execute();
+
+          generatedKeys = addStmt.getGeneratedKeys();
+          if (generatedKeys.next()) {
+            value.setId(generatedKeys.getLong(1));
+          }
+        }
+      }
+
+      DatabaseUtils.closeStatements(addStmt);
+    } catch (SQLException e) {
+      throw new DatabaseException("Error storing sensor values", e);
+    } catch (Exception e) {
+      DatabaseUtils.closeStatements(addStmt);
+      throw e;
+    }
+
+    sensorValues.clearDirtyFlags();
+  }
+
+  /**
+   * Store updated {@link SensorValue}s in the database.
+   * 
+   * <p>
+   * All the supplied {@link SensorValue}s must already be in the database (i.e.
+   * have a database ID). If any of the values do not, an exception will be
+   * thrown and none of the values will be stored.
+   * </p>
+   * 
+   * @param conn
+   * @param sensorValues
+   * @throws DatabaseException
+   * @throws InvalidSensorValueException
+   * @throws SensorGroupsException
+   * @throws InstrumentException
+   * @throws RecordNotFoundException
+   */
+  public static void updateSensorValues(Connection conn,
+    Collection<SensorValue> sensorValues)
+    throws DatabaseException, InvalidSensorValueException,
+    RecordNotFoundException, InstrumentException, SensorGroupsException {
+
+    MissingParam.checkMissing(conn, "conn");
+    MissingParam.checkMissing(sensorValues, "sensorValues", true);
+
+    if (sensorValues.stream().anyMatch(sv -> !sv.isInDatabase())) {
+      throw new DatabaseException("All sensor values must have database ID");
+    }
+
+    PreparedStatement updateStmt = null;
+
+    try {
+      if (conn.getAutoCommit()) {
+        throw new DatabaseException("Connection must be autoCommit=false");
+      }
+
       updateStmt = conn.prepareStatement(UPDATE_SENSOR_VALUE_STATEMENT);
 
       DataSet dataSet = null;
@@ -406,63 +523,40 @@ public class DataSetDataDB {
         }
 
         if (value.isDirty()) {
-          if (!value.isInDatabase()) {
-            addStmt.setLong(1, value.getCoordinate().getId());
-            addStmt.setLong(2, value.getColumnId());
-            if (null == value.getValue()) {
-              addStmt.setNull(3, Types.VARCHAR);
-            } else {
-              addStmt.setString(3, value.getValue());
+          updateStmt.setString(1, value.getAutoQcResult().toJson());
+          updateStmt.setInt(2, value.getUserQCFlag().getFlagValue());
+
+          // Truncate user QC message (except for LOOKUP flags)
+          String userQCMessage = value.getUserQCMessage();
+          if (!value.getUserQCFlag().equals(Flag.LOOKUP)) {
+            if (userQCMessage.length() > 255) {
+              userQCMessage = userQCMessage.substring(0, 255);
             }
-
-            addStmt.setString(4, value.getAutoQcResult().toJson());
-            addStmt.setInt(5, value.getUserQCFlag().getFlagValue());
-            addStmt.setString(6, value.getUserQCMessage());
-
-            addStmt.execute();
-
-            generatedKeys = addStmt.getGeneratedKeys();
-            if (generatedKeys.next()) {
-              value.setId(generatedKeys.getLong(1));
-            }
-          } else {
-            updateStmt.setString(1, value.getAutoQcResult().toJson());
-            updateStmt.setInt(2, value.getUserQCFlag().getFlagValue());
-
-            // Truncate user QC message (except for LOOKUP flags)
-            String userQCMessage = value.getUserQCMessage();
-            if (!value.getUserQCFlag().equals(Flag.LOOKUP)) {
-              if (userQCMessage.length() > 255) {
-                userQCMessage = userQCMessage.substring(0, 255);
-              }
-            }
-
-            if (value.getUserQCFlag().commentRequired()
-              && StringUtils.isBlank(value.getUserQCMessage())) {
-              throw new InvalidSensorValueException(
-                "User QC message cannot be empty with flag "
-                  + value.getUserQCFlag().getFlagValue(),
-                value);
-            }
-
-            updateStmt.setString(3, userQCMessage);
-            updateStmt.setLong(4, value.getId());
-
-            updateStmt.execute();
           }
+
+          if (value.getUserQCFlag().commentRequired()
+            && StringUtils.isBlank(value.getUserQCMessage())) {
+            throw new InvalidSensorValueException(
+              "User QC message cannot be empty with flag "
+                + value.getUserQCFlag().getFlagValue(),
+              value);
+          }
+
+          updateStmt.setString(3, userQCMessage);
+          updateStmt.setLong(4, value.getId());
+
+          updateStmt.execute();
         }
       }
 
-      DatabaseUtils.closeStatements(addStmt, updateStmt);
-    } catch (SQLException e) {
-      throw new DatabaseException("Error storing sensor values", e);
-    } catch (Exception e) {
-      DatabaseUtils.closeStatements(addStmt, updateStmt);
-      throw e;
-    }
+      // Clear the dirty flag on all the sensor values
+      SensorValue.clearDirtyFlag(sensorValues);
 
-    // Clear the dirty flag on all the sensor values
-    SensorValue.clearDirtyFlag(sensorValues);
+    } catch (SQLException e) {
+      throw new DatabaseException("Error updating sensor values", e);
+    } finally {
+      DatabaseUtils.closeStatements(updateStmt);
+    }
   }
 
   /**
@@ -1214,7 +1308,7 @@ public class DataSetDataDB {
           try (ResultSet records = stmt.executeQuery()) {
             while (records.next()) {
               result.add(records.getString(2),
-                coordinates.get(records.getLong(1)));
+                coordinates.get(records.getLong(1)).getTime());
             }
           }
         }
@@ -1394,9 +1488,11 @@ public class DataSetDataDB {
    *          The measurement whose coordinate is to be updated.
    * @throws DatabaseException
    * @throws CoordinateException
+   * @throws RecordNotFoundException
    */
   public static void updateMeasurementCoordinate(Connection conn,
-    Measurement measurement) throws CoordinateException, DatabaseException {
+    Measurement measurement)
+    throws CoordinateException, DatabaseException, RecordNotFoundException {
 
     try {
       if (!measurement.getCoordinate().isInDatabase()) {

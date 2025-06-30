@@ -611,7 +611,7 @@ public class ManualQCData extends PlotPageData {
 
       conn = dataSource.getConnection();
       conn.setAutoCommit(false);
-      DataSetDataDB.storeSensorValues(conn, changedValues);
+      DataSetDataDB.updateSensorValues(conn, changedValues);
       conn.commit();
       clearSelection();
       initPlots();
@@ -729,7 +729,7 @@ public class ManualQCData extends PlotPageData {
       // Store the updated sensor values
       conn = dataSource.getConnection();
       conn.setAutoCommit(false);
-      DataSetDataDB.storeSensorValues(conn, changedValues);
+      DataSetDataDB.updateSensorValues(conn, changedValues);
       conn.commit();
 
       clearSelection();

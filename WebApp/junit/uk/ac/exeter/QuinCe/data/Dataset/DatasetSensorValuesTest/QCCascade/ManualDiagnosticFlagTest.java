@@ -305,7 +305,7 @@ public class ManualDiagnosticFlagTest extends AbstractDiagnosticFlagTest {
       runType.setValue(line.getStringField(RUN_TYPE_COL, false));
 
       // Write updated values to DB
-      DataSetDataDB.storeSensorValues(conn,
+      DataSetDataDB.updateSensorValues(conn,
         Arrays.asList(sst, salinity, co2, runType));
       conn.commit();
 
@@ -324,7 +324,7 @@ public class ManualDiagnosticFlagTest extends AbstractDiagnosticFlagTest {
 
       allSensorValues.applyQCCascade(gasFlow, runTypePeriods);
 
-      DataSetDataDB.storeSensorValues(conn, allSensorValues.getAll());
+      DataSetDataDB.updateSensorValues(conn, allSensorValues.getAll());
       conn.commit();
 
       // Run the Data Reduction
@@ -379,7 +379,7 @@ public class ManualDiagnosticFlagTest extends AbstractDiagnosticFlagTest {
 
         allSensorValues.applyQCCascade(gasFlow, runTypePeriods);
 
-        DataSetDataDB.storeSensorValues(conn, allSensorValues.getAll());
+        DataSetDataDB.updateSensorValues(conn, allSensorValues.getAll());
         conn.commit();
 
         // Run the Data Reduction
