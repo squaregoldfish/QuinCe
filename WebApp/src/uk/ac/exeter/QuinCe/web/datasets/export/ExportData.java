@@ -214,7 +214,6 @@ public class ExportData extends ManualQCData {
         for (Variable variable : instrument.getVariables()) {
           ColumnHeading variableHeading = variable.getColumnHeading(sensorType);
           if (null != variableHeading) {
-
             measurementValuesHeadings
               .add(new PlotPageColumnHeading(variableHeading, true, false,
                 sensorType.questionableFlagAllowed()));

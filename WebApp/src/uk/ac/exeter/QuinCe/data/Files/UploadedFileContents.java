@@ -24,7 +24,7 @@ public class UploadedFileContents extends FileContents {
      * This is not implemented because the contents of an uploaded file can only
      * be read once. Luckily it's not needed - we only read bytes when exporting
      * a DataSet, and that doesn't happen with uploaded files.
-     * 
+     *
      * Note that we could fix this by reading the bytes in the UploadedDataFile
      * object and building the fileLines array from that, but that would double
      * the RAM consumption so while it's not needed there's no point.

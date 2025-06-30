@@ -29,7 +29,7 @@ public class ArgoCoordinate extends Coordinate {
   /**
    * The profile number. Each cycle may have multiple profiles, since different
    * sensors can measure at different sets of depths.
-   * 
+   *
    * @see #nLevel
    */
   private int nProf;
@@ -41,18 +41,18 @@ public class ArgoCoordinate extends Coordinate {
 
   /**
    * The level number in the current profile.
-   * 
+   *
    * @see #nProf
    */
   private int nLevel;
 
   /**
    * The pressure (i.e. depth) of this coordinate.
-   * 
+   *
    * <p>
    * This is specific to a given nProf/nLevel combination.
    * </p>
-   * 
+   *
    * <p>
    * This value is referred to as 'pres' to be consistent with its label in the
    * Argo data.
@@ -68,12 +68,12 @@ public class ArgoCoordinate extends Coordinate {
 
   /**
    * Construct a new ArgoCoordinate with all values.
-   * 
+   *
    * <p>
    * Pass {@link DatabaseUtil#NO_DATABASE_RECORD} for a new Coordinate that is
    * not yet in the database.
    * </p>
-   * 
+   *
    * @param id
    * @param datasetId
    * @param cycleNumber
@@ -148,12 +148,12 @@ public class ArgoCoordinate extends Coordinate {
 
   /**
    * Validate a direction value.
-   * 
+   *
    * <p>
    * If the direction is valid, nothing happens. If it is not, a
    * {@link CoordinateException} is thrown.
    * </p>
-   * 
+   *
    * @param direction
    *          The direction value to check.
    * @throws CoordinateException
@@ -168,7 +168,7 @@ public class ArgoCoordinate extends Coordinate {
 
   /**
    * Get the cycle number.
-   * 
+   *
    * @return The cycle number.
    */
   public int getCycleNumber() {
@@ -177,7 +177,7 @@ public class ArgoCoordinate extends Coordinate {
 
   /**
    * Get the nProf.
-   * 
+   *
    * @return The nProf.
    */
   public int getNProf() {
@@ -186,7 +186,7 @@ public class ArgoCoordinate extends Coordinate {
 
   /**
    * Get the float direction.
-   * 
+   *
    * @return The float direction.
    */
   public char getDirection() {
@@ -195,7 +195,7 @@ public class ArgoCoordinate extends Coordinate {
 
   /**
    * Get the nLevel.
-   * 
+   *
    * @return The nLevel.
    */
   public int getNLevel() {
@@ -204,7 +204,7 @@ public class ArgoCoordinate extends Coordinate {
 
   /**
    * Get the pressure.
-   * 
+   *
    * @return The pressure.
    */
   public double getPres() {
@@ -214,7 +214,7 @@ public class ArgoCoordinate extends Coordinate {
   /**
    * Get the filename of the Argo profile file from which this coordinate was
    * retrieved.
-   * 
+   *
    * @return The source filename.
    */
   public String getSourceFile() {

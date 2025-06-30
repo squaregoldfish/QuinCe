@@ -283,11 +283,11 @@ public abstract class DataFile {
 
   /**
    * Extra validation steps.
-   * 
+   *
    * <p>
    * Can be overridden by concrete implementations.
    * </p>
-   * 
+   *
    * @throws DataFileException
    *           If any validation fails.
    */
@@ -627,7 +627,7 @@ public abstract class DataFile {
 
   /**
    * Run actions after the file contents have been loaded.
-   * 
+   *
    * @throws DataFileException
    *           If the hook fails.
    */

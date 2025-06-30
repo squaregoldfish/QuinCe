@@ -164,7 +164,7 @@ public class CoordinateDB {
 
   /**
    * Store the provided surface coordinates in the database.
-   * 
+   *
    * @param conn
    * @param coordinates
    * @throws DatabaseException

@@ -507,7 +507,7 @@ public class NewInstrumentBean extends FileUploadBean {
 
   /**
    * The setup steps for the instrument.
-   * 
+   *
    * <p>
    * The steps will vary depending on the type of instrument being created.
    * </p>
@@ -516,7 +516,7 @@ public class NewInstrumentBean extends FileUploadBean {
 
   /**
    * The current step in the instrument setup.
-   * 
+   *
    * @see #setupSteps
    */
   private int setupStep = 0;

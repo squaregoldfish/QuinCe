@@ -33,10 +33,10 @@
   <ui:define name="new_instrument_name">New Instrument</ui:define>
   <ui:define name="new_instrument_content">
     <h:form id="newInstrumentForm" method="post" charset="utf8">
-    
+
       <p:remoteCommand name="setBasis" action="{#newInstrumentBean.noop}"
         process="basis" update=":menuForm:menuSteps"/>
-    
+
       <table class="form">
         <tr>
           <td class="labels">Platform Name</td>

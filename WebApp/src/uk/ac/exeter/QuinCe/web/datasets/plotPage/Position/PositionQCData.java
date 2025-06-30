@@ -57,7 +57,7 @@ public class PositionQCData extends ManualQCData {
 
     // Build the row IDs
     progress.setName("Analysing data");
-    coordinates = new TreeMap<Long, Coordinate>();
+    coordinates = new LinkedHashMap<Long, Coordinate>();
     sensorValues.getCoordinates().forEach(v -> coordinates.put(v.getId(), v));
     rowIDs = sensorValues.getRawPositionCoordinates().stream()
       .map(c -> c.getId()).collect(Collectors.toList());

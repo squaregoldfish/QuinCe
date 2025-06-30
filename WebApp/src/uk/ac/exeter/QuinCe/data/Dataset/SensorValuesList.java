@@ -349,7 +349,7 @@ public abstract class SensorValuesList {
 
   /**
    * Get the output values for the list.
-   * 
+   *
    * @return The output values.
    * @throws SensorValuesListException
    *
@@ -363,7 +363,7 @@ public abstract class SensorValuesList {
 
   /**
    * Get the {@link Coordinate}s of the output values for the list.
-   * 
+   *
    * @return The output coordinates.
    * @throws SensorValuesListException
    * @see #getOutputCoordinates()
@@ -571,14 +571,14 @@ public abstract class SensorValuesList {
 
   /**
    * Retrieve the constructed output values from the list.
-   * 
+   *
    * <p>
    * Most instances of this class do not simply return a list of values that
    * directly corresponds to the individual members supplied through the
    * {@code add} methods. This method must be implemented to ensure that the
    * outputs from the list have the necessary processing applied.
    * </p>
-   * 
+   *
    * @return The computed output values of the list.
    */
   protected abstract List<? extends SensorValuesListValue> getOutputValues()
@@ -586,7 +586,7 @@ public abstract class SensorValuesList {
 
   /**
    * The {@link Coordinate}s of the constructed output values from the list.
-   * 
+   *
    * @return The {@link Coordinate}s of the computed output values of the list.
    * @throws SensorValuesListException
    * @see #getOutputValues()
@@ -604,7 +604,7 @@ public abstract class SensorValuesList {
   /**
    * Method to broadcast the fact that the base contents of the list have been
    * changed.
-   * 
+   *
    * <p>
    * When the contents of the list are changed, this method is called to signal
    * that any previously computed output values may now be invalid and should be

@@ -13,14 +13,14 @@ import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 /**
  * Represents a newly created collection of {@link SensorValue}s which have not
  * yet been stored in the database.
- * 
+ *
  * <p>
  * {@link SensorValue} objects are not passed in to this object; instead, the
  * values for a new {@link SensorValue} are passed in, and the class takes care
  * of creating the objects. The created objects can be retrieved by calling
  * {@link #toSet()}.
  * </p>
- * 
+ *
  * <p>
  * Note that this is not a Java {@link Collection}.
  * </p>
@@ -44,7 +44,7 @@ public class NewSensorValues {
 
   /**
    * Initialise an empty object.
-   * 
+   *
    * @param dataset
    *          The {@link DataSet} that the {@link SensorValue}s belong to.
    * @throws CoordinateException
@@ -60,7 +60,7 @@ public class NewSensorValues {
 
     /*
      * Generate the Coordinate object for the {@link SensorValue}.
-     * 
+     *
      * If a Coordinate already exists, use that instance.
      */
     Coordinate coordinate = new TimeCoordinate(dataset.getId(), time);
@@ -84,7 +84,7 @@ public class NewSensorValues {
 
   /**
    * Get the number of {@link SensorValue}s in the collection.
-   * 
+   *
    * @return
    */
   public int size() {

@@ -37,7 +37,7 @@ public class TimeDataFile extends DataFile implements TimeRange {
 
   /**
    * Indicates whether or not we have already extracted the header date.
-   * 
+   *
    * <p>
    * This will be set if we have examined the data file and determined that the
    * header date is not required.

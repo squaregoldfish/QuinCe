@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Class to hold the contents of a {@link DataFile}.
- * 
+ *
  * <p>
  * Only one instance of this class can have its contents loaded into memory at
  * any given time. Calling {@link #get()} on an instance whose contents are not
@@ -27,7 +27,7 @@ public abstract class FileContents {
 
   /**
    * Get the file contents.
-   * 
+   *
    * <p>
    * If the contents aren't yet loaded, they will be.
    * </p>
@@ -66,7 +66,7 @@ public abstract class FileContents {
 
   /**
    * Load the contents of the file.
-   * 
+   *
    * @throws DataFileException
    *           If the file cannot be loaded.
    */
@@ -74,7 +74,7 @@ public abstract class FileContents {
 
   /**
    * Return the raw bytes of the file.
-   * 
+   *
    * @return The file bytes.
    * @throws IOException
    *           If the file cannot be loaded.

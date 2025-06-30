@@ -319,7 +319,7 @@ public class DataSetDataDB {
    * database ID, it will be updated. Otherwise it will be stored as a new
    * record, and its ID set to the generated key.
    * </p>
-   * 
+   *
    * <p>
    * The passed in {@link Connection} must have {@code autoCommit == false}. The
    * calling method is responsible for managing the transaction.
@@ -442,13 +442,13 @@ public class DataSetDataDB {
 
   /**
    * Store updated {@link SensorValue}s in the database.
-   * 
+   *
    * <p>
    * All the supplied {@link SensorValue}s must already be in the database (i.e.
    * have a database ID). If any of the values do not, an exception will be
    * thrown and none of the values will be stored.
    * </p>
-   * 
+   *
    * @param conn
    * @param sensorValues
    * @throws DatabaseException

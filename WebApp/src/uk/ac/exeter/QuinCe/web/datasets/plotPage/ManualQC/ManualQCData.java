@@ -119,7 +119,7 @@ public class ManualQCData extends PlotPageData {
   /**
    * Lookup table for getting {@link Coordinate} objects from their IDs.
    */
-  protected Map<Long, Coordinate> coordinates = null;
+  protected LinkedHashMap<Long, Coordinate> coordinates = null;
 
   /**
    * The dataset's sensor values.
@@ -211,7 +211,7 @@ public class ManualQCData extends PlotPageData {
       progress.setValue(100F);
 
       // Build the row IDs
-      coordinates = new TreeMap<Long, Coordinate>();
+      coordinates = new LinkedHashMap<Long, Coordinate>();
       sensorValues.getCoordinates().forEach(v -> coordinates.put(v.getId(), v));
       rowIDs = new ArrayList<Long>(coordinates.keySet());
     }
