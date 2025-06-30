@@ -421,10 +421,12 @@
               </p:dataTable>
             </p:tab>
           </p:tabView>
-          <h:panelGrid columns="1" cellpadding="5" styleClass="buttonPanel">
-            <p:commandButton value="Add File" ajax="false"
-              action="#{newInstrumentBean.addFile}" immediate="true" />
-          </h:panelGrid>
+          <ui:fragment rendered="#{newInstrumentBean.multipleFilesAllowed()}">
+            <h:panelGrid columns="1" cellpadding="5" styleClass="buttonPanel">
+              <p:commandButton value="Add File" ajax="false"
+                action="#{newInstrumentBean.addFile}" immediate="true" />
+            </h:panelGrid>
+          </ui:fragment>
         </p:fieldset>
         <div id="assignInstructions">
           Drag and drop

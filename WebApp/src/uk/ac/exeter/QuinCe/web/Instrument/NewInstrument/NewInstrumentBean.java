@@ -916,8 +916,8 @@ public class NewInstrumentBean extends FileUploadBean {
 
   @Override
   public void clearFile() {
-    currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles);
     super.clearFile();
+    currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles);
   }
 
   /**
@@ -1694,6 +1694,7 @@ public class NewInstrumentBean extends FileUploadBean {
       }
 
       if (instrumentFiles.size() == 0) {
+        currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles);
         result = NAV_UPLOAD_FILE;
       } else {
         result = NAV_ASSIGN_VARIABLES;
@@ -2873,5 +2874,16 @@ public class NewInstrumentBean extends FileUploadBean {
       throw new IllegalArgumentException("Invalid navigation " + nav);
     }
     }
+  }
+
+  /**
+   * Determine whether or not multiple file definitions can be used with the
+   * instrument.
+   *
+   * @return {@code true} if multiple file definitions are allowed;
+   *         {@code false} if not.
+   */
+  public boolean multipleFilesAllowed() {
+    return basis == Instrument.BASIS_TIME;
   }
 }
