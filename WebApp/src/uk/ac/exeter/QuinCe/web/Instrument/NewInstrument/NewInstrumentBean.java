@@ -703,7 +703,7 @@ public class NewInstrumentBean extends FileUploadBean {
 
       sensorAssignments = new SensorAssignments(getDataSource(),
         instrumentVariables);
-      assignmentsTree = new AssignmentsTree(this.instrumentVariables,
+      assignmentsTree = AssignmentsTree.create(basis, this.instrumentVariables,
         sensorAssignments, !fixedPosition);
       sensorGroups = new SensorGroups();
       this.instrumentVariables.forEach(v -> v.getAttributes().reset());

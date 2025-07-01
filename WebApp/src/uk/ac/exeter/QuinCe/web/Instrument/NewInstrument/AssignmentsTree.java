@@ -9,10 +9,12 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
+import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.DateTimeColumnAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.DateTimeSpecification;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.DateTimeSpecificationException;
@@ -31,8 +33,13 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 /**
  * Holds details of the assigned sensors in tree form for the
  * {@code assign_variables.xhtml} page.
+ *
+ * <p>
+ * Concrete implementations will configure the tree for different
+ * {@code Instrument} bases.
+ * </p>
  */
-public class AssignmentsTree {
+public abstract class AssignmentsTree {
 
   /**
    * Node type indicating that the date/time has not been fully assigned.
@@ -137,20 +144,9 @@ public class AssignmentsTree {
   private final SensorAssignments assignments;
 
   /**
-   * Indicates whether or not position information needs to be assigned for the
-   * {@link uk.ac.exeter.QuinCe.data.Instrument.Instrument}.
-   *
-   * <p>
-   * Note that this indicates whether positions are needed <i>at all</i>, and
-   * not whether required position details have been assigned.
-   * </p>
-   */
-  private final boolean needsPosition;
-
-  /**
    * The root node of the whole assignments tree.
    */
-  private DefaultTreeNode<AssignmentsTreeNodeData> root;
+  protected DefaultTreeNode<AssignmentsTreeNodeData> root;
 
   /**
    * The 'root' node of the Date/Time portion of the tree.
@@ -166,7 +162,7 @@ public class AssignmentsTree {
   /**
    * The 'root' node of the Position section of the tree.
    */
-  private DefaultTreeNode<AssignmentsTreeNodeData> positionNode;
+  protected DefaultTreeNode<AssignmentsTreeNodeData> positionNode;
 
   /**
    * The 'root' node for each of the {@link Variable}s measured by the
@@ -228,46 +224,59 @@ public class AssignmentsTree {
    *           If any referenced {@link SensorType} does not exist.
    */
   protected AssignmentsTree(List<Variable> variables,
-    SensorAssignments assignments, boolean needsPosition)
+    SensorAssignments assignments)
     throws SensorConfigurationException, SensorTypeNotFoundException {
 
     root = new DefaultTreeNode<AssignmentsTreeNodeData>(
       new StringNodeData("Root"), null);
     this.variables = variables;
     this.assignments = assignments;
-    this.needsPosition = needsPosition;
     sensorTypeNodes = new HashMap<SensorType, List<DefaultTreeNode<AssignmentsTreeNodeData>>>();
     files = new TreeSet<FileDefinitionBuilder>();
-
-    buildTree(variables);
+    buildTree();
   }
 
   /**
-   * Construct the base structure of the tree ready to be populated.
-   *
-   * @param variables
-   *          The {@link Variable}s measured by the
-   *          {@link uk.ac.exeter.QuinCe.data.Instrument.Instrument}.
-   * @throws SensorConfigurationException
-   *           If the system's sensor configuration is invalid.
-   * @throws SensorTypeNotFoundException
-   *           If any referenced {@link SensorType} does not exist.
+   * Build the nodes for the assignments tree.
    */
-  private void buildTree(List<Variable> variables)
-    throws SensorConfigurationException, SensorTypeNotFoundException {
+  protected abstract void buildTree()
+    throws SensorConfigurationException, SensorTypeNotFoundException;
+
+  /**
+   * Build the date/time node sub-tree.
+   *
+   * @param parent
+   *          The date/time node's parent node.
+   * @param expanded
+   *          Whether the node should be expanded initially.
+   */
+  protected void buildDateTimeNode(TreeNode<AssignmentsTreeNodeData> parent,
+    boolean expanded) {
 
     dateTimeNode = new DefaultTreeNode<AssignmentsTreeNodeData>(VAR_UNFINISHED,
-      new StringNodeData("Date/Time"), root);
-    dateTimeNode.setExpanded(true);
+      new StringNodeData("Date/Time"), parent);
+    dateTimeNode.setExpanded(expanded);
     dateTimeNodes = new TreeMap<String, DefaultTreeNode<AssignmentsTreeNodeData>>();
+  }
 
-    if (needsPosition) {
-      positionNode = new DefaultTreeNode<AssignmentsTreeNodeData>(
-        VAR_UNFINISHED, new StringNodeData("Position"), root);
-      positionNode.setExpanded(true);
-      updatePositionNodes(null);
-    }
+  /**
+   * Build the position node sub-tree.
+   *
+   * @param parent
+   *          The position node's parent node.
+   */
+  protected void buildPositionNode(TreeNode<AssignmentsTreeNodeData> parent) {
+    positionNode = new DefaultTreeNode<AssignmentsTreeNodeData>(VAR_UNFINISHED,
+      new StringNodeData("Position"), parent);
+    positionNode.setExpanded(true);
+    updatePositionNodes(null);
+  }
 
+  /**
+   * Build the nodes for the {@link Variable}s and diagnostics.
+   */
+  protected void buildFieldNodes()
+    throws SensorConfigurationException, SensorTypeNotFoundException {
     SensorsConfiguration sensorConfig = ResourceManager.getInstance()
       .getSensorsConfiguration();
 
@@ -776,5 +785,25 @@ public class AssignmentsTree {
    */
   protected Set<SensorType> getSensorTypes() {
     return sensorTypeNodes.keySet();
+  }
+
+  protected static AssignmentsTree create(int basis, List<Variable> variables,
+    SensorAssignments assignments, boolean needsPosition)
+    throws SensorConfigurationException, SensorTypeNotFoundException {
+
+    AssignmentsTree result = null;
+
+    switch (basis) {
+    case Instrument.BASIS_TIME: {
+      result = new TimeBasisAssignmentsTree(variables, assignments,
+        needsPosition);
+      break;
+    }
+    case Instrument.BASIS_ARGO: {
+      throw new NotImplementedException();
+    }
+    }
+
+    return result;
   }
 }
