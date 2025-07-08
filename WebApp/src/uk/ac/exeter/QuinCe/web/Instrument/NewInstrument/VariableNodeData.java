@@ -18,4 +18,9 @@ public class VariableNodeData extends AssignmentsTreeNodeData {
   public String getLabel() {
     return variable.getName();
   }
+
+  @Override
+  public String toString() {
+    return getLabel();
+  }
 }

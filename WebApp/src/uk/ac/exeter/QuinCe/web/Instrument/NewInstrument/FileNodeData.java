@@ -16,4 +16,9 @@ public class FileNodeData extends AssignmentsTreeNodeData {
   public String getLabel() {
     return file.getFileDescription();
   }
+
+  @Override
+  public String toString() {
+    return file.getFileDescription();
+  }
 }

@@ -19,4 +19,8 @@ public class SensorTypeNodeData extends AssignmentsTreeNodeData {
     return sensorType.getShortName();
   }
 
+  @Override
+  public String toString() {
+    return getLabel();
+  }
 }
