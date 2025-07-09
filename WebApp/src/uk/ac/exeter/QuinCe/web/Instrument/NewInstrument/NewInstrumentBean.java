@@ -2383,7 +2383,7 @@ public class NewInstrumentBean extends FileUploadBean {
 
   public TreeNode<AssignmentsTreeNodeData> getAssignmentsTree()
     throws Exception {
-    return assignmentsTree.getRootDynamic();
+    return assignmentsTree.getRoot();
   }
 
   public String getSensorTypesJson() throws SensorConfigurationException {

@@ -37,32 +37,24 @@ public class TimeBasisAssignmentsTree extends AssignmentsTree {
   }
 
   @Override
-  protected void buildTree()
-    throws SensorConfigurationException, SensorTypeNotFoundException {
-
-    buildDateTimeNode(root, true);
-    if (needsPosition) {
-      buildPositionNode(root);
-    }
-
-    buildFieldNodes();
-  }
-
-  @Override
-  public DefaultTreeNode<AssignmentsTreeNodeData> getRootDynamic()
-    throws DateTimeSpecificationException, SensorConfigurationException,
-    SensorTypeNotFoundException {
+  public DefaultTreeNode<AssignmentsTreeNodeData> getRoot()
+    throws AssignmentsTreeException {
 
     DefaultTreeNode<AssignmentsTreeNodeData> root = new DefaultTreeNode<AssignmentsTreeNodeData>(
       new StringNodeData("Root"), null);
 
-    buildDateTimeNode(root);
+    try {
 
-    if (needsPosition) {
-      buildPositionNodes(root);
+      buildDateTimeNode(root);
+
+      if (needsPosition) {
+        buildPositionNodes(root);
+      }
+
+      buildSensorTypeNodes(root);
+    } catch (Exception e) {
+      throw new AssignmentsTreeException(e);
     }
-
-    buildSensorTypeNodes(root);
 
     return root;
   }
