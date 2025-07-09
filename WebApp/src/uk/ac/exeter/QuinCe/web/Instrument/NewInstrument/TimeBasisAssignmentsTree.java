@@ -2,6 +2,10 @@ package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument;
 
 import java.util.List;
 
+import org.primefaces.model.DefaultTreeNode;
+
+import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
+import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.DateTimeSpecificationException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignments;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorConfigurationException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
@@ -23,11 +27,12 @@ public class TimeBasisAssignmentsTree extends AssignmentsTree {
    */
   private final boolean needsPosition;
 
-  protected TimeBasisAssignmentsTree(List<Variable> variables,
-    SensorAssignments assignments, boolean needsPosition)
+  protected TimeBasisAssignmentsTree(NewInstrumentFileSet files,
+    List<Variable> variables, SensorAssignments assignments,
+    boolean needsPosition)
     throws SensorConfigurationException, SensorTypeNotFoundException {
 
-    super(variables, assignments);
+    super(files, variables, assignments);
     this.needsPosition = needsPosition;
   }
 
@@ -41,5 +46,52 @@ public class TimeBasisAssignmentsTree extends AssignmentsTree {
     }
 
     buildFieldNodes();
+  }
+
+  @Override
+  public DefaultTreeNode<AssignmentsTreeNodeData> getRootDynamic()
+    throws DateTimeSpecificationException, SensorConfigurationException,
+    SensorTypeNotFoundException {
+
+    DefaultTreeNode<AssignmentsTreeNodeData> root = new DefaultTreeNode<AssignmentsTreeNodeData>(
+      new StringNodeData("Root"), null);
+
+    buildDateTimeNode(root);
+
+    if (needsPosition) {
+      buildPositionNodes(root);
+    }
+
+    buildSensorTypeNodes(root);
+
+    return root;
+  }
+
+  private void buildDateTimeNode(
+    DefaultTreeNode<AssignmentsTreeNodeData> parent)
+    throws DateTimeSpecificationException {
+
+    // See if any date/time specs still need assignment
+    String nodeType = files.stream().anyMatch(
+      f -> !f.getDateTimeSpecification().assignmentComplete()) ? VAR_UNFINISHED
+        : VAR_FINISHED;
+
+    DefaultTreeNode<AssignmentsTreeNodeData> main = new DefaultTreeNode<AssignmentsTreeNodeData>(
+      nodeType, new StringNodeData("Date/Time"), parent);
+
+    if (files.size() == 1) {
+      buildDateTimeNodes((FileDefinitionBuilder) files.get(0), main);
+    } else {
+      for (FileDefinition file : files) {
+        String fileState = file.getDateTimeSpecification().assignmentComplete()
+          ? DATETIME_FINISHED
+          : DATETIME_UNFINISHED;
+
+        DefaultTreeNode<AssignmentsTreeNodeData> fileNode = new DefaultTreeNode<AssignmentsTreeNodeData>(
+          fileState, new FileNodeData(file), main);
+
+        buildDateTimeNodes((FileDefinitionBuilder) file, fileNode);
+      }
+    }
   }
 }

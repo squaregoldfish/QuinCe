@@ -1,10 +1,12 @@
 package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument;
 
+import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
+
 public class FileNodeData extends AssignmentsTreeNodeData {
 
-  private final FileDefinitionBuilder file;
+  private final FileDefinition file;
 
-  protected FileNodeData(FileDefinitionBuilder file) {
+  protected FileNodeData(FileDefinition file) {
     this.file = file;
   }
 

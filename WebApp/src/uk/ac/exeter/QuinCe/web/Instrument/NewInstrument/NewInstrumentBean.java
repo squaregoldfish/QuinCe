@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import javax.faces.bean.ManagedBean;
@@ -703,8 +704,8 @@ public class NewInstrumentBean extends FileUploadBean {
 
       sensorAssignments = new SensorAssignments(getDataSource(),
         instrumentVariables);
-      assignmentsTree = AssignmentsTree.create(basis, this.instrumentVariables,
-        sensorAssignments, !fixedPosition);
+      assignmentsTree = AssignmentsTree.create(basis, instrumentFiles,
+        this.instrumentVariables, sensorAssignments, !fixedPosition);
       sensorGroups = new SensorGroups();
       this.instrumentVariables.forEach(v -> v.getAttributes().reset());
     } catch (Exception e) {
@@ -772,7 +773,6 @@ public class NewInstrumentBean extends FileUploadBean {
     SensorAssignmentException, SensorTypeNotFoundException,
     SensorConfigurationException, SensorGroupsException {
     instrumentFiles.add(currentInstrumentFile);
-    assignmentsTree.addFile(currentInstrumentFile);
     updatedFile = currentInstrumentFile.getFileDescription();
 
     autoAssignColumns(currentInstrumentFile);
@@ -794,9 +794,9 @@ public class NewInstrumentBean extends FileUploadBean {
    * {@link User} that has the same platform name and code, check its
    * {@link SensorAssignments} to see if the column name is used. If so, create
    * the same {@link SensorAssignment}.</li>
-   * <li>Check {@link SensorType#getSourceColumns()} for each {@link SensorType}
-   * in the {@link #assignmentsTree} and see if the heading matches any. If so,
-   * create a {@link SensorAssignment}.</li>
+   * <li>Check {@link SensorType#getSourceColumns()} against each column in the
+   * data files and see if the heading matches any. If so, create a
+   * {@link SensorAssignment}.</li>
    * </ol>
    * <p>
    * If the supplied file does not have column headings, no action is taken.
@@ -842,7 +842,7 @@ public class NewInstrumentBean extends FileUploadBean {
       }
 
       if (!assignmentMade) {
-        for (SensorType sensorType : assignmentsTree.getSensorTypes()) {
+        for (SensorType sensorType : getAllSensorTypes()) {
           if (sensorType.getSourceColumns()
             .contains(column.getName().toLowerCase())) {
             autoAssignColumn(file, column, sensorType);
@@ -852,6 +852,29 @@ public class NewInstrumentBean extends FileUploadBean {
         }
       }
     }
+  }
+
+  /**
+   * Get all the {@link SensorType}s that can be assigned for the instrument.
+   * 
+   * @return The {@link SensorType}s.
+   * @throws SensorConfigurationException
+   */
+  private TreeSet<SensorType> getAllSensorTypes()
+    throws SensorConfigurationException {
+    TreeSet<SensorType> result = new TreeSet<SensorType>();
+
+    SensorsConfiguration sensorConfig = ResourceManager.getInstance()
+      .getSensorsConfiguration();
+
+    for (Variable variable : instrumentVariables) {
+      result.addAll(
+        sensorConfig.getSensorTypes(variable.getId(), true, true, true));
+    }
+
+    result.addAll(sensorConfig.getDiagnosticSensorTypes());
+
+    return result;
   }
 
   /**
@@ -1089,7 +1112,6 @@ public class NewInstrumentBean extends FileUploadBean {
 
     sensorAssignments.addAssignment(assignment);
     sensorGroups.addAssignment(assignment);
-    assignmentsTree.addAssignment(assignment);
 
     // Reset the assign dialog values, because it's so damn hard to do in
     // Javascript
@@ -1181,7 +1203,6 @@ public class NewInstrumentBean extends FileUploadBean {
       file.getLongitudeSpecification().setHemisphereColumn(-1);
     }
 
-    assignmentsTree.updatePositionNodes("Longitude");
     resetPositionAssignmentValues();
   }
 
@@ -1257,7 +1278,6 @@ public class NewInstrumentBean extends FileUploadBean {
       file.getLatitudeSpecification().setHemisphereColumn(-1);
     }
 
-    assignmentsTree.updatePositionNodes("Latitude");
     resetPositionAssignmentValues();
   }
 
@@ -1326,19 +1346,15 @@ public class NewInstrumentBean extends FileUploadBean {
       .get(hemisphereFile);
 
     PositionSpecification posSpec;
-    String expandType;
 
     if (hemisphereCoordinate.equals("Longitude")) {
       posSpec = file.getLongitudeSpecification();
-      expandType = "Longitude";
     } else {
       posSpec = file.getLatitudeSpecification();
-      expandType = "Latitude";
     }
 
     posSpec.setHemisphereColumn(hemisphereColumn);
 
-    assignmentsTree.updatePositionNodes(expandType);
     resetPositionAssignmentValues();
   }
 
@@ -1523,9 +1539,6 @@ public class NewInstrumentBean extends FileUploadBean {
     }
     }
 
-    assignmentsTree
-      .setDateTimeAssignment(instrumentFiles.getByDescription(dateTimeFile));
-
     resetDateTimeAssignmentValues();
   }
 
@@ -1689,7 +1702,6 @@ public class NewInstrumentBean extends FileUploadBean {
         sensorGroups
           .remove(sensorAssignments.getFileAssignments(removeFileName));
         sensorAssignments.removeFileAssignments(removeFileName);
-        assignmentsTree.removeFile(removeFileName);
         sensorAssignmentsGuessed.remove(removeFileName);
       }
 
@@ -2256,7 +2268,6 @@ public class NewInstrumentBean extends FileUploadBean {
       file.getFileColumns().get(runTypeColumn).getName(), true, false, null);
 
     sensorAssignments.addAssignment(sensorAssignment);
-    assignmentsTree.addAssignment(sensorAssignment);
   }
 
   public int getDepth() {
@@ -2363,7 +2374,6 @@ public class NewInstrumentBean extends FileUploadBean {
     if (null != fileDefinition) {
       fileDefinition.setFileDescription(renameNewFile);
       sensorAssignments.renameFile(renameOldFile, renameNewFile);
-      assignmentsTree.renameFile(renameOldFile, fileDefinition);
     }
 
     updatedFile = fileDefinition.getFileDescription();
@@ -2373,7 +2383,7 @@ public class NewInstrumentBean extends FileUploadBean {
 
   public TreeNode<AssignmentsTreeNodeData> getAssignmentsTree()
     throws Exception {
-    return assignmentsTree.getRoot();
+    return assignmentsTree.getRootDynamic();
   }
 
   public String getSensorTypesJson() throws SensorConfigurationException {
@@ -2451,7 +2461,6 @@ public class NewInstrumentBean extends FileUploadBean {
       SensorAssignment removed = sensorAssignments.removeAssignment(sensorType,
         removeAssignmentDataFile, removeAssignmentColumn);
       sensorGroups.remove(removed);
-      assignmentsTree.removeAssignment(removed);
 
       if (sensorType.equals(SensorType.RUN_TYPE_SENSOR_TYPE)) {
         instrumentFiles.get(removeAssignmentDataFile)
@@ -2467,9 +2476,6 @@ public class NewInstrumentBean extends FileUploadBean {
       .getDateTimeSpecification();
 
     dateTimeSpec.removeAssignment(dateTimeColumn);
-
-    assignmentsTree
-      .setDateTimeAssignment(instrumentFiles.getByDescription(dateTimeFile));
 
     resetDateTimeAssignmentValues();
   }
@@ -2488,39 +2494,25 @@ public class NewInstrumentBean extends FileUploadBean {
    */
   public void removePositionAssignment() throws InvalidPositionFormatException {
 
-    String expandNode = null;
-
     FileDefinitionBuilder file = (FileDefinitionBuilder) instrumentFiles
       .get(removeAssignmentDataFile);
 
-    if (removeColumnFromPositionSpec(file.getLongitudeSpecification(),
-      removeAssignmentColumn)) {
+    removeColumnFromPositionSpec(file.getLongitudeSpecification(),
+      removeAssignmentColumn);
+    removeColumnFromPositionSpec(file.getLatitudeSpecification(),
+      removeAssignmentColumn);
 
-      expandNode = "Longitude";
-    } else if (removeColumnFromPositionSpec(file.getLatitudeSpecification(),
-      removeAssignmentColumn)) {
-
-      expandNode = "Latitude";
-    }
-
-    assignmentsTree.updatePositionNodes(expandNode);
     resetSensorAssignmentValues();
   }
 
-  private boolean removeColumnFromPositionSpec(PositionSpecification spec,
+  private void removeColumnFromPositionSpec(PositionSpecification spec,
     int column) throws InvalidPositionFormatException {
 
-    boolean removed = false;
-
     if (spec.getValueColumn() == column) {
-      removed = true;
       spec.clearValueColumn();
     } else if (spec.getHemisphereColumn() == column) {
-      removed = true;
       spec.clearHemisphereColumn();
     }
-
-    return removed;
   }
 
   public FileDefinitionBuilder getRunTypeFileDefinition() {
