@@ -1,4 +1,4 @@
-package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument;
+package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree;
 
 /**
  * Node data for a simple string
@@ -19,5 +19,10 @@ public class StringNodeData extends AssignmentsTreeNodeData {
   @Override
   public String toString() {
     return label;
+  }
+
+  @Override
+  public String getId() {
+    return "STRING_" + label;
   }
 }

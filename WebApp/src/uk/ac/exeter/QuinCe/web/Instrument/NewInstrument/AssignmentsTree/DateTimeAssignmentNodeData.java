@@ -1,21 +1,16 @@
-package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument;
+package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree;
 
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.DateTimeColumnAssignment;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.FileDefinitionBuilder;
 
-public class DateTimeAssignmentNodeData extends AssignmentsTreeNodeData {
-
-  private FileDefinitionBuilder file;
+public class DateTimeAssignmentNodeData extends FileNodeData {
 
   private final DateTimeColumnAssignment assignment;
 
   protected DateTimeAssignmentNodeData(FileDefinitionBuilder file,
     DateTimeColumnAssignment assignment) {
-    this.file = file;
+    super(file);
     this.assignment = assignment;
-  }
-
-  public String getFile() {
-    return file.getFileDescription();
   }
 
   public int getColumn() {
@@ -24,7 +19,12 @@ public class DateTimeAssignmentNodeData extends AssignmentsTreeNodeData {
 
   @Override
   public String getLabel() {
-    return file.getFileDescription() + ": "
+    return getFileDescription() + ": "
       + file.getColumnName(assignment.getColumn());
+  }
+
+  @Override
+  public String getId() {
+    return "DATETIME_" + file.getFileDescription() + "_" + getLabel();
   }
 }

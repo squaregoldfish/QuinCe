@@ -1,4 +1,4 @@
-package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument;
+package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree;
 
 import java.util.List;
 
@@ -10,6 +10,8 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignments;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorConfigurationException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.FileDefinitionBuilder;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.NewInstrumentFileSet;
 
 /**
  * {@link SensorAssignments} tree for instruments with a Time basis.
@@ -68,19 +70,20 @@ public class TimeBasisAssignmentsTree extends AssignmentsTree {
       f -> !f.getDateTimeSpecification().assignmentComplete()) ? VAR_UNFINISHED
         : VAR_FINISHED;
 
-    DefaultTreeNode<AssignmentsTreeNodeData> main = new DefaultTreeNode<AssignmentsTreeNodeData>(
-      nodeType, new StringNodeData("Date/Time"), parent);
+    DefaultTreeNode<AssignmentsTreeNodeData> main = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+      this, nodeType, new StringNodeData("Date/Time"), parent);
 
     if (files.size() == 1) {
       buildDateTimeNodes((FileDefinitionBuilder) files.get(0), main);
     } else {
-      for (FileDefinition file : files) {
+      for (FileDefinition f : files) {
+        FileDefinitionBuilder file = (FileDefinitionBuilder) f;
         String fileState = file.getDateTimeSpecification().assignmentComplete()
           ? DATETIME_FINISHED
           : DATETIME_UNFINISHED;
 
-        DefaultTreeNode<AssignmentsTreeNodeData> fileNode = new DefaultTreeNode<AssignmentsTreeNodeData>(
-          fileState, new FileNodeData(file), main);
+        DefaultTreeNode<AssignmentsTreeNodeData> fileNode = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+          this, fileState, new DateTimeFileNodeData(file), main);
 
         buildDateTimeNodes((FileDefinitionBuilder) file, fileNode);
       }

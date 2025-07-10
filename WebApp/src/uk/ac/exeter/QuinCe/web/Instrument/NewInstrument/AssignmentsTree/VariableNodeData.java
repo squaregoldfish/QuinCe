@@ -1,4 +1,4 @@
-package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument;
+package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree;
 
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 
@@ -22,5 +22,10 @@ public class VariableNodeData extends AssignmentsTreeNodeData {
   @Override
   public String toString() {
     return getLabel();
+  }
+
+  @Override
+  public String getId() {
+    return "VARIABLE" + variable.getName();
   }
 }

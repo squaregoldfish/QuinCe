@@ -1,4 +1,4 @@
-package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument;
+package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree;
 
 /**
  * Exception class for issues encountered when building an

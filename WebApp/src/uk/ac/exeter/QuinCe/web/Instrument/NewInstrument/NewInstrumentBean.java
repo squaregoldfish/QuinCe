@@ -22,6 +22,8 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 
 import org.apache.commons.lang3.StringUtils;
+import org.primefaces.event.NodeCollapseEvent;
+import org.primefaces.event.NodeExpandEvent;
 import org.primefaces.model.TreeNode;
 import org.primefaces.model.menu.DefaultMenuItem;
 import org.primefaces.model.menu.DefaultMenuModel;
@@ -64,6 +66,8 @@ import uk.ac.exeter.QuinCe.utils.HighlightedStringException;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.web.FileUploadBean;
 import uk.ac.exeter.QuinCe.web.Instrument.InstrumentListBean;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree.AssignmentsTree;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree.AssignmentsTreeNodeData;
 import uk.ac.exeter.QuinCe.web.datasets.DataSetsBean;
 import uk.ac.exeter.QuinCe.web.files.DataFilesBean;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -2877,5 +2881,17 @@ public class NewInstrumentBean extends FileUploadBean {
    */
   public boolean multipleFilesAllowed() {
     return basis == Instrument.BASIS_TIME;
+  }
+
+  @Override
+  public void treeNodeExpand(NodeExpandEvent event) {
+    super.treeNodeExpand(event);
+    assignmentsTree.nodeExpanded(event);
+  }
+
+  @Override
+  public void treeNodeCollapse(NodeCollapseEvent event) {
+    super.treeNodeCollapse(event);
+    assignmentsTree.nodeCollapsed(event);
   }
 }

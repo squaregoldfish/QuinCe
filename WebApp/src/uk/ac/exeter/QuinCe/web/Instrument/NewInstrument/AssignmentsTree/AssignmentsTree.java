@@ -1,11 +1,12 @@
-package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument;
+package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.primefaces.model.DefaultTreeNode;
+import org.primefaces.event.NodeCollapseEvent;
+import org.primefaces.event.NodeExpandEvent;
 import org.primefaces.model.TreeNode;
 
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
@@ -23,6 +24,8 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundEx
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariableAttributes;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.FileDefinitionBuilder;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.NewInstrumentFileSet;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
@@ -151,6 +154,11 @@ public abstract class AssignmentsTree {
   protected final List<Variable> variables;
 
   /**
+   * Records the expanded/collapsed state of tree nodes.
+   */
+  private Map<String, Boolean> expandStates = new HashMap<String, Boolean>();
+
+  /**
    * Initialise and construct the assignments tree.
    *
    * @param variables
@@ -176,8 +184,8 @@ public abstract class AssignmentsTree {
   }
 
   protected void buildPositionNodes(TreeNode<AssignmentsTreeNodeData> parent) {
-    DefaultTreeNode<AssignmentsTreeNodeData> positionNode = new DefaultTreeNode<AssignmentsTreeNodeData>(
-      null, new StringNodeData("Position"), parent);
+    AssignmentsTreeNode<AssignmentsTreeNodeData> positionNode = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+      this, null, new StringNodeData("Position"), parent);
 
     makePositionNodes("Longitude", positionNode);
     makePositionNodes("Latitude", positionNode);
@@ -196,8 +204,7 @@ public abstract class AssignmentsTree {
     positionNode.setType(allAssigned ? VAR_FINISHED : VAR_UNFINISHED);
   }
 
-  protected void buildSensorTypeNodes(
-    DefaultTreeNode<AssignmentsTreeNodeData> parent)
+  protected void buildSensorTypeNodes(TreeNode<AssignmentsTreeNodeData> parent)
     throws SensorConfigurationException, SensorTypeNotFoundException,
     SensorAssignmentException {
     SensorsConfiguration sensorConfig = ResourceManager.getInstance()
@@ -207,8 +214,8 @@ public abstract class AssignmentsTree {
     variables.forEach(v -> varAttributes.put(v.getId(), v.getAttributes()));
 
     for (Variable var : variables) {
-      DefaultTreeNode<AssignmentsTreeNodeData> varNode = new DefaultTreeNode<AssignmentsTreeNodeData>(
-        new VariableNodeData(var), parent);
+      AssignmentsTreeNode<AssignmentsTreeNodeData> varNode = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+        this, new VariableNodeData(var), parent);
 
       varNode.setType(
         assignments.isVariableComplete(var) ? VAR_FINISHED : VAR_UNFINISHED);
@@ -216,8 +223,8 @@ public abstract class AssignmentsTree {
       for (SensorType sensorType : sensorConfig.getSensorTypes(var.getId(),
         true, true, true)) {
 
-        DefaultTreeNode<AssignmentsTreeNodeData> node = new DefaultTreeNode<AssignmentsTreeNodeData>(
-          new SensorTypeNodeData(sensorType), varNode);
+        AssignmentsTreeNode<AssignmentsTreeNodeData> node = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+          this, new SensorTypeNodeData(sensorType), varNode);
 
         boolean assigned = assignments.isAssigned(sensorType);
 
@@ -227,37 +234,33 @@ public abstract class AssignmentsTree {
         node.setType(
           assignmentRequired ? SENSOR_TYPE_ASSIGNED : SENSOR_TYPE_UNASSIGNED);
 
-        node.setExpanded(true);
-
         if (assignments.isAssigned(sensorType)) {
           for (SensorAssignment assignment : assignments.get(sensorType)) {
-            new DefaultTreeNode<AssignmentsTreeNodeData>(ASSIGNMENT,
+            new AssignmentsTreeNode<AssignmentsTreeNodeData>(this, ASSIGNMENT,
               new SensorAssignmentNodeData(assignment), node);
           }
         }
       }
     }
 
-    DefaultTreeNode<AssignmentsTreeNodeData> diagnosticsNode = new DefaultTreeNode<AssignmentsTreeNodeData>(
-      VAR_FINISHED, new StringNodeData("Diagnostics"), parent);
+    AssignmentsTreeNode<AssignmentsTreeNodeData> diagnosticsNode = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+      this, VAR_FINISHED, new StringNodeData("Diagnostics"), parent);
 
     for (SensorType diagnosticType : sensorConfig.getDiagnosticSensorTypes()) {
-      DefaultTreeNode<AssignmentsTreeNodeData> node = new DefaultTreeNode<AssignmentsTreeNodeData>(
-        SENSOR_TYPE_ASSIGNED, new SensorTypeNodeData(diagnosticType),
+      AssignmentsTreeNode<AssignmentsTreeNodeData> node = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+        this, SENSOR_TYPE_ASSIGNED, new SensorTypeNodeData(diagnosticType),
         diagnosticsNode);
 
       if (assignments.isAssigned(diagnosticType)) {
-        node.setExpanded(true);
-
         for (SensorAssignment assignment : assignments.get(diagnosticType)) {
-          new DefaultTreeNode<AssignmentsTreeNodeData>(ASSIGNMENT,
+          new AssignmentsTreeNode<AssignmentsTreeNodeData>(this, ASSIGNMENT,
             new SensorAssignmentNodeData(assignment), node);
         }
       }
     }
   }
 
-  protected abstract DefaultTreeNode<AssignmentsTreeNodeData> getRoot()
+  public abstract TreeNode<AssignmentsTreeNodeData> getRoot()
     throws AssignmentsTreeException;
 
   /**
@@ -272,36 +275,37 @@ public abstract class AssignmentsTree {
    *           If the specification is invalid.
    */
   protected void buildDateTimeNodes(FileDefinitionBuilder file,
-    DefaultTreeNode<AssignmentsTreeNodeData> parent)
+    TreeNode<AssignmentsTreeNodeData> parent)
     throws DateTimeSpecificationException {
 
     for (Map.Entry<String, Boolean> entry : file.getDateTimeSpecification()
       .getAssignedAndRequiredEntries().entrySet()) {
 
       if (entry.getValue()) {
-        new DefaultTreeNode<AssignmentsTreeNodeData>(DATETIME_UNASSIGNED,
-          new StringNodeData(entry.getKey()), parent);
+        new AssignmentsTreeNode<AssignmentsTreeNodeData>(this,
+          DATETIME_UNASSIGNED, new DateTimeNodeData(file, entry.getKey()),
+          parent);
       } else {
-        DefaultTreeNode<AssignmentsTreeNodeData> child = new DefaultTreeNode<AssignmentsTreeNodeData>(
-          DATETIME_ASSIGNED, new StringNodeData(entry.getKey()), parent);
-        child.setExpanded(true);
+        AssignmentsTreeNode<AssignmentsTreeNodeData> child = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+          this, DATETIME_ASSIGNED, new DateTimeNodeData(file, entry.getKey()),
+          parent);
 
         DateTimeColumnAssignment assignment = file.getDateTimeSpecification()
           .getAssignment(
             DateTimeSpecification.getAssignmentIndex(entry.getKey()));
 
-        new DefaultTreeNode<AssignmentsTreeNodeData>(DATETIME_ASSIGNMENT,
-          new DateTimeAssignmentNodeData(file, assignment), child);
+        new AssignmentsTreeNode<AssignmentsTreeNodeData>(this,
+          DATETIME_ASSIGNMENT, new DateTimeAssignmentNodeData(file, assignment),
+          child);
       }
     }
-
   }
 
-  private DefaultTreeNode<AssignmentsTreeNodeData> makePositionNodes(
+  private AssignmentsTreeNode<AssignmentsTreeNodeData> makePositionNodes(
     String positionType, TreeNode<AssignmentsTreeNodeData> parent) {
 
-    DefaultTreeNode<AssignmentsTreeNodeData> mainNode = new DefaultTreeNode<AssignmentsTreeNodeData>(
-      null, new StringNodeData(positionType), parent);
+    AssignmentsTreeNode<AssignmentsTreeNodeData> mainNode = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+      this, null, new StringNodeData(positionType), parent);
 
     String hemisphereNodeName = positionType + " Hemisphere";
     String unassignedType;
@@ -326,24 +330,26 @@ public abstract class AssignmentsTree {
       }
 
       if (posSpec.getValueColumn() > -1) {
-        new DefaultTreeNode<AssignmentsTreeNodeData>(assignmentNodeType,
+        new AssignmentsTreeNode<AssignmentsTreeNodeData>(this,
+          assignmentNodeType,
           new PositionSpecNodeData(file, posSpec, PositionSpecNodeData.VALUE),
           mainNode);
         mainNode.setType(assignedType);
 
         if (posSpec.hemisphereRequired()
           && posSpec.getHemisphereColumn() == -1) {
-          new DefaultTreeNode<AssignmentsTreeNodeData>(HEMISPHERE_UNASSIGNED,
-            new StringNodeData(hemisphereNodeName), mainNode);
+          new AssignmentsTreeNode<AssignmentsTreeNodeData>(this,
+            HEMISPHERE_UNASSIGNED, new StringNodeData(hemisphereNodeName),
+            mainNode);
 
           mainNode.setType(unassignedType);
         } else if (posSpec.getHemisphereColumn() > -1) {
-          DefaultTreeNode<AssignmentsTreeNodeData> hemisphereNode = new DefaultTreeNode<AssignmentsTreeNodeData>(
-            HEMISPHERE_ASSIGNED, new StringNodeData(hemisphereNodeName),
+          AssignmentsTreeNode<AssignmentsTreeNodeData> hemisphereNode = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+            this, HEMISPHERE_ASSIGNED, new StringNodeData(hemisphereNodeName),
             mainNode);
 
-          new DefaultTreeNode<AssignmentsTreeNodeData>(HEMISPHERE_ASSIGNMENT,
-            new PositionSpecNodeData(file, posSpec,
+          new AssignmentsTreeNode<AssignmentsTreeNodeData>(this,
+            HEMISPHERE_ASSIGNMENT, new PositionSpecNodeData(file, posSpec,
               PositionSpecNodeData.HEMISPHERE),
             hemisphereNode);
         }
@@ -355,7 +361,7 @@ public abstract class AssignmentsTree {
     return mainNode;
   }
 
-  protected static AssignmentsTree create(int basis, NewInstrumentFileSet files,
+  public static AssignmentsTree create(int basis, NewInstrumentFileSet files,
     List<Variable> variables, SensorAssignments assignments,
     boolean needsPosition)
     throws SensorConfigurationException, SensorTypeNotFoundException {
@@ -374,5 +380,19 @@ public abstract class AssignmentsTree {
     }
 
     return result;
+  }
+
+  public void nodeExpanded(NodeExpandEvent event) {
+    expandStates.put(
+      ((AssignmentsTreeNodeData) event.getTreeNode().getData()).getId(), true);
+  }
+
+  public void nodeCollapsed(NodeCollapseEvent event) {
+    expandStates.put(
+      ((AssignmentsTreeNodeData) event.getTreeNode().getData()).getId(), false);
+  }
+
+  public boolean getExpandState(AssignmentsTreeNodeData nodeData) {
+    return expandStates.getOrDefault(nodeData.getId(), true);
   }
 }

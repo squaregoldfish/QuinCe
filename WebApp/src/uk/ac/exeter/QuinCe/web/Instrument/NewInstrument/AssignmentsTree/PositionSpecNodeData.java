@@ -1,6 +1,7 @@
-package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument;
+package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree;
 
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.PositionSpecification;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.FileDefinitionBuilder;
 
 public class PositionSpecNodeData extends AssignmentsTreeNodeData {
 
@@ -62,5 +63,10 @@ public class PositionSpecNodeData extends AssignmentsTreeNodeData {
     }
 
     return result;
+  }
+
+  @Override
+  public String getId() {
+    return "POSSPEC_" + getFile() + "_" + getLabel();
   }
 }

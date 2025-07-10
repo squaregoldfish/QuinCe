@@ -1,4 +1,4 @@
-package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument;
+package uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree;
 
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 
@@ -22,5 +22,10 @@ public class SensorTypeNodeData extends AssignmentsTreeNodeData {
   @Override
   public String toString() {
     return getLabel();
+  }
+
+  @Override
+  public String getId() {
+    return "SENSORTYPE_" + sensorType.getShortName();
   }
 }
