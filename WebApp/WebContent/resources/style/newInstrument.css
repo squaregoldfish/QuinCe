@@ -218,6 +218,8 @@ table.ui-selectmanycheckbox > tbody > tr > td > label {
 
 .dateTimeAssignment {
   color: blue;
+  font-weight: normal;
+  font-style: normal;
 }
 
 .positionAssignment {
