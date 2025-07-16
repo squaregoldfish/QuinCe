@@ -23,6 +23,8 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.PositionSpecification;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.NewInstrumentBean;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.NewInstrumentFileSet;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
@@ -1275,5 +1277,31 @@ public class SensorAssignments
 
   public int getFixedLatitudeFormat() {
     return PositionSpecification.NO_FORMAT;
+  }
+
+  /**
+   * Custom assignment of file columns to sensor types. The default
+   * implementation does nothing.
+   *
+   * <p>
+   * The {@link NewInstrumentBean} will attempt to automatically assign columns
+   * to sensor types. Some instrument types can automatically specify their own
+   * assignments over and above what can be done generically. This can include:
+   * </p>
+   * <ul>
+   * <li>Date/Time and Position assignments, which also need a format assigned.
+   * QuinCe can't guess this, but some applications (e.g. Argo) will have fixed
+   * formats.</li>
+   * <li>QuinCe will refuse to guess some columns (e.g. TEMP) because they are
+   * too generic and may refer to different things in different circumstances.
+   * If we absolutely know what they refer to, we can add them here.</li>
+   * </ul>
+   *
+   * @param files
+   *          The instrument's files.
+   */
+  public void customAssignColumns(NewInstrumentFileSet files)
+    throws SensorAssignmentException {
+    // NOOP
   }
 }

@@ -15,35 +15,38 @@ ALTER TABLE coordinates ADD source_file VARCHAR(25);
 INSERT INTO sensor_types (
     name, vargroup, display_order, column_code, source_columns
   ) VALUES (
-    'Cycle Number', 'Coordinate', 50, 'CYCLE_NUMBER', 'CYCLE_NUMBER'
+    'Cycle Number', 'Coordinate', 50, 'CYCLE_NUMBER', 'cycle_number'
   );
 
 INSERT INTO sensor_types (
     name, vargroup, display_order, column_code, source_columns
   ) VALUES (
-    'Profile', 'Coordinate', 51, 'NPROF', 'NPROF'
+    'Profile', 'Coordinate', 51, 'NPROF', 'nprof'
   );
 
 INSERT INTO sensor_types (
     name, vargroup, display_order, column_code, source_columns
   ) VALUES (
-    'Direction', 'Coordinate', 52, 'DIRECTION', 'DIRECTION'
+    'Direction', 'Coordinate', 52, 'DIRECTION', 'direction'
   );
 
 INSERT INTO sensor_types (
     name, vargroup, display_order, column_code, source_columns
   ) VALUES (
-    'Level', 'Coordinate', 53, 'NLEVEL', 'NLEVEL'
+    'Level', 'Coordinate', 53, 'NLEVEL', 'nlevel'
   );
 
 INSERT INTO sensor_types (
     name, vargroup, display_order, column_code, source_columns
   ) VALUES (
-    'Pressure (Depth)', 'Coordinate', 54, 'PRES', 'PRES'
+    'Pressure (Depth)', 'Coordinate', 54, 'PRES', 'pres'
   );
 
 INSERT INTO sensor_types (
     name, vargroup, display_order, column_code, source_columns
   ) VALUES (
-    'Source File', 'Coordinate', 55, 'SOURCE_FILE', 'SOURCE_FILE'
+    'Source File', 'Coordinate', 55, 'SOURCE_FILE', 'source_file'
   );
+
+-- Update salinity source columns
+UPDATE sensor_types SET source_columns = 'salinity;ssps;tsg sal;sal;sss;psal' WHERE id = 2;

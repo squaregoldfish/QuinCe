@@ -642,4 +642,17 @@ public class FileDefinitionBuilder extends FileDefinition {
 
     return result;
   }
+
+  public int getColumnIndex(String columnName) {
+    int result = -1;
+
+    Optional<FileColumn> column = fileColumns.stream()
+      .filter(c -> c.getName().equals(columnName)).findAny();
+
+    if (column.isPresent()) {
+      result = column.get().getIndex();
+    }
+
+    return result;
+  }
 }

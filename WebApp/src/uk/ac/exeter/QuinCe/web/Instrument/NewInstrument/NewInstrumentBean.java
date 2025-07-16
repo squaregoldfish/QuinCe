@@ -856,6 +856,9 @@ public class NewInstrumentBean extends FileUploadBean {
         }
       }
     }
+
+    // Make any custom assignments
+    sensorAssignments.customAssignColumns(instrumentFiles);
   }
 
   /**
@@ -866,19 +869,8 @@ public class NewInstrumentBean extends FileUploadBean {
    */
   private TreeSet<SensorType> getAllSensorTypes()
     throws SensorConfigurationException {
-    TreeSet<SensorType> result = new TreeSet<SensorType>();
 
-    SensorsConfiguration sensorConfig = ResourceManager.getInstance()
-      .getSensorsConfiguration();
-
-    for (Variable variable : instrumentVariables) {
-      result.addAll(
-        sensorConfig.getSensorTypes(variable.getId(), true, true, true));
-    }
-
-    result.addAll(sensorConfig.getDiagnosticSensorTypes());
-
-    return result;
+    return new TreeSet<SensorType>(sensorAssignments.keySet());
   }
 
   /**

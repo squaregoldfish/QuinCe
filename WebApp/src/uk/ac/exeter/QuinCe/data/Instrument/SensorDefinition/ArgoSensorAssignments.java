@@ -10,6 +10,8 @@ import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.LatitudeSpecification;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.LongitudeSpecification;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.PositionSpecification;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.FileDefinitionBuilder;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.NewInstrumentFileSet;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
@@ -57,5 +59,37 @@ public class ArgoSensorAssignments extends SensorAssignments {
   @Override
   public int getFixedLatitudeFormat() {
     return LatitudeSpecification.FORMAT_MINUS90_90;
+  }
+
+  @Override
+  public void customAssignColumns(NewInstrumentFileSet files)
+    throws SensorAssignmentException {
+
+    try {
+      FileDefinitionBuilder file = files.get(0);
+
+      // Water Temp
+      int columnIndex = file.getColumnIndex("TEMP");
+      SensorType waterTemp = ResourceManager.getInstance()
+        .getSensorsConfiguration().getSensorType("Water Temperature");
+      get(waterTemp).add(new SensorAssignment(file.getFileDescription(),
+        columnIndex, waterTemp, "TEMP", true, false, null));
+
+      // Timestamp
+      file.getDateTimeSpecification().assign(DateTimeSpecification.UNIX,
+        file.getColumnIndex("TIMESTAMP"), null);
+
+      // Position
+      file.getLongitudeSpecification()
+        .setValueColumn(file.getColumnIndex("LONGITUDE"));
+      file.getLongitudeSpecification().setFormat(getFixedLongitudeFormat());
+
+      file.getLatitudeSpecification()
+        .setValueColumn(file.getColumnIndex("LATITUDE"));
+      file.getLatitudeSpecification().setFormat(getFixedLatitudeFormat());
+    } catch (Exception e) {
+      throw new SensorAssignmentException("Error while auto-assigning columns",
+        e);
+    }
   }
 }
