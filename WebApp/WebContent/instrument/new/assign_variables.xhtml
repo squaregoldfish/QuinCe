@@ -587,8 +587,15 @@
         <ui:include src="/WEB-INF/templates/new_instrument_cancel.xhtml" />
         <p:commandButton value="Back" ajax="false"
           action="#{newInstrumentBean.goToVariables}" immediate="true" />
-        <p:commandButton id="nextButton" widgetVar="next" value="Next"
-          ajax="false" action="#{newInstrumentBean.goToRunTypes}" />
+
+        <ui:fragment rendered="#{newInstrumentBean.basis eq 1}">
+          <p:commandButton id="nextButton" widgetVar="next" value="Next"
+            ajax="false" action="#{newInstrumentBean.goToRunTypes}" />
+        </ui:fragment>
+        <ui:fragment rendered="#{newInstrumentBean.basis eq 2}">
+          <p:commandButton id="saveButton" widgetVar="next" value="Save"
+            ajax="false" action="#{newInstrumentBean.saveInstrument}" />
+        </ui:fragment>
       </h:panelGrid>
     </h:form>
 
