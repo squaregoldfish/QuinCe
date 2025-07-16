@@ -214,6 +214,7 @@ table.ui-selectmanycheckbox > tbody > tr > td > label {
 
 .assignedDateTimeType {
   color: black;
+  font-weight: normal;
 }
 
 .dateTimeAssignment {

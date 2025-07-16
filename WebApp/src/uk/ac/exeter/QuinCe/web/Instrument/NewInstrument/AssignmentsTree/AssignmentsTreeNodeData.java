@@ -17,7 +17,7 @@ public abstract class AssignmentsTreeNodeData {
 
   /**
    * Get a unique identifier for this node.
-   * 
+   *
    * @return The node ID.
    */
   public String getId() {

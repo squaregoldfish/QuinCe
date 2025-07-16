@@ -19,6 +19,8 @@ import java.util.stream.Stream;
 import javax.sql.DataSource;
 
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
+import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.PositionSpecification;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -44,6 +46,14 @@ public class SensorAssignments
   private static final int NOT_ASSIGNED = 0;
 
   /**
+   * We can override whether a {@link SensorType} must be assigned by putting an
+   * entry in this map.
+   *
+   * @see #isAssignmentRequired(SensorType, Map)
+   */
+  protected HashMap<SensorType, Boolean> forcedAssignmentRequired = new HashMap<SensorType, Boolean>();
+
+  /**
    * The database IDs of the variables that this set of assignments is targeting
    */
   private List<Long> variableIDs;
@@ -65,7 +75,7 @@ public class SensorAssignments
    * @throws SensorTypeNotFoundException
    *           If any internally listed SensorTypes don't exist
    */
-  public SensorAssignments(Connection conn, List<Long> variableIDs)
+  protected SensorAssignments(Connection conn, List<Long> variableIDs)
     throws DatabaseException, SensorConfigurationException,
     SensorTypeNotFoundException {
 
@@ -89,7 +99,7 @@ public class SensorAssignments
    * @throws SensorTypeNotFoundException
    *           If any internally listed SensorTypes don't exist
    */
-  public SensorAssignments(DataSource dataSource, List<Long> variableIDs)
+  protected SensorAssignments(DataSource dataSource, List<Long> variableIDs)
     throws SensorTypeNotFoundException, SensorConfigurationException,
     DatabaseException {
     super();
@@ -204,20 +214,26 @@ public class SensorAssignments
 
     boolean result;
 
-    if (sensorType.equals(SensorType.RUN_TYPE_SENSOR_TYPE)) {
-      result = isRunTypeSensorTypeRequired();
+    if (forcedAssignmentRequired.containsKey(sensorType)) {
+      result = forcedAssignmentRequired.get(sensorType)
+        && !isAssigned(sensorType, true, true);
     } else {
-      // Is the sensor required for the variables being measured?
-      boolean required = getSensorConfig().requiredForVariables(sensorType,
-        variableIDs, varAttributes);
 
-      // Do other required sensors depend on this SensorType?
-      if (hasAssignedDependents(sensorType)) {
-        required = true;
+      if (sensorType.equals(SensorType.RUN_TYPE_SENSOR_TYPE)) {
+        result = isRunTypeSensorTypeRequired();
+      } else {
+        // Is the sensor required for the variables being measured?
+        boolean required = getSensorConfig().requiredForVariables(sensorType,
+          variableIDs, varAttributes);
+
+        // Do other required sensors depend on this SensorType?
+        if (hasAssignedDependents(sensorType)) {
+          required = true;
+        }
+
+        // If it's required and primary not assigned, return true
+        result = (required && !isAssigned(sensorType, true, true));
       }
-
-      // If it's required and primary not assigned, return true
-      result = (required && !isAssigned(sensorType, true, true));
     }
 
     return result;
@@ -1219,5 +1235,30 @@ public class SensorAssignments
   public static Collection<Long> getColumnIdsForAssignments(
     Collection<SensorAssignment> assignments) {
     return assignments.stream().map(a -> a.getDatabaseId()).toList();
+  }
+
+  public static SensorAssignments create(int basis, DataSource dataSource,
+    List<Long> instrumentVariables) throws SensorTypeNotFoundException,
+    SensorConfigurationException, DatabaseException {
+
+    switch (basis) {
+    case Instrument.BASIS_TIME: {
+      return new SensorAssignments(dataSource, instrumentVariables);
+    }
+    case Instrument.BASIS_ARGO: {
+      return new ArgoSensorAssignments(dataSource, instrumentVariables);
+    }
+    default: {
+      throw new IllegalArgumentException("Unrecognised basis " + basis);
+    }
+    }
+  }
+
+  public int getFixedLongitudeFormat() {
+    return PositionSpecification.NO_FORMAT;
+  }
+
+  public int getFixedLatitudeFormat() {
+    return PositionSpecification.NO_FORMAT;
   }
 }

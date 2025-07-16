@@ -706,7 +706,7 @@ public class NewInstrumentBean extends FileUploadBean {
       this.instrumentVariables = sensorConfig
         .getInstrumentVariables(instrumentVariables);
 
-      sensorAssignments = new SensorAssignments(getDataSource(),
+      sensorAssignments = SensorAssignments.create(basis, getDataSource(),
         instrumentVariables);
       assignmentsTree = AssignmentsTree.create(basis, instrumentFiles,
         this.instrumentVariables, sensorAssignments, !fixedPosition);
@@ -860,7 +860,7 @@ public class NewInstrumentBean extends FileUploadBean {
 
   /**
    * Get all the {@link SensorType}s that can be assigned for the instrument.
-   * 
+   *
    * @return The {@link SensorType}s.
    * @throws SensorConfigurationException
    */
@@ -1202,7 +1202,16 @@ public class NewInstrumentBean extends FileUploadBean {
     FileDefinitionBuilder file = (FileDefinitionBuilder) instrumentFiles
       .get(longitudeFile);
     file.getLongitudeSpecification().setValueColumn(longitudeColumn);
-    file.getLongitudeSpecification().setFormat(longitudeFormat);
+
+    // If we have a fixed format, we ignore what the form sent us
+    int format = longitudeFormat;
+    if (sensorAssignments
+      .getFixedLongitudeFormat() != PositionSpecification.NO_FORMAT) {
+      format = sensorAssignments.getFixedLongitudeFormat();
+    }
+
+    file.getLongitudeSpecification().setFormat(format);
+
     if (longitudeFormat != LongitudeSpecification.FORMAT_0_180) {
       file.getLongitudeSpecification().setHemisphereColumn(-1);
     }
@@ -1277,7 +1286,16 @@ public class NewInstrumentBean extends FileUploadBean {
     FileDefinitionBuilder file = (FileDefinitionBuilder) instrumentFiles
       .get(latitudeFile);
     file.getLatitudeSpecification().setValueColumn(latitudeColumn);
-    file.getLatitudeSpecification().setFormat(latitudeFormat);
+
+    // If we have a fixed format, we ignore what the form sent us
+    int format = latitudeFormat;
+    if (sensorAssignments
+      .getFixedLatitudeFormat() != PositionSpecification.NO_FORMAT) {
+      format = sensorAssignments.getFixedLatitudeFormat();
+    }
+
+    file.getLongitudeSpecification().setFormat(format);
+
     if (latitudeFormat != LatitudeSpecification.FORMAT_0_90) {
       file.getLatitudeSpecification().setHemisphereColumn(-1);
     }
@@ -2396,20 +2414,7 @@ public class NewInstrumentBean extends FileUploadBean {
   }
 
   public String getSensorTypesJson() throws SensorConfigurationException {
-
-    SensorsConfiguration sensorConfig = ResourceManager.getInstance()
-      .getSensorsConfiguration();
-
-    HashSet<SensorType> sensorTypes = new HashSet<SensorType>();
-
-    for (Variable var : instrumentVariables) {
-      sensorTypes
-        .addAll(sensorConfig.getSensorTypes(var.getId(), true, true, true));
-    }
-
-    sensorTypes.addAll(sensorConfig.getDiagnosticSensorTypes());
-
-    return new Gson().toJson(sensorTypes);
+    return new Gson().toJson(sensorAssignments.keySet());
   }
 
   public String getSensorTypesWithFixedDependsQuestionAnswer() {
@@ -2898,5 +2903,13 @@ public class NewInstrumentBean extends FileUploadBean {
   public void treeNodeCollapse(NodeCollapseEvent event) {
     super.treeNodeCollapse(event);
     assignmentsTree.nodeCollapsed(event);
+  }
+
+  public int getFixedLongitudeFormat() {
+    return sensorAssignments.getFixedLongitudeFormat();
+  }
+
+  public int getFixedLatitudeFormat() {
+    return sensorAssignments.getFixedLatitudeFormat();
   }
 }

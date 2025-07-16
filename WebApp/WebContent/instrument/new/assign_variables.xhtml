@@ -20,9 +20,12 @@
         value="#{newInstrumentBean.assignedFiles}" />
       <h:inputHidden id="updatedFile"
         value="#{newInstrumentBean.updatedFile}" />
+      <h:inputHidden id="fixedLongitudeFormat"
+        value="#{newInstrumentBean.fixedLongitudeFormat}" />
+      <h:inputHidden id="fixedLatitudeFormat"
+        value="#{newInstrumentBean.fixedLatitudeFormat}" />
     </h:form>
     <h:form id="newInstrumentForm" method="post" charset="utf8">
-
       <h:inputHidden id="hemisphereFile"
         value="#{newInstrumentBean.hemisphereFile}" />
       <h:inputHidden id="hemisphereCoordinate"
@@ -171,7 +174,7 @@
           <table>
             <tr>
               <td><p:outputLabel value="Format:" /></td>
-              <td><p:selectOneMenu id="longitudeFormat"
+              <td><p:selectOneMenu id="longitudeFormat" widgetVar="longitudeFormat"
                   value="#{newInstrumentBean.longitudeFormat}">
 
                   <f:selectItems value="#{newInstrumentBean.longitudeFormats}" var="format"
@@ -182,7 +185,7 @@
           </table>
         </div>
         <h:panelGrid columns="2" cellpadding="5" styleClass="buttonPanel">
-          <p:commandButton value="Assign" ajax="true"
+          <p:commandButton value="Assign" ajax="true" widgetVar="assignLongitude"
             action="#{newInstrumentBean.assignLongitude}"
             process="longitudeFile longitudeColumn longitudeFormat"
             update="longitudeFile longitudeColumn longitudeFormat assignmentsTree
@@ -223,7 +226,7 @@
           </table>
         </div>
         <h:panelGrid columns="2" cellpadding="5" styleClass="buttonPanel">
-          <p:commandButton value="Assign" ajax="true"
+          <p:commandButton value="Assign" ajax="true" widgetVar="assignLatitude"
             action="#{newInstrumentBean.assignLatitude}"
             process="latitudeFile latitudeColumn latitudeFormat"
             update="latitudeFile latitudeColumn latitudeFormat assignmentsTree

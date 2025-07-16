@@ -17,11 +17,22 @@ public class PositionSpecNodeData extends AssignmentsTreeNodeData {
 
   private final int assignmentType;
 
+  private final int fixedFormat;
+
   protected PositionSpecNodeData(FileDefinitionBuilder file,
     PositionSpecification positionSpec, int assignmentType) {
     this.file = file;
     this.positionSpec = positionSpec;
     this.assignmentType = assignmentType;
+    this.fixedFormat = PositionSpecification.NO_FORMAT;
+  }
+
+  protected PositionSpecNodeData(FileDefinitionBuilder file,
+    PositionSpecification positionSpec, int assignmentType, int fixedFormat) {
+    this.file = file;
+    this.positionSpec = positionSpec;
+    this.assignmentType = assignmentType;
+    this.fixedFormat = fixedFormat;
   }
 
   public String getFile() {
@@ -63,6 +74,10 @@ public class PositionSpecNodeData extends AssignmentsTreeNodeData {
     }
 
     return result;
+  }
+
+  public int getFixedFormat() {
+    return fixedFormat;
   }
 
   @Override

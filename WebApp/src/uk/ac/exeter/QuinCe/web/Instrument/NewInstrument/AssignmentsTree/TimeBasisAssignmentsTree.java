@@ -70,7 +70,7 @@ public class TimeBasisAssignmentsTree extends AssignmentsTree {
       f -> !f.getDateTimeSpecification().assignmentComplete()) ? VAR_UNFINISHED
         : VAR_FINISHED;
 
-    DefaultTreeNode<AssignmentsTreeNodeData> main = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+    AssignmentsTreeNode<AssignmentsTreeNodeData> main = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
       this, nodeType, new StringNodeData("Date/Time"), parent);
 
     if (files.size() == 1) {
@@ -82,7 +82,7 @@ public class TimeBasisAssignmentsTree extends AssignmentsTree {
           ? DATETIME_FINISHED
           : DATETIME_UNFINISHED;
 
-        DefaultTreeNode<AssignmentsTreeNodeData> fileNode = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
+        AssignmentsTreeNode<AssignmentsTreeNodeData> fileNode = new AssignmentsTreeNode<AssignmentsTreeNodeData>(
           this, fileState, new DateTimeFileNodeData(file), main);
 
         buildDateTimeNodes((FileDefinitionBuilder) file, fileNode);
