@@ -319,6 +319,21 @@ public class SensorAssignments
     return isAssigned(sensorType, false, false);
   }
 
+  public boolean isAssigned(String... sensorTypeNames)
+    throws SensorTypeNotFoundException {
+    boolean assigned = true;
+
+    for (String sensorTypeName : sensorTypeNames) {
+      if (!isAssigned(ResourceManager.getInstance().getSensorsConfiguration()
+        .getSensorType(sensorTypeName))) {
+        assigned = false;
+        break;
+      }
+    }
+
+    return assigned;
+  }
+
   /**
    * See if a SensorType has been assigned. Optionally only check for primary
    * assignments. Check children or siblings as appropriate.

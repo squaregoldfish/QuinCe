@@ -68,7 +68,22 @@ public class ArgoAssignmentsTree extends AssignmentsTree {
     makeSensorTypeNode("Source File", coordinateNode);
   }
 
-  private boolean coordinateAssigned() {
-    return false;
+  private boolean coordinateAssigned() throws SensorTypeNotFoundException {
+    boolean assigned = true;
+
+    if (!files.get(0).getDateTimeSpecification().assignmentComplete()) {
+      assigned = false;
+    } else if (!files.get(0).getLatitudeSpecification()
+      .specificationComplete()) {
+      assigned = false;
+    } else if (!files.get(0).getLongitudeSpecification()
+      .specificationComplete()) {
+      assigned = false;
+    } else if (!assignments.isAssigned("Cycle Number", "Profile", "Direction",
+      "Level", "Pressure (Depth)", "Source File")) {
+      assigned = false;
+    }
+
+    return assigned;
   }
 }
