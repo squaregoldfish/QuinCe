@@ -29,9 +29,7 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 /**
  * Class representing a data file.
  */
-public abstract class DataFile {
-
-  public static final String TIME_OFFSET_PROP = "timeOffset";
+public abstract class DataFile implements Comparable<DataFile> {
 
   /**
    * The database ID of this file
@@ -633,5 +631,64 @@ public abstract class DataFile {
    */
   protected void postLoadHook() throws DataFileException {
     // Default action does nothing.
+  }
+
+  /**
+   * Get the start point of the file.
+   * 
+   * <p>
+   * This can be an encoded String specific to the implementation, and may not
+   * be suitable for display to end users.
+   * </p>
+   * 
+   * @see #getStartDisplayString()
+   * 
+   * @return The start point.
+   */
+  public abstract String getStartString();
+
+  /**
+   * Get the start point of the file for display.
+   * 
+   * @return The start point.
+   */
+  public abstract String getStartDisplayString();
+
+  /**
+   * Get the end point of the file.
+   * 
+   * <p>
+   * This can be an encoded String specific to the implementation, and may not
+   * be suitable for display to end users.
+   * </p>
+   * 
+   * @see #getEndDisplayString()
+   * 
+   * @return The end point.
+   */
+  public abstract String getEndString();
+
+  /**
+   * Get the end point of the file for display.
+   * 
+   * @return The end point.
+   */
+  public abstract String getEndDisplayString();
+
+  /**
+   * Get a list of existing files that overlap with this file.
+   * 
+   * @return The overlapping files.
+   */
+  public abstract TreeSet<DataFile> getOverlappingFiles(
+    TreeSet<DataFile> allFiles);
+
+  /**
+   * Get any extra properties that should be included in the export manifest.
+   * 
+   * @return
+   */
+  public Properties getExportProperties() {
+    return new Properties();
   }
 }

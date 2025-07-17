@@ -14,7 +14,7 @@ import org.flywaydb.core.api.migration.Context;
 
 import com.google.gson.Gson;
 
-import uk.ac.exeter.QuinCe.data.Files.DataFile;
+import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 
 /**
@@ -215,7 +215,7 @@ public class V51__non_time_measurements_2931 extends BaseJavaMigration {
 
     protected boolean coveredBy(LocalDateTime start, LocalDateTime end) {
       int offset = Integer
-        .parseInt(properties.getProperty(DataFile.TIME_OFFSET_PROP));
+        .parseInt(properties.getProperty(TimeDataFile.TIME_OFFSET_PROP));
 
       return rawEnd.plusSeconds(offset).isAfter(start)
         && rawStart.plusSeconds(offset).isBefore(end);

@@ -28,3 +28,10 @@ ALTER TABLE instrument ADD basis TINYINT NOT NULL AFTER platform_code;
 UPDATE instrument SET basis = 1;
 ALTER TABLE variables ADD allowed_basis INT AFTER visible;
 UPDATE variables SET allowed_basis = 1;
+
+-- Remove start and end date from files. We can't use these for anything
+ALTER TABLE data_file CHANGE start_date start VARCHAR(20);
+ALTER TABLE data_file CHANGE end_date end VARCHAR(20);
+
+-- Store the DataFile class
+ALTER TABLE data_file ADD class VARCHAR(45) DEFAULT 'TimeDataFile' NOT NULL AFTER properties;

@@ -112,14 +112,18 @@ public class DateTimeUtils {
   }
 
   /**
-   * Generate an ISOformatted date string for a given date
+   * Generate an ISOformatted date string for a given date.
+   * 
+   * <p>
+   * Passing in a {@code null} date will give a {@code null} result.
+   * </p>
    *
    * @param date
    *          The date
    * @return The ISO date string
    */
   public static String toIsoDate(LocalDateTime date) {
-    return isoDateTimeFormatter.format(date);
+    return null == date ? null : isoDateTimeFormatter.format(date);
   }
 
   /**

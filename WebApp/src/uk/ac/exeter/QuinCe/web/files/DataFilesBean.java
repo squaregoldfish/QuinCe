@@ -7,8 +7,8 @@ import java.util.List;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 
+import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
-import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
@@ -56,17 +56,17 @@ public class DataFilesBean extends FileUploadBean {
    * @throws MissingParamException
    *           If any internal calls have missing parameters
    */
-  public List<TimeDataFile> getListFiles()
+  public List<DataFile> getListFiles()
     throws DatabaseException, MissingParamException, RecordNotFoundException,
     InstrumentException, ResourceException {
 
-    List<TimeDataFile> result;
+    List<DataFile> result;
 
     if (null != getCurrentInstrument()) {
-      result = DataFileDB.getFiles(getDataSource(), getAppConfig(),
-        getCurrentInstrument());
+      result = new ArrayList<DataFile>(DataFileDB.getFiles(getDataSource(),
+        getAppConfig(), getCurrentInstrument()));
     } else {
-      result = new ArrayList<TimeDataFile>();
+      result = new ArrayList<DataFile>();
     }
 
     Collections.reverse(result);

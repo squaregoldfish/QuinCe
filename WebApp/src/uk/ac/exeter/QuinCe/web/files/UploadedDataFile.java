@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.TreeSet;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.application.FacesMessage.Severity;
@@ -370,10 +371,9 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
               + " could not be processed (see messages below). Please fix these problems and upload the file again.",
               FacesMessage.SEVERITY_ERROR);
           } else {
-            List<TimeDataFile> overlappingFiles = DataFileDB
-              .getFilesWithinDates(dataSource, instrument, matchedDefinition,
-                getDataFile().getRawStartTime(), getDataFile().getRawEndTime(),
-                false);
+            TreeSet<DataFile> overlappingFiles = getDataFile()
+              .getOverlappingFiles(DataFileDB.getFiles(dataSource, appConfig,
+                instrument, getDataFile().getFileDefinition()));
 
             boolean fileOK = true;
             String fileMessage = null;
@@ -384,7 +384,7 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
               fileMessage = "This file overlaps one or more existing files";
               fileStatus = Status.CONFLICT.getStatusCode();
             } else if (overlappingFiles.size() == 1) {
-              DataFile existingFile = overlappingFiles.get(0);
+              DataFile existingFile = overlappingFiles.stream().findAny().get();
               DataFile newFile = getDataFile();
 
               if (!existingFile.getFilename().equals(newFile.getFilename())) {

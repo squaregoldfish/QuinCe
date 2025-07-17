@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -36,6 +38,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Export.ExportConfig;
 import uk.ac.exeter.QuinCe.data.Export.ExportException;
 import uk.ac.exeter.QuinCe.data.Export.ExportOption;
+import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Files.DataFileException;
 import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
@@ -767,7 +770,7 @@ public class ExportBean extends BaseManagedBean {
     throws Exception {
 
     // Get the list of raw files
-    List<TimeDataFile> files = DataFileDB.getDatasetFiles(conn,
+    TreeSet<DataFile> files = DataFileDB.getDatasetFiles(conn,
       ResourceManager.getInstance().getConfig(), dataset);
 
     // Get the base manifest. We will add to it as we go.
@@ -832,29 +835,38 @@ public class ExportBean extends BaseManagedBean {
     // Add the dataset details to the manifest
     manifest.getAsJsonObject("manifest").add("exportFiles", exportFilesJson);
 
-    // Add the raw files
-    Map<FileDefinition, List<TimeDataFile>> groupedFiles = files.stream()
-      .collect(Collectors.groupingBy(TimeDataFile::getFileDefinition));
-
     JsonArray rawManifest = new JsonArray();
 
-    for (FileDefinition fileDefinition : groupedFiles.keySet()) {
-      double meanFileLength = TimeDataFile
-        .getMeanFileLength(groupedFiles.get(fileDefinition));
+    if (instrument.getBasis() == Instrument.BASIS_TIME) {
+      // Some time-based files are very small, so we combine them into
+      // larger files for convenience.
+      TreeSet<TimeDataFile> timeFiles = new TreeSet<TimeDataFile>();
+      files.forEach(f -> timeFiles.add((TimeDataFile) f));
 
-      boolean combineFiles = !fileDefinition.hasHeader()
-        && fileDefinition.getColumnHeaderRows() == 0 && meanFileLength < 3600D;
+      Map<FileDefinition, List<TimeDataFile>> groupedFiles = timeFiles.stream()
+        .collect(Collectors.groupingBy(DataFile::getFileDefinition));
 
-      if (!combineFiles) {
-        addRawFilesToZip(zip, rawManifest, dirRoot,
-          groupedFiles.get(fileDefinition));
-      } else {
-        combineAndAddRawFilesToZip(zip, rawManifest, dirRoot, fileDefinition,
-          groupedFiles.get(fileDefinition));
+      for (FileDefinition fileDefinition : groupedFiles.keySet()) {
+        double meanFileLength = TimeDataFile
+          .getMeanFileLength(groupedFiles.get(fileDefinition));
+
+        boolean combineFiles = !fileDefinition.hasHeader()
+          && fileDefinition.getColumnHeaderRows() == 0
+          && meanFileLength < 3600D;
+
+        if (!combineFiles) {
+          addRawFilesToZip(zip, rawManifest, dirRoot,
+            new ArrayList<DataFile>(groupedFiles.get(fileDefinition)));
+        } else {
+          combineAndAddRawFilesToZip(zip, rawManifest, dirRoot, fileDefinition,
+            groupedFiles.get(fileDefinition));
+        }
       }
-
-      manifest.getAsJsonObject("manifest").add("raw", rawManifest);
+    } else {
+      addRawFilesToZip(zip, rawManifest, dirRoot, files);
     }
+
+    manifest.getAsJsonObject("manifest").add("raw", rawManifest);
 
     // Manifest
     ZipEntry manifestEntry = new ZipEntry(dirRoot + "/manifest.json");
@@ -871,10 +883,10 @@ public class ExportBean extends BaseManagedBean {
   }
 
   private static void addRawFilesToZip(ZipOutputStream zip,
-    JsonArray rawManifest, String dirRoot, List<TimeDataFile> files)
+    JsonArray rawManifest, String dirRoot, Collection<DataFile> files)
     throws IOException {
 
-    for (TimeDataFile file : files) {
+    for (DataFile file : files) {
       String filePath = dirRoot + "/raw/" + file.getFilename();
 
       ZipEntry rawEntry = new ZipEntry(filePath);
@@ -882,8 +894,9 @@ public class ExportBean extends BaseManagedBean {
       zip.write(file.getBytes());
       zip.closeEntry();
 
-      rawManifest.add(makeRawFileJson(file.getFilename(),
-        file.getRawStartTime(), file.getRawEndTime(), file.getTimeOffset()));
+      rawManifest
+        .add(makeRawFileJson(file.getFilename(), file.getStartDisplayString(),
+          file.getEndDisplayString(), file.getExportProperties()));
     }
   }
 
@@ -903,7 +916,9 @@ public class ExportBean extends BaseManagedBean {
       if (!fileDate.equals(currentDate)) {
         if (null != currentEntry) {
           zip.closeEntry();
-          rawManifest.add(makeRawFileJson(filePath, startTime, endTime, 0));
+          rawManifest.add(makeRawFileJson(filePath,
+            DateTimeUtils.formatDateTime(startTime),
+            DateTimeUtils.formatDateTime(endTime), file.getExportProperties()));
         }
 
         currentDate = fileDate;
@@ -925,17 +940,24 @@ public class ExportBean extends BaseManagedBean {
     }
 
     zip.closeEntry();
-    rawManifest.add(makeRawFileJson(filePath, startTime, endTime, 0));
+    rawManifest
+      .add(makeRawFileJson(filePath, DateTimeUtils.formatDateTime(startTime),
+        DateTimeUtils.formatDateTime(endTime), null));
   }
 
-  private static JsonObject makeRawFileJson(String filePath,
-    LocalDateTime start, LocalDateTime end, long offset) {
+  private static JsonObject makeRawFileJson(String filePath, String start,
+    String end, Properties otherProperties) {
 
     JsonObject fileJson = new JsonObject();
     fileJson.addProperty("filename", new File(filePath).getName());
-    fileJson.addProperty("startDate", DateTimeUtils.toIsoDate(start));
-    fileJson.addProperty("endDate", DateTimeUtils.toIsoDate(end));
-    fileJson.addProperty("timeOffset", offset);
+    fileJson.addProperty("start", start);
+    fileJson.addProperty("end", end);
+
+    if (null != otherProperties) {
+      for (String key : otherProperties.stringPropertyNames()) {
+        fileJson.addProperty(key, otherProperties.getProperty(key));
+      }
+    }
 
     return fileJson;
   }

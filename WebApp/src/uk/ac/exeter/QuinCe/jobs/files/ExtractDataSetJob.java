@@ -3,6 +3,7 @@ package uk.ac.exeter.QuinCe.jobs.files;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -121,9 +122,12 @@ public class ExtractDataSetJob extends DataSetJob {
           DataSet.STATUS_REPROCESS);
       }
 
-      List<TimeDataFile> potentialFiles = DataFileDB.getFilesWithinDates(conn,
-        dataSet.getInstrument(), dataSet.getStartTime(), dataSet.getEndTime(),
-        true);
+      List<TimeDataFile> allFiles = new ArrayList<DataFile>(DataFileDB
+        .getFiles(conn, ResourceManager.getInstance().getConfig(), instrument))
+        .stream().map(f -> (TimeDataFile) f).toList();
+
+      List<TimeDataFile> potentialFiles = TimeDataFile.filter(allFiles,
+        dataSet.getStartTime(), dataSet.getEndTime(), true);
 
       Set<DataFile> usedFiles = new HashSet<DataFile>(potentialFiles.size());
 
@@ -141,8 +145,15 @@ public class ExtractDataSetJob extends DataSetJob {
       instrument.getFileDefinitions()
         .forEach(fd -> fileDefinitionRanges.put(fd, new TimeRangeBuilder()));
 
-      potentialFiles
-        .forEach(f -> fileDefinitionRanges.get(f.getFileDefinition()).add(f));
+      for (DataFile file : potentialFiles) {
+        if (!(file instanceof TimeDataFile)) {
+          throw new IllegalArgumentException("File of wrong type");
+        }
+
+        TimeDataFile castFile = (TimeDataFile) file;
+
+        fileDefinitionRanges.get(castFile.getFileDefinition()).add(castFile);
+      }
 
       LocalDateTime filesLatestStart = TimeRange
         .getLatestStart(fileDefinitionRanges.values());
@@ -162,7 +173,7 @@ public class ExtractDataSetJob extends DataSetJob {
       double minLat = Double.MAX_VALUE;
       double maxLat = -Double.MAX_VALUE;
 
-      for (TimeDataFile file : potentialFiles) {
+      for (DataFile file : potentialFiles) {
         FileDefinition fileDefinition = file.getFileDefinition();
         int currentLine = file.getFirstDataLine();
         while (currentLine < file.getContentLineCount()) {
@@ -203,7 +214,7 @@ public class ExtractDataSetJob extends DataSetJob {
                 "Incorrect number of columns");
             }
 
-            LocalDateTime time = file.getOffsetTime(line);
+            LocalDateTime time = ((TimeDataFile) file).getOffsetTime(line);
 
             if ((time.equals(dataSet.getStartTime())
               || time.isAfter(dataSet.getStartTime()))

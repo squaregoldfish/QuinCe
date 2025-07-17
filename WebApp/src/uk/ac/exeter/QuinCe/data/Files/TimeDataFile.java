@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
@@ -29,6 +30,8 @@ import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.TimeRange;
 
 public class TimeDataFile extends DataFile implements TimeRange {
+
+  public static final String TIME_OFFSET_PROP = "timeOffset";
 
   /**
    * The date in the file header
@@ -81,13 +84,12 @@ public class TimeDataFile extends DataFile implements TimeRange {
 
   public TimeDataFile(long id, Instrument instrument,
     FileDefinition fileDefinition, String filename, FileContents contents,
-    LocalDateTime startDate, LocalDateTime endDate, int recordCount,
-    Properties properties) {
+    String start, String end, int recordCount, Properties properties) {
 
     super(id, instrument, fileDefinition, filename, contents, recordCount,
       properties);
-    this.startDate = startDate;
-    this.endDate = endDate;
+    this.startDate = DateTimeUtils.longToDate(Long.parseLong(start));
+    this.endDate = DateTimeUtils.longToDate(Long.parseLong(end));
   }
 
   @Override
@@ -366,23 +368,29 @@ public class TimeDataFile extends DataFile implements TimeRange {
    * @return
    */
   public static boolean hasConcurrentFiles(Instrument instrument,
-    Collection<TimeDataFile> files, LocalDateTime start, LocalDateTime end) {
-
-    /*
-     * TODO This could be a little more efficient if we ensure that all the
-     * incoming files are in time order. Then we could break out as soon as we
-     * run off the end time before establishing the final result.
-     *
-     * In practice the files will almost certainly be in time order anyway, so
-     * unless I explicitly see this being a performance problem I won't bother.
-     */
+    TreeSet<DataFile> files, LocalDateTime start, LocalDateTime end) {
 
     boolean result = false;
 
     // If there's only one FileDefinition, we can just find any file with data
     // between the start and end.
     if (instrument.getFileDefinitions().size() == 1) {
-      result = files.stream().anyMatch(f -> f.overlaps(start, end));
+
+      for (DataFile file : files) {
+        if (!(file instanceof TimeDataFile)) {
+          throw new IllegalArgumentException(
+            "File " + file.getFilename() + " is of the wrong type");
+        }
+
+        TimeDataFile castFile = (TimeDataFile) file;
+        if (castFile.overlaps(start, end)) {
+          result = true;
+          break;
+        } else if (castFile.getOffsetStartTime().isAfter(end)) {
+          // We can stop now - we've gone beyond the end time
+          break;
+        }
+      }
     } else {
       // Build a Map of the files that encompass the required period
       // grouped by FileDefinition
@@ -392,8 +400,17 @@ public class TimeDataFile extends DataFile implements TimeRange {
 
       fileDefinitions.forEach(fd -> map.put(fd, new ArrayList<TimeDataFile>()));
 
-      files.stream().filter(f -> f.overlaps(start, end))
-        .forEach(f -> map.get(f.getFileDefinition()).add(f));
+      for (DataFile file : files) {
+        if (!(file instanceof TimeDataFile)) {
+          throw new IllegalArgumentException(
+            "File " + file.getFilename() + " is of the wrong type");
+        }
+
+        TimeDataFile castFile = (TimeDataFile) file;
+        if (castFile.overlaps(start, end)) {
+          map.get(castFile.getFileDefinition()).add(castFile);
+        }
+      }
 
       for (TimeDataFile checkFile : map.get(fileDefinitions.get(0))) {
 
@@ -563,5 +580,75 @@ public class TimeDataFile extends DataFile implements TimeRange {
     List<RunTypeAssignment> list = new ArrayList<>(missingRunTypes);
     Collections.sort(list);
     return list;
+  }
+
+  @Override
+  public String getStartString() {
+    return String.valueOf(DateTimeUtils.dateToLong(getRawStartTime()));
+  }
+
+  @Override
+  public String getStartDisplayString() {
+    return DateTimeUtils.toIsoDate(getRawStartTime());
+  }
+
+  @Override
+  public String getEndString() {
+    return String.valueOf(DateTimeUtils.dateToLong(getRawEndTime()));
+  }
+
+  @Override
+  public String getEndDisplayString() {
+    return DateTimeUtils.toIsoDate(getRawEndTime());
+  }
+
+  @Override
+  public TreeSet<DataFile> getOverlappingFiles(TreeSet<DataFile> allFiles) {
+    if (getRawEndTime().isBefore(getRawStartTime())) {
+      throw new IllegalArgumentException("End must be >= start date");
+    }
+
+    TreeSet<DataFile> result = new TreeSet<DataFile>();
+
+    for (DataFile file : allFiles) {
+      if (!(file instanceof TimeDataFile)) {
+        throw new IllegalArgumentException("Not a TimeDataFile");
+      }
+
+      TimeDataFile castFile = (TimeDataFile) file;
+
+      if (castFile.getRawEndTime().isAfter(getRawStartTime())
+        && castFile.getRawStartTime().isBefore(getRawEndTime())) {
+        result.add(castFile);
+      }
+    }
+
+    return result;
+  }
+
+  @Override
+  public int compareTo(DataFile o) {
+    if (!(o instanceof TimeDataFile)) {
+      throw new IllegalArgumentException(
+        "Cannot compare DataFile of different type");
+    }
+
+    return getRawStartTime().compareTo(((TimeDataFile) o).getRawStartTime());
+  }
+
+  @Override
+  public Properties getExportProperties() {
+    Properties props = new Properties();
+    properties.setProperty(TIME_OFFSET_PROP, String.valueOf(getTimeOffset()));
+    return props;
+  }
+
+  public static List<TimeDataFile> filter(List<TimeDataFile> allFiles,
+    LocalDateTime start, LocalDateTime end, boolean applyOffset) {
+
+    return allFiles.stream()
+      .filter(f -> f.getEndTime(applyOffset).isAfter(start)
+        && f.getStartTime(applyOffset).isBefore(end))
+      .toList();
   }
 }

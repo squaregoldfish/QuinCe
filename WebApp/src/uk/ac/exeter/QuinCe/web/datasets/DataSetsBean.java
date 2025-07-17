@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -22,6 +23,7 @@ import com.google.gson.JsonObject;
 import uk.ac.exeter.QuinCe.User.User;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
+import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
@@ -280,13 +282,13 @@ public class DataSetsBean extends BaseManagedBean {
       fileDefinitionsJson = fdJson.toString();
 
       // Now the actual files
-      List<TimeDataFile> dataFiles = DataFileDB.getFiles(getDataSource(),
+      TreeSet<DataFile> dataFiles = DataFileDB.getFiles(getDataSource(),
         getAppConfig(), getCurrentInstrument());
 
       JsonArray entriesJson = new JsonArray();
 
-      for (int i = 0; i < dataFiles.size(); i++) {
-        TimeDataFile file = dataFiles.get(i);
+      for (DataFile file : dataFiles) {
+        TimeDataFile castFile = (TimeDataFile) file;
 
         JsonObject entry = new JsonObject();
 
@@ -294,9 +296,9 @@ public class DataSetsBean extends BaseManagedBean {
         entry.addProperty("group",
           definitionIds.get(file.getFileDefinition().getFileDescription()));
         entry.addProperty("start",
-          DateTimeUtils.toIsoDate(file.getOffsetStartTime()));
+          DateTimeUtils.toIsoDate(castFile.getOffsetStartTime()));
         entry.addProperty("end",
-          DateTimeUtils.toIsoDate(file.getOffsetEndTime()));
+          DateTimeUtils.toIsoDate(castFile.getOffsetEndTime()));
         entry.addProperty("content", file.getFilename());
         entry.addProperty("title", file.getFilename());
 

@@ -2,12 +2,13 @@ package uk.ac.exeter.QuinCe.jobs.files;
 
 import java.sql.Connection;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Properties;
+import java.util.TreeSet;
 
 import uk.ac.exeter.QuinCe.User.User;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
+import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -79,13 +80,12 @@ public class CreateNrtDataset extends Job {
 
       // The NRT dataset will start immediately after the last 'real' dataset.
       // If there isn't one, it will start at the beginning of the first
-      // available
-      // data file.
+      // available data file.
       LocalDateTime nrtStartDate = null;
       DataSet lastDataset = DataSetDB.getLastDataSet(conn, instrument.getId(),
         false);
 
-      List<TimeDataFile> instrumentFiles = DataFileDB.getFiles(conn,
+      TreeSet<DataFile> instrumentFiles = DataFileDB.getFiles(conn,
         ResourceManager.getInstance().getConfig(), instrument);
 
       if (null != lastDataset) {
@@ -93,13 +93,16 @@ public class CreateNrtDataset extends Job {
       } else {
         // We can only continue if there's at least one file
         if (instrumentFiles.size() > 0) {
-          nrtStartDate = instrumentFiles.get(0).getOffsetStartTime();
+          nrtStartDate = ((TimeDataFile) instrumentFiles.first())
+            .getOffsetStartTime();
         }
       }
 
       if (null != nrtStartDate) {
-        LocalDateTime endDate = DataFileDB.getLastFileDate(conn,
-          instrument.getId(), true);
+        TreeSet<DataFile> files = DataFileDB.getFiles(conn,
+          ResourceManager.getInstance().getConfig(), instrument);
+
+        LocalDateTime endDate = ((TimeDataFile) files.last()).getRawEndTime();
 
         boolean canCreateNrt = true;
 
