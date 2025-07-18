@@ -248,11 +248,12 @@ public class DataSetDB {
    * @throws DatabaseException
    * @throws MissingParamException
    * @throws CoordinateException
+   * @throws ClassNotFoundException
    */
   private static DataSet dataSetFromRecord(Connection conn, ResultSet record)
     throws SQLException, MissingParamException, DatabaseException,
     RecordNotFoundException, InstrumentException, SensorGroupsException,
-    CoordinateException {
+    CoordinateException, ClassNotFoundException {
 
     long id = record.getLong(1);
     Instrument instrument = InstrumentDB.getInstrument(conn, record.getLong(2));
@@ -902,11 +903,12 @@ public class DataSetDB {
    *           If the instrument details cannot be retrieved
    * @throws SensorGroupsException
    * @throws CalibrationException
+   * @throws ClassNotFoundException
    */
   public static JsonObject getMetadataJson(DataSource dataSource,
-    DataSet dataset)
-    throws DatabaseException, MissingParamException, RecordNotFoundException,
-    InstrumentException, SensorGroupsException, CalibrationException {
+    DataSet dataset) throws DatabaseException, MissingParamException,
+    RecordNotFoundException, InstrumentException, SensorGroupsException,
+    CalibrationException, ClassNotFoundException {
 
     JsonObject result = null;
     Connection conn = null;
@@ -941,10 +943,12 @@ public class DataSetDB {
    *           If the instrument details cannot be retrieved
    * @throws SensorGroupsException
    * @throws CalibrationException
+   * @throws ClassNotFoundException
    */
   public static JsonObject getMetadataJson(Connection conn, DataSet dataset)
     throws DatabaseException, MissingParamException, RecordNotFoundException,
-    InstrumentException, SensorGroupsException, CalibrationException {
+    InstrumentException, SensorGroupsException, CalibrationException,
+    ClassNotFoundException {
 
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkMissing(dataset, "dataset");
@@ -1093,7 +1097,7 @@ public class DataSetDB {
 
   public static List<NrtStatus> getNrtStatus(DataSource dataSource)
     throws DatabaseException, MissingParamException, RecordNotFoundException,
-    InstrumentException, SensorGroupsException {
+    InstrumentException, SensorGroupsException, ClassNotFoundException {
 
     List<NrtStatus> result = new ArrayList<NrtStatus>();
 

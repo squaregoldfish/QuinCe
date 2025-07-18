@@ -79,8 +79,8 @@ public class InstrumentDB {
     + "instrument_id, description, column_separator, " // 3
     + "header_type, header_lines, header_end_string, " // 6
     + "column_header_rows, column_count, " // 8
-    + "lon_spec, lat_spec, datetime_spec" // 11
-    + ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    + "lon_spec, lat_spec, datetime_spec, file_class" // 11
+    + ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
   /**
    * Statement for inserting a file column definition record
@@ -130,7 +130,7 @@ public class InstrumentDB {
   private static final String GET_FILE_DEFINITIONS_QUERY = "SELECT "
     + "id, description, column_separator, " // 3
     + "header_type, header_lines, header_end_string, column_header_rows, " // 7
-    + "column_count, lon_spec, lat_spec, datetime_spec " // 11
+    + "column_count, lon_spec, lat_spec, datetime_spec, file_class " // 11
     + "FROM file_definition WHERE instrument_id = ? ORDER BY description";
 
   /**
@@ -486,6 +486,7 @@ public class InstrumentDB {
     stmt.setString(9, gson.toJson(file.getLongitudeSpecification()));
     stmt.setString(10, gson.toJson(file.getLatitudeSpecification()));
     stmt.setString(11, gson.toJson(file.getDateTimeSpecification()));
+    stmt.setString(12, file.getFileClass().getSimpleName());
 
     return stmt;
   }
@@ -513,11 +514,12 @@ public class InstrumentDB {
    * @throws RecordNotFoundException
    * @throws VariableNotFoundException
    * @throws SensorGroupsException
+   * @throws ClassNotFoundException
    */
   public static List<Instrument> getInstrumentList(DataSource dataSource,
-    User owner)
-    throws MissingParamException, DatabaseException, VariableNotFoundException,
-    RecordNotFoundException, InstrumentException, SensorGroupsException {
+    User owner) throws MissingParamException, DatabaseException,
+    VariableNotFoundException, RecordNotFoundException, InstrumentException,
+    SensorGroupsException, ClassNotFoundException {
 
     MissingParam.checkMissing(dataSource, "dataSource");
     MissingParam.checkMissing(owner, "owner");
@@ -560,11 +562,12 @@ public class InstrumentDB {
    * @throws RecordNotFoundException
    * @throws VariableNotFoundException
    * @throws SensorGroupsException
+   * @throws ClassNotFoundException
    */
   public static List<Instrument> getInstrumentList(Connection conn,
-    long ownerId)
-    throws MissingParamException, DatabaseException, VariableNotFoundException,
-    RecordNotFoundException, InstrumentException, SensorGroupsException {
+    long ownerId) throws MissingParamException, DatabaseException,
+    VariableNotFoundException, RecordNotFoundException, InstrumentException,
+    SensorGroupsException, ClassNotFoundException {
 
     MissingParam.checkMissing(conn, "conn");
 
@@ -694,9 +697,9 @@ public class InstrumentDB {
     long id, String name, List<Long> sharedWith, List<Long> variableIds,
     Map<Long, String> variableProperties, String platformName,
     String platformCode, int basis, boolean nrt, LocalDateTime lastNrtExport,
-    String propertiesJson, LocalDateTime created)
-    throws MissingParamException, DatabaseException, RecordNotFoundException,
-    InstrumentException, VariableNotFoundException, SensorGroupsException {
+    String propertiesJson, LocalDateTime created) throws MissingParamException,
+    DatabaseException, RecordNotFoundException, InstrumentException,
+    VariableNotFoundException, SensorGroupsException, ClassNotFoundException {
 
     SensorsConfiguration sensorConfig = ResourceManager.getInstance()
       .getSensorsConfiguration();
@@ -746,10 +749,12 @@ public class InstrumentDB {
    * @throws RecordNotFoundException
    * @throws VariableNotFoundException
    * @throws SensorGroupsException
+   * @throws ClassNotFoundException
    */
   private static List<Instrument> getAllUsersInstrumentList(Connection conn)
     throws MissingParamException, DatabaseException, VariableNotFoundException,
-    RecordNotFoundException, InstrumentException, SensorGroupsException {
+    RecordNotFoundException, InstrumentException, SensorGroupsException,
+    ClassNotFoundException {
 
     return getInstrumentList(conn, -1);
   }
@@ -799,8 +804,9 @@ public class InstrumentDB {
   }
 
   public static Instrument getInstrument(DataSource dataSource,
-    long instrumentId) throws DatabaseException, MissingParamException,
-    RecordNotFoundException, InstrumentException, SensorGroupsException {
+    long instrumentId)
+    throws DatabaseException, MissingParamException, RecordNotFoundException,
+    InstrumentException, SensorGroupsException, ClassNotFoundException {
     try (Connection conn = dataSource.getConnection()) {
       return getInstrument(conn, instrumentId);
     } catch (SQLException e) {
@@ -827,10 +833,12 @@ public class InstrumentDB {
    * @throws InstrumentException
    *           If any instrument values are invalid
    * @throws SensorGroupsException
+   * @throws ClassNotFoundException
+   * @throws MissingParamException
    */
   public static Instrument getInstrument(Connection conn, long instrumentId)
     throws DatabaseException, RecordNotFoundException, InstrumentException,
-    SensorGroupsException {
+    SensorGroupsException, MissingParamException, ClassNotFoundException {
 
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
@@ -907,6 +915,8 @@ public class InstrumentDB {
 
     } catch (SQLException e) {
       throw new DatabaseException("Error retrieving instrument", e);
+    } catch (Exception e) {
+      throw e;
     } finally {
       DatabaseUtils.closeResultSets(resultSets);
       DatabaseUtils.closeStatements(stmts);
@@ -930,10 +940,11 @@ public class InstrumentDB {
    * @throws RecordNotFoundException
    *           If no file definitions are stored for the instrument
    * @throws InstrumentException
+   * @throws ClassNotFoundException
    */
   public static InstrumentFileSet getFileDefinitions(Connection conn,
     long instrumentId) throws MissingParamException, DatabaseException,
-    RecordNotFoundException, InstrumentException {
+    RecordNotFoundException, InstrumentException, ClassNotFoundException {
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);
 
@@ -967,10 +978,11 @@ public class InstrumentDB {
           LatitudeSpecification.class);
         DateTimeSpecification dateTimeSpec = gson
           .fromJson(records.getString(11), DateTimeSpecification.class);
+        String fileClass = records.getString(12);
 
         FileDefinition fileDefinition = new FileDefinition(id, description,
           separator, headerType, headerLines, headerEndString, columnHeaderRows,
-          columnCount, lonSpec, latSpec, dateTimeSpec, fileSet);
+          columnCount, lonSpec, latSpec, dateTimeSpec, fileSet, fileClass);
 
         fileSet.add(fileDefinition);
 
@@ -1260,10 +1272,11 @@ public class InstrumentDB {
    *           If a database error occurs
    * @throws RecordNotFoundException
    * @throws InstrumentException
+   * @throws ClassNotFoundException
    */
   public static Map<String, String> getCalibratableSensors(Connection conn,
     long instrumentId) throws MissingParamException, DatabaseException,
-    RecordNotFoundException, InstrumentException {
+    RecordNotFoundException, InstrumentException, ClassNotFoundException {
 
     Map<String, String> result = new LinkedHashMap<String, String>();
 
@@ -1823,8 +1836,8 @@ public class InstrumentDB {
 
   public static void deleteInstrument(DataSource dataSource, long instrumentId)
     throws DatabaseException, RecordNotFoundException, MissingParamException,
-    InstrumentException, SensorGroupsException, FileStoreException,
-    IOException {
+    InstrumentException, SensorGroupsException, FileStoreException, IOException,
+    ClassNotFoundException {
 
     MissingParam.checkMissing(dataSource, "dataSource");
     MissingParam.checkDatabaseId(instrumentId, "instrumentId", false);

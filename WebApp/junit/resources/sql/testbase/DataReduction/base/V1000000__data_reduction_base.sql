@@ -55,16 +55,17 @@ INSERT INTO instrument_variables (instrument_id, variable_id)
 
 -- File definition.
 -- This isn't actually used, but we need a file definition and file columns
--- to conform to the daINSERT INTO file_definition VALUES
+-- to conform to the INSERT INTO file_definition VALUES
 INSERT INTO file_definition
   (id, instrument_id, description, column_separator, header_type, header_lines,
    header_end_string, column_header_rows, column_count, lon_spec, lat_spec,
-   datetime_spec)
+   datetime_spec, file_class)
   VALUES
   (1, 1, 'Data File', ',', 0, 0, NULL, 0, 6,
    '{"valueColumn":-1,"hemisphereColumn":-1,"format":-1}',
    '{"valueColumn":-1,"hemisphereColumn":-1,"format":-1}',
-   '{"assignments":{"0":{"assignmentIndex":0,"column":0,"properties":{"formatString":"yyyy-MM-dd HH:mm:ss.SSS"}},"1":{"assignmentIndex":1,"column":-1,"properties":{}},"2":{"assignmentIndex":2,"column":-1,"properties":{}},"3":{"assignmentIndex":3,"column":-1,"properties":{}},"4":{"assignmentIndex":4,"column":-1,"properties":{}},"5":{"assignmentIndex":5,"column":-1,"properties":{}},"6":{"assignmentIndex":6,"column":-1,"properties":{}},"7":{"assignmentIndex":7,"column":-1,"properties":{}},"8":{"assignmentIndex":8,"column":-1,"properties":{}},"9":{"assignmentIndex":9,"column":-1,"properties":{}},"10":{"assignmentIndex":10,"column":-1,"properties":{}},"11":{"assignmentIndex":11,"column":-1,"properties":{}},"12":{"assignmentIndex":12,"column":-1,"properties":{}}},"fileHasHeader":false}'
+   '{"assignments":{"0":{"assignmentIndex":0,"column":0,"properties":{"formatString":"yyyy-MM-dd HH:mm:ss.SSS"}},"1":{"assignmentIndex":1,"column":-1,"properties":{}},"2":{"assignmentIndex":2,"column":-1,"properties":{}},"3":{"assignmentIndex":3,"column":-1,"properties":{}},"4":{"assignmentIndex":4,"column":-1,"properties":{}},"5":{"assignmentIndex":5,"column":-1,"properties":{}},"6":{"assignmentIndex":6,"column":-1,"properties":{}},"7":{"assignmentIndex":7,"column":-1,"properties":{}},"8":{"assignmentIndex":8,"column":-1,"properties":{}},"9":{"assignmentIndex":9,"column":-1,"properties":{}},"10":{"assignmentIndex":10,"column":-1,"properties":{}},"11":{"assignmentIndex":11,"column":-1,"properties":{}},"12":{"assignmentIndex":12,"column":-1,"properties":{}}},"fileHasHeader":false}',
+   'TimeDataFile'
   );
   
 -- Run Types

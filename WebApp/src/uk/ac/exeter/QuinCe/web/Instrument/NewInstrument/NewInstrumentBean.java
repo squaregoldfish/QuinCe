@@ -38,6 +38,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
+import uk.ac.exeter.QuinCe.data.Instrument.InvalidInstrumentBasisException;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.DateTimeSpecification;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.DateTimeSpecificationException;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.InvalidPositionFormatException;
@@ -65,6 +66,7 @@ import uk.ac.exeter.QuinCe.utils.HighlightedString;
 import uk.ac.exeter.QuinCe.utils.HighlightedStringException;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.web.FileUploadBean;
+import uk.ac.exeter.QuinCe.web.FileUploadException;
 import uk.ac.exeter.QuinCe.web.Instrument.InstrumentListBean;
 import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree.AssignmentsTree;
 import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.AssignmentsTree.AssignmentsTreeNodeData;
@@ -553,8 +555,9 @@ public class NewInstrumentBean extends FileUploadBean {
    * Navigate to the Name page
    *
    * @return Navigation to the name page
+   * @throws FileUploadException
    */
-  public String goToName() {
+  public String goToName() throws FileUploadException {
     clearFile();
     setSetupStep(NAV_NAME);
     return NAV_NAME;
@@ -578,12 +581,14 @@ public class NewInstrumentBean extends FileUploadBean {
    * @return Navigation to the files
    * @throws InstrumentFileExistsException
    *           If the default instrument file has already been added.
+   * @throws InvalidInstrumentBasisException
    */
-  public String goToFiles() throws InstrumentFileExistsException {
+  public String goToFiles()
+    throws InstrumentFileExistsException, InvalidInstrumentBasisException {
     String result;
 
     if (instrumentFiles.size() == 0) {
-      currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles);
+      currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles, basis);
 
       result = NAV_UPLOAD_FILE;
     } else {
@@ -611,10 +616,12 @@ public class NewInstrumentBean extends FileUploadBean {
    * Begin the process of adding a new file to the instrument.
    *
    * @return The navigation to the file upload.
+   * @throws InvalidInstrumentBasisException
    * @throws DateTimeSpecificationException.
    */
-  public String addFile() throws DateTimeSpecificationException {
-    currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles);
+  public String addFile()
+    throws DateTimeSpecificationException, InvalidInstrumentBasisException {
+    currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles, basis);
     return NAV_UPLOAD_FILE;
   }
 
@@ -772,10 +779,11 @@ public class NewInstrumentBean extends FileUploadBean {
    * @throws SensorConfigurationException
    * @throws SensorTypeNotFoundException
    * @throws SensorAssignmentException
+   * @throws FileUploadException
    */
   public String useFile() throws DateTimeSpecificationException,
     SensorAssignmentException, SensorTypeNotFoundException,
-    SensorConfigurationException, SensorGroupsException {
+    SensorConfigurationException, SensorGroupsException, FileUploadException {
     instrumentFiles.add(currentInstrumentFile);
     updatedFile = currentInstrumentFile.getFileDescription();
 
@@ -928,15 +936,22 @@ public class NewInstrumentBean extends FileUploadBean {
 
   /**
    * Discard the current instrument file
+   *
+   * @throws FileUploadException
    */
-  public void discardUploadedFile() {
+  public void discardUploadedFile() throws FileUploadException {
     clearFile();
   }
 
   @Override
-  public void clearFile() {
-    super.clearFile();
-    currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles);
+  public void clearFile() throws FileUploadException {
+
+    try {
+      super.clearFile();
+      currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles, basis);
+    } catch (Exception e) {
+      throw new FileUploadException(e);
+    }
   }
 
   /**
@@ -1720,7 +1735,8 @@ public class NewInstrumentBean extends FileUploadBean {
       }
 
       if (instrumentFiles.size() == 0) {
-        currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles);
+        currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles,
+          basis);
         result = NAV_UPLOAD_FILE;
       } else {
         result = NAV_ASSIGN_VARIABLES;

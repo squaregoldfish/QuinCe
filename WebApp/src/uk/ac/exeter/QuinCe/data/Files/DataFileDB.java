@@ -51,12 +51,6 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 public class DataFileDB {
 
   /**
-   * The package in which implementations of the {@link DataFile} class are
-   * located.
-   */
-  private static final String DATA_FILE_PACKAGE = "uk.ac.exeter.QuinCe.data.Files";
-
-  /**
    * Statement to add a data file to the database
    *
    * @see #storeNewFile(DataSource, Properties, DataFile)
@@ -79,7 +73,7 @@ public class DataFileDB {
    */
   private static final String GET_FILENAME_QUERY = "SELECT "
     + "f.id, f.file_definition_id, f.filename, f.start, "
-    + "f.end, f.record_count, f.properties, f.class, i.id FROM data_file AS f "
+    + "f.end, f.record_count, f.properties, i.id FROM data_file AS f "
     + "INNER JOIN file_definition AS d ON f.file_definition_id = d.id "
     + "INNER JOIN instrument AS i ON d.instrument_id = i.id " + "WHERE f.id IN "
     + DatabaseUtils.IN_PARAMS_TOKEN;
@@ -91,7 +85,7 @@ public class DataFileDB {
    */
   private static final String GET_FILES_QUERY = "SELECT "
     + "f.id, f.file_definition_id, f.filename, f.start, f.end, "
-    + "f.record_count, f.properties, f.class, i.id FROM data_file AS f "
+    + "f.record_count, f.properties, i.id FROM data_file AS f "
     + "INNER JOIN file_definition AS d ON f.file_definition_id = d.id "
     + "INNER JOIN instrument AS i ON d.instrument_id = i.id";
 
@@ -102,7 +96,7 @@ public class DataFileDB {
    */
   private static final String GET_FILES_BY_INSTRUMENT_QUERY = "SELECT "
     + "f.id, f.file_definition_id, f.filename, f.start, f.end, "
-    + "f.record_count, f.properties, f.class FROM data_file AS f "
+    + "f.record_count, f.properties FROM data_file AS f "
     + "INNER JOIN file_definition AS d ON f.file_definition_id = d.id "
     + "INNER JOIN instrument AS i ON d.instrument_id = i.id "
     + "WHERE d.instrument_id = ?";
@@ -114,7 +108,7 @@ public class DataFileDB {
    */
   private static final String GET_FILES_BY_DEFINITION_QUERY = "SELECT "
     + "f.id, f.file_definition_id, f.filename, f.start, f.end, "
-    + "f.record_count, f.properties, f.class, d.id FROM data_file AS f "
+    + "f.record_count, f.properties, d.id FROM data_file AS f "
     + "INNER JOIN file_definition AS d ON f.file_definition_id = d.id "
     + "WHERE d.id = ?";
 
@@ -698,15 +692,12 @@ public class DataFileDB {
       int recordCount = record.getInt(6);
       Properties properties = new Gson().fromJson(record.getString(7),
         Properties.class);
-      String simpleClass = record.getString(8);
 
       try {
-        String fullClass = DATA_FILE_PACKAGE + "." + simpleClass;
-        Class<?> clazz = Class.forName(fullClass);
-
-        Constructor<?> constructor = clazz.getConstructor(long.class,
-          Instrument.class, FileDefinition.class, String.class, String.class,
-          String.class, int.class, Properties.class);
+        Constructor<?> constructor = fileDefinition.getFileClass()
+          .getConstructor(long.class, Instrument.class, FileDefinition.class,
+            String.class, String.class, String.class, int.class,
+            Properties.class);
         result = (DataFile) constructor.newInstance(id, instrument,
           fileDefinition, filename, start, end, recordCount, properties);
       } catch (Exception e) {

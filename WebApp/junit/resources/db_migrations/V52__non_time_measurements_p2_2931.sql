@@ -32,4 +32,4 @@ ALTER TABLE data_file DROP COLUMN start_date;
 ALTER TABLE data_file DROP COLUMN end_date;
 
 -- Store the DataFile class
-ALTER TABLE data_file ADD class VARCHAR(45) DEFAULT 'TimeDataFile' NOT NULL AFTER properties;
+ALTER TABLE file_definition ADD file_class VARCHAR(45) DEFAULT 'TimeDataFile' NOT NULL AFTER datetime_spec;

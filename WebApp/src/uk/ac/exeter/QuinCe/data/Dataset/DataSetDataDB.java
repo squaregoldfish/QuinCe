@@ -224,11 +224,12 @@ public class DataSetDataDB {
    * @throws InstrumentException
    *           If the instrument details cannot be retrieved
    * @throws SensorGroupsException
+   * @throws ClassNotFoundException
    */
   public static List<String> extractDatasetFields(Connection conn,
     DataSet dataSet, List<String> originalFields)
     throws MissingParamException, DatabaseException, RecordNotFoundException,
-    InstrumentException, SensorGroupsException {
+    InstrumentException, SensorGroupsException, ClassNotFoundException {
 
     List<String> datasetFields = new ArrayList<String>();
 
@@ -290,10 +291,12 @@ public class DataSetDataDB {
    * @throws InstrumentException
    *           If the instrument details cannot be retrieved
    * @throws SensorGroupsException
+   * @throws ClassNotFoundException
    */
   public static boolean isDatasetField(Connection conn, DataSet dataset,
-    String field) throws MissingParamException, DatabaseException,
-    RecordNotFoundException, InstrumentException, SensorGroupsException {
+    String field)
+    throws MissingParamException, DatabaseException, RecordNotFoundException,
+    InstrumentException, SensorGroupsException, ClassNotFoundException {
 
     List<String> fieldList = new ArrayList<String>(1);
     fieldList.add(field);
@@ -329,20 +332,12 @@ public class DataSetDataDB {
    *          A database connection.
    * @param sensorValues
    *          The sensor values.
-   * @throws DatabaseException
-   *           If a database error occurs.
+   * @throws Exception
    * @throws MissingParamException
    *           If any required parameters are missing.
-   * @throws InstrumentException
-   *           If the instrument details cannot be retrieved.
-   * @throws InvalidSensorValueException
-   *           If any sensor value contains invalid dataset/column IDs.
-   * @throws SensorGroupsException
    */
   public static void storeNewSensorValues(Connection conn,
-    NewSensorValues sensorValues) throws DatabaseException, CoordinateException,
-    InvalidSensorValueException, RecordNotFoundException, InstrumentException,
-    SensorGroupsException, IllegalAccessException {
+    NewSensorValues sensorValues) throws Exception {
 
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkMissing(sensorValues, "sensorValues");
@@ -456,11 +451,13 @@ public class DataSetDataDB {
    * @throws SensorGroupsException
    * @throws InstrumentException
    * @throws RecordNotFoundException
+   * @throws ClassNotFoundException
+   * @throws MissingParamException
    */
   public static void updateSensorValues(Connection conn,
-    Collection<SensorValue> sensorValues)
-    throws DatabaseException, InvalidSensorValueException,
-    RecordNotFoundException, InstrumentException, SensorGroupsException {
+    Collection<SensorValue> sensorValues) throws DatabaseException,
+    InvalidSensorValueException, RecordNotFoundException, InstrumentException,
+    SensorGroupsException, MissingParamException, ClassNotFoundException {
 
     MissingParam.checkMissing(conn, "conn");
     MissingParam.checkMissing(sensorValues, "sensorValues", true);

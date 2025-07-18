@@ -34,4 +34,4 @@ ALTER TABLE data_file CHANGE start_date start VARCHAR(20);
 ALTER TABLE data_file CHANGE end_date end VARCHAR(20);
 
 -- Store the DataFile class
-ALTER TABLE data_file ADD class VARCHAR(45) DEFAULT 'TimeDataFile' NOT NULL AFTER properties;
+ALTER TABLE file_definition ADD file_class VARCHAR(45) DEFAULT 'TimeDataFile' NOT NULL AFTER datetime_spec;

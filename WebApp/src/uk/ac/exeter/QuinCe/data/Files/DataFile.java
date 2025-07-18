@@ -608,7 +608,8 @@ public abstract class DataFile implements Comparable<DataFile> {
 
   protected List<Instrument> getPreviousInstruments()
     throws MissingParamException, VariableNotFoundException, DatabaseException,
-    RecordNotFoundException, InstrumentException, SensorGroupsException {
+    RecordNotFoundException, InstrumentException, SensorGroupsException,
+    ClassNotFoundException {
 
     List<Instrument> result = null;
 
