@@ -85,8 +85,7 @@ public class CreateNrtDataset extends Job {
       DataSet lastDataset = DataSetDB.getLastDataSet(conn, instrument.getId(),
         false);
 
-      TreeSet<DataFile> instrumentFiles = DataFileDB.getFiles(conn,
-        ResourceManager.getInstance().getConfig(), instrument);
+      TreeSet<DataFile> instrumentFiles = DataFileDB.getFiles(conn, instrument);
 
       if (null != lastDataset) {
         nrtStartDate = lastDataset.getEndTime().plusSeconds(1);
@@ -99,8 +98,7 @@ public class CreateNrtDataset extends Job {
       }
 
       if (null != nrtStartDate) {
-        TreeSet<DataFile> files = DataFileDB.getFiles(conn,
-          ResourceManager.getInstance().getConfig(), instrument);
+        TreeSet<DataFile> files = DataFileDB.getFiles(conn, instrument);
 
         LocalDateTime endDate = ((TimeDataFile) files.last()).getRawEndTime();
 

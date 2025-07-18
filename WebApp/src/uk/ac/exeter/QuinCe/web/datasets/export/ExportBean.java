@@ -770,8 +770,7 @@ public class ExportBean extends BaseManagedBean {
     throws Exception {
 
     // Get the list of raw files
-    TreeSet<DataFile> files = DataFileDB.getDatasetFiles(conn,
-      ResourceManager.getInstance().getConfig(), dataset);
+    TreeSet<DataFile> files = DataFileDB.getDatasetFiles(conn, dataset);
 
     // Get the base manifest. We will add to it as we go.
     JsonObject manifest = makeManifest(conn, instrument, dataset);

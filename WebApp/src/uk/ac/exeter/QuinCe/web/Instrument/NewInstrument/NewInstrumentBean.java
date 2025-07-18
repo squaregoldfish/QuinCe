@@ -1286,7 +1286,7 @@ public class NewInstrumentBean extends FileUploadBean {
       format = sensorAssignments.getFixedLatitudeFormat();
     }
 
-    file.getLongitudeSpecification().setFormat(format);
+    file.getLatitudeSpecification().setFormat(format);
 
     if (latitudeFormat != LatitudeSpecification.FORMAT_0_90) {
       file.getLatitudeSpecification().setHemisphereColumn(-1);

@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Properties;
 import java.util.TreeSet;
 
 import javax.faces.application.FacesMessage;
@@ -306,8 +305,8 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
    * @param allowEmpty
    *          Indicates whether or not empty files are accepted.
    */
-  public void extractFile(Instrument instrument, Properties appConfig,
-    boolean allowExactDuplicate, boolean allowEmpty) {
+  public void extractFile(Instrument instrument, boolean allowExactDuplicate,
+    boolean allowEmpty) {
     boolean fileEmpty = false;
 
     try {
@@ -372,8 +371,8 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
               FacesMessage.SEVERITY_ERROR);
           } else {
             TreeSet<DataFile> overlappingFiles = getDataFile()
-              .getOverlappingFiles(DataFileDB.getFiles(dataSource, appConfig,
-                instrument, getDataFile().getFileDefinition()));
+              .getOverlappingFiles(DataFileDB.getFiles(dataSource, instrument,
+                getDataFile().getFileDefinition()));
 
             boolean fileOK = true;
             String fileMessage = null;

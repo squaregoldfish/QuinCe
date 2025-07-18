@@ -66,7 +66,7 @@ public class MultipleFileUploadBean extends FileUploadBean {
     progress.setValue(0);
     dataFiles.forEach(f -> f.setProcessed(false));
     for (UploadedDataFile file : dataFiles) {
-      file.extractFile(getCurrentInstrument(), getAppConfig(), false, false);
+      file.extractFile(getCurrentInstrument(), false, false);
       progress.increment();
     }
 

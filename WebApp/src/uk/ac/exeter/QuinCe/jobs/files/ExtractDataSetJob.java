@@ -122,9 +122,9 @@ public class ExtractDataSetJob extends DataSetJob {
           DataSet.STATUS_REPROCESS);
       }
 
-      List<TimeDataFile> allFiles = new ArrayList<DataFile>(DataFileDB
-        .getFiles(conn, ResourceManager.getInstance().getConfig(), instrument))
-        .stream().map(f -> (TimeDataFile) f).toList();
+      List<TimeDataFile> allFiles = new ArrayList<DataFile>(
+        DataFileDB.getFiles(conn, instrument)).stream()
+        .map(f -> (TimeDataFile) f).toList();
 
       List<TimeDataFile> potentialFiles = TimeDataFile.filter(allFiles,
         dataSet.getStartTime(), dataSet.getEndTime(), true);

@@ -54,7 +54,7 @@ public abstract class DataFile implements Comparable<DataFile> {
   /**
    * The file contents
    */
-  protected FileContents contents;
+  private FileContents contents;
 
   /**
    * Messages generated regarding the file
@@ -139,14 +139,13 @@ public abstract class DataFile implements Comparable<DataFile> {
    *          The number of records in the file
    */
   public DataFile(long id, Instrument instrument, FileDefinition fileDefinition,
-    String filename, FileContents contents, int recordCount,
-    Properties properties) {
+    String filename, int recordCount, Properties properties) {
 
     this.databaseId = id;
     this.instrument = instrument;
     this.fileDefinition = fileDefinition;
     this.filename = filename;
-    this.contents = contents;
+    this.contents = null;
     this.recordCount = recordCount;
     this.properties = properties;
   }
@@ -202,7 +201,7 @@ public abstract class DataFile implements Comparable<DataFile> {
    *           header
    */
   public int getFirstDataLine() throws DataFileException {
-    return fileDefinition.getHeaderLength(contents.get())
+    return fileDefinition.getHeaderLength(getContents().get())
       + fileDefinition.getColumnHeaderRows();
   }
 
@@ -213,7 +212,7 @@ public abstract class DataFile implements Comparable<DataFile> {
    * @throws DataFileException
    */
   public int getContentLineCount() throws DataFileException {
-    return contents.size();
+    return getContents().size();
   }
 
   /**
@@ -249,8 +248,8 @@ public abstract class DataFile implements Comparable<DataFile> {
       throw new DataFileException(databaseId, row,
         "Requested row is in the file header");
     } else {
-      result = StringUtils.trimList(
-        Arrays.asList(contents.get(row).split(fileDefinition.getSeparator())));
+      result = StringUtils.trimList(Arrays
+        .asList(getContents().get(row).split(fileDefinition.getSeparator())));
     }
 
     return result;
@@ -471,6 +470,15 @@ public abstract class DataFile implements Comparable<DataFile> {
     return fileDefinition;
   }
 
+  protected FileContents getContents() {
+    if (null == contents) {
+      contents = DataFileDB.getFileContents(getFileDefinition().getDatabaseId(),
+        databaseId);
+    }
+
+    return contents;
+  }
+
   /**
    * Get the contents of the file as a single string
    *
@@ -482,7 +490,7 @@ public abstract class DataFile implements Comparable<DataFile> {
     StringBuilder result = new StringBuilder();
 
     for (int i = 0; i < getContentLineCount(); i++) {
-      result.append(contents.get(i));
+      result.append(getContents().get(i));
 
       if (i < getContentLineCount() - 1) {
         result.append('\n');
@@ -500,7 +508,7 @@ public abstract class DataFile implements Comparable<DataFile> {
    *           If the file cannot be read
    */
   public byte[] getBytes() throws IOException {
-    return contents.getBytes();
+    return getContents().getBytes();
   }
 
   /**
@@ -519,7 +527,7 @@ public abstract class DataFile implements Comparable<DataFile> {
    */
   public Double getDoubleValue(int line, int field, String missingValue)
     throws DataFileException {
-    String fieldValue = fileDefinition.extractFields(contents.get(line))
+    String fieldValue = fileDefinition.extractFields(getContents().get(line))
       .get(field);
 
     Double result = null;
@@ -586,7 +594,7 @@ public abstract class DataFile implements Comparable<DataFile> {
    * @throws DataFileException
    */
   public List<String> getLine(int line) throws DataFileException {
-    return fileDefinition.extractFields(contents.get(line));
+    return fileDefinition.extractFields(getContents().get(line));
   }
 
   public Properties getProperties() {
@@ -635,49 +643,49 @@ public abstract class DataFile implements Comparable<DataFile> {
 
   /**
    * Get the start point of the file.
-   * 
+   *
    * <p>
    * This can be an encoded String specific to the implementation, and may not
    * be suitable for display to end users.
    * </p>
-   * 
+   *
    * @see #getStartDisplayString()
-   * 
+   *
    * @return The start point.
    */
   public abstract String getStartString();
 
   /**
    * Get the start point of the file for display.
-   * 
+   *
    * @return The start point.
    */
   public abstract String getStartDisplayString();
 
   /**
    * Get the end point of the file.
-   * 
+   *
    * <p>
    * This can be an encoded String specific to the implementation, and may not
    * be suitable for display to end users.
    * </p>
-   * 
+   *
    * @see #getEndDisplayString()
-   * 
+   *
    * @return The end point.
    */
   public abstract String getEndString();
 
   /**
    * Get the end point of the file for display.
-   * 
+   *
    * @return The end point.
    */
   public abstract String getEndDisplayString();
 
   /**
    * Get a list of existing files that overlap with this file.
-   * 
+   *
    * @return The overlapping files.
    */
   public abstract TreeSet<DataFile> getOverlappingFiles(
@@ -685,7 +693,7 @@ public abstract class DataFile implements Comparable<DataFile> {
 
   /**
    * Get any extra properties that should be included in the export manifest.
-   * 
+   *
    * @return
    */
   public Properties getExportProperties() {

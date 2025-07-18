@@ -83,11 +83,10 @@ public class TimeDataFile extends DataFile implements TimeRange {
   }
 
   public TimeDataFile(long id, Instrument instrument,
-    FileDefinition fileDefinition, String filename, FileContents contents,
-    String start, String end, int recordCount, Properties properties) {
+    FileDefinition fileDefinition, String filename, String start, String end,
+    int recordCount, Properties properties) {
 
-    super(id, instrument, fileDefinition, filename, contents, recordCount,
-      properties);
+    super(id, instrument, fileDefinition, filename, recordCount, properties);
     this.startDate = DateTimeUtils.longToDate(Long.parseLong(start));
     this.endDate = DateTimeUtils.longToDate(Long.parseLong(end));
   }
@@ -211,7 +210,7 @@ public class TimeDataFile extends DataFile implements TimeRange {
    */
   public LocalDateTime getRawTime(int line) throws DataFileException,
     DateTimeSpecificationException, MissingDateTimeException {
-    return getRawTime(fileDefinition.extractFields(contents.get(line)));
+    return getRawTime(fileDefinition.extractFields(getContents().get(line)));
   }
 
   public LocalDateTime getOffsetTime(List<String> line)
@@ -246,7 +245,7 @@ public class TimeDataFile extends DataFile implements TimeRange {
     String runType = null;
 
     if (fileDefinition.hasRunTypes()) {
-      runType = fileDefinition.getRunType(contents.get(line), true)
+      runType = fileDefinition.getRunType(getContents().get(line), true)
         .getRunName();
     }
 
@@ -270,7 +269,7 @@ public class TimeDataFile extends DataFile implements TimeRange {
     RunTypeCategory runType = null;
 
     if (fileDefinition.hasRunTypes()) {
-      runType = fileDefinition.getRunTypeCategory(contents.get(line));
+      runType = fileDefinition.getRunTypeCategory(getContents().get(line));
     }
 
     return runType;
@@ -461,7 +460,8 @@ public class TimeDataFile extends DataFile implements TimeRange {
       if (null != assignment) {
         try {
           HighlightedString matchedLine = fileDefinition.getHeaderLine(
-            contents.get(), assignment.getPrefix(), assignment.getSuffix());
+            getContents().get(), assignment.getPrefix(),
+            assignment.getSuffix());
           headerDate = LocalDateTime.parse(matchedLine.getHighlightedPortion(),
             assignment.getFormatter());
         } catch (Exception e) {
@@ -491,7 +491,7 @@ public class TimeDataFile extends DataFile implements TimeRange {
 
       LocalDateTime lastDateTime = null;
       for (int lineNumber = firstDataLine; lineNumber < getContentLineCount(); lineNumber++) {
-        String line = contents.get(lineNumber);
+        String line = getContents().get(lineNumber);
 
         try {
           LocalDateTime dateTime = fileDefinition.getDateTimeSpecification()

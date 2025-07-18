@@ -283,7 +283,7 @@ public class DataSetsBean extends BaseManagedBean {
 
       // Now the actual files
       TreeSet<DataFile> dataFiles = DataFileDB.getFiles(getDataSource(),
-        getAppConfig(), getCurrentInstrument());
+        getCurrentInstrument());
 
       JsonArray entriesJson = new JsonArray();
 

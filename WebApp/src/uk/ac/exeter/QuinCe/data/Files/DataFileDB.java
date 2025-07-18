@@ -31,6 +31,7 @@ import uk.ac.exeter.QuinCe.utils.ExceptionUtils;
 import uk.ac.exeter.QuinCe.utils.MissingParam;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
+import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
  * Methods for handling raw data files.
@@ -231,7 +232,7 @@ public class DataFileDB {
     ResultSet generatedKeys = null;
 
     try {
-      TreeSet<DataFile> existingFiles = getFiles(conn, appConfig, instrument,
+      TreeSet<DataFile> existingFiles = getFiles(conn, instrument,
         dataFile.getFileDefinition());
 
       if (dataFile.getOverlappingFiles(existingFiles).size() > 0) {
@@ -304,7 +305,7 @@ public class DataFileDB {
         // we don't need to do anything
         List<Long> idList = new ArrayList<Long>(1);
         idList.add(replacementId);
-        DataFile fileToReplace = getDataFiles(conn, appConfig, idList).first();
+        DataFile fileToReplace = getDataFiles(conn, idList).first();
 
         byte[] existingFile = fileToReplace.getBytes();
         byte[] newFile = dataFile.getBytes();
@@ -409,10 +410,10 @@ public class DataFileDB {
    * @see #makeDataFile(ResultSet, String, Connection)
    */
   public static TreeSet<DataFile> getFiles(DataSource dataSource,
-    Properties appConfig, Instrument instrument) throws DatabaseException {
+    Instrument instrument) throws DatabaseException {
 
     try (Connection conn = dataSource.getConnection()) {
-      return getFiles(conn, appConfig, instrument);
+      return getFiles(conn, instrument);
     } catch (SQLException e) {
       throw new DatabaseException("An error occurred while searching for files",
         e);
@@ -439,7 +440,7 @@ public class DataFileDB {
    * @see #makeDataFile(ResultSet, String, Connection)
    */
   public static TreeSet<DataFile> getFiles(Connection conn,
-    Properties appConfig, Instrument instrument) throws DatabaseException {
+    Instrument instrument) throws DatabaseException {
 
     PreparedStatement stmt = null;
     ResultSet records = null;
@@ -458,8 +459,7 @@ public class DataFileDB {
 
       records = stmt.executeQuery();
       while (records.next()) {
-        fileInfo.add(makeDataFile(records, appConfig.getProperty("filestore"),
-          instrument));
+        fileInfo.add(makeDataFile(records, instrument));
       }
 
     } catch (Exception e) {
@@ -491,11 +491,11 @@ public class DataFileDB {
    * @see #makeDataFile(ResultSet, String, Connection)
    */
   public static TreeSet<DataFile> getFiles(DataSource dataSource,
-    Properties appConfig, Instrument instrument, FileDefinition fileDefinition)
+    Instrument instrument, FileDefinition fileDefinition)
     throws DatabaseException {
 
     try (Connection conn = dataSource.getConnection()) {
-      return getFiles(conn, appConfig, instrument, fileDefinition);
+      return getFiles(conn, instrument, fileDefinition);
     } catch (SQLException e) {
       throw new DatabaseException("An error occurred while searching for files",
         e);
@@ -517,7 +517,7 @@ public class DataFileDB {
    * @see #makeDataFile(ResultSet, String, Connection)
    */
   public static TreeSet<DataFile> getFiles(Connection conn,
-    Properties appConfig, Instrument instrument, FileDefinition fileDefinition)
+    Instrument instrument, FileDefinition fileDefinition)
     throws DatabaseException {
 
     PreparedStatement stmt = null;
@@ -530,8 +530,7 @@ public class DataFileDB {
 
       records = stmt.executeQuery();
       while (records.next()) {
-        fileInfo.add(makeDataFile(records, appConfig.getProperty("filestore"),
-          instrument, fileDefinition));
+        fileInfo.add(makeDataFile(records, instrument, fileDefinition));
       }
 
     } catch (Exception e) {
@@ -563,12 +562,10 @@ public class DataFileDB {
    * @throws RecordNotFoundException
    *           If any files are not in the database
    */
-  public static TreeSet<DataFile> getDataFiles(Connection conn,
-    Properties appConfig, List<Long> ids)
+  public static TreeSet<DataFile> getDataFiles(Connection conn, List<Long> ids)
     throws DatabaseException, MissingParamException, RecordNotFoundException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkMissing(appConfig, "appConfig");
     MissingParam.checkMissing(ids, "ids");
 
     TreeSet<DataFile> files = new TreeSet<DataFile>();
@@ -585,8 +582,7 @@ public class DataFileDB {
 
       records = stmt.executeQuery();
       while (records.next()) {
-        files
-          .add(makeDataFile(records, appConfig.getProperty("filestore"), conn));
+        files.add(makeDataFile(records, conn));
       }
 
     } catch (SQLException e) {
@@ -618,14 +614,14 @@ public class DataFileDB {
    * @throws DatabaseException
    *           If any sub-queries fail
    */
-  private static DataFile makeDataFile(ResultSet record, String fileStore,
-    Connection conn) throws SQLException, DatabaseException {
+  private static DataFile makeDataFile(ResultSet record, Connection conn)
+    throws SQLException, DatabaseException {
     DataFile result = null;
 
     try {
-      long instrumentId = record.getLong(8);
+      long instrumentId = record.getLong(9);
       Instrument instrument = InstrumentDB.getInstrument(conn, instrumentId);
-      result = makeDataFile(record, fileStore, instrument);
+      result = makeDataFile(record, instrument);
     } catch (SQLException e) {
       throw e;
     } catch (Exception e) {
@@ -651,13 +647,13 @@ public class DataFileDB {
    * @throws DatabaseException
    *           If any sub-queries fail
    */
-  private static DataFile makeDataFile(ResultSet record, String fileStore,
-    Instrument instrument) throws SQLException, DatabaseException {
+  private static DataFile makeDataFile(ResultSet record, Instrument instrument)
+    throws SQLException, DatabaseException {
     DataFile result = null;
 
     try {
       long fileDefinitionId = record.getLong(2);
-      result = makeDataFile(record, fileStore, instrument,
+      result = makeDataFile(record, instrument,
         instrument.getFileDefinitions().get(fileDefinitionId));
     } catch (SQLException e) {
       throw e;
@@ -689,9 +685,8 @@ public class DataFileDB {
    * @throws IllegalAccessException
    * @throws InstantiationException
    */
-  private static DataFile makeDataFile(ResultSet record, String fileStore,
-    Instrument instrument, FileDefinition fileDefinition)
-    throws SQLException, DataFileException {
+  private static DataFile makeDataFile(ResultSet record, Instrument instrument,
+    FileDefinition fileDefinition) throws SQLException, DataFileException {
 
     DataFile result = null;
 
@@ -705,20 +700,15 @@ public class DataFileDB {
         Properties.class);
       String simpleClass = record.getString(8);
 
-      FileContents contents = new FileStoreFileContents(fileStore,
-        fileDefinition.getDatabaseId(), id);
-
       try {
         String fullClass = DATA_FILE_PACKAGE + "." + simpleClass;
         Class<?> clazz = Class.forName(fullClass);
 
         Constructor<?> constructor = clazz.getConstructor(long.class,
-          Instrument.class, FileDefinition.class, String.class,
-          FileContents.class, String.class, String.class, int.class,
-          Properties.class);
+          Instrument.class, FileDefinition.class, String.class, String.class,
+          String.class, int.class, Properties.class);
         result = (DataFile) constructor.newInstance(id, instrument,
-          fileDefinition, filename, contents, start, end, recordCount,
-          properties);
+          fileDefinition, filename, start, end, recordCount, properties);
       } catch (Exception e) {
         throw new DataFileException("Failed to construct DataFile object", e);
       }
@@ -866,7 +856,7 @@ public class DataFileDB {
     Instrument instrument, boolean deleteFolders)
     throws DatabaseException, FileStoreException, IOException {
 
-    TreeSet<DataFile> files = getFiles(conn, appConfig, instrument);
+    TreeSet<DataFile> files = getFiles(conn, instrument);
     for (DataFile file : files) {
       deleteFile(conn, appConfig, file);
     }
@@ -934,8 +924,7 @@ public class DataFileDB {
    * @throws RecordNotFoundException
    */
   public static TreeSet<DataFile> getDatasetFiles(Connection conn,
-    Properties appConfig, DataSet dataset)
-    throws DatabaseException, RecordNotFoundException {
+    DataSet dataset) throws DatabaseException, RecordNotFoundException {
 
     PreparedStatement usedFilesStmt = null;
     ResultSet records = null;
@@ -951,12 +940,21 @@ public class DataFileDB {
         fileIds.add(records.getLong(1));
       }
 
-      return getDataFiles(conn, appConfig, fileIds);
+      return getDataFiles(conn, fileIds);
     } catch (SQLException e) {
       throw new DatabaseException("Error getting dataset files", e);
     } finally {
       DatabaseUtils.closeResultSets(records);
       DatabaseUtils.closeStatements(usedFilesStmt);
     }
+  }
+
+  public static FileContents getFileContents(long fileDefinitionId,
+    long fileId) {
+
+    String fileStore = ResourceManager.getInstance().getConfig()
+      .getProperty("filestore");
+
+    return new FileStoreFileContents(fileStore, fileDefinitionId, fileId);
   }
 }

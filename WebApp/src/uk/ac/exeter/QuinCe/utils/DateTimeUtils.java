@@ -113,7 +113,7 @@ public class DateTimeUtils {
 
   /**
    * Generate an ISOformatted date string for a given date.
-   * 
+   *
    * <p>
    * Passing in a {@code null} date will give a {@code null} result.
    * </p>
