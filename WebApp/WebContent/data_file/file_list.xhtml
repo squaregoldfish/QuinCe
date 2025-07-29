@@ -35,7 +35,7 @@
               <p:ajax event="change" update="files" />
             </p:selectOneMenu>
           </ui:fragment>
-          <p:button value="Upload New File(s)" ajax="false" outcome="upload" />
+          <p:commandButton value="Upload New File(s)" ajax="false" action="#{fileUpload.start}" />
         </h:panelGrid>
         <p:dataTable id="files" value="#{dataFilesBean.listFiles}" var="file"
           stripedRows="true" styleClass="pageBlock">

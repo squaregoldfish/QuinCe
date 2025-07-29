@@ -23,6 +23,9 @@ import uk.ac.exeter.QuinCe.web.FileUploadBean;
 @ManagedBean(name = "fileUpload")
 @ViewScoped
 public class MultipleFileUploadBean extends FileUploadBean {
+
+  public static final String NAV_UPLOAD = "upload";
+
   /**
    * The data file object
    */
@@ -161,5 +164,11 @@ public class MultipleFileUploadBean extends FileUploadBean {
     return getCurrentInstrument().getFileDefinitions().stream()
       .map(fd -> fd.getRunTypeValues()).flatMap(Collection::stream).distinct()
       .filter(r -> !r.equals(exclusion)).toList();
+  }
+
+  public String start() {
+    dataFiles = new TreeSet<UploadedDataFile>();
+    unrecognisedRunTypes = null;
+    return NAV_UPLOAD;
   }
 }

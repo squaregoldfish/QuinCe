@@ -654,14 +654,20 @@ public abstract class DataFile implements Comparable<DataFile> {
    *
    * @return The start point.
    */
-  public abstract String getStartString();
+  public abstract String getStartString() throws DataFileException;
 
   /**
    * Get the start point of the file for display.
    *
+   * <p>
+   * The default implementation returns the output of {@link #getStartString()}.
+   * </p>
+   *
    * @return The start point.
    */
-  public abstract String getStartDisplayString();
+  public String getStartDisplayString() throws DataFileException {
+    return getStartString();
+  }
 
   /**
    * Get the end point of the file.
@@ -675,14 +681,20 @@ public abstract class DataFile implements Comparable<DataFile> {
    *
    * @return The end point.
    */
-  public abstract String getEndString();
+  public abstract String getEndString() throws DataFileException;
 
   /**
    * Get the end point of the file for display.
    *
+   * <p>
+   * The default implementation returns the output of {@link #getEndString()}.
+   * </p>
+   *
    * @return The end point.
    */
-  public abstract String getEndDisplayString();
+  public String getEndDisplayString() throws DataFileException {
+    return getEndString();
+  }
 
   /**
    * Get a list of existing files that overlap with this file.
@@ -700,4 +712,29 @@ public abstract class DataFile implements Comparable<DataFile> {
   public Properties getExportProperties() {
     return new Properties();
   }
+
+  protected Instrument getInstrument() {
+    return instrument;
+  }
+
+  /**
+   * Determine whether or not this file has a fundamental issue which means it
+   * cannot be processed.
+   *
+   * @return {@code true} if the file cannot be processed; {@code false} if it
+   *         is OK.
+   */
+  public abstract boolean hasFundametalProcessingIssue();
+
+  /**
+   * The data file item that causes {@link #hasFundametalProcessingIssue()} to
+   * return {@code true}.
+   *
+   * <p>
+   * The value returned by this method will be included in messages of the form
+   * {@code The file has &lt;item&gt; issues}.
+   *
+   * @return
+   */
+  public abstract String getFundamentalProcessingIssueItem();
 }

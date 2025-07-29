@@ -57,7 +57,7 @@ public class DataFileDB {
    */
   private static final String ADD_FILE_STATEMENT = "INSERT INTO data_file "
     + "(file_definition_id, filename, start, end, record_count, "
-    + "properties, class) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    + "properties) VALUES (?, ?, ?, ?, ?, ?)";
 
   /**
    * Statement to add a data file to the database
@@ -65,7 +65,7 @@ public class DataFileDB {
    * @see #replaceFile(DataSource, Properties, DataFile, long)
    */
   private static final String REPLACE_FILE_STATEMENT = "UPDATE data_file "
-    + "SET filename = ?, start = ?, end = ?, record_count = ?, properties = ?, class = ? "
+    + "SET filename = ?, start = ?, end = ?, record_count = ?, properties = ? "
     + "WHERE id = ?";
 
   /**
@@ -241,7 +241,6 @@ public class DataFileDB {
       stmt.setString(4, dataFile.getEndString());
       stmt.setInt(5, dataFile.getRecordCount());
       stmt.setString(6, new Gson().toJson(dataFile.getProperties()));
-      stmt.setString(7, dataFile.getClass().getSimpleName());
 
       stmt.execute();
 
@@ -319,7 +318,6 @@ public class DataFileDB {
         stmt.setInt(4, dataFile.getRecordCount());
         stmt.setString(5, new Gson().toJson(dataFile.getProperties()));
         stmt.setLong(6, replacementId);
-        stmt.setString(7, dataFile.getClass().getSimpleName());
 
         stmt.execute();
 

@@ -883,7 +883,7 @@ public class ExportBean extends BaseManagedBean {
 
   private static void addRawFilesToZip(ZipOutputStream zip,
     JsonArray rawManifest, String dirRoot, Collection<DataFile> files)
-    throws IOException {
+    throws IOException, DataFileException {
 
     for (DataFile file : files) {
       String filePath = dirRoot + "/raw/" + file.getFilename();

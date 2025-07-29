@@ -1,10 +1,7 @@
 package uk.ac.exeter.QuinCe.web.files;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.TreeSet;
@@ -51,7 +48,7 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
   /**
    * The processed file
    */
-  private TimeDataFile dataFile = null;
+  private DataFile dataFile = null;
 
   /**
    * Error messages for the file
@@ -117,38 +114,26 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
   /**
    * @return the dataFile
    */
-  public TimeDataFile getDataFile() {
+  public DataFile getDataFile() {
     return dataFile;
   }
 
   /**
    * @return the startDate
+   * @throws DataFileException
    */
-  public Date getStartDate() {
-    Date date = null;
-    if (null != dataFile) {
-      LocalDateTime localDate = dataFile.getRawStartTime();
-      if (null != localDate) {
-        date = Date.from(localDate.atZone(ZoneId.of("UTC")).toInstant());
-      }
-    }
-    return date;
+  public String getStart() throws DataFileException {
+    return dataFile.getStartDisplayString();
   }
 
   /**
    * Get the last date in the file.
    *
    * @return The last date.
+   * @throws DataFileException
    */
-  public Date getEndDate() {
-    Date date = null;
-    if (null != dataFile) {
-      LocalDateTime localDate = dataFile.getRawEndTime();
-      if (null != localDate) {
-        date = Date.from(localDate.atZone(ZoneId.of("UTC")).toInstant());
-      }
-    }
-    return date;
+  public String getEnd() throws DataFileException {
+    return dataFile.getEndDisplayString();
   }
 
   /**
@@ -255,12 +240,20 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
    *         {@code false} otherwise
    */
   public boolean getHasUnrecognisedRunTypes() {
-    return null != dataFile && dataFile.getMissingRunTypes().size() > 0;
+
+    if (null != dataFile && dataFile instanceof TimeDataFile) {
+      return ((TimeDataFile) dataFile).getMissingRunTypes().size() > 0;
+    } else {
+      return false;
+    }
   }
 
   public List<RunTypeAssignment> getMissingRunTypes() {
-    return null == dataFile ? new ArrayList<RunTypeAssignment>()
-      : dataFile.getMissingRunTypes();
+    if (null != dataFile && dataFile instanceof TimeDataFile) {
+      return ((TimeDataFile) dataFile).getMissingRunTypes();
+    } else {
+      return new ArrayList<RunTypeAssignment>();
+    }
   }
 
   /**
@@ -341,7 +334,7 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
           throw new NoSuchElementException();
         }
 
-        dataFile = new TimeDataFile(instrument, matchedDefinition, getName(),
+        dataFile = matchedDefinition.makeDataFile(instrument, getName(),
           new UploadedFileContents(this));
 
         if (getDataFile().getFirstDataLine() >= getDataFile()
@@ -360,10 +353,10 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
             getName() + " is empty. File accepted but not processed",
             FacesMessage.SEVERITY_INFO);
         } else {
-          if (null == getDataFile().getRawStartTime()
-            || null == getDataFile().getRawEndTime()) {
-            putMessage(UNPROCESSABLE_STATUS, getName()
-              + " has date issues, see messages below. Please fix these problems and upload the file again.",
+          if (dataFile.hasFundametalProcessingIssue()) {
+            putMessage(UNPROCESSABLE_STATUS, getName() + " has "
+              + dataFile.getFundamentalProcessingIssueItem()
+              + " issues, see messages below. Please fix these problems and upload the file again.",
               FacesMessage.SEVERITY_ERROR);
           } else if (getDataFile().getMessageCount() > 0) {
             putMessage(UNPROCESSABLE_STATUS, getName()

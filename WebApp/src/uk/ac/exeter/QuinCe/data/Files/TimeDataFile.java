@@ -479,7 +479,7 @@ public class TimeDataFile extends DataFile implements TimeRange {
   }
 
   @Override
-  public void validate() throws DataFileException {
+  public void validateWorker() throws DataFileException {
     int firstDataLine = getFirstDataLine();
     if (firstDataLine > -1) {
 
@@ -650,5 +650,15 @@ public class TimeDataFile extends DataFile implements TimeRange {
       .filter(f -> f.getEndTime(applyOffset).isAfter(start)
         && f.getStartTime(applyOffset).isBefore(end))
       .toList();
+  }
+
+  @Override
+  public boolean hasFundametalProcessingIssue() {
+    return null == getRawStartTime() || null == getRawEndTime();
+  }
+
+  @Override
+  public String getFundamentalProcessingIssueItem() {
+    return "date";
   }
 }

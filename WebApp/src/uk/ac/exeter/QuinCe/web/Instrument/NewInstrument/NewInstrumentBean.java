@@ -943,17 +943,6 @@ public class NewInstrumentBean extends FileUploadBean {
     clearFile();
   }
 
-  @Override
-  public void clearFile() throws FileUploadException {
-
-    try {
-      super.clearFile();
-      currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles, basis);
-    } catch (Exception e) {
-      throw new FileUploadException(e);
-    }
-  }
-
   /**
    * Get the sensor assignment file
    *
@@ -1904,11 +1893,23 @@ public class NewInstrumentBean extends FileUploadBean {
    * attributes to be assigned
    *
    * @return The navigation target
+   * @throws InvalidInstrumentBasisException
    */
-  public String goToVariableInfo() {
+  public String goToVariableInfo() throws InvalidInstrumentBasisException {
 
-    String result = instrumentVariables.stream().filter(v -> v.hasAttributes())
-      .findAny().isPresent() ? NAV_VARIABLE_INFO : NAV_UPLOAD_FILE;
+    String result;
+
+    if (instrumentVariables.stream().filter(v -> v.hasAttributes()).findAny()
+      .isPresent()) {
+      result = NAV_VARIABLE_INFO;
+    } else {
+      if (instrumentFiles.size() == 0) {
+        currentInstrumentFile = new FileDefinitionBuilder(instrumentFiles,
+          basis);
+      }
+
+      result = NAV_UPLOAD_FILE;
+    }
 
     setSetupStep(result);
 

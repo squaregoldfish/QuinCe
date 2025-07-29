@@ -1,5 +1,6 @@
 package uk.ac.exeter.QuinCe.data.Instrument;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,7 +10,9 @@ import java.util.Objects;
 import java.util.TreeSet;
 
 import uk.ac.exeter.QuinCe.data.Dataset.ColumnHeading;
+import uk.ac.exeter.QuinCe.data.Files.ArgoDataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFile;
+import uk.ac.exeter.QuinCe.data.Files.FileContents;
 import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.DateTimeSpecification;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.LatitudeSpecification;
@@ -227,6 +230,7 @@ public class FileDefinition implements Comparable<FileDefinition> {
 
     BASIS_TO_CLASS = new HashMap<Integer, Class<? extends DataFile>>();
     BASIS_TO_CLASS.put(Instrument.BASIS_TIME, TimeDataFile.class);
+    BASIS_TO_CLASS.put(Instrument.BASIS_ARGO, ArgoDataFile.class);
   }
 
   /**
@@ -1176,5 +1180,15 @@ public class FileDefinition implements Comparable<FileDefinition> {
     }
 
     return BASIS_TO_CLASS.get(basis);
+  }
+
+  public DataFile makeDataFile(Instrument instrument, String filename,
+    FileContents contents) throws Exception {
+
+    Constructor<?> constructor = fileClass.getConstructor(Instrument.class,
+      FileDefinition.class, String.class, FileContents.class);
+
+    return (DataFile) constructor.newInstance(instrument, this, filename,
+      contents);
   }
 }
