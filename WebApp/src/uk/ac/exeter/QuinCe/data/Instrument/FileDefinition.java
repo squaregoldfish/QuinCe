@@ -1185,6 +1185,9 @@ public class FileDefinition implements Comparable<FileDefinition> {
   public DataFile makeDataFile(Instrument instrument, String filename,
     FileContents contents) throws Exception {
 
+    // TODO A FileDefinition should know what instrument it belongs to
+    // so we shouldn't need to pass it in here.
+
     Constructor<?> constructor = fileClass.getConstructor(Instrument.class,
       FileDefinition.class, String.class, FileContents.class);
 

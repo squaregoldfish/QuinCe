@@ -589,7 +589,19 @@ public class TimeDataFile extends DataFile implements TimeRange {
 
   @Override
   public String getStartDisplayString() {
-    return DateTimeUtils.toIsoDate(getRawStartTime());
+    StringBuilder result = new StringBuilder(
+      DateTimeUtils.toIsoDate(getRawStartTime()));
+    addOffsetInfo(result);
+    return result.toString();
+  }
+
+  private void addOffsetInfo(StringBuilder string) {
+    if (hasTimeOffset()) {
+      string.append(" (");
+      int offset = getTimeOffset();
+      string.append(offset >= 0 ? '+' : '-');
+      string.append(')');
+    }
   }
 
   @Override
@@ -599,7 +611,10 @@ public class TimeDataFile extends DataFile implements TimeRange {
 
   @Override
   public String getEndDisplayString() {
-    return DateTimeUtils.toIsoDate(getRawEndTime());
+    StringBuilder result = new StringBuilder(
+      DateTimeUtils.toIsoDate(getRawEndTime()));
+    addOffsetInfo(result);
+    return result.toString();
   }
 
   @Override

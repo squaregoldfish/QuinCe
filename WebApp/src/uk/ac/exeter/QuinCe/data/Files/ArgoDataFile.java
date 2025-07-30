@@ -54,12 +54,12 @@ public class ArgoDataFile extends DataFile {
    * @param properties
    */
   public ArgoDataFile(long id, Instrument instrument,
-    FileDefinition fileDefinition, String filename, int startCycle,
-    int endCycle, int recordCount, Properties properties) {
+    FileDefinition fileDefinition, String filename, String startCycle,
+    String endCycle, int recordCount, Properties properties) {
 
     super(id, instrument, fileDefinition, filename, recordCount, properties);
-    this.startCycle = startCycle;
-    this.endCycle = endCycle;
+    this.startCycle = Integer.parseInt(startCycle);
+    this.endCycle = Integer.parseInt(endCycle);
   }
 
   @Override
