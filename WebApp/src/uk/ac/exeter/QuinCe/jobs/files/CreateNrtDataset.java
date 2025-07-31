@@ -8,6 +8,7 @@ import java.util.TreeSet;
 import uk.ac.exeter.QuinCe.User.User;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
@@ -82,8 +83,8 @@ public class CreateNrtDataset extends Job {
       // If there isn't one, it will start at the beginning of the first
       // available data file.
       LocalDateTime nrtStartDate = null;
-      DataSet lastDataset = DataSetDB.getLastDataSet(conn, instrument.getId(),
-        false);
+      TimeDataSet lastDataset = (TimeDataSet) DataSetDB.getLastDataSet(conn,
+        instrument.getId(), false);
 
       TreeSet<DataFile> instrumentFiles = DataFileDB.getFiles(conn, instrument);
 
@@ -115,7 +116,7 @@ public class CreateNrtDataset extends Job {
         if (canCreateNrt) {
           String nrtDatasetName = buildNrtDatasetName(instrument);
 
-          DataSet newDataset = new DataSet(instrument, nrtDatasetName,
+          DataSet newDataset = new TimeDataSet(instrument, nrtDatasetName,
             nrtStartDate, endDate, true);
           DataSetDB.addDataSet(conn, newDataset);
 

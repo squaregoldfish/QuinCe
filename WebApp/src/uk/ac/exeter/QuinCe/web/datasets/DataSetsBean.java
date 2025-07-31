@@ -23,6 +23,7 @@ import com.google.gson.JsonObject;
 import uk.ac.exeter.QuinCe.User.User;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
@@ -133,7 +134,7 @@ public class DataSetsBean extends BaseManagedBean {
    * @return The navigation to the dataset definition page
    */
   public String startNewDataset() {
-    newDataSet = new DataSet(getCurrentInstrument());
+    newDataSet = new TimeDataSet(getCurrentInstrument());
     fileDefinitionsJson = null;
     timelineEntriesJson = null;
     calibrationsJson = null;
@@ -309,10 +310,8 @@ public class DataSetsBean extends BaseManagedBean {
         JsonObject entry = new JsonObject();
 
         entry.addProperty("type", "background");
-        entry.addProperty("start",
-          DateTimeUtils.formatDateTime(dataSet.getStartTime()));
-        entry.addProperty("end",
-          DateTimeUtils.formatDateTime(dataSet.getEndTime()));
+        entry.addProperty("start", dataSet.getDisplayStart());
+        entry.addProperty("end", dataSet.getDisplayEnd());
         entry.addProperty("content", dataSet.getName());
         entry.addProperty("title", dataSet.getName());
         entry.addProperty("className",

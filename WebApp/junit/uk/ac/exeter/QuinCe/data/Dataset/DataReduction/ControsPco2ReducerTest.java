@@ -17,6 +17,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.DataSetDataDB;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetMeasurements;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficientDB;
@@ -231,9 +232,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
    * @throws Exception
    *           If the reducer cannot be created.
    */
-  private ControsPco2Reducer makeReducer(
-
-    DataSet dataset) throws Exception {
+  private ControsPco2Reducer makeReducer(TimeDataSet dataset) throws Exception {
     CalibrationSet calculationCoefficients = CalculationCoefficientDB
       .getInstance().getCalibrationSet(getConnection(), dataset);
     return new ControsPco2Reducer(getVariable(), dataset.getAllProperties(),
@@ -274,9 +273,10 @@ public class ControsPco2ReducerTest extends DataReducerTest {
    * @throws Exception
    *           If the DataSet cannot be retrieved.
    */
-  private DataSet getDataset(String variableMode) throws Exception {
+  private TimeDataSet getDataset(String variableMode) throws Exception {
 
-    DataSet dataSet = DataSetDB.getDataSet(getConnection(), DATASET_ID);
+    TimeDataSet dataSet = (TimeDataSet) DataSetDB.getDataSet(getConnection(),
+      DATASET_ID);
 
     Properties varProps = dataSet.getAllProperties()
       .get(getVariable().getName());
@@ -333,7 +333,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void continuousCalPrePostZeroPrePost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Continuous");
+    TimeDataSet dataset = getDataset("Continuous");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -381,7 +381,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void continuousCalPrePostZeroPre() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Continuous");
+    TimeDataSet dataset = getDataset("Continuous");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -429,7 +429,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void continuousCalPrePostZeroPost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Continuous");
+    TimeDataSet dataset = getDataset("Continuous");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -476,7 +476,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void continuousCalPreZeroPrePost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Continuous");
+    TimeDataSet dataset = getDataset("Continuous");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -523,7 +523,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void continuousCalPreZeroPre() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Continuous");
+    TimeDataSet dataset = getDataset("Continuous");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -570,7 +570,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void continuousCalPreZeroPost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Continuous");
+    TimeDataSet dataset = getDataset("Continuous");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -618,7 +618,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroBeforeSleepCalPrePostZeroPrePost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero before sleep");
+    TimeDataSet dataset = getDataset("Zero before sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -666,7 +666,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroBeforeSleepCalPrePostZeroPre() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero before sleep");
+    TimeDataSet dataset = getDataset("Zero before sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -713,7 +713,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroBeforeSleepCalPrePostZeroPost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero before sleep");
+    TimeDataSet dataset = getDataset("Zero before sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -760,7 +760,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroBeforeSleepCalPreZeroPrePost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero before sleep");
+    TimeDataSet dataset = getDataset("Zero before sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -807,7 +807,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroBeforeSleepCalPreZeroPre() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero before sleep");
+    TimeDataSet dataset = getDataset("Zero before sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -853,7 +853,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroBeforeSleepCalPreZeroPost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero before sleep");
+    TimeDataSet dataset = getDataset("Zero before sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -901,7 +901,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroAfterSleepCalPrePostZeroPrePost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero after sleep");
+    TimeDataSet dataset = getDataset("Zero after sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -949,7 +949,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroAfterSleepCalPrePostZeroPre() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero after sleep");
+    TimeDataSet dataset = getDataset("Zero after sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -997,7 +997,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroAfterSleepCalPrePostZeroPost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero after sleep");
+    TimeDataSet dataset = getDataset("Zero after sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -1043,7 +1043,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroAfterSleepCalPreZeroPrePost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero after sleep");
+    TimeDataSet dataset = getDataset("Zero after sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -1090,7 +1090,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroAfterSleepCalPreZeroPre() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero after sleep");
+    TimeDataSet dataset = getDataset("Zero after sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB
@@ -1137,7 +1137,7 @@ public class ControsPco2ReducerTest extends DataReducerTest {
   public void zeroAfterSleepCalPreZeroPost() throws Exception {
 
     Instrument instrument = getInstrument();
-    DataSet dataset = getDataset("Zero after sleep");
+    TimeDataSet dataset = getDataset("Zero after sleep");
     ControsPco2Reducer reducer = makeReducer(dataset);
     DatasetMeasurements measurements = getMeasurements(dataset);
     DatasetSensorValues allSensorValues = DataSetDataDB

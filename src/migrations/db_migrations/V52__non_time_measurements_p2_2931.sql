@@ -17,8 +17,9 @@ ALTER TABLE measurements DROP COLUMN dataset_id, ALGORITHM = INPLACE, LOCK = NON
 ALTER TABLE measurements DROP COLUMN date, ALGORITHM = INPLACE, LOCK = NONE;
 
 -- Remove the original dataset start and end columns
-ALTER TABLE dataset CHANGE start start_time BIGINT(20);
-ALTER TABLE dataset CHANGE end end_time BIGINT(20);
+-- and convert them to strings
+ALTER TABLE dataset CHANGE start start VARCHAR(20);
+ALTER TABLE dataset CHANGE end end VARCHAR(20);
 
 SET SESSION foreign_key_checks = ON;
 
@@ -35,3 +36,6 @@ ALTER TABLE data_file CHANGE end_date end VARCHAR(20);
 
 -- Store the DataFile class
 ALTER TABLE file_definition ADD file_class VARCHAR(45) DEFAULT 'TimeDataFile' NOT NULL AFTER datetime_spec;
+
+-- Replace dataset start and end with strings
+

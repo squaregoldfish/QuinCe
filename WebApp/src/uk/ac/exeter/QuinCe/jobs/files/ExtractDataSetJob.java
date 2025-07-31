@@ -26,6 +26,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriod;
 import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriods;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
@@ -106,7 +107,7 @@ public class ExtractDataSetJob extends DataSetJob {
       conn.commit();
 
       // Get the new data set from the database
-      DataSet dataSet = getDataset(conn);
+      TimeDataSet dataSet = (TimeDataSet) getDataset(conn);
       dataSet.setStatus(DataSet.STATUS_DATA_EXTRACTION);
       DataSetDB.updateDataSet(conn, dataSet);
       conn.commit();
@@ -115,9 +116,9 @@ public class ExtractDataSetJob extends DataSetJob {
 
       // If the new dataset overlaps the NRT dataset, mark it for deletion.
       // It will get removed and recreated by the NRT scripts outside QuinCe
-      DataSet nrtDataset = DataSetDB.getNrtDataSet(conn,
+      TimeDataSet nrtDataset = (TimeDataSet) DataSetDB.getNrtDataSet(conn,
         dataSet.getInstrumentId());
-      if (null != nrtDataset && DateTimeUtils.overlap(nrtDataset, dataSet)) {
+      if (null != nrtDataset && TimeDataSet.overlap(nrtDataset, dataSet)) {
         DataSetDB.setNrtDatasetStatus(dataSource, instrument,
           DataSet.STATUS_REPROCESS);
       }

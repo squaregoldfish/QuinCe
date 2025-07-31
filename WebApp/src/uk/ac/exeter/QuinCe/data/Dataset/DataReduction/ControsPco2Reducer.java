@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficient;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
@@ -76,17 +77,19 @@ public class ControsPco2Reducer extends DataReducer {
     throws DataReductionException {
 
     try {
-      F = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "F", dataset.getStartTime()).getBigDecimalValue();
+      TimeDataSet castDataset = (TimeDataSet) dataset;
 
-      calcKSteps(dataset);
-      calcZeroS2Beams(dataset, allMeasurements);
+      F = CalculationCoefficient.getCoefficient(calculationCoefficients,
+        variable, "F", castDataset.getStartTime()).getBigDecimalValue();
+
+      calcKSteps(castDataset);
+      calcZeroS2Beams(castDataset, allMeasurements);
     } catch (Exception e) {
       throw new DataReductionException(e);
     }
   }
 
-  private void calcKSteps(DataSet dataset) {
+  private void calcKSteps(TimeDataSet dataset) {
     k1Prior = CalculationCoefficient.getCoefficient(calculationCoefficients,
       variable, "k1", dataset.getStartTime());
     k2Prior = CalculationCoefficient.getCoefficient(calculationCoefficients,
@@ -199,7 +202,7 @@ public class ControsPco2Reducer extends DataReducer {
 
     try {
       // We use BigDecimals to maintain the precision on the k parameters,
-      // which are on the order of 1e-10
+      // dataset which are on the order of 1e-10
       BigDecimal measurementRuntime = new BigDecimal(
         measurement.getMeasurementValue("Runtime").getCalculatedValue());
 

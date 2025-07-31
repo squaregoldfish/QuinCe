@@ -1188,10 +1188,8 @@ public class FileDefinition implements Comparable<FileDefinition> {
     // TODO A FileDefinition should know what instrument it belongs to
     // so we shouldn't need to pass it in here.
 
-    Constructor<?> constructor = fileClass.getConstructor(Instrument.class,
-      FileDefinition.class, String.class, FileContents.class);
-
-    return (DataFile) constructor.newInstance(instrument, this, filename,
-      contents);
+    Constructor<? extends DataFile> constructor = fileClass.getConstructor(
+      Instrument.class, FileDefinition.class, String.class, FileContents.class);
+    return constructor.newInstance(instrument, this, filename, contents);
   }
 }

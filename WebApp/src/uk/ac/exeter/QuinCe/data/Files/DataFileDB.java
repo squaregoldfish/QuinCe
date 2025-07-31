@@ -692,12 +692,12 @@ public class DataFileDB {
         Properties.class);
 
       try {
-        Constructor<?> constructor = fileDefinition.getFileClass()
-          .getConstructor(long.class, Instrument.class, FileDefinition.class,
-            String.class, String.class, String.class, int.class,
-            Properties.class);
-        result = (DataFile) constructor.newInstance(id, instrument,
-          fileDefinition, filename, start, end, recordCount, properties);
+        Constructor<? extends DataFile> constructor = fileDefinition
+          .getFileClass().getConstructor(long.class, Instrument.class,
+            FileDefinition.class, String.class, String.class, String.class,
+            int.class, Properties.class);
+        result = constructor.newInstance(id, instrument, fileDefinition,
+          filename, start, end, recordCount, properties);
       } catch (Exception e) {
         throw new DataFileException("Failed to construct DataFile object", e);
       }

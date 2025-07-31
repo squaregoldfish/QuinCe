@@ -629,6 +629,7 @@ public class JobManager {
    * @throws SQLException
    *           If a database error occurs
    */
+  @SuppressWarnings("unchecked")
   private static Job getJobFromResultSet(Connection conn, ResultSet result,
     ResourceManager resourceManager, Properties config)
     throws JobFailedException, SQLException {
@@ -637,12 +638,13 @@ public class JobManager {
 
     try {
       jobId = result.getLong(1);
-      Class<?> jobClazz = Class.forName(result.getString(3));
-      Constructor<?> jobConstructor = jobClazz.getConstructor(
+      Class<? extends Job> jobClazz = (Class<? extends Job>) Class
+        .forName(result.getString(3));
+      Constructor<? extends Job> jobConstructor = jobClazz.getConstructor(
         ResourceManager.class, Properties.class, long.class, User.class,
         Properties.class);
 
-      return (Job) jobConstructor.newInstance(resourceManager, config,
+      return jobConstructor.newInstance(resourceManager, config,
         result.getLong(1), UserDB.getUser(conn, result.getLong(2)),
         new Gson().fromJson(result.getString(4), Properties.class));
     } catch (SQLException e) {
@@ -940,12 +942,14 @@ public class JobManager {
    *         {@code CLASS_CHECK_*} fields.
    * @see Job
    */
+  @SuppressWarnings("unchecked")
   protected static int checkJobClass(String jobClass) {
 
     int checkResult = CLASS_CHECK_OK;
 
     try {
-      Class<?> jobClazz = Class.forName(jobClass);
+      Class<? extends Job> jobClazz = (Class<? extends Job>) Class
+        .forName(jobClass);
 
       // Does it inherit from the job class?
       if (!(Job.class.isAssignableFrom(jobClazz))) {

@@ -123,8 +123,8 @@ public class DefaultMeasurementValueCalculator
       // (b) the instrument has calibration Run Types defined.
       if (allowCalibration && requiredSensorType.hasInternalCalibration()
         && instrument.hasInternalCalibrations()) {
-        calibrate(instrument, dataSet, baseValue, requiredSensorType, result,
-          allMeasurements, sensorValues, conn);
+        calibrate(instrument, (TimeDataSet) dataSet, baseValue,
+          requiredSensorType, result, allMeasurements, sensorValues, conn);
       }
     }
 
@@ -230,7 +230,7 @@ public class DefaultMeasurementValueCalculator
    * @throws MeasurementValueCalculatorException
    *           If the calibration cannot be performed.
    */
-  protected void calibrate(Instrument instrument, DataSet dataset,
+  protected void calibrate(Instrument instrument, TimeDataSet dataset,
     SensorValuesListValue baseValue, SensorType sensorType,
     MeasurementValue value, DatasetMeasurements allMeasurements,
     SensorValuesList sensorValues, Connection conn)

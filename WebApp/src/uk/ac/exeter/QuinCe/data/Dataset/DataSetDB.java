@@ -1,5 +1,6 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -59,7 +60,7 @@ public class DataSetDB {
    * @see #addDataSet(DataSource, DataSet)
    */
   private static final String ADD_DATASET_STATEMENT = "INSERT INTO dataset "
-    + "(instrument_id, name, start_time, end_time, status, status_date, "
+    + "(instrument_id, name, start, end, status, status_date, "
     + "nrt, properties, last_touched, error_messages, processing_messages, user_messages, "
     + "min_longitude, max_longitude, min_latitude, max_latitude, exported) "
     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -70,7 +71,7 @@ public class DataSetDB {
    * @see #addDataSet(DataSource, DataSet)
    */
   private static final String UPDATE_DATASET_STATEMENT = "Update dataset set "
-    + "instrument_id = ?, name = ?, start_time = ?, end_time = ?, status = ?, "
+    + "instrument_id = ?, name = ?, start = ?, end = ?, status = ?, "
     + "status_date = ?, nrt = ?, properties = ?, last_touched = ?, "
     + "error_messages = ?, processing_messages = ?, user_messages = ?, "
     + "min_longitude = ?, max_longitude = ?, "
@@ -87,7 +88,7 @@ public class DataSetDB {
    * in the same order.
    */
   private static final String DATASET_QUERY_BASE = "SELECT "
-    + "d.id, d.instrument_id, d.name, d.start_time, d.end_time, d.status, "
+    + "d.id, d.instrument_id, d.name, d.start, d.end, d.status, "
     + "d.status_date, d.nrt, d.properties, d.created, d.last_touched, "
     + "COALESCE(d.error_messages, '[]'), processing_messages, user_messages, "
     + "d.min_longitude, d.max_longitude, d.min_latitude, d.max_latitude, d.exported "
@@ -251,15 +252,13 @@ public class DataSetDB {
    * @throws ClassNotFoundException
    */
   private static DataSet dataSetFromRecord(Connection conn, ResultSet record)
-    throws SQLException, MissingParamException, DatabaseException,
-    RecordNotFoundException, InstrumentException, SensorGroupsException,
-    CoordinateException, ClassNotFoundException {
+    throws Exception {
 
     long id = record.getLong(1);
     Instrument instrument = InstrumentDB.getInstrument(conn, record.getLong(2));
     String name = record.getString(3);
-    LocalDateTime startDate = DateTimeUtils.longToDate(record.getLong(4));
-    LocalDateTime endDate = DateTimeUtils.longToDate(record.getLong(5));
+    String start = record.getString(4);
+    String end = record.getString(5);
     int status = record.getInt(6);
     LocalDateTime statusDate = DateTimeUtils.longToDate(record.getLong(7));
     boolean nrt = record.getBoolean(8);
@@ -319,7 +318,10 @@ public class DataSetDB {
     double maxLat = record.getDouble(18);
     boolean exported = record.getBoolean(19);
 
-    return new DataSet(id, instrument, name, startDate, endDate, status,
+    Constructor<? extends DataSet> constructor = DataSet
+      .getDataSetConstructor(instrument.getBasis());
+
+    return constructor.newInstance(id, instrument, name, start, end, status,
       statusDate, nrt, properties, sensorOffsets, createdDate, lastTouched,
       errorMessage, processingMessages, userMessages, minLon, minLat, maxLon,
       maxLat, exported);
@@ -407,8 +409,8 @@ public class DataSetDB {
 
       stmt.setLong(1, dataSet.getInstrumentId());
       stmt.setString(2, dataSet.getName());
-      stmt.setLong(3, DateTimeUtils.dateToLong(dataSet.getStartTime()));
-      stmt.setLong(4, DateTimeUtils.dateToLong(dataSet.getEndTime()));
+      stmt.setString(3, dataSet.getStart());
+      stmt.setString(4, dataSet.getEnd());
       stmt.setInt(5, dataSet.getStatus());
       stmt.setLong(6, DateTimeUtils.dateToLong(dataSet.getStatusDate()));
       stmt.setBoolean(7, dataSet.isNrt());
@@ -926,7 +928,7 @@ public class DataSetDB {
   }
 
   /**
-   * Generate the metadata portion of the manifest
+   * Generate the metadata portion of the manifest for a {@link DataSet}.
    *
    * @param conn
    *          A database connection
@@ -958,10 +960,8 @@ public class DataSetDB {
 
     JsonObject result = new JsonObject();
     result.addProperty("name", dataset.getName());
-    result.addProperty("start",
-      DateTimeUtils.formatDateTime(dataset.getStartTime()));
-    result.addProperty("end",
-      DateTimeUtils.formatDateTime(dataset.getEndTime()));
+    result.addProperty("start", dataset.getDisplayStart());
+    result.addProperty("end", dataset.getDisplayEnd());
     result.addProperty("platformCode", instrument.getPlatformCode());
     result.addProperty("platformName", instrument.getPlatformName());
     result.addProperty("instrumentName", instrument.getName());
@@ -981,24 +981,27 @@ public class DataSetDB {
     // Calibrations
     JsonObject calibrationObject = new JsonObject();
 
-    if (instrument.hasInternalCalibrations()) {
+    if (dataset instanceof TimeDataSet) {
+      TimeDataSet castDataset = (TimeDataSet) dataset;
 
-      CalibrationSet standards = ExternalStandardDB.getInstance()
-        .getCalibrationSet(conn, dataset);
+      if (instrument.hasInternalCalibrations()) {
 
-      calibrationObject.add("gasStandards",
-        standards.toJson(new DefaultTargetNameMapper(), false));
+        CalibrationSet standards = ExternalStandardDB.getInstance()
+          .getCalibrationSet(conn, castDataset);
+
+        calibrationObject.add("gasStandards",
+          standards.toJson(new DefaultTargetNameMapper(), false));
+      }
+
+      // Sensors
+      CalibrationSet sensorCalibrations = SensorCalibrationDB.getInstance()
+        .getCalibrationSet(conn, castDataset);
+
+      if (!sensorCalibrations.isEmpty()) {
+        calibrationObject.add("sensorCalibrations", sensorCalibrations.toJson(
+          new SensorIdMapper(instrument.getSensorAssignments()), false));
+      }
     }
-
-    // Sensors
-    CalibrationSet sensorCalibrations = SensorCalibrationDB.getInstance()
-      .getCalibrationSet(conn, dataset);
-
-    if (!sensorCalibrations.isEmpty()) {
-      calibrationObject.add("sensorCalibrations", sensorCalibrations
-        .toJson(new SensorIdMapper(instrument.getSensorAssignments()), false));
-    }
-
     return result;
   }
 

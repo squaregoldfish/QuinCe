@@ -107,8 +107,7 @@ public class MissingParam {
     if (null == collection) {
       throw new MissingParamException(collectionName);
     } else if (!canBeEmpty && collection.size() == 0) {
-      throw new EmptyMissingParamException(
-        collectionName + " must not be empty");
+      throw new EmptyMissingParamException(collectionName);
     }
   }
 

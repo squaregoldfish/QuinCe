@@ -21,6 +21,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValueCollector;
 import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValueCollectorFactory;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReducer;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReducerFactory;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReductionRecord;
@@ -117,7 +118,7 @@ public class DataReductionJob extends DataSetJob {
         .getMeasurementsByRunType(conn, dataSet);
 
       CalibrationSet calculationCoefficients = CalculationCoefficientDB
-        .getInstance().getCalibrationSet(conn, dataSet);
+        .getInstance().getCalibrationSet(conn, (TimeDataSet) dataSet);
 
       ArrayList<DataReductionRecord> dataReductionRecords = new ArrayList<DataReductionRecord>();
 

@@ -21,6 +21,7 @@ import com.google.gson.JsonObject;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Calibration;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationCoefficient;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationDB;
@@ -80,7 +81,7 @@ public abstract class CalibrationBean extends BaseManagedBean {
    * The {@link DataSet}s defined for the instrument, with an indication of
    * whether they are affected by the edits that have been made.
    */
-  private TreeMap<DataSet, RecalculateStatus> datasets;
+  private TreeMap<TimeDataSet, RecalculateStatus> datasets;
 
   /**
    * The calibration database handler.
@@ -192,9 +193,10 @@ public abstract class CalibrationBean extends BaseManagedBean {
 
     try {
       setCurrentInstrumentId(instrumentId);
-      datasets = new TreeMap<DataSet, RecalculateStatus>();
+      datasets = new TreeMap<TimeDataSet, RecalculateStatus>();
       DataSetDB.getDataSets(getDataSource(), getCurrentInstrumentId(), true)
-        .values().forEach(d -> datasets.put(d, new RecalculateStatus()));
+        .values()
+        .forEach(d -> datasets.put((TimeDataSet) d, new RecalculateStatus()));
 
       dbInstance = getDbInstance();
 
@@ -403,7 +405,8 @@ public abstract class CalibrationBean extends BaseManagedBean {
     }
 
     // Add the datasets
-    for (Map.Entry<DataSet, RecalculateStatus> entry : datasets.entrySet()) {
+    for (Map.Entry<TimeDataSet, RecalculateStatus> entry : datasets
+      .entrySet()) {
 
       DataSet dataset = entry.getKey();
 
@@ -411,10 +414,8 @@ public abstract class CalibrationBean extends BaseManagedBean {
       datasetJson.put("id", getTimelineId(dataset));
       datasetJson.put("type", "range");
       datasetJson.put("group", "Datasets");
-      datasetJson.put("start",
-        DateTimeUtils.formatDateTime(dataset.getStartTime()));
-      datasetJson.put("end",
-        DateTimeUtils.formatDateTime(dataset.getEndTime()));
+      datasetJson.put("start", dataset.getDisplayStart());
+      datasetJson.put("end", dataset.getDisplayEnd());
       datasetJson.put("content", dataset.getName());
       datasetJson.put("title", dataset.getName());
       datasetJson.put("className", entry.getValue().getDisplayClass());
@@ -742,7 +743,7 @@ public abstract class CalibrationBean extends BaseManagedBean {
   private void calculateAffectedDatasets()
     throws InvalidCalibrationDateException {
 
-    for (DataSet dataset : datasets.keySet()) {
+    for (TimeDataSet dataset : datasets.keySet()) {
       CalibrationSet originalSet = new CalibrationSet(calibrationTargets,
         dataset.getStartTime(), dataset.getEndTime(), dbInstance,
         originalCalibrations);
@@ -780,7 +781,8 @@ public abstract class CalibrationBean extends BaseManagedBean {
 
     TreeMap<Long, Boolean> result = new TreeMap<Long, Boolean>();
 
-    for (Map.Entry<DataSet, RecalculateStatus> entry : datasets.entrySet()) {
+    for (Map.Entry<TimeDataSet, RecalculateStatus> entry : datasets
+      .entrySet()) {
       if (entry.getValue().getRequired()) {
         result.put(entry.getKey().getId(),
           entry.getValue().getCanBeRecalculated());
@@ -828,7 +830,8 @@ public abstract class CalibrationBean extends BaseManagedBean {
       dbInstance.commitEdits(getDataSource(), edits.values());
 
       // Resubmit jobs for all affected datasets
-      for (Map.Entry<DataSet, RecalculateStatus> entry : datasets.entrySet()) {
+      for (Map.Entry<TimeDataSet, RecalculateStatus> entry : datasets
+        .entrySet()) {
 
         if (entry.getValue().getRequired()) {
 

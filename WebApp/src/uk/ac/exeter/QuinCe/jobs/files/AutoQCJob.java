@@ -20,6 +20,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesList;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesListFactory;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesListValue;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.ExternalStandards.ExternalStandardsQCRoutine;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.ExternalStandards.ExternalStandardsRoutinesConfiguration;
@@ -260,6 +261,9 @@ public class AutoQCJob extends DataSetJob {
 
       // External Standards routines
       if (instrument.hasInternalCalibrations()) {
+
+        TimeDataSet castDataset = (TimeDataSet) dataSet;
+
         ExternalStandardsRoutinesConfiguration externalStandardsRoutinesConfig = ResourceManager
           .getInstance().getExternalStandardsRoutinesConfiguration();
 
@@ -269,7 +273,7 @@ public class AutoQCJob extends DataSetJob {
             .getSensorTypeForDBColumn(columnId);
 
           CalibrationSet calibrationSet = ExternalStandardDB.getInstance()
-            .getCalibrationSet(conn, dataSet);
+            .getCalibrationSet(conn, castDataset);
 
           if (sensorType.hasInternalCalibration()) {
             for (AbstractAutoQCRoutine routine : externalStandardsRoutinesConfig

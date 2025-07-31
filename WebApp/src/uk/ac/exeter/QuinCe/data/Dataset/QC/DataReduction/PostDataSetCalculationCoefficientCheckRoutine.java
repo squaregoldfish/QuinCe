@@ -6,6 +6,7 @@ import java.util.TreeMap;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReductionException;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReductionRecord;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.ReadOnlyDataReductionRecord;
@@ -38,21 +39,25 @@ public class PostDataSetCalculationCoefficientCheckRoutine
     DatasetSensorValues allSensorValues, FlaggedItems flaggedItems)
     throws RoutineException {
 
-    try {
-      // See if we have a post-calibration for the dataset
-      CalibrationSet calculationCoefficients = CalculationCoefficientDB
-        .getInstance().getCalibrationSet(conn, dataSet);
-      if (!calculationCoefficients.hasCompletePost()) {
-        for (DataReductionRecord record : dataReductionRecords.values()) {
-          record.setQc(Flag.NOT_CALIBRATED, getShortMessage());
-        }
-      }
+    if (dataSet instanceof TimeDataSet) {
+      TimeDataSet castDataset = (TimeDataSet) dataSet;
 
-      flaggedItems.addDataReductionRecords(dataReductionRecords.values());
-    } catch (DataReductionException e) {
-      throw new RoutineException("Error setting QC flags", e);
-    } catch (Exception e) {
-      throw new RoutineException("Error getting calibration information", e);
+      try {
+        // See if we have a post-calibration for the dataset
+        CalibrationSet calculationCoefficients = CalculationCoefficientDB
+          .getInstance().getCalibrationSet(conn, castDataset);
+        if (!calculationCoefficients.hasCompletePost()) {
+          for (DataReductionRecord record : dataReductionRecords.values()) {
+            record.setQc(Flag.NOT_CALIBRATED, getShortMessage());
+          }
+        }
+
+        flaggedItems.addDataReductionRecords(dataReductionRecords.values());
+      } catch (DataReductionException e) {
+        throw new RoutineException("Error setting QC flags", e);
+      } catch (Exception e) {
+        throw new RoutineException("Error getting calibration information", e);
+      }
     }
   }
 }

@@ -17,8 +17,8 @@ ALTER TABLE measurements DROP COLUMN dataset_id;
 ALTER TABLE measurements DROP COLUMN date;
 
 -- Remove the original dataset start and end columns
-ALTER TABLE dataset CHANGE start start_time BIGINT(20);
-ALTER TABLE dataset CHANGE end end_time BIGINT(20);
+ALTER TABLE dataset CHANGE start start VARCHAR(20);
+ALTER TABLE dataset CHANGE end end VARCHAR(20);
 
 -- Add measurement basis columns
 -- All existing instruments and variables are surface based

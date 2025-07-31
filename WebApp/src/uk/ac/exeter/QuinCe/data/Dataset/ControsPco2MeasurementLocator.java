@@ -36,6 +36,8 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
     throws MeasurementLocatorException {
 
     try {
+      TimeDataSet castDataset = (TimeDataSet) dataset;
+
       SensorsConfiguration sensorConfig = ResourceManager.getInstance()
         .getSensorsConfiguration();
 
@@ -61,11 +63,11 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
         .getColumnIds(refSensorType).get(0);
 
       CalibrationSet calibrationSet = CalculationCoefficientDB.getInstance()
-        .getCalibrationSet(conn, dataset);
+        .getCalibrationSet(conn, castDataset);
 
       CalculationCoefficient defaultRunTimeCoefficient = CalculationCoefficient
         .getCoefficient(calibrationSet, variable, "Response Time",
-          dataset.getStartTime());
+          castDataset.getStartTime());
 
       long defaultFlushingTime = Math
         .round(defaultRunTimeCoefficient.getValue()) * RESPONSE_TIME_MULTIPLIER;

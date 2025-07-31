@@ -1,5 +1,6 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
+import java.lang.reflect.Constructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import com.google.gson.JsonArray;
 
 import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.data.Instrument.InvalidInstrumentBasisException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariableNotFoundException;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
@@ -24,7 +26,9 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 /**
  * Object to represent a data set
  */
-public class DataSet implements Comparable<DataSet> {
+public abstract class DataSet implements Comparable<DataSet> {
+
+  private static Map<Integer, Class<? extends DataSet>> BASIS_TO_CLASS;
 
   public static final long TIMEPOS_FIELDSET_ID = 0L;
 
@@ -221,16 +225,6 @@ public class DataSet implements Comparable<DataSet> {
   private String name;
 
   /**
-   * The start date of the DataSet.
-   */
-  private LocalDateTime startTime;
-
-  /**
-   * The end date of the data set
-   */
-  private LocalDateTime endTime;
-
-  /**
    * Properties for each of the measured variables
    */
   private Map<String, Properties> properties;
@@ -331,6 +325,9 @@ public class DataSet implements Comparable<DataSet> {
     validStatuses.put(STATUS_EXPORTING, STATUS_EXPORTING_NAME);
     validStatuses.put(STATUS_EXPORT_COMPLETE, STATUS_EXPORT_COMPLETE_NAME);
     validStatuses.put(STATUS_DELETING, STATUS_DELETING_NAME);
+
+    BASIS_TO_CLASS = new HashMap<Integer, Class<? extends DataSet>>();
+    BASIS_TO_CLASS.put(Instrument.BASIS_TIME, TimeDataSet.class);
   }
 
   /**
@@ -370,8 +367,7 @@ public class DataSet implements Comparable<DataSet> {
    *          The maximum latitude of the dataset's geographical bounds
    *
    */
-  protected DataSet(long id, Instrument instrument, String name,
-    LocalDateTime startDate, LocalDateTime endDate, int status,
+  protected DataSet(long id, Instrument instrument, String name, int status,
     LocalDateTime statusDate, boolean nrt, Map<String, Properties> properties,
     SensorOffsets sensorOffsets, LocalDateTime createdDate,
     LocalDateTime lastTouched, List<Message> errorMessages,
@@ -382,8 +378,6 @@ public class DataSet implements Comparable<DataSet> {
     this.id = id;
     this.instrument = instrument;
     this.name = name;
-    this.startTime = startDate;
-    this.endTime = endDate;
     this.status = status;
     this.statusDate = statusDate;
     this.nrt = nrt;
@@ -432,12 +426,9 @@ public class DataSet implements Comparable<DataSet> {
    * @param nrt
    *          Indicates whether or not this is a NRT dataset
    */
-  public DataSet(Instrument instrument, String name, LocalDateTime startDate,
-    LocalDateTime endDate, boolean nrt) {
+  public DataSet(Instrument instrument, String name, boolean nrt) {
     this.instrument = instrument;
     this.name = name;
-    this.startTime = startDate;
-    this.endTime = endDate;
     this.nrt = nrt;
     this.statusDate = DateTimeUtils.longToDate(System.currentTimeMillis());
     loadProperties(instrument);
@@ -550,41 +541,30 @@ public class DataSet implements Comparable<DataSet> {
   }
 
   /**
-   * Get the start date of the data set
+   * Get the start point of the data set.
    *
-   * @return The start date
+   * <p>
+   * This is an internal format and may not be suitable for display to humans.
+   * Use {@link #getDisplayStart()} for that.
+   * </p>
+   *
+   * @return The start point.
    */
-  public LocalDateTime getStartTime() {
-    return startTime;
+  public abstract String getStart();
+
+  public String getDisplayStart() {
+    return getStart();
   }
 
   /**
-   * Set the start date of the data set
+   * Get the end point of the data set
    *
-   * @param start
-   *          The start date
+   * @return The end point
    */
-  public void setStartTime(LocalDateTime startTime) {
-    this.startTime = startTime;
-  }
+  public abstract String getEnd();
 
-  /**
-   * Get the end date of the data set
-   *
-   * @return The end date
-   */
-  public LocalDateTime getEndTime() {
-    return endTime;
-  }
-
-  /**
-   * Set the end date of the data set
-   *
-   * @param end
-   *          The end date
-   */
-  public void setEndTime(LocalDateTime endTime) {
-    this.endTime = endTime;
+  public String getDisplayEnd() {
+    return getEnd();
   }
 
   /**
@@ -924,8 +904,15 @@ public class DataSet implements Comparable<DataSet> {
 
   @Override
   public int compareTo(DataSet o) {
-    return startTime.compareTo(o.startTime);
+    if (getClass() == o.getClass()) {
+      return this.compareToWorker(o);
+    } else {
+      throw new IllegalArgumentException(
+        "Cannot compare coordinates of different types");
+    }
   }
+
+  protected abstract int compareToWorker(DataSet o);
 
   public void addProcessingMessage(String module, String message) {
     processingMessages.addMessage(module, message);
@@ -991,5 +978,21 @@ public class DataSet implements Comparable<DataSet> {
    */
   public void markExported() {
     exported = true;
+  }
+
+  public static Constructor<? extends DataSet> getDataSetConstructor(int basis)
+    throws InvalidInstrumentBasisException, NoSuchMethodException,
+    SecurityException {
+
+    if (!BASIS_TO_CLASS.containsKey(basis)) {
+      throw new InvalidInstrumentBasisException(basis);
+    }
+
+    Class<? extends DataSet> clazz = BASIS_TO_CLASS.get(basis);
+    return clazz.getConstructor(long.class, Instrument.class, String.class,
+      String.class, String.class, int.class, LocalDateTime.class, boolean.class,
+      Map.class, SensorOffsets.class, LocalDateTime.class, LocalDateTime.class,
+      List.class, DatasetProcessingMessages.class, DatasetUserMessages.class,
+      double.class, double.class, double.class, double.class, boolean.class);
   }
 }

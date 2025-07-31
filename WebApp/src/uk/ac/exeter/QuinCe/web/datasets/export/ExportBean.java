@@ -32,6 +32,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.CalculationParameter;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReducerFactory;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
@@ -716,28 +717,32 @@ public class ExportBean extends BaseManagedBean {
     manifest.add("metadata", metadata);
 
     JsonObject calibrations = new JsonObject();
-    CalibrationSet sensorCalibrations = SensorCalibrationDB.getInstance()
-      .getCalibrationSet(conn, dataset);
-    if (!sensorCalibrations.isEmpty()) {
-      calibrations.add("sensorCalibrations", sensorCalibrations
-        .toJson(new SensorIdMapper(instrument.getSensorAssignments()), true));
-    }
+    if (dataset instanceof TimeDataSet) {
+      TimeDataSet castDataset = (TimeDataSet) dataset;
 
-    if (instrument.hasInternalCalibrations()) {
-      CalibrationSet externalStandards = ExternalStandardDB.getInstance()
-        .getCalibrationSet(conn, dataset);
-      if (!externalStandards.isEmpty()) {
-        calibrations.add("externalStandards",
-          externalStandards.toJson(new DefaultTargetNameMapper(), false));
+      CalibrationSet sensorCalibrations = SensorCalibrationDB.getInstance()
+        .getCalibrationSet(conn, castDataset);
+      if (!sensorCalibrations.isEmpty()) {
+        calibrations.add("sensorCalibrations", sensorCalibrations
+          .toJson(new SensorIdMapper(instrument.getSensorAssignments()), true));
       }
-    }
 
-    if (instrument.hasCalculationCoefficients()) {
-      CalibrationSet calculationCoefficients = CalculationCoefficientDB
-        .getInstance().getCalibrationSet(conn, dataset);
-      if (!calculationCoefficients.isEmpty()) {
-        calibrations.add("calculationCoefficients",
-          calculationCoefficients.toJson(new DefaultTargetNameMapper(), true));
+      if (instrument.hasInternalCalibrations()) {
+        CalibrationSet externalStandards = ExternalStandardDB.getInstance()
+          .getCalibrationSet(conn, castDataset);
+        if (!externalStandards.isEmpty()) {
+          calibrations.add("externalStandards",
+            externalStandards.toJson(new DefaultTargetNameMapper(), false));
+        }
+      }
+
+      if (instrument.hasCalculationCoefficients()) {
+        CalibrationSet calculationCoefficients = CalculationCoefficientDB
+          .getInstance().getCalibrationSet(conn, castDataset);
+        if (!calculationCoefficients.isEmpty()) {
+          calibrations.add("calculationCoefficients", calculationCoefficients
+            .toJson(new DefaultTargetNameMapper(), true));
+        }
       }
     }
 

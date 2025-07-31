@@ -9,12 +9,14 @@ import java.util.Properties;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficient;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 
+@Deprecated
 public class JapanCustomReducer extends DataReducer {
 
   private static List<CalculationParameter> calculationParameters = null;
@@ -39,23 +41,26 @@ public class JapanCustomReducer extends DataReducer {
     throws DataReductionException {
 
     try {
+      TimeDataSet castDataset = (TimeDataSet) dataset;
+
       // Get the calibration slope information
       baseSlope = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "Base Slope", dataset.getStartTime()).getBigDecimalValue();
+        variable, "Base Slope", castDataset.getStartTime())
+        .getBigDecimalValue();
 
       baseIntercept = CalculationCoefficient
         .getCoefficient(calculationCoefficients, variable, "Base Intercept",
-          dataset.getStartTime())
+          castDataset.getStartTime())
         .getBigDecimalValue();
 
       slopeAdjustment = CalculationCoefficient
         .getCoefficient(calculationCoefficients, variable, "Slope Adjustment",
-          dataset.getStartTime())
+          castDataset.getStartTime())
         .getBigDecimalValue();
 
       interceptAdjustment = CalculationCoefficient
         .getCoefficient(calculationCoefficients, variable,
-          "Intercept Adjustment", dataset.getStartTime())
+          "Intercept Adjustment", castDataset.getStartTime())
         .getBigDecimalValue();
     } catch (Exception e) {
       throw new DataReductionException(e);

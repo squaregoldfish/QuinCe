@@ -10,7 +10,6 @@ import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 
 /**
@@ -190,11 +189,6 @@ public class DateTimeUtils {
       || isBetween(realEnd1, realStart2, realEnd2)
       || (!realStart1.isAfter(realStart2) && !realEnd1.isBefore(realEnd2));
 
-  }
-
-  public static boolean overlap(DataSet ds1, DataSet ds2) {
-    return overlap(ds1.getStartTime(), ds1.getEndTime(), ds2.getStartTime(),
-      ds2.getEndTime());
   }
 
   /**
