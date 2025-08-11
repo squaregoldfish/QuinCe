@@ -3,9 +3,13 @@ import re
 import pandas as pd
 from datetime import datetime
 import numpy as np
+import logging
 
 from warnings import simplefilter
 simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
+
+# DEBUG=10, INFO=20, WARNING=30, ERROR=40, CRITICAL=50
+LOGGING_LEVEL = 20
 
 # Sensor modes that do not contain measurement data
 NON_DATA_MODES = ["[PCO2 START ACQUISITION]", "[PCO2 STATUS]", "[PCO2 END ACQUISITION]"]
@@ -147,6 +151,11 @@ def store_values(data, sequence, mode, sensor, values):
 #
 # SCRIPT START
 #
+logging.basicConfig(filename="raw_to_csv.log",
+                    format="%(asctime)s:%(levelname)s:%(message)s")
+logger = logging.getLogger('raw_to_csv')
+logger.setLevel(LOGGING_LEVEL)
+
 parser = argparse.ArgumentParser(
                     prog="raw_to_csv",
                     description="Convert data direct from GENx sensor to CSV for QuinCe")
@@ -155,6 +164,8 @@ parser.add_argument("in_file")
 parser.add_argument("out_file")
 
 args = parser.parse_args()
+
+logger.log(20, f"Processing file {args.in_file}")
 
 # Read the input file into memory.
 # We have to jump around a lot, so this is easier.
@@ -192,8 +203,15 @@ current_mode = None
 # The current sensor
 current_sensor = None
 
+# Store the time of the last acquisition
+# so we can detect time anomalies.
+last_timestamp = None
+
 # Hold numerical values from the data
 values = list()
+
+# Flag indicating whether data is valid.
+data_valid = True
 
 while current_line < len(lines):
     line = lines[current_line]
@@ -206,42 +224,54 @@ while current_line < len(lines):
             current_sequence += 1
 
     elif state == MEASUREMENT_SEQUENCE:
-
         if is_mode(line):
-            # Add the last set of values to the data
-            store_values(df, current_sequence, current_mode, current_sensor, values)
-            values = list()
-
-            if extract_mode(line) == 'END ACQUISITION':
-                # We have finished the current measurement sequence.
-                # Go back to looking for the next one.
-                state = SEARCH_FOR_SEQUENCE
-                current_mode = None
-                current_sensor = None
+            # If we hit a new START ACQUISITION, something went wrong.
+            # Discard the current data and start a new set.
+            if extract_mode(line) == 'START ACQUISITION':
+                logger.log(30, f"Line {current_line}: Incomplete acquisition")
                 values = list()
+                current_sequence += 1
             else:
-                current_mode = extract_mode(line)
-                current_sensor = None
+                # Add the last set of values to the data
+                store_values(df, current_sequence, current_mode, current_sensor, values)
+                values = list()
 
-                # If the mode is STATUS, process that specially here
-                if current_mode == 'STATUS':
+                if extract_mode(line) == 'END ACQUISITION':
+                    # We have finished the current measurement sequence.
+                    # Go back to looking for the next one.
+                    state = SEARCH_FOR_SEQUENCE
+                    current_mode = None
+                    current_sensor = None
+                    values = list()
+                else:
+                    current_mode = extract_mode(line)
+                    current_sensor = None
 
-                    # For STATUS mode, process that now in one shot.
-                    
-                    # Status code
-                    current_line += 1
-                    df.at[current_sequence, 'StatusCode'] = lines[current_line]
-                    
-                    # Timestamp
-                    current_line += 1
-                    timestamp = datetime.strptime(lines[current_line], '%Y/%m/%d %H:%M:%S')
-                    df.at[current_sequence, 'Time'] = timestamp
+                    # If the mode is STATUS, process that specially here
+                    if current_mode == 'STATUS':
 
-                    # Position
-                    current_line += 1
-                    (lon, lat) = parse_position_line(lines[current_line])
-                    df.at[current_sequence, 'Longitude'] = lon
-                    df.at[current_sequence, 'Latitude'] = lat
+                        # For STATUS mode, process that now in one shot.
+                        
+                        # Status code
+                        current_line += 1
+                        df.at[current_sequence, 'StatusCode'] = lines[current_line]
+                        
+                        # Timestamp
+                        current_line += 1
+                        timestamp = datetime.strptime(lines[current_line], '%Y/%m/%d %H:%M:%S')
+                        if (last_timestamp is not None and timestamp < last_timestamp):
+                            logger.log(40, f"{current_line}: Timestamps out of sequence")
+                            data_valid = False
+                            break # Abort
+
+                        df.at[current_sequence, 'Time'] = timestamp
+                        last_timestamp = timestamp
+
+                        # Position
+                        current_line += 1
+                        (lon, lat) = parse_position_line(lines[current_line])
+                        df.at[current_sequence, 'Longitude'] = lon
+                        df.at[current_sequence, 'Latitude'] = lat
 
         elif current_mode is not None:
             if is_sensor(line):
@@ -256,9 +286,11 @@ while current_line < len(lines):
                 line_values = re.findall(r'-?\d+', line)
                 values += line_values
 
-
     current_line += 1
 
-
 # Write the data out as CSV
-df.to_csv(args.out_file, index=False, date_format='%Y-%m-%dT%H:%M:%SZ')
+if data_valid:
+    df.to_csv(args.out_file, index=False, date_format='%Y-%m-%dT%H:%M:%SZ')
+else:
+    logging.log(40, "Invalid data - no output written")
+    exit(1)
