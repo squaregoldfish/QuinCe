@@ -14,6 +14,58 @@ LOGGING_LEVEL = 20
 # Sensor modes that do not contain measurement data
 NON_DATA_MODES = ["[PCO2 START ACQUISITION]", "[PCO2 STATUS]", "[PCO2 END ACQUISITION]"]
 
+# Holds details of an acquisition as it is extracted from the file.
+class Acquisition:
+    def __init__(self):
+        self.timestamp = None
+        self.longitude = None
+        self.latitude = None
+        self.status = None
+
+        self.data = dict()
+
+    def is_complete(self):
+        return self.timestamp is not None and self.status is not None
+
+    def set_position(self, lon, lat):
+        self.longitude = lon
+        self.latitude = lat
+
+    def add_values(self, mode, sensor, values):
+
+        # Write the current values
+        if len(values) > 0:
+            column_name = mode
+            if sensor is not None:
+                column_name += f'_{sensor}'
+
+            calc_values = np.array(values, dtype=np.float64)
+
+            mean = np.mean(calc_values)
+            stdev = -1 if sensor is None else np.std(calc_values)
+
+            self.data[column_name] = [mean, stdev]
+    
+    def write(self, df, sequence):
+        # If this acquisition is not complete, do nothing.
+        if self.is_complete():
+            df.at[sequence, 'Time'] = self.timestamp
+            df.at[sequence, 'StatusCode'] = self.status
+
+            if self.longitude is not None:
+                df.at[sequence, 'Longitude'] = self.longitude
+                df.at[sequence, 'Latitude'] = self.latitude
+
+            for column, values in self.data.items():
+                # If we have only one value, just store that
+                # This is indicated by a stdev of -1
+                if values[1] == -1:
+                    df.at[sequence, column] = values[0]
+                else:
+                    df.at[sequence, f'{column}_mean'] = values[0]
+                    df.at[sequence, f'{column}_sd'] = values[1]
+            
+
 def write_file_header(outfile, lines):
     # Write the dataset ID as the file header.
     # Find the first PCO2 START ACQUISITION and take the line after that.
@@ -112,7 +164,6 @@ def make_data_columns(sensor_headers):
 
 
 def parse_position_field(value, hemisphere, negative_hemisphere):
-
     extract = re.match(r'(\d+)(\d\d.\d+)', value)
     degrees = int(extract.group(1))
     minutes = float(extract.group(2))
@@ -130,22 +181,6 @@ def parse_position_line(line):
     lat = parse_position_field(fields[0], fields[1], 'S')
     lon = parse_position_field(fields[2], fields[3], 'W')
     return(lon, lat)
-
-def store_values(data, sequence, mode, sensor, values):
-    # Write the current values
-    if len(values) > 0:
-        column_name = current_mode
-        if current_sensor is not None:
-            column_name += f'_{current_sensor}'
-
-        calc_values = np.array(values, dtype=np.float64)
-
-        if current_sensor is None:
-            df.at[current_sequence, f'{column_name}'] = np.mean(calc_values)
-        else:
-            df.at[current_sequence, f'{column_name}_mean'] = np.mean(calc_values)
-            df.at[current_sequence, f'{column_name}_sd'] = np.std(calc_values)
-
 
 #############################################################
 #
@@ -177,7 +212,7 @@ sensor_headers = get_sensor_headers(lines)
 
 # Make the data columns and add the fixed record columns.
 columns = make_data_columns(sensor_headers)
-columns = ['Time', 'Longitude', 'Latitude', 'StatusCode'] + columns
+columns = ['Time', 'StatusCode', 'Longitude', 'Latitude'] + columns
 
 df = pd.DataFrame(columns=columns, dtype=float)
 df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str})
@@ -203,6 +238,9 @@ current_mode = None
 # The current sensor
 current_sensor = None
 
+# Data from the current acquisition
+current_acquisition = None
+
 # Store the time of the last acquisition
 # so we can detect time anomalies.
 last_timestamp = None
@@ -222,6 +260,7 @@ while current_line < len(lines):
         if is_mode(line) and extract_mode(line) == 'START ACQUISITION':
             state = MEASUREMENT_SEQUENCE
             current_sequence += 1
+            current_acquisition = Acquisition()
 
     elif state == MEASUREMENT_SEQUENCE:
         if is_mode(line):
@@ -229,17 +268,18 @@ while current_line < len(lines):
             # Discard the current data and start a new set.
             if extract_mode(line) == 'START ACQUISITION':
                 logger.log(30, f"Line {current_line}: Incomplete acquisition")
-                values = list()
+                current_acquisition = Acquisition()
                 current_sequence += 1
             else:
                 # Add the last set of values to the data
-                store_values(df, current_sequence, current_mode, current_sensor, values)
+                current_acquisition.add_values(current_mode, current_sensor, values)
                 values = list()
 
                 if extract_mode(line) == 'END ACQUISITION':
                     # We have finished the current measurement sequence.
                     # Go back to looking for the next one.
                     state = SEARCH_FOR_SEQUENCE
+                    current_acquisition.write(df, current_sequence)
                     current_mode = None
                     current_sensor = None
                     values = list()
@@ -254,7 +294,7 @@ while current_line < len(lines):
                         
                         # Status code
                         current_line += 1
-                        df.at[current_sequence, 'StatusCode'] = lines[current_line]
+                        current_acquisition.status = lines[current_line]
                         
                         # Timestamp
                         current_line += 1
@@ -264,18 +304,17 @@ while current_line < len(lines):
                             data_valid = False
                             break # Abort
 
-                        df.at[current_sequence, 'Time'] = timestamp
+                        current_acquisition.timestamp = timestamp
                         last_timestamp = timestamp
 
                         # Position
                         current_line += 1
                         (lon, lat) = parse_position_line(lines[current_line])
-                        df.at[current_sequence, 'Longitude'] = lon
-                        df.at[current_sequence, 'Latitude'] = lat
+                        current_acquisition.set_position(lon, lat)
 
         elif current_mode is not None:
             if is_sensor(line):
-                store_values(df, current_sequence, current_mode, current_sensor, values)
+                current_acquisition.add_values(current_mode, current_sensor, values)
 
                 # Clear the values array ready for the next sensor's data
                 values = list()
@@ -283,7 +322,7 @@ while current_line < len(lines):
                 current_sensor = extract_sensor(line)
             else:
                 # Split the line into numeric values and add them to the array
-                line_values = re.findall(r'-?\d+', line)
+                line_values = re.findall(r'(?<!\d)-?\d+(?:\.\d+)?', line)
                 values += line_values
 
     current_line += 1
