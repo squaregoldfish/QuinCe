@@ -14,6 +14,22 @@ LOGGING_LEVEL = 20
 # Sensor modes that do not contain measurement data
 NON_DATA_MODES = ["[PCO2 START ACQUISITION]", "[PCO2 STATUS]", "[PCO2 END ACQUISITION]"]
 
+# All values are reported as integers, so they need
+# multiplying to get them to the right order of magnitude.
+SENSOR_MULTIPLIERS = {
+    'CO2Calc': 0.01,
+    'CO2Temp': 0.01,
+    'CO2Pres': 0.001,
+    'CO2Raw1': 1,
+    'CO2Raw2': 1,
+    'RhCalc': 0.01,
+    'RhTemp': 0.01,
+    'EnclPres': 0.001,
+    'EnclAirTemp': 0.01,
+    'EnclRH': 0.01,
+    'EnclPCBTemp': 0.01
+}
+
 # Holds details of an acquisition as it is extracted from the file.
 class Acquisition:
     def __init__(self):
@@ -40,6 +56,8 @@ class Acquisition:
                 column_name += f'_{sensor}'
 
             calc_values = np.array(values, dtype=np.float64)
+            if sensor is not None:
+                calc_values = calc_values * SENSOR_MULTIPLIERS[sensor]
 
             mean = np.mean(calc_values)
             stdev = -1 if sensor is None else np.std(calc_values)
