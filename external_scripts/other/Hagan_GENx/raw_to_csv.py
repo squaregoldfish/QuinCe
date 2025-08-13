@@ -60,7 +60,7 @@ class Acquisition:
                 calc_values = calc_values * SENSOR_MULTIPLIERS[sensor]
 
             mean = np.mean(calc_values)
-            stdev = -1 if sensor is None else np.std(calc_values)
+            stdev = -1 if sensor is None else np.std(calc_values, ddof=1)
 
             self.data[column_name] = [mean, stdev]
     
