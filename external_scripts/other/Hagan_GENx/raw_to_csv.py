@@ -130,13 +130,15 @@ def get_sensor_headers(lines):
         
         if state == PROCESS_DATA_MODE:
             if is_sensor(line):
-                headers[current_mode].add(extract_sensor(line))
+                sensor = extract_sensor(line)
+                if sensor not in headers[current_mode]:
+                    headers[current_mode].append(extract_sensor(line))
 
         if is_mode(line):
             if is_data_mode(line):
                 current_mode = extract_mode(line)
                 if not current_mode in headers:
-                    headers[current_mode] = set()
+                    headers[current_mode] = list()
 
                 state = PROCESS_DATA_MODE
             else:
@@ -155,7 +157,7 @@ def make_data_columns(sensor_headers):
             # This mode has no sensors - just a value.
             columns.append(mode)
         else:
-            for sensor in sorted(sensors):
+            for sensor in sensors:
                 # We need columns for the mean and standard deviation
                 columns.append(f'{mode}_{sensor}_mean')
                 columns.append(f'{mode}_{sensor}_sd')
