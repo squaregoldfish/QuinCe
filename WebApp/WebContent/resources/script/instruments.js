@@ -16,6 +16,12 @@ function goToStandards(id) {
     return false;
   }
 
+  function goToUncertainties(id) {
+      $('#instrumentListForm\\:uncertaintiesInstrumentId').val(id);
+      $('#instrumentListForm\\:showUncertaintiesLink').click();
+      return false;
+    }
+
 function goToDiagnosticsQC(id) {
   $('#instrumentListForm\\:diagnosticQCInstrumentId').val(id);
   $('#instrumentListForm\\:diagnostQCLink').click();

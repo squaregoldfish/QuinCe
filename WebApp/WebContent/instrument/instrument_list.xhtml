@@ -138,6 +138,11 @@
       <p:commandLink id="showStandardsLink" ajax="false"
         action="#{externalStandardsBean.start}" />
 
+      <h:inputHidden id="uncertaintiesInstrumentId"
+        value="#{uncertaintiesBean.instrumentId}" />
+      <p:commandLink id="showUncertaintiesLink" ajax="false"
+        action="#{uncertaintiesBean.start}" />
+
       <h:inputHidden id="diagnosticQCInstrumentId"
         value="#{diagnosticQCSetupBean.instrumentId}" />
       <p:commandLink id="diagnostQCLink" ajax="false"
@@ -192,6 +197,11 @@
         </p:column>
         <p:column styleClass="centeredCell">
           <f:facet name="header">Configuration</f:facet>
+            <p:commandLink onclick="goToUncertainties(#{instrument.id})">
+              <h:graphicImage value="/resources/image/uncertainty.svg"
+                styleClass="actionIconLarge" alt="Uncertainties"
+                title="Uncertainties" />
+            </p:commandLink>
             <p:commandLink onclick="goToCalibrations(#{instrument.id})">
               <h:graphicImage value="/resources/image/sensor_calibration.svg"
                 styleClass="actionIconLarge" alt="Sensor Calibrations"

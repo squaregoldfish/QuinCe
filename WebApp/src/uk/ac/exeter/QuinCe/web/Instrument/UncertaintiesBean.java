@@ -5,36 +5,24 @@ import java.time.LocalDateTime;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficient;
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficientDB;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Calibration;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationDB;
+import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Uncertainty;
+import uk.ac.exeter.QuinCe.data.Instrument.Calibration.UncertaintyDB;
 import uk.ac.exeter.QuinCe.jobs.Job;
-import uk.ac.exeter.QuinCe.jobs.files.LocateMeasurementsJob;
+import uk.ac.exeter.QuinCe.jobs.files.ExtractDataSetJob;
 
 /**
- * Instance of the {@link CalibrationBean} for editing
- * {@link CalculationCoefficient}s.
+ * Instance of the {@link CalibrationBean} for editing {@link Uncertainty}(ie)s.
  */
 @ManagedBean
 @SessionScoped
-public class CalculationCoefficientsBean extends CalibrationBean {
+public class UncertaintiesBean extends CalibrationBean {
 
   /**
    * The navigation string for the calculation coefficients list.
    */
-  private static final String NAV_LIST = "calculation_coefficients";
-
-  /**
-   * Empty constructor.
-   *
-   * <p>
-   * Required for JUnit tests.
-   * </p>
-   */
-  public CalculationCoefficientsBean() {
-    super();
-  }
+  private static final String NAV_LIST = "uncertainties";
 
   @Override
   protected String getPageNavigation() {
@@ -43,41 +31,42 @@ public class CalculationCoefficientsBean extends CalibrationBean {
 
   @Override
   protected Class<? extends Job> getReprocessJobClass() {
-    return LocateMeasurementsJob.class;
+    return ExtractDataSetJob.class;
   }
 
   @Override
   protected CalibrationDB getDbInstance() {
-    return CalculationCoefficientDB.getInstance();
+    return UncertaintyDB.getInstance();
   }
 
   @Override
   protected String getCalibrationType() {
-    return CalculationCoefficientDB.CALCULATION_COEFFICIENT_CALIBRATION_TYPE;
+    return UncertaintyDB.UNCERTAINTY_CALIBRATION_TYPE;
   }
 
   @Override
   public String getHumanReadableCalibrationType() {
-    return "Calculation Coefficient";
+    return "Uncertainties";
   }
 
   @Override
   protected Calibration initNewCalibration(long id, LocalDateTime date) {
-    return new CalculationCoefficient(getCurrentInstrument(), id, date);
+    return new Uncertainty(getCurrentInstrument(), id, date);
   }
 
   @Override
   public String getTargetLabel() {
-    return "Coefficient";
+    return "Sensor";
   }
 
   @Override
   public String getCalibrationName() {
-    return "Coefficient";
+    return "Uncertainty";
   }
 
   @Override
   protected boolean changeAffectsDatasetsAfterOnly() {
-    return false;
+    return true;
   }
+
 }

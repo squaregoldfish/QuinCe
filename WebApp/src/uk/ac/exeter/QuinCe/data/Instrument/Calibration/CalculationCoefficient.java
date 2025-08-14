@@ -114,7 +114,6 @@ public class CalculationCoefficient extends Calibration {
       source.getId(), source.getDeploymentDate());
     setTarget(source.getTarget());
     setCoefficients(duplicateCoefficients(source));
-
   }
 
   /**
