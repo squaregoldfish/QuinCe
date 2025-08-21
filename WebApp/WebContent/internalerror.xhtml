@@ -26,7 +26,7 @@
 
     <h:panelGrid columns="1" cellpadding="5" styleClass="buttonPanel" style="margin-top: 20px">
       <p:button id="restartButton" value="Restart QuinCe"
-        action="/logout" />
+         onclick="window.open('#{request.contextPath}/logout');return false;" />
     </h:panelGrid>
   </ui:define>
 </ui:composition>
