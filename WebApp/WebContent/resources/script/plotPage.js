@@ -307,10 +307,10 @@ function resizeAllContent() {
   $('#plotPageContent').split().position($('#plotPageContent').height() * tableSplitProportion);
   resizePlots();
 
-  if (null != jsDataTable) {
-  let tableHeight = calcTableScrollY();
-  $('.dataTables_scrollBody').css('max-height',tableHeight);
-  $('.dataTables_scrollBody').css('height', tableHeight);
+  if (typeof variable !== 'undefined' && null != jsDataTable) {
+    let tableHeight = calcTableScrollY();
+    $('.dataTables_scrollBody').css('max-height',tableHeight);
+    $('.dataTables_scrollBody').css('height', tableHeight);
     jsDataTable.draw();
   }
 
@@ -381,12 +381,16 @@ function dataLoaded() {
   }
 }
 
-function plotError() {
+function plotError(xhr) {
+  // Log the info we have to the console
+  console.log('***plotError info dump');
+  console.log(xhr);
+
   // We can't use the window object here because consts don't get put there.
   itemNotLoading(PLOT1_LOADING);
   itemNotLoading(PLOT2_LOADING);
 
-  alert('Unhandled error in plot/map. If you see this, please report it with details of what you were trying to do');
+  alert('Unhandled error in plot/map. If you see this, please report it with details of what you were trying to do.');
 }
 
 // Get the index of the group that the specified column is in
