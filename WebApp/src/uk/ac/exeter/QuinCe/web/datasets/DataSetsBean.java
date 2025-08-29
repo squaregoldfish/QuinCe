@@ -28,6 +28,7 @@ import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
+import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficientDB;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationDB;
@@ -52,11 +53,6 @@ import uk.ac.exeter.QuinCe.web.system.ResourceException;
 @ManagedBean
 @SessionScoped
 public class DataSetsBean extends BaseManagedBean {
-
-  /**
-   * Navigation string for the New Dataset page
-   */
-  private static final String NAV_NEW_DATASET = "new_dataset";
 
   /**
    * Navigation string for the datasets list
@@ -141,7 +137,24 @@ public class DataSetsBean extends BaseManagedBean {
     validCalibration = true;
     validCalibrationMessage = null;
 
-    return NAV_NEW_DATASET;
+    String nav;
+
+    switch (getCurrentInstrument().getBasis()) {
+    case Instrument.BASIS_TIME: {
+      nav = "new_dataset_time";
+      break;
+    }
+    case Instrument.BASIS_ARGO: {
+      nav = "new_dataset_argo";
+      break;
+    }
+    default: {
+      nav = internalError(new IllegalArgumentException(
+        "Unrecognised instrument basis " + getCurrentInstrument().getBasis()));
+    }
+    }
+
+    return nav;
   }
 
   /**
@@ -367,6 +380,23 @@ public class DataSetsBean extends BaseManagedBean {
    */
   public DataSet getNewDataSet() {
     return newDataSet;
+  }
+
+  /**
+   * Get the new data set as a {@link TimeDataSet} object.
+   *
+   * <p>
+   * This is required for accessing the dataset start and end directly as
+   * {@link LocalDateTime} objects.
+   * </p>
+   *
+   * @return The new data set.
+   */
+  public TimeDataSet getNewTimeDataSet() {
+    if (!(newDataSet instanceof TimeDataSet)) {
+      internalError(new ClassCastException());
+    }
+    return (TimeDataSet) newDataSet;
   }
 
   /**

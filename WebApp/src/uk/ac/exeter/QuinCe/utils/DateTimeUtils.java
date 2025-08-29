@@ -80,8 +80,8 @@ public class DateTimeUtils {
    *          The date
    * @return The long value
    */
-  public static long dateToLong(LocalDateTime date) {
-    return date.toInstant(ZoneOffset.UTC).toEpochMilli();
+  public static Long dateToLong(LocalDateTime date) {
+    return null == date ? null : date.toInstant(ZoneOffset.UTC).toEpochMilli();
   }
 
   /**

@@ -51,7 +51,7 @@
           <p:outputLabel for="startDate" value="Start Date" />
           <p:outputLabel for="endDate" value="End Date" />
           <p:datePicker id="startDate" widgetVar="startDate"
-            value="#{dataSetsBean.newDataSet.startTime}" timeInput="true"
+            value="#{dataSetsBean.newTimeDataSet.startTime}" timeInput="true"
             pattern="yyyy-MM-dd HH:mm:ss"
             monthNavigator="true" yearNavigator="true"
             onMonthChange="autoSelectDay"
@@ -59,7 +59,7 @@
             onchange="processNewDataSet('start');">
           </p:datePicker>
           <p:datePicker id="endDate" widgetVar="endDate"
-            value="#{dataSetsBean.newDataSet.endTime}" timeInput="true"
+            value="#{dataSetsBean.newTimeDataSet.endTime}" timeInput="true"
             pattern="yyyy-MM-dd HH:mm:ss"
             monthNavigator="true" yearNavigator="true"
             onMonthChange="autoSelectDay"
