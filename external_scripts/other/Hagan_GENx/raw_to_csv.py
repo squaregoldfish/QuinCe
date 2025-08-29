@@ -103,7 +103,17 @@ def write_file_header(outfile, lines):
     outfile.write(f'{header}\n')
 
 def is_mode(line):
-    return line.startswith('[')
+    return line.startswith('[') and not line.startswith('[AUX')
+
+def is_aux(line):
+    return line.startswith('[AUX')
+
+def get_aux_type(aux_line):
+    match = re.match(r'\[AUX (.*)\]', aux_line)
+    if match is None:
+        raise ValueError("Invalid AUX mode line")
+
+    return match.group(1)
 
 def is_data_mode(line):
     return line not in NON_DATA_MODES
@@ -197,7 +207,7 @@ def parse_position_field(value, hemisphere, negative_hemisphere):
 
 
 def parse_position_line(line):
-    fields = line.split(' ')
+    fields = line.split()
     lat = parse_position_field(fields[0], fields[1], 'S')
     lon = parse_position_field(fields[2], fields[3], 'W')
     return(lon, lat)
@@ -215,8 +225,8 @@ parser = argparse.ArgumentParser(
                     prog="raw_to_csv",
                     description="Convert data direct from GENx sensor to CSV for QuinCe")
 
-parser.add_argument("in_file")
-parser.add_argument("out_file")
+parser.add_argument("in_file", help="Input SD card file")
+parser.add_argument("out_file_root", help="Root of output file(s). Suffixes will be added automatically.")
 
 args = parser.parse_args()
 
@@ -271,6 +281,10 @@ values = list()
 # Flag indicating whether data is valid.
 data_valid = True
 
+# Aux file handles.
+# Aux lines are written to their own files as they are encountered
+aux_data = dict()
+
 while current_line < len(lines):
     line = lines[current_line]
 
@@ -283,7 +297,18 @@ while current_line < len(lines):
             current_acquisition = Acquisition()
 
     elif state == MEASUREMENT_SEQUENCE:
-        if is_mode(line):
+        if is_aux(line):
+            
+            # Add the next line to the appropriate AUX file
+            aux_type = get_aux_type(line)
+            
+            if aux_type not in aux_data.keys():
+                aux_data[aux_type] = ''
+            
+            current_line += 1
+            aux_data[aux_type] = aux_data[aux_type] + lines[current_line] + '\n'
+
+        elif is_mode(line):
             # If we hit a new START ACQUISITION, something went wrong.
             # Discard the current data and start a new set.
             if extract_mode(line) == 'START ACQUISITION':
@@ -349,7 +374,11 @@ while current_line < len(lines):
 
 # Write the data out as CSV
 if data_valid:
-    df.to_csv(args.out_file, index=False, date_format='%Y-%m-%dT%H:%M:%SZ')
+    df.to_csv(f'{args.out_file_root}.csv', index=False, date_format='%Y-%m-%dT%H:%M:%SZ')
+
+    for (aux_type, contents) in aux_data.items():
+        with open(f'{args.out_file_root}_{aux_type}.dat', 'w') as aux_out:
+            aux_out.write(contents)
 else:
     logging.log(40, "Invalid data - no output written")
     exit(1)
