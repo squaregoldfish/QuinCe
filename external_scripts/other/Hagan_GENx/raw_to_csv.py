@@ -32,23 +32,40 @@ SENSOR_MULTIPLIERS = {
 
 # Holds details of an acquisition as it is extracted from the file.
 class Acquisition:
-    def __init__(self):
-        self.timestamp = None
+    SPAN_SLOPE_HEX_OFFSET = int('800000', 16)
+
+    def __init__(self, generation):
+        self.generation = generation
+
+        self.start_timestamp = None
+        self.end_timestamp = None
         self.longitude = None
         self.latitude = None
         self.status = None
 
+        # Signature info
+        self.serial_number = None
+        self.span_concentration = None
+        self.span_slope = None
+        self.zero_pre_offset = None
+        self.zero_post_offset = None
+        self.span_pre_offset = None
+        self.span_post_offset = None
+        self.air_offset = None
+        self.eq_cal_offset = None
+        self.eq_between_cal_offset = None
+        self.eq_before_sample = None
+
         self.data = dict()
 
     def is_complete(self):
-        return self.timestamp is not None and self.status is not None
+        return self.end_timestamp is not None and self.status is not None
 
     def set_position(self, lon, lat):
         self.longitude = lon
         self.latitude = lat
 
     def add_values(self, mode, sensor, values):
-
         # Write the current values
         if len(values) > 0:
             column_name = mode
@@ -63,12 +80,71 @@ class Acquisition:
             stdev = -1 if sensor is None else np.std(calc_values, ddof=1)
 
             self.data[column_name] = [mean, stdev]
-    
+
+    @staticmethod
+    def _get_time_ofsset(line, line_pos):
+        return int(line[line_pos:line_pos + 3], 16)
+        
+
+    def set_signature(self, line):
+        
+        line_pos = 0
+
+        # Serial number
+        self.serial_number = line[line_pos:8]
+        line_pos += 8
+
+        # Span gas concentration
+        # Gen2: 4 or 5 characters. Gen3: Always 5
+        if self.generation == '2':
+            span_conc_length = 4 if len(line) == 39 else 5
+        else:
+            span_conc_length = 4 if len(line) == 40 else 5
+
+        span_conc_hex = line[line_pos:line_pos + span_conc_length]
+        self.span_concentration = int(span_conc_hex, 16) / 100
+
+        line_pos += span_conc_length
+        span_slope_hex = line[line_pos:line_pos + 6]
+        self.span_slope = (int(span_slope_hex, 16) - self.SPAN_SLOPE_HEX_OFFSET) / 10000000
+        
+        line_pos += 6
+        self.zero_pre_offset = self._get_time_ofsset(line, line_pos)
+        line_pos += 3
+        self.zero_post_offset = self._get_time_ofsset(line, line_pos)
+        line_pos += 3
+        self.span_pre_offset = self._get_time_ofsset(line, line_pos)
+        line_pos += 3
+        self.span_post_offset = self._get_time_ofsset(line, line_pos)
+        line_pos += 3
+        self.air_offset = self._get_time_ofsset(line, line_pos)
+        line_pos += 3
+        self.eq_cal_offset = self._get_time_ofsset(line, line_pos)
+        line_pos += 3
+        self.eq_between_cal_offset = self._get_time_ofsset(line, line_pos)
+        line_pos += 3
+        
+        if self.generation == '3':
+            self.eq_before_sample = int(line[-1:])
+
     def write(self, df, sequence):
         # If this acquisition is not complete, do nothing.
         if self.is_complete():
-            df.at[sequence, 'Time'] = self.timestamp
+            df.at[sequence, 'Time'] = self.end_timestamp
             df.at[sequence, 'StatusCode'] = self.status
+
+            # Signature details
+            df.at[sequence, 'Serial Number'] = self.serial_number
+            df.at[sequence, 'Span Concentration'] = self.span_concentration
+            df.at[sequence, 'Span Slope'] = self.span_slope
+            df.at[sequence, 'Zero Pre Time'] = self.zero_pre_offset
+            df.at[sequence, 'Zero Post Time'] = self.zero_post_offset
+            df.at[sequence, 'Span Pre Time'] = self.span_pre_offset
+            df.at[sequence, 'Span Post Time'] = self.span_post_offset
+            df.at[sequence, 'Air Time'] = self.air_offset
+            df.at[sequence, 'Eq CAL Time'] = self.eq_cal_offset
+            df.at[sequence, 'Eq Between CAL Time'] = self.eq_between_cal_offset
+            df.at[sequence, 'Eq Before Sample'] = self.eq_before_sample
 
             if self.longitude is not None:
                 df.at[sequence, 'Longitude'] = self.longitude
@@ -155,7 +231,6 @@ def get_sensor_headers(lines):
     while state != FINISHED:
         line = lines[current_line]
 
-        
         if state == PROCESS_DATA_MODE:
             if is_sensor(line):
                 sensor = extract_sensor(line)
@@ -212,6 +287,9 @@ def parse_position_line(line):
     lon = parse_position_field(fields[2], fields[3], 'W')
     return(lon, lat)
 
+def get_timestamp(line):
+    return datetime.strptime(line, '%Y/%m/%d %H:%M:%S')
+
 #############################################################
 #
 # SCRIPT START
@@ -225,6 +303,7 @@ parser = argparse.ArgumentParser(
                     prog="raw_to_csv",
                     description="Convert data direct from GENx sensor to CSV for QuinCe")
 
+parser.add_argument("generation", help="Sensor generation", choices=['2', '3'])
 parser.add_argument("in_file", help="Input SD card file")
 parser.add_argument("out_file_root", help="Root of output file(s). Suffixes will be added automatically.")
 
@@ -242,10 +321,29 @@ sensor_headers = get_sensor_headers(lines)
 
 # Make the data columns and add the fixed record columns.
 columns = make_data_columns(sensor_headers)
-columns = ['Time', 'StatusCode', 'Longitude', 'Latitude'] + columns
 
-df = pd.DataFrame(columns=columns, dtype=float)
-df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str})
+# Different generations have different preamble columns
+if args.generation == '2':
+    columns = ['Time', 'StatusCode', 'Serial Number', 'Span Concentration',
+        'Span Slope', 'Zero Pre Time', 'Zero Post Time', 'Span Pre Time', 'Span Post Time',
+        'Air Time', 'Eq CAL Time', 'Eq Between CAL Time',
+        'Longitude', 'Latitude'] + columns
+
+    df = pd.DataFrame(columns=columns, dtype=float)
+    df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
+        'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
+        'Span Post Time': int, 'Air Time': int, 'Eq CAL Time': int})
+else:
+    columns = ['Time', 'StatusCode', 'Serial Number', 'Span Concentration',
+        'Span Slope', 'Zero Pre Time', 'Zero Post Time', 'Span Pre Time', 'Span Post Time',
+        'Air Time', 'Eq CAL Time', 'Eq Between CAL Time', 'Eq Before Sample',
+        'Longitude', 'Latitude'] + columns
+
+    df = pd.DataFrame(columns=columns, dtype=float)
+    df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
+        'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
+        'Span Post Time': int, 'Air Time': int, 'Eq CAL Time': int,
+        'Eq Before Sample': int})
 
 # Now for the main data extraction.
 
@@ -294,7 +392,17 @@ while current_line < len(lines):
         if is_mode(line) and extract_mode(line) == 'START ACQUISITION':
             state = MEASUREMENT_SEQUENCE
             current_sequence += 1
-            current_acquisition = Acquisition()
+            current_acquisition = Acquisition(args.generation)
+            
+            current_line += 1
+            current_acquisition.set_signature(lines[current_line])
+            current_line += 1
+
+            try:
+                current_acquisition.start_timestamp = get_timestamp(lines[current_line])
+            except ValueError:
+                logger.log(30, f"Line {current_line}: Invalid acquisition timestamp")
+                state = SEARCH_FOR_SEQUENCE
 
     elif state == MEASUREMENT_SEQUENCE:
         if is_aux(line):
@@ -313,8 +421,18 @@ while current_line < len(lines):
             # Discard the current data and start a new set.
             if extract_mode(line) == 'START ACQUISITION':
                 logger.log(30, f"Line {current_line}: Incomplete acquisition")
-                current_acquisition = Acquisition()
+                current_acquisition = Acquisition(args.generation)
                 current_sequence += 1
+
+                current_line += 1
+                current_acquisition.set_signature(lines[current_line])
+                current_line += 1
+
+                try:
+                    current_acquisition.start_timestamp = get_timestamp(lines[current_line])
+                except ValueError:
+                    logger.log(30, f"Line {current_line}: Invalid acquisition timestamp")
+                    state = SEARCH_FOR_SEQUENCE
             else:
                 # Add the last set of values to the data
                 current_acquisition.add_values(current_mode, current_sensor, values)
@@ -343,13 +461,13 @@ while current_line < len(lines):
                         
                         # Timestamp
                         current_line += 1
-                        timestamp = datetime.strptime(lines[current_line], '%Y/%m/%d %H:%M:%S')
+                        timestamp = get_timestamp(lines[current_line])
                         if (last_timestamp is not None and timestamp < last_timestamp):
                             logger.log(40, f"{current_line}: Timestamps out of sequence")
                             data_valid = False
                             break # Abort
 
-                        current_acquisition.timestamp = timestamp
+                        current_acquisition.end_timestamp = timestamp
                         last_timestamp = timestamp
 
                         # Position
