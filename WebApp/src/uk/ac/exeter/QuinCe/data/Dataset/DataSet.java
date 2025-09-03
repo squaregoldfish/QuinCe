@@ -21,12 +21,13 @@ import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.Message;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
+import uk.ac.exeter.QuinCe.utils.NaturalOrderComparator;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
  * Object to represent a data set
  */
-public abstract class DataSet implements Comparable<DataSet> {
+public class DataSet implements Comparable<DataSet> {
 
   private static Map<Integer, Class<? extends DataSet>> BASIS_TO_CLASS;
 
@@ -225,6 +226,16 @@ public abstract class DataSet implements Comparable<DataSet> {
   private String name;
 
   /**
+   * The start point of the DataSet.
+   */
+  private String start;
+
+  /**
+   * The end point of the DataSet.
+   */
+  private String end;
+
+  /**
    * Properties for each of the measured variables
    */
   private Map<String, Properties> properties;
@@ -367,17 +378,19 @@ public abstract class DataSet implements Comparable<DataSet> {
    *          The maximum latitude of the dataset's geographical bounds
    *
    */
-  protected DataSet(long id, Instrument instrument, String name, int status,
-    LocalDateTime statusDate, boolean nrt, Map<String, Properties> properties,
-    SensorOffsets sensorOffsets, LocalDateTime createdDate,
-    LocalDateTime lastTouched, List<Message> errorMessages,
-    DatasetProcessingMessages processingMessages,
+  protected DataSet(long id, Instrument instrument, String name, String start,
+    String end, int status, LocalDateTime statusDate, boolean nrt,
+    Map<String, Properties> properties, SensorOffsets sensorOffsets,
+    LocalDateTime createdDate, LocalDateTime lastTouched,
+    List<Message> errorMessages, DatasetProcessingMessages processingMessages,
     DatasetUserMessages userMessages, double minLon, double minLat,
     double maxLon, double maxLat, boolean exported) {
 
     this.id = id;
     this.instrument = instrument;
     this.name = name;
+    this.start = start;
+    this.end = end;
     this.status = status;
     this.statusDate = statusDate;
     this.nrt = nrt;
@@ -426,9 +439,12 @@ public abstract class DataSet implements Comparable<DataSet> {
    * @param nrt
    *          Indicates whether or not this is a NRT dataset
    */
-  public DataSet(Instrument instrument, String name, boolean nrt) {
+  public DataSet(Instrument instrument, String name, String start, String end,
+    boolean nrt) {
     this.instrument = instrument;
     this.name = name;
+    this.start = start;
+    this.end = end;
     this.nrt = nrt;
     this.statusDate = DateTimeUtils.longToDate(System.currentTimeMillis());
     loadProperties(instrument);
@@ -550,8 +566,31 @@ public abstract class DataSet implements Comparable<DataSet> {
    *
    * @return The start point.
    */
-  public abstract String getStart();
+  public String getStart() {
+    return start;
+  }
 
+  /**
+   * Set the start point for the dataset.
+   * 
+   * <p>
+   * This must use the internal format for the start point per
+   * {@link #getStart()}, and not the human-readable format supplied by
+   * {@link #getDisplayStart()}.
+   * </p>
+   * 
+   * @param start
+   *          The start point.
+   */
+  public void setStart(String start) {
+    this.start = start;
+  }
+
+  /**
+   * Get the human-readable version of the start point of the DataSet.
+   * 
+   * @return The human-readable start point
+   */
   public String getDisplayStart() {
     return getStart();
   }
@@ -559,10 +598,35 @@ public abstract class DataSet implements Comparable<DataSet> {
   /**
    * Get the end point of the data set
    *
-   * @return The end point
+   * <p>
+   * This is an internal format and may not be suitable for display to humans.
+   * Use {@link #getDisplayEnd()} for that.
+   * </p>
    */
-  public abstract String getEnd();
+  public String getEnd() {
+    return end;
+  }
 
+  /**
+   * Set the end point for the dataset.
+   * 
+   * <p>
+   * This must use the internal format for the end point per {@link #getEnd()},
+   * and not the human-readable format supplied by {@link #getDisplayEnd()}.
+   * </p>
+   * 
+   * @param end
+   *          The end point.
+   */
+  public void setEnd(String end) {
+    this.end = end;
+  }
+
+  /**
+   * Get the human-readable version of the end point of the DataSet.
+   * 
+   * @return The human-readable end point
+   */
   public String getDisplayEnd() {
     return getEnd();
   }
@@ -912,7 +976,9 @@ public abstract class DataSet implements Comparable<DataSet> {
     }
   }
 
-  protected abstract int compareToWorker(DataSet o);
+  protected int compareToWorker(DataSet o) {
+    return new NaturalOrderComparator().compare(this.start, o.start);
+  }
 
   public void addProcessingMessage(String module, String message) {
     processingMessages.addMessage(module, message);

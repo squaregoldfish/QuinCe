@@ -21,11 +21,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import uk.ac.exeter.QuinCe.User.User;
+import uk.ac.exeter.QuinCe.data.Dataset.ArgoDataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
 import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
+import uk.ac.exeter.QuinCe.data.Files.DataFileException;
 import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -43,6 +45,7 @@ import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.ExceptionUtils;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
+import uk.ac.exeter.QuinCe.utils.NaturalOrderComparator;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.web.BaseManagedBean;
 import uk.ac.exeter.QuinCe.web.system.ResourceException;
@@ -125,12 +128,23 @@ public class DataSetsBean extends BaseManagedBean {
   private long processingMessagesId = -1L;
 
   /**
+   * The minimum allowed start point for a new dataset.
+   */
+  private String minimumStart = "";
+
+  /**
+   * The maximum allowed end point for a new dataset.
+   */
+  private String maximumEnd = "";
+
+  /**
    * Start the dataset definition procedure
    *
    * @return The navigation to the dataset definition page
+   * @throws DataFileException
+   * @throws DatabaseException
    */
-  public String startNewDataset() {
-    newDataSet = new TimeDataSet(getCurrentInstrument());
+  public String startNewDataset() throws DatabaseException, DataFileException {
     fileDefinitionsJson = null;
     timelineEntriesJson = null;
     calibrationsJson = null;
@@ -141,10 +155,22 @@ public class DataSetsBean extends BaseManagedBean {
 
     switch (getCurrentInstrument().getBasis()) {
     case Instrument.BASIS_TIME: {
+      newDataSet = new TimeDataSet(getCurrentInstrument());
       nav = "new_dataset_time";
       break;
     }
     case Instrument.BASIS_ARGO: {
+      newDataSet = new ArgoDataSet(getCurrentInstrument());
+
+      String[] fileLimits = getFileLimits();
+
+      minimumStart = fileLimits[0];
+      maximumEnd = fileLimits[1];
+
+      newDataSet.setStart(fileLimits[0]);
+      newDataSet.setEnd(fileLimits[1]);
+      newDataSet.setName(fileLimits[0] + "-" + fileLimits[1]);
+
       nav = "new_dataset_argo";
       break;
     }
@@ -155,6 +181,39 @@ public class DataSetsBean extends BaseManagedBean {
     }
 
     return nav;
+  }
+
+  public String getMinimumStart() {
+    return minimumStart;
+  }
+
+  public String getMaximumEnd() {
+    return maximumEnd;
+  }
+
+  private String[] getFileLimits() throws DatabaseException, DataFileException {
+
+    NaturalOrderComparator comparator = new NaturalOrderComparator();
+
+    String lowestStart = null;
+    String highestEnd = null;
+
+    TreeSet<DataFile> dataFiles = DataFileDB.getFiles(getDataSource(),
+      getCurrentInstrument());
+
+    for (DataFile dataFile : dataFiles) {
+      if (null == lowestStart || comparator
+        .compare(dataFile.getStartDisplayString(), lowestStart) < 0) {
+        lowestStart = dataFile.getStartDisplayString();
+      }
+
+      if (null == highestEnd
+        || comparator.compare(dataFile.getEndDisplayString(), highestEnd) > 0) {
+        highestEnd = dataFile.getEndDisplayString();
+      }
+    }
+
+    return new String[] { lowestStart, highestEnd };
   }
 
   /**
@@ -302,19 +361,24 @@ public class DataSetsBean extends BaseManagedBean {
       JsonArray entriesJson = new JsonArray();
 
       for (DataFile file : dataFiles) {
-        TimeDataFile castFile = (TimeDataFile) file;
-
         JsonObject entry = new JsonObject();
 
         entry.addProperty("type", "range");
         entry.addProperty("group",
           definitionIds.get(file.getFileDefinition().getFileDescription()));
-        entry.addProperty("start",
-          DateTimeUtils.toIsoDate(castFile.getOffsetStartTime()));
-        entry.addProperty("end",
-          DateTimeUtils.toIsoDate(castFile.getOffsetEndTime()));
         entry.addProperty("content", file.getFilename());
         entry.addProperty("title", file.getFilename());
+
+        if (getCurrentInstrument().getBasis() == Instrument.BASIS_TIME) {
+          TimeDataFile castFile = (TimeDataFile) file;
+          entry.addProperty("start",
+            DateTimeUtils.toIsoDate(castFile.getOffsetStartTime()));
+          entry.addProperty("end",
+            DateTimeUtils.toIsoDate(castFile.getOffsetEndTime()));
+        } else {
+          entry.addProperty("start", file.getStartDisplayString());
+          entry.addProperty("end", file.getEndDisplayString());
+        }
 
         entriesJson.add(entry);
       }
@@ -688,6 +752,14 @@ public class DataSetsBean extends BaseManagedBean {
     }
 
     return result;
+  }
+
+  public String getMinStart() {
+    return minimumStart;
+  }
+
+  public String getMaxEnd() {
+    return maximumEnd;
   }
 
   public void delete() {

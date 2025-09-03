@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.Message;
@@ -24,7 +26,7 @@ public class TimeDataSet extends DataSet {
 
   public TimeDataSet(Instrument instrument, String name,
     LocalDateTime startTime, LocalDateTime endTime, boolean nrt) {
-    super(instrument, name, nrt);
+    super(instrument, name, null, null, nrt);
     this.startTime = startTime;
     this.endTime = endTime;
   }
@@ -37,7 +39,7 @@ public class TimeDataSet extends DataSet {
     DatasetUserMessages userMessages, double minLon, double minLat,
     double maxLon, double maxLat, boolean exported) {
 
-    super(id, instrument, name, status, statusDate, nrt, properties,
+    super(id, instrument, name, null, null, status, statusDate, nrt, properties,
       sensorOffsets, createdDate, lastTouched, errorMessages,
       processingMessages, userMessages, minLon, minLat, maxLon, maxLat,
       exported);
@@ -52,6 +54,11 @@ public class TimeDataSet extends DataSet {
   }
 
   @Override
+  public void setStart(String start) {
+    throw new NotImplementedException("setStartTime must be used");
+  }
+
+  @Override
   public String getDisplayStart() {
     return DateTimeUtils.formatDateTime(startTime);
   }
@@ -59,6 +66,11 @@ public class TimeDataSet extends DataSet {
   @Override
   public String getEnd() {
     return String.valueOf(DateTimeUtils.dateToLong(endTime));
+  }
+
+  @Override
+  public void setEnd(String end) {
+    throw new NotImplementedException("setEndTime must be used");
   }
 
   @Override
