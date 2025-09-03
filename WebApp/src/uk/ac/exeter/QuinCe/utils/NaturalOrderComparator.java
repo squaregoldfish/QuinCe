@@ -5,24 +5,24 @@ import java.util.Comparator;
 /**
  * NaturalOrderComparator.java -- Perform 'natural order' comparisons of strings
  * in Java. Copyright (C) 2003 by Pierre-Luc Paour <natorder@paour.com>
- * 
+ *
  * <p>
  * Based on the C version by Martin Pool, of which this is more or less a
  * straight conversion. Copyright (C) 2000 by Martin Pool <mbp@humbug.org.au>
  * </p>
- * 
+ *
  * <p>
  * This software is provided 'as-is', without any express or implied warranty.
  * In no event will the authors be held liable for any damages arising from the
  * use of this software.
  * </p>
- * 
+ *
  * <p>
  * Permission is granted to anyone to use this software for any purpose,
  * including commercial applications, and to alter it and redistribute it
  * freely, subject to the following restrictions:
  * </p>
- * 
+ *
  * <ol>
  * <li>The origin of this software must not be misrepresented; you must not
  * claim that you wrote the original software. If you use this software in a
@@ -33,7 +33,7 @@ import java.util.Comparator;
  * <li>3. This notice may not be removed or altered from any source
  * distribution.</li>
  * </ol>
- * 
+ *
  * <p>
  * Retrieved from https://github.com/paour/natorder
  * </p>

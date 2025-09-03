@@ -339,6 +339,7 @@ public class DataSet implements Comparable<DataSet> {
 
     BASIS_TO_CLASS = new HashMap<Integer, Class<? extends DataSet>>();
     BASIS_TO_CLASS.put(Instrument.BASIS_TIME, TimeDataSet.class);
+    BASIS_TO_CLASS.put(Instrument.BASIS_ARGO, ArgoDataSet.class);
   }
 
   /**
@@ -572,13 +573,13 @@ public class DataSet implements Comparable<DataSet> {
 
   /**
    * Set the start point for the dataset.
-   * 
+   *
    * <p>
    * This must use the internal format for the start point per
    * {@link #getStart()}, and not the human-readable format supplied by
    * {@link #getDisplayStart()}.
    * </p>
-   * 
+   *
    * @param start
    *          The start point.
    */
@@ -588,7 +589,7 @@ public class DataSet implements Comparable<DataSet> {
 
   /**
    * Get the human-readable version of the start point of the DataSet.
-   * 
+   *
    * @return The human-readable start point
    */
   public String getDisplayStart() {
@@ -609,12 +610,12 @@ public class DataSet implements Comparable<DataSet> {
 
   /**
    * Set the end point for the dataset.
-   * 
+   *
    * <p>
    * This must use the internal format for the end point per {@link #getEnd()},
    * and not the human-readable format supplied by {@link #getDisplayEnd()}.
    * </p>
-   * 
+   *
    * @param end
    *          The end point.
    */
@@ -624,7 +625,7 @@ public class DataSet implements Comparable<DataSet> {
 
   /**
    * Get the human-readable version of the end point of the DataSet.
-   * 
+   *
    * @return The human-readable end point
    */
   public String getDisplayEnd() {
