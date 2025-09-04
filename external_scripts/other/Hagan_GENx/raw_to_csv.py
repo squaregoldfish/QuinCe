@@ -290,6 +290,28 @@ def parse_position_line(line):
 def get_timestamp(line):
     return datetime.strptime(line, '%Y/%m/%d %H:%M:%S')
 
+def extract_values(line):
+    values = list()
+
+    current_value = ''
+    current_pos = 0
+
+    while current_pos < len(line):
+        if (line[current_pos] == ' ' or line[current_pos] == '-'):
+            if len(current_value) > 0:
+                values.append(current_value)
+                current_value = ''
+        
+        if line[current_pos] != ' ':
+            current_value += line[current_pos]
+
+        current_pos += 1
+
+    if len(current_value) > 0:
+        values.append(current_value)
+
+    return values
+
 #############################################################
 #
 # SCRIPT START
@@ -422,6 +444,8 @@ while current_line < len(lines):
             if extract_mode(line) == 'START ACQUISITION':
                 logger.log(30, f"Line {current_line}: Incomplete acquisition")
                 current_acquisition = Acquisition(args.generation)
+                values = list()
+                current_mode = None
                 current_sequence += 1
 
                 current_line += 1
@@ -485,8 +509,7 @@ while current_line < len(lines):
                 current_sensor = extract_sensor(line)
             else:
                 # Split the line into numeric values and add them to the array
-                line_values = re.findall(r'(?<!\d)-?\d+(?:\.\d+)?', line)
-                values += line_values
+                values += extract_values(line)
 
     current_line += 1
 
