@@ -564,22 +564,19 @@ public class DataSetDB {
     }
   }
 
-  public static void setNrtDatasetStatus(DataSource dataSource,
-    Instrument instrument, int status) throws DatabaseException,
-    MissingParamException, InvalidDataSetStatusException,
-    RecordNotFoundException, CoordinateException {
+  public static void setNrtDatasetStatus(Connection conn, Instrument instrument,
+    int status) throws DatabaseException, MissingParamException,
+    InvalidDataSetStatusException, RecordNotFoundException,
+    CoordinateException {
 
-    try (Connection conn = dataSource.getConnection();) {
-
+    try {
       DataSet nrtDataset = getNrtDataSet(conn, instrument.getId());
       if (null != nrtDataset) {
         setDatasetStatus(conn, nrtDataset.getId(), status);
       }
-
-    } catch (SQLException e) {
+    } catch (Exception e) {
       throw new DatabaseException("Error while setting dataset status", e);
     }
-
   }
 
   /**

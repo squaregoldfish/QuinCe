@@ -346,7 +346,6 @@ public class DataSetDataDB {
     ResultSet generatedKeys;
 
     try {
-
       if (conn.getAutoCommit()) {
         throw new DatabaseException("Connection must be autoCommit=false");
       }

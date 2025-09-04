@@ -847,7 +847,7 @@ public class DataSet implements Comparable<DataSet> {
   }
 
   /**
-   * Set the dataset's geographical bounds
+   * Set the dataset's geographical bounds.
    *
    * @param minLon
    *          The minimum longitude
@@ -858,14 +858,13 @@ public class DataSet implements Comparable<DataSet> {
    * @param maxLat
    *          The maximum latitude
    */
-  public void setBounds(double minLon, double minLat, double maxLon,
-    double maxLat) {
+  public void setBounds(GeoBounds bounds) {
 
-    if (!instrument.fixedPosition()) {
-      this.minLon = minLon;
-      this.maxLon = maxLon;
-      this.minLat = minLat;
-      this.maxLat = maxLat;
+    if (null != bounds && !instrument.fixedPosition()) {
+      this.minLon = bounds.getMinLon();
+      this.maxLon = bounds.getMaxLon();
+      this.minLat = bounds.getMinLat();
+      this.maxLat = bounds.getMaxLat();
     }
   }
 
