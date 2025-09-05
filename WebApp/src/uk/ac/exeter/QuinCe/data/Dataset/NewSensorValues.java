@@ -1,6 +1,5 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,14 +55,14 @@ public class NewSensorValues {
     this.dataset = dataset;
   }
 
-  public SensorValue create(long columnId, LocalDateTime time, String value) {
+  public SensorValue create(long columnId, Coordinate coordinate,
+    String value) {
 
     /*
      * Generate the Coordinate object for the {@link SensorValue}.
      *
      * If a Coordinate already exists, use that instance.
      */
-    Coordinate coordinate = new TimeCoordinate(dataset.getId(), time);
     if (coordinates.containsKey(coordinate)) {
       coordinate = coordinates.get(coordinate);
     } else {

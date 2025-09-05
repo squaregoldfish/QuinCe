@@ -112,6 +112,8 @@ public class ArgoCoordinate extends Coordinate {
     /*
      * The pressure is inherently linked to the nProf/nLevel/direction
      * combination, so we don't need to check it.
+     * 
+     * Not all records contain timestamp or position, so we don't check those.
      */
     return cycleNumber == o.cycleNumber && nProf == o.nProf
       && direction == o.direction && nLevel == o.nLevel;

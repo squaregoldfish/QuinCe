@@ -56,7 +56,7 @@ public class DataSetDataDBTest extends BaseTest {
     Mockito.when(dataset.getId()).thenReturn(datasetId);
 
     NewSensorValues sv = new NewSensorValues(dataset);
-    sv.create(columnId, time, value);
+    sv.create(columnId, new TimeCoordinate(datasetId, time), value);
     return sv;
   }
 
@@ -314,7 +314,9 @@ public class DataSetDataDBTest extends BaseTest {
     NewSensorValues sensorValues = newSensorValue(DATASET_ID, COLUMN_ID,
       LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
 
-    sensorValues.create(7000L, LocalDateTime.of(2021, 1, 1, 0, 0, 0), "22");
+    sensorValues.create(7000L,
+      new TimeCoordinate(DATASET_ID, LocalDateTime.of(2021, 1, 1, 0, 0, 0)),
+      "22");
 
     boolean exceptionThrown = false;
     try {
@@ -340,7 +342,9 @@ public class DataSetDataDBTest extends BaseTest {
     NewSensorValues sensorValues = newSensorValue(DATASET_ID, COLUMN_ID,
       LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
 
-    sensorValues.create(COLUMN_ID, LocalDateTime.of(2021, 1, 1, 0, 0, 1), "21");
+    sensorValues.create(COLUMN_ID,
+      new TimeCoordinate(DATASET_ID, LocalDateTime.of(2021, 1, 1, 0, 0, 1)),
+      "21");
 
     for (SensorValue value : sensorValues.getSensorValues()) {
       if (value.getCoordinate().getTime().getSecond() == 1) {
@@ -365,7 +369,9 @@ public class DataSetDataDBTest extends BaseTest {
     NewSensorValues sensorValues = newSensorValue(DATASET_ID, COLUMN_ID,
       LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
 
-    sensorValues.create(COLUMN_ID, LocalDateTime.of(2021, 1, 1, 0, 0, 1), "21");
+    sensorValues.create(COLUMN_ID,
+      new TimeCoordinate(DATASET_ID, LocalDateTime.of(2021, 1, 1, 0, 0, 1)),
+      "21");
 
     for (SensorValue value : sensorValues.getSensorValues()) {
       if (value.getCoordinate().getTime().getSecond() == 1) {
@@ -390,7 +396,9 @@ public class DataSetDataDBTest extends BaseTest {
     NewSensorValues sensorValues = newSensorValue(DATASET_ID, COLUMN_ID,
       LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
 
-    sensorValues.create(2L, LocalDateTime.of(2021, 1, 1, 0, 0, 0), "21");
+    sensorValues.create(2L,
+      new TimeCoordinate(DATASET_ID, LocalDateTime.of(2021, 1, 1, 0, 0, 0)),
+      "21");
 
     DataSetDataDB.storeNewSensorValues(conn, sensorValues);
     conn.commit();

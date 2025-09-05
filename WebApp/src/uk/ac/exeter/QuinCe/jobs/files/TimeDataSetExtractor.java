@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeSet;
 
 import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
@@ -43,18 +42,12 @@ import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.TimeRange;
 import uk.ac.exeter.QuinCe.utils.TimeRangeBuilder;
 
-public class TimeDataSetExtractor implements DataSetExtractor {
+public class TimeDataSetExtractor extends DataSetExtractor {
 
   /**
    * Name of the job, used for reporting
    */
-  private final String jobName = "Time Basis Dataset Extraction";
-
-  private Set<DataFile> usedFiles = null;
-
-  private NewSensorValues sensorValues = null;
-
-  private GeoBounds geoBounds = null;
+  private static final String JOB_NAME = "Time Basis Dataset Extraction";
 
   public void extract(Connection conn, Instrument instrument, DataSet dataSet)
     throws Exception {
@@ -143,9 +136,9 @@ public class TimeDataSetExtractor implements DataSetExtractor {
                 checkColumnCount = false;
               }
             } catch (FileDefinitionException e) {
-              dataSet.addProcessingMessage(jobName, file, currentLine, e);
+              dataSet.addProcessingMessage(JOB_NAME, file, currentLine, e);
               if (e instanceof MissingRunTypeException) {
-                dataSet.addProcessingMessage(jobName, file, currentLine,
+                dataSet.addProcessingMessage(JOB_NAME, file, currentLine,
                   "Unrecognised Run Type");
               }
             }
@@ -153,11 +146,12 @@ public class TimeDataSetExtractor implements DataSetExtractor {
 
           if (checkColumnCount
             && line.size() != fileDefinition.getColumnCount()) {
-            dataSet.addProcessingMessage(jobName, file, currentLine,
+            dataSet.addProcessingMessage(JOB_NAME, file, currentLine,
               "Incorrect number of columns");
           }
 
           LocalDateTime time = ((TimeDataFile) file).getOffsetTime(line);
+          TimeCoordinate coordinate = new TimeCoordinate(dataSet.getId(), time);
 
           if ((time.equals(castDataSet.getStartTime())
             || time.isAfter(castDataSet.getStartTime()))
@@ -172,12 +166,12 @@ public class TimeDataSetExtractor implements DataSetExtractor {
               try {
                 longitude = file.getLongitude(line);
               } catch (PositionException e) {
-                dataSet.addProcessingMessage(jobName, file, currentLine, e);
+                dataSet.addProcessingMessage(JOB_NAME, file, currentLine, e);
               }
 
               if (null != longitude) {
-                sensorValues.create(FileDefinition.LONGITUDE_COLUMN_ID, time,
-                  longitude);
+                sensorValues.create(FileDefinition.LONGITUDE_COLUMN_ID,
+                  coordinate, longitude);
 
                 // Update the dataset bounds
                 try {
@@ -191,12 +185,12 @@ public class TimeDataSetExtractor implements DataSetExtractor {
               try {
                 latitude = file.getLatitude(line);
               } catch (PositionException e) {
-                dataSet.addProcessingMessage(jobName, file, currentLine, e);
+                dataSet.addProcessingMessage(JOB_NAME, file, currentLine, e);
               }
 
               if (null != latitude) {
-                sensorValues.create(FileDefinition.LATITUDE_COLUMN_ID, time,
-                  latitude);
+                sensorValues.create(FileDefinition.LATITUDE_COLUMN_ID,
+                  coordinate, latitude);
 
                 // Update the dataset bounds
                 try {
@@ -224,8 +218,8 @@ public class TimeDataSetExtractor implements DataSetExtractor {
                     if (null != runTypeValue) {
                       String runType = runTypeValue.getRunName();
 
-                      sensorValues.create(assignment.getDatabaseId(), time,
-                        runType);
+                      sensorValues.create(assignment.getDatabaseId(),
+                        coordinate, runType);
 
                       runTypePeriods.add(runType, time);
                     }
@@ -234,13 +228,13 @@ public class TimeDataSetExtractor implements DataSetExtractor {
                     // Create the SensorValue object
                     String fieldValue = null;
 
-                    fieldValue = file.getStringValue(jobName, dataSet,
+                    fieldValue = file.getStringValue(JOB_NAME, dataSet,
                       currentLine, line, assignment.getColumn(),
                       assignment.getMissingValue());
 
                     if (null != fieldValue) {
-                      SensorValue sensorValue = sensorValues
-                        .create(assignment.getDatabaseId(), time, fieldValue);
+                      SensorValue sensorValue = sensorValues.create(
+                        assignment.getDatabaseId(), coordinate, fieldValue);
 
                       // Apply calibration if required
                       Calibration sensorCalibration = sensorCalibrations
@@ -258,7 +252,7 @@ public class TimeDataSetExtractor implements DataSetExtractor {
           }
         } catch (Throwable e) {
           // Log the error but continue with the next line
-          dataSet.addProcessingMessage(jobName, file, currentLine, e);
+          dataSet.addProcessingMessage(JOB_NAME, file, currentLine, e);
         }
 
         currentLine++;
@@ -344,17 +338,5 @@ public class TimeDataSetExtractor implements DataSetExtractor {
     }
 
     return result;
-  }
-
-  public Set<DataFile> getUsedFiles() {
-    return usedFiles;
-  }
-
-  public NewSensorValues getSensorValues() {
-    return sensorValues;
-  }
-
-  public GeoBounds getGeoBounds() {
-    return geoBounds;
   }
 }
