@@ -33,7 +33,6 @@ import uk.ac.exeter.QuinCe.data.Instrument.MissingRunTypeException;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Calibration;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.SensorCalibrationDB;
-import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.PositionException;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
@@ -162,43 +161,8 @@ public class TimeDataSetExtractor extends DataSetExtractor {
             usedFiles.add(file);
 
             if (!dataSet.fixedPosition() && fileDefinition.hasPosition()) {
-              String longitude = null;
-              try {
-                longitude = file.getLongitude(line);
-              } catch (PositionException e) {
-                dataSet.addProcessingMessage(JOB_NAME, file, currentLine, e);
-              }
-
-              if (null != longitude) {
-                sensorValues.create(FileDefinition.LONGITUDE_COLUMN_ID,
-                  coordinate, longitude);
-
-                // Update the dataset bounds
-                try {
-                  geoBounds.addLon(Double.parseDouble(longitude));
-                } catch (NumberFormatException e) {
-                  // Ignore it now. QC will pick it up later.
-                }
-              }
-
-              String latitude = null;
-              try {
-                latitude = file.getLatitude(line);
-              } catch (PositionException e) {
-                dataSet.addProcessingMessage(JOB_NAME, file, currentLine, e);
-              }
-
-              if (null != latitude) {
-                sensorValues.create(FileDefinition.LATITUDE_COLUMN_ID,
-                  coordinate, latitude);
-
-                // Update the dataset bounds
-                try {
-                  geoBounds.addLat(Double.parseDouble(latitude));
-                } catch (NumberFormatException e) {
-                  // Ignore it now. QC will pick it up later.
-                }
-              }
+              extractLongitude(dataSet, file, currentLine, line, coordinate);
+              extractLatitude(dataSet, file, currentLine, line, coordinate);
             }
 
             // Assigned columns
@@ -338,5 +302,10 @@ public class TimeDataSetExtractor extends DataSetExtractor {
     }
 
     return result;
+  }
+
+  @Override
+  public String getJobName() {
+    return JOB_NAME;
   }
 }

@@ -1,5 +1,6 @@
 package uk.ac.exeter.QuinCe.data.Files;
 
+import java.util.List;
 import java.util.Properties;
 import java.util.TreeSet;
 
@@ -174,5 +175,12 @@ public class ArgoDataFile extends DataFile {
     } catch (Exception e) {
       throw new DataFileException("Error extracting cycle number info", e);
     }
+  }
+
+  public static List<ArgoDataFile> filter(List<ArgoDataFile> allFiles,
+    int start, int end) {
+
+    return allFiles.stream()
+      .filter(f -> f.endCycle >= start && f.startCycle <= end).toList();
   }
 }

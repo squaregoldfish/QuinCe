@@ -87,6 +87,9 @@ public class ExtractDataSetJob extends DataSetJob {
         extractor = new TimeDataSetExtractor();
         break;
       }
+      case Instrument.BASIS_ARGO:
+        extractor = new ArgoDataSetExtractor();
+        break;
       default: {
         throw new JobException(
           "Unrecognised instrument basis " + instrument.getBasis());

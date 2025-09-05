@@ -34,4 +34,12 @@ public class ArgoDataSet extends DataSet {
       processingMessages, userMessages, minLon, minLat, maxLon, maxLat,
       exported);
   }
+
+  public int getStartCycle() {
+    return Integer.parseInt(getStart());
+  }
+
+  public int getEndCycle() {
+    return Integer.parseInt(getEnd());
+  }
 }

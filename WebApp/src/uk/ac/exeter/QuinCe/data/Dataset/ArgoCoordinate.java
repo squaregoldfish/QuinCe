@@ -3,6 +3,7 @@ package uk.ac.exeter.QuinCe.data.Dataset;
 import java.time.LocalDateTime;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 
 /**
  * Coordinate for Argo measurements.
@@ -99,6 +100,20 @@ public class ArgoCoordinate extends Coordinate {
     this.sourceFile = sourceFile;
   }
 
+  public ArgoCoordinate(long datasetId, int cycleNumber, int nProf,
+    char direction, int nLevel, double pres, String sourceFile,
+    LocalDateTime timestamp) throws CoordinateException {
+
+    super(DatabaseUtils.NO_DATABASE_RECORD, datasetId, timestamp);
+    this.cycleNumber = cycleNumber;
+    this.nProf = nProf;
+    validateDirection(direction);
+    this.direction = direction;
+    this.nLevel = nLevel;
+    this.pres = pres;
+    this.sourceFile = sourceFile;
+  }
+
   @Override
   public int getType() {
     return Instrument.BASIS_ARGO;
@@ -112,7 +127,7 @@ public class ArgoCoordinate extends Coordinate {
     /*
      * The pressure is inherently linked to the nProf/nLevel/direction
      * combination, so we don't need to check it.
-     * 
+     *
      * Not all records contain timestamp or position, so we don't check those.
      */
     return cycleNumber == o.cycleNumber && nProf == o.nProf

@@ -154,6 +154,7 @@ public class CoordinateDB {
       }
       case Instrument.BASIS_ARGO: {
         storeArgoCoordinates(conn, coordinates);
+        break;
       }
       default: {
         throw new CoordinateException("Unrecognised coordinate type");
