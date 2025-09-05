@@ -85,8 +85,7 @@
         actionListener="#{dataSetsBean.checkValidCalibration}"
         update="uploadForm" oncomplete="processNewDataSet('submit')" />
       <p:remoteCommand name="addDataSet"
-        actionListener="#{dataSetsBean.addDataSet}"
-        oncomplete="window.location.href='dataset_list.xhtml'" />
+        action="#{dataSetsBean.addDataSet}" />
     </h:form>
   </ui:define>
 </ui:composition>

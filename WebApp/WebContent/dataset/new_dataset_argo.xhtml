@@ -43,8 +43,7 @@
       <h:panelGrid columns="2" cellpadding="5" class="buttonPanel">
         <p:commandButton id="addButton" widgetVar="pAddButton"
           value="Add Data Set"
-          actionListener="#{dataSetsBean.addDataSet}"
-          ajax="false" />
+          action="#{dataSetsBean.addDataSet}"/>
         <p:commandButton value="Cancel" ajax="false"
           action="#{dataSetsBean.goToList}" immediate="true" />
       </h:panelGrid>
