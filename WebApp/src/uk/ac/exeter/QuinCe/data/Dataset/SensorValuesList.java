@@ -348,7 +348,12 @@ public abstract class SensorValuesList {
     boolean interpolate) throws SensorValuesListException;
 
   /**
-   * Get the output values for the list.
+   * Get the set of output values for the list.
+   *
+   * <p>
+   * The output values are constructed according to the measurement mode of the
+   * list and the QC flags of the member {@link SensorValue}s.
+   * </p>
    *
    * @return The output values.
    * @throws SensorValuesListException

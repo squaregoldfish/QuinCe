@@ -31,6 +31,11 @@ public class TimestampSensorValuesListGetValuePeriodicTest
   }
 
   @Override
+  protected boolean getInterpolationAllowed(TestSetLine line) {
+    return true;
+  }
+
+  @Override
   protected int getExpectedUsedValuesCol() {
     return 9;
   }

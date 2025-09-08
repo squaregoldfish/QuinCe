@@ -148,31 +148,36 @@ public class TimestampSensorValuesListGetValueContinuousTest
     TimestampSensorValuesList list, TestSetLine line)
     throws SensorValuesListException, CoordinateException {
     return (TimestampSensorValuesListValue) list.getValue(
-      makeCoordinate(line.getIntField(getRequestedMinuteCol())), true);
+      makeCoordinate(line.getIntField(getRequestedMinuteCol())),
+      getInterpolationAllowed(line));
+  }
+
+  protected boolean getInterpolationAllowed(TestSetLine line) {
+    return line.getBooleanField(getAllowInterpolationCol());
   }
 
   protected int getExpectedUsedValuesCol() {
-    return 7;
+    return 8;
   }
 
   protected int getExpectedFlagCol() {
-    return 6;
+    return 7;
   }
 
   protected int getExpectedNominalTimeCol() {
-    return 4;
+    return 5;
   }
 
   protected int getExpectedEndTimeCol() {
-    return 3;
+    return 4;
   }
 
   protected int getExpectedStartTimeCol() {
-    return 2;
+    return 3;
   }
 
   protected int getExpectedValueCol() {
-    return 5;
+    return 6;
   }
 
   protected int getRequestedMinuteCol() {
@@ -180,7 +185,11 @@ public class TimestampSensorValuesListGetValueContinuousTest
   }
 
   protected int getInterpolatesAroundFlagCol() {
-    return 8;
+    return 9;
+  }
+
+  protected int getAllowInterpolationCol() {
+    return 2;
   }
 
   protected void buildSensorValues(DatasetSensorValues allSensorValues,
