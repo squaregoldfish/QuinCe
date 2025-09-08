@@ -3,6 +3,7 @@ package uk.ac.exeter.QuinCe.data.Dataset;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -143,12 +144,16 @@ public class DataSetDataDBTest extends BaseTest {
     DataSetDataDB.storeNewSensorValues(conn, sensorValues);
     conn.commit();
 
-    DataSet dataset = DataSetDB.getDataSet(conn, DATASET_ID);
+    SensorValue sensorValue = sensorValues.getSensorValues().stream().findAny()
+      .get();
 
-    DatasetSensorValues storedValues = DataSetDataDB.getSensorValues(conn,
-      dataset, false, false);
+    DataSetDataDB.storeNewSensorValues(conn, sensorValues);
+    conn.commit();
 
-    assertEquals(0, storedValues.size());
+    SensorValue storedValue = retrieveSingleStoredValue(
+      sensorValue.getCoordinate());
+
+    assertNull(storedValue.getValue(), "Stored value not null");
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",

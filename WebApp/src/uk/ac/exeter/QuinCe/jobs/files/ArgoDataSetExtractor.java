@@ -137,8 +137,10 @@ public class ArgoDataSetExtractor extends DataSetExtractor {
                 currentLine, line, assignment.getColumn(),
                 assignment.getMissingValue());
 
-              sensorValues.create(assignment.getDatabaseId(), coordinate,
-                fieldValue);
+              if (null != fieldValue) {
+                sensorValues.create(assignment.getDatabaseId(), coordinate,
+                  fieldValue);
+              }
             }
           }
         } catch (Throwable e) {

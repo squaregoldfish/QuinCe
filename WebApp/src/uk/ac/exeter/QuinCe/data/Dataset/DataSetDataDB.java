@@ -369,58 +369,55 @@ public class DataSetDataDB {
             "Attempt to store SensorValue but canBeSaved = false", value);
         }
 
-        // We ignore empty values
-        if (!value.isNaN()) {
-          DatasetColumn dsCol = new DatasetColumn(value);
+        DatasetColumn dsCol = new DatasetColumn(value);
 
-          if (!verifiedColumns.contains(dsCol)) {
+        if (!verifiedColumns.contains(dsCol)) {
 
-            // Make sure the dataset exists
-            if (null == dataSet || dataSet.getId() != value.getDatasetId()) {
-              try {
-                dataSet = DataSetDB.getDataSet(conn, value.getDatasetId());
-              } catch (RecordNotFoundException e) {
-                throw new InvalidSensorValueException(
-                  "Dataset specified in SensorValue does not exist", value);
-              }
-            }
-
-            // Make sure the column ID is valid for the dataset's instrument
-            if (null == instrument
-              || instrument.getId() != dataSet.getInstrumentId()) {
-              instrument = InstrumentDB.getInstrument(conn,
-                dataSet.getInstrumentId());
-            }
-
-            if (!instrument.columnValid(value.getColumnId())) {
+          // Make sure the dataset exists
+          if (null == dataSet || dataSet.getId() != value.getDatasetId()) {
+            try {
+              dataSet = DataSetDB.getDataSet(conn, value.getDatasetId());
+            } catch (RecordNotFoundException e) {
               throw new InvalidSensorValueException(
-                "Column specified in SensorValue is not valid for the instrument",
-                value);
+                "Dataset specified in SensorValue does not exist", value);
             }
-
-            // If we got to here, we are good to go
-            verifiedColumns.add(dsCol);
           }
 
-          if (value.isDirty()) {
-            addStmt.setLong(1, value.getCoordinate().getId());
-            addStmt.setLong(2, value.getColumnId());
-            if (null == value.getValue()) {
-              addStmt.setNull(3, Types.VARCHAR);
-            } else {
-              addStmt.setString(3, value.getValue());
-            }
+          // Make sure the column ID is valid for the dataset's instrument
+          if (null == instrument
+            || instrument.getId() != dataSet.getInstrumentId()) {
+            instrument = InstrumentDB.getInstrument(conn,
+              dataSet.getInstrumentId());
+          }
 
-            addStmt.setString(4, value.getAutoQcResult().toJson());
-            addStmt.setInt(5, value.getUserQCFlag().getFlagValue());
-            addStmt.setString(6, value.getUserQCMessage());
+          if (!instrument.columnValid(value.getColumnId())) {
+            throw new InvalidSensorValueException(
+              "Column specified in SensorValue is not valid for the instrument",
+              value);
+          }
 
-            addStmt.execute();
+          // If we got to here, we are good to go
+          verifiedColumns.add(dsCol);
+        }
 
-            generatedKeys = addStmt.getGeneratedKeys();
-            if (generatedKeys.next()) {
-              value.setId(generatedKeys.getLong(1));
-            }
+        if (value.isDirty()) {
+          addStmt.setLong(1, value.getCoordinate().getId());
+          addStmt.setLong(2, value.getColumnId());
+          if (null == value.getValue()) {
+            addStmt.setNull(3, Types.VARCHAR);
+          } else {
+            addStmt.setString(3, value.getValue());
+          }
+
+          addStmt.setString(4, value.getAutoQcResult().toJson());
+          addStmt.setInt(5, value.getUserQCFlag().getFlagValue());
+          addStmt.setString(6, value.getUserQCMessage());
+
+          addStmt.execute();
+
+          generatedKeys = addStmt.getGeneratedKeys();
+          if (generatedKeys.next()) {
+            value.setId(generatedKeys.getLong(1));
           }
         }
       }
