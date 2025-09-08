@@ -364,61 +364,63 @@ public class DataSetDataDB {
       HashSet<DatasetColumn> verifiedColumns = new HashSet<DatasetColumn>();
 
       for (SensorValue value : sensorValues.getSensorValues()) {
-
         if (!value.canBeSaved()) {
           throw new InvalidSensorValueException(
             "Attempt to store SensorValue but canBeSaved = false", value);
         }
 
-        DatasetColumn dsCol = new DatasetColumn(value);
+        // We ignore empty values
+        if (!value.isNaN()) {
+          DatasetColumn dsCol = new DatasetColumn(value);
 
-        if (!verifiedColumns.contains(dsCol)) {
+          if (!verifiedColumns.contains(dsCol)) {
 
-          // Make sure the dataset exists
-          if (null == dataSet || dataSet.getId() != value.getDatasetId()) {
-            try {
-              dataSet = DataSetDB.getDataSet(conn, value.getDatasetId());
-            } catch (RecordNotFoundException e) {
-              throw new InvalidSensorValueException(
-                "Dataset specified in SensorValue does not exist", value);
+            // Make sure the dataset exists
+            if (null == dataSet || dataSet.getId() != value.getDatasetId()) {
+              try {
+                dataSet = DataSetDB.getDataSet(conn, value.getDatasetId());
+              } catch (RecordNotFoundException e) {
+                throw new InvalidSensorValueException(
+                  "Dataset specified in SensorValue does not exist", value);
+              }
             }
+
+            // Make sure the column ID is valid for the dataset's instrument
+            if (null == instrument
+              || instrument.getId() != dataSet.getInstrumentId()) {
+              instrument = InstrumentDB.getInstrument(conn,
+                dataSet.getInstrumentId());
+            }
+
+            if (!instrument.columnValid(value.getColumnId())) {
+              throw new InvalidSensorValueException(
+                "Column specified in SensorValue is not valid for the instrument",
+                value);
+            }
+
+            // If we got to here, we are good to go
+            verifiedColumns.add(dsCol);
           }
 
-          // Make sure the column ID is valid for the dataset's instrument
-          if (null == instrument
-            || instrument.getId() != dataSet.getInstrumentId()) {
-            instrument = InstrumentDB.getInstrument(conn,
-              dataSet.getInstrumentId());
-          }
+          if (value.isDirty()) {
+            addStmt.setLong(1, value.getCoordinate().getId());
+            addStmt.setLong(2, value.getColumnId());
+            if (null == value.getValue()) {
+              addStmt.setNull(3, Types.VARCHAR);
+            } else {
+              addStmt.setString(3, value.getValue());
+            }
 
-          if (!instrument.columnValid(value.getColumnId())) {
-            throw new InvalidSensorValueException(
-              "Column specified in SensorValue is not valid for the instrument",
-              value);
-          }
+            addStmt.setString(4, value.getAutoQcResult().toJson());
+            addStmt.setInt(5, value.getUserQCFlag().getFlagValue());
+            addStmt.setString(6, value.getUserQCMessage());
 
-          // If we got to here, we are good to go
-          verifiedColumns.add(dsCol);
-        }
+            addStmt.execute();
 
-        if (value.isDirty()) {
-          addStmt.setLong(1, value.getCoordinate().getId());
-          addStmt.setLong(2, value.getColumnId());
-          if (null == value.getValue()) {
-            addStmt.setNull(3, Types.VARCHAR);
-          } else {
-            addStmt.setString(3, value.getValue());
-          }
-
-          addStmt.setString(4, value.getAutoQcResult().toJson());
-          addStmt.setInt(5, value.getUserQCFlag().getFlagValue());
-          addStmt.setString(6, value.getUserQCMessage());
-
-          addStmt.execute();
-
-          generatedKeys = addStmt.getGeneratedKeys();
-          if (generatedKeys.next()) {
-            value.setId(generatedKeys.getLong(1));
+            generatedKeys = addStmt.getGeneratedKeys();
+            if (generatedKeys.next()) {
+              value.setId(generatedKeys.getLong(1));
+            }
           }
         }
       }
