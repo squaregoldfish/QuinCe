@@ -1061,4 +1061,97 @@ public class DataSet implements Comparable<DataSet> {
       List.class, DatasetProcessingMessages.class, DatasetUserMessages.class,
       double.class, double.class, double.class, double.class, boolean.class);
   }
+
+  /**
+   * Get a time from the DataSet's properties.
+   *
+   * @param timeName
+   *          The name of the time property.
+   * @return The time.
+   */
+  private LocalDateTime getTimeProperty(String timeName) {
+    LocalDateTime result = null;
+
+    String propertyString = getProperty(DATASET_PROPERTIES_KEY, timeName);
+    if (null != propertyString) {
+      result = DateTimeUtils.longToDate(propertyString);
+    }
+
+    return result;
+  }
+
+  /**
+   * Set a time in the DataSet's properties.
+   *
+   * @param timeName
+   *          The name of the time property.
+   * @param time
+   *          The time.
+   */
+  private void setTimeProperty(String timeName, LocalDateTime time) {
+    setProperty(DATASET_PROPERTIES_KEY, timeName,
+      String.valueOf(DateTimeUtils.dateToLong(time)));
+  }
+
+  /**
+   * Get the start time for the DataSet.
+   *
+   * @return The start time.
+   */
+  public LocalDateTime getStartTime() {
+    return getTimeProperty("startTime");
+  }
+
+  /**
+   * Get the end time for the DataSet.
+   *
+   * @return The end time.
+   */
+  public LocalDateTime getEndTime() {
+    return getTimeProperty("endTime");
+  }
+
+  /**
+   * Set the start time for the DataSet.
+   *
+   * @param time
+   *          The start time.
+   */
+  public void setStartTime(LocalDateTime time) {
+    setTimeProperty("startTime", time);
+  }
+
+  /**
+   * Set the end time for the DatSet.
+   *
+   * @param time
+   *          The end time.
+   */
+  public void setEndTime(LocalDateTime time) {
+    setTimeProperty("endTime", time);
+  }
+
+  /**
+   * Adjust the DataSet's start and end times such that they encompass the
+   * specified time.
+   *
+   * @param time
+   *          The time.
+   */
+  public void adjustTimeRange(LocalDateTime time) {
+
+    if (null != time) {
+      LocalDateTime currentStartTime = getStartTime();
+
+      if (null == currentStartTime || time.isBefore(currentStartTime)) {
+        setStartTime(time);
+      }
+
+      LocalDateTime currentEndTime = getEndTime();
+
+      if (null == currentEndTime || time.isAfter(currentEndTime)) {
+        setEndTime(time);
+      }
+    }
+  }
 }

@@ -13,6 +13,12 @@ import uk.ac.exeter.QuinCe.utils.Message;
 
 /**
  * {#link DataSet} implementation for time basis.
+ *
+ * <p>
+ * The start and end of the dataset are the start time and end time. Therefore
+ * this class does not use the {@code startTime} and {@code endTime} properties
+ * as in the default implementation from {@link DataSet}, but stores them
+ * directly in {@link DataSet#start} and {@link DataSet#end}.
  */
 public class TimeDataSet extends DataSet {
 
@@ -83,18 +89,22 @@ public class TimeDataSet extends DataSet {
     return this.startTime.compareTo(((TimeDataSet) o).startTime);
   }
 
+  @Override
   public LocalDateTime getStartTime() {
     return startTime;
   }
 
+  @Override
   public void setStartTime(LocalDateTime startTime) {
     this.startTime = startTime;
   }
 
+  @Override
   public LocalDateTime getEndTime() {
     return endTime;
   }
 
+  @Override
   public void setEndTime(LocalDateTime endTime) {
     this.endTime = endTime;
   }

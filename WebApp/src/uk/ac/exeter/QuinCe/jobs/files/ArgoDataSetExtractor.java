@@ -98,6 +98,9 @@ public class ArgoDataSetExtractor extends DataSetExtractor {
           LocalDateTime timestamp = file.getFileDefinition()
             .getDateTimeSpecification().getDateTime(null, line);
 
+          // Update the dataset's time properties
+          dataSet.adjustTimeRange(timestamp);
+
           // Make Coordinate for line
           int cycleNumber = Integer.parseInt(line.get(cycleNumberColumn));
 

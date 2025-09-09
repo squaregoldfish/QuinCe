@@ -429,6 +429,8 @@ public class CoordinateDB {
       result = new ArgoCoordinate(coordinateId, datasetId, record.getInt(9),
         record.getInt(10), record.getString(11).charAt(0), record.getInt(12),
         record.getDouble(13), record.getString(14), timestamp);
+
+      break;
     }
     default: {
       throw new CoordinateException("Basis not recognised");

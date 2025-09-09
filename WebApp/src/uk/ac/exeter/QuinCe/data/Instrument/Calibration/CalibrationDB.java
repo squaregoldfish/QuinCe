@@ -19,7 +19,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
-import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
@@ -511,7 +510,7 @@ public abstract class CalibrationDB {
    * @see #getCalibrationSet(Connection, Instrument, LocalDateTime,
    *      LocalDateTime)
    */
-  public CalibrationSet getCalibrationSet(Connection conn, TimeDataSet dataset)
+  public CalibrationSet getCalibrationSet(Connection conn, DataSet dataset)
     throws DatabaseException, RecordNotFoundException, InstrumentException,
     CalibrationException {
 

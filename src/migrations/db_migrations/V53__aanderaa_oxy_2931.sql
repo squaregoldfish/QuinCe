@@ -8,7 +8,7 @@ INSERT INTO sensor_types (
   );
 
 INSERT INTO variables (name, allowed_basis, attributes, properties)
-  VALUES ('Aanderaa 4330 Oxygen', 3, NULL, NULL);
+  VALUES ('Aanderaa 4330 Oxygen', 3, NULL, '{"coefficients": ["Coef1", "Coef2"]}');
 
 INSERT INTO variable_sensors (
     variable_id, sensor_type, core, questionable_cascade, bad_cascade

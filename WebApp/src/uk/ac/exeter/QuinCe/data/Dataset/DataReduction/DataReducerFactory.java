@@ -50,7 +50,7 @@ public class DataReducerFactory {
     reducers.put("Underway Atmospheric pCO₂ from ¹²CO₂/¹³CO₂",
       UnderwayAtmospheric12_13Pco2Reducer.class);
     reducers.put("TA [discrete]", NoReductionReducer.class);
-    reducers.put("Aanderaa 4330 Oxygen", NoReductionReducer.class);
+    reducers.put("Aanderaa 4330 Oxygen", AanderaaOxygenReducer.class);
     reducers.put("SubCTech CO₂ (EXPERIMENTAL)", SubCTechCO2Reducer.class);
   }
 
