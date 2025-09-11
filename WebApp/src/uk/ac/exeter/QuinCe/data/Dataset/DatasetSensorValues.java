@@ -553,9 +553,9 @@ public class DatasetSensorValues {
     SensorValue result = null;
 
     if (columnID == SensorType.LONGITUDE_ID) {
-      result = longitudes.getRawSensorValue(coordinate);
+      result = null == longitudes ? null : longitudes.getRawSensorValue(coordinate);
     } else if (columnID == SensorType.LATITUDE_ID) {
-      result = latitudes.getRawSensorValue(coordinate);
+      result = null == latitudes ? null : latitudes.getRawSensorValue(coordinate);
     } else if (valuesByColumn.containsKey(columnID)) {
       result = valuesByColumn.get(columnID).getRawSensorValue(coordinate);
     }
