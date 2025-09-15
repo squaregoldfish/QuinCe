@@ -99,6 +99,10 @@ public class MeasurementValueCalculatorFactory {
         result = new D12D13CMeasurementValueCalculator();
         break;
       }
+      case "SubCTech xCO₂": {
+        result = new SubCTechXCO2MeasurementValueCalculator();
+        break;
+      }
       default: {
         if (sensorConfig.isParent(sensorType)) {
           result = new ParentSensorTypeMeasurementValueCalculator();
