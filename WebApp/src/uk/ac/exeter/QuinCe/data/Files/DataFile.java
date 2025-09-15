@@ -79,7 +79,7 @@ public abstract class DataFile implements Comparable<DataFile> {
   /**
    * The {@link Instrument} that this file belongs to.
    */
-  private final Instrument instrument;
+  protected final Instrument instrument;
 
   /**
    * The previously defined {@link Instrument}s that have the same platform name

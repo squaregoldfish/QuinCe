@@ -1,7 +1,6 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
 import java.sql.Connection;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -52,9 +51,8 @@ public class ControsPco2MeasurementValueCollector
     throws MeasurementValueCollectorException {
 
     try {
-
       // Convenience variable to make code shorter
-      LocalDateTime time = measurement.getTime();
+      TimeCoordinate time = (TimeCoordinate) measurement.getCoordinate();
 
       List<MeasurementValue> result = new ArrayList<MeasurementValue>();
 
@@ -62,7 +60,8 @@ public class ControsPco2MeasurementValueCollector
         .getColumnIds("Raw Detector Signal").get(0);
 
       SensorValuesListValue referenceValue = allSensorValues
-        .getColumnValues(referenceColumnId).getValue(time, time, time, false);
+        .getColumnValues(referenceColumnId)
+        .getValue(measurement.getCoordinate(), false);
 
       for (SensorType sensorType : variable
         .getAllSensorTypes(!dataSet.fixedPosition())) {
@@ -71,7 +70,7 @@ public class ControsPco2MeasurementValueCollector
           try {
             long columnId = instrument.getSensorAssignments()
               .getColumnIds(sensorType).get(0);
-            SensorValuesList sensorValuesList = allSensorValues
+            TimestampSensorValuesList sensorValuesList = (TimestampSensorValuesList) allSensorValues
               .getColumnValues(columnId);
 
             result.add(new MeasurementValue(sensorType,

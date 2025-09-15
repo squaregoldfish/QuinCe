@@ -19,8 +19,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
+import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignments;
@@ -40,12 +42,19 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user" })
 public class PositionQCRoutineTest extends BaseTest {
 
-  public static Instrument mockInstrument() {
+  private static DatasetSensorValues mockDatasetSensorValues()
+    throws Exception {
+    DatasetSensorValues datasetSensorValues = new DatasetSensorValues(
+      Mockito.mock(DataSet.class));
+
     Instrument instrument = Mockito.mock(Instrument.class);
+    Mockito.when(instrument.getBasis()).thenReturn(Instrument.BASIS_TIME);
     Mockito.when(instrument.getSensorAssignments())
       .thenReturn(Mockito.mock(SensorAssignments.class));
 
-    return instrument;
+    Mockito.when(datasetSensorValues.getInstrument()).thenReturn(instrument);
+
+    return datasetSensorValues;
   }
 
   /**
@@ -126,10 +135,10 @@ public class PositionQCRoutineTest extends BaseTest {
 
     initResourceManager();
 
-    DatasetSensorValues sensorValues = new DatasetSensorValues(
-      mockInstrument());
+    DatasetSensorValues sensorValues = mockDatasetSensorValues();
 
-    LocalDateTime time = LocalDateTime.of(2025, 1, 1, 0, 0, 0);
+    TimeCoordinate time = new TimeCoordinate(
+      LocalDateTime.of(2025, 1, 1, 0, 0, 0));
 
     SensorValue longitudeSensorValue = new SensorValue(1L, 1L,
       SensorType.LONGITUDE_ID, time,
@@ -163,10 +172,10 @@ public class PositionQCRoutineTest extends BaseTest {
   public void noLongitudeTest() throws Exception {
     initResourceManager();
 
-    DatasetSensorValues sensorValues = new DatasetSensorValues(
-      mockInstrument());
+    DatasetSensorValues sensorValues = mockDatasetSensorValues();
 
-    LocalDateTime time = LocalDateTime.of(2025, 1, 1, 0, 0, 0);
+    TimeCoordinate time = new TimeCoordinate(
+      LocalDateTime.of(2025, 1, 1, 0, 0, 0));
 
     SensorValue latitudeSensorValue = new SensorValue(2L, 1L,
       SensorType.LATITUDE_ID, time, "0", new AutoQCResult(), Flag.ASSUMED_GOOD,
@@ -192,10 +201,10 @@ public class PositionQCRoutineTest extends BaseTest {
   public void noLatitudeTest() throws Exception {
     initResourceManager();
 
-    DatasetSensorValues sensorValues = new DatasetSensorValues(
-      mockInstrument());
+    DatasetSensorValues sensorValues = mockDatasetSensorValues();
 
-    LocalDateTime time = LocalDateTime.of(2025, 1, 1, 0, 0, 0);
+    TimeCoordinate time = new TimeCoordinate(
+      LocalDateTime.of(2025, 1, 1, 0, 0, 0));
 
     SensorValue longitudeSensorValue = new SensorValue(2L, 1L,
       SensorType.LONGITUDE_ID, time, "0", new AutoQCResult(), Flag.ASSUMED_GOOD,
@@ -227,17 +236,18 @@ public class PositionQCRoutineTest extends BaseTest {
 
     initResourceManager();
 
-    DatasetSensorValues sensorValues = new DatasetSensorValues(
-      mockInstrument());
+    DatasetSensorValues sensorValues = mockDatasetSensorValues();
 
     SensorValue longitudeSensorValue = new SensorValue(2L, 1L,
-      SensorType.LONGITUDE_ID, LocalDateTime.of(2025, 1, 1, 0, 0, 0), "0",
+      SensorType.LONGITUDE_ID,
+      new TimeCoordinate(LocalDateTime.of(2025, 1, 1, 0, 0, 0)), "0",
       new AutoQCResult(), Flag.ASSUMED_GOOD, null);
 
     sensorValues.add(longitudeSensorValue);
 
     SensorValue latitudeSensorValue = new SensorValue(2L, 1L,
-      SensorType.LATITUDE_ID, LocalDateTime.of(2025, 1, 1, 0, 1, 0), "0",
+      SensorType.LATITUDE_ID,
+      new TimeCoordinate(LocalDateTime.of(2025, 1, 1, 0, 1, 0)), "0",
       new AutoQCResult(), Flag.ASSUMED_GOOD, null);
 
     sensorValues.add(latitudeSensorValue);
