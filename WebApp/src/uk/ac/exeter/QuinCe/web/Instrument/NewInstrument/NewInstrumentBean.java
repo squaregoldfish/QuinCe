@@ -1776,7 +1776,7 @@ public class NewInstrumentBean extends FileUploadBean {
 
       for (FileDefinition file : instrumentFiles) {
         // TODO Get run types from previous instrument if possible
-        file.setRunTypes(autoAssignRunTypes(file));
+        file.setRunTypes(autoAssignRunTypes((FileDefinitionBuilder) file));
       }
 
       result = NAV_RUN_TYPES;
@@ -1788,17 +1788,19 @@ public class NewInstrumentBean extends FileUploadBean {
     return result;
   }
 
-  private RunTypeAssignments autoAssignRunTypes(FileDefinition file) {
+  private RunTypeAssignments autoAssignRunTypes(FileDefinitionBuilder file) {
 
     RunTypeAssignments result;
 
     if (!file.hasRunTypes()) {
       result = null;
     } else {
+      file.buildRunTypeCategories();
+
       List<Instrument> previousInstruments = getPreviousInstruments();
 
       if (previousInstruments.size() == 0) {
-        result = RunTypeAssignments.buildRunTypes(
+        result = RunTypeAssignments.buildRunTypes(instrumentVariables,
           file.getRunTypeColumns().first(), file.getRunTypeValues());
       } else {
         result = new RunTypeAssignments(file.getRunTypeColumns().first());
@@ -1817,7 +1819,7 @@ public class NewInstrumentBean extends FileUploadBean {
         // If we haven't found any previous assignments, revert to the base
         // guess.
         if (result.size() == 0) {
-          result = RunTypeAssignments.buildRunTypes(
+          result = RunTypeAssignments.buildRunTypes(instrumentVariables,
             file.getRunTypeColumns().first(), file.getRunTypeValues());
         }
       }

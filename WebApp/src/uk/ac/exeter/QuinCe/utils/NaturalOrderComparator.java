@@ -3,8 +3,20 @@ package uk.ac.exeter.QuinCe.utils;
 import java.util.Comparator;
 
 /**
+ * Performs 'natural order' comparisons of strings.
+ *
+ * <p>
+ * This is a copy of the class written by Pierre-Luc Paour, updated for newer
+ * versions of Java. The remainder of this description is from the original
+ * implementation. The original can be accessed at
+ * <a href="https://github.com/paour/natorder" target=
+ * "_blank">https://github.com/paour/natorder</a>.
+ * </p>
+ *
+ * <p>
  * NaturalOrderComparator.java -- Perform 'natural order' comparisons of strings
  * in Java. Copyright (C) 2003 by Pierre-Luc Paour <natorder@paour.com>
+ * </p>
  *
  * <p>
  * Based on the C version by Martin Pool, of which this is more or less a
@@ -30,17 +42,15 @@ import java.util.Comparator;
  * but is not required.</li>
  * <li>Altered source versions must be plainly marked as such, and must not be
  * misrepresented as being the original software.</li>
- * <li>3. This notice may not be removed or altered from any source
- * distribution.</li>
+ * <li>This notice may not be removed or altered from any source distribution.
+ * </li>
  * </ol>
  *
- * <p>
- * Retrieved from https://github.com/paour/natorder
- * </p>
+ * @see https://github.com/paour/natorder
  */
 public class NaturalOrderComparator implements Comparator<String> {
 
-  private int compareRight(String a, String b) {
+  int compareRight(String a, String b) {
     int bias = 0, ia = 0, ib = 0;
 
     // The longest run of digits wins. That aside, the greatest
@@ -74,10 +84,7 @@ public class NaturalOrderComparator implements Comparator<String> {
     }
   }
 
-  public int compare(String o1, String o2) {
-    String a = o1.toString();
-    String b = o2.toString();
-
+  public int compare(String a, String b) {
     int ia = 0, ib = 0;
     int nza = 0, nzb = 0;
     char ca, cb;
@@ -137,15 +144,15 @@ public class NaturalOrderComparator implements Comparator<String> {
     }
   }
 
-  private boolean isDigit(char c) {
+  static boolean isDigit(char c) {
     return Character.isDigit(c) || c == '.' || c == ',';
   }
 
-  private static char charAt(String s, int i) {
+  static char charAt(String s, int i) {
     return i >= s.length() ? 0 : s.charAt(i);
   }
 
-  private int compareEqual(String a, String b, int nza, int nzb) {
+  static int compareEqual(String a, String b, int nza, int nzb) {
     if (nza - nzb != 0)
       return nza - nzb;
 
@@ -153,5 +160,19 @@ public class NaturalOrderComparator implements Comparator<String> {
       return a.compareTo(b);
 
     return a.length() - b.length();
+  }
+
+  static void compareSymmetric() {
+    NaturalOrderComparator naturalOrderComparator = new NaturalOrderComparator();
+
+    int compare1 = naturalOrderComparator.compare("1-2", "1-02");
+    int compare2 = naturalOrderComparator.compare("1-02", "1-2");
+
+    System.out.println(compare1 + " == " + compare2);
+
+    compare1 = naturalOrderComparator.compare("pic 5", "pic05");
+    compare2 = naturalOrderComparator.compare("pic05", "pic 5");
+
+    System.out.println(compare1 + " == " + compare2);
   }
 }

@@ -460,6 +460,8 @@ public abstract class CalibrationBean extends BaseManagedBean {
       throw new RecordNotFoundException(getCurrentInstrument().getDisplayName(),
         "calibration", selectedCalibrationId);
     }
+
+    setLastDate(editedCalibration.getDeploymentDate());
   }
 
   public void newCalibration() throws Exception {
@@ -691,6 +693,7 @@ public abstract class CalibrationBean extends BaseManagedBean {
           }
 
           targetCalibrations.add(editedCalibration);
+          setLastDate(editedCalibration.getDeploymentDate());
           break;
         }
         case CalibrationEdit.DELETE: {

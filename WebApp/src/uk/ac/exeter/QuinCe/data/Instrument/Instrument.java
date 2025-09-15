@@ -1512,4 +1512,9 @@ public class Instrument {
           && i.getPlatformCode().equals(platformCode))
       .sorted(new InstrumentCreationDateComparator(true)).toList();
   }
+
+  @Override
+  public String toString() {
+    return platformName + ":" + name;
+  }
 }

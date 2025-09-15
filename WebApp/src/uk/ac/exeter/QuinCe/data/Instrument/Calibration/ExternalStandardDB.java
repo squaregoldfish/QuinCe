@@ -8,6 +8,10 @@ import java.util.TreeMap;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
+==== BASE ====
+import uk.ac.exeter.QuinCe.utils.DatabaseException;
+import uk.ac.exeter.QuinCe.utils.MissingParamException;
+==== BASE ====
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**

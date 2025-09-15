@@ -539,7 +539,8 @@ public class TimeDataFile extends DataFile implements TimeRange {
               } else {
                 // Guess from presets
                 RunTypeAssignment presetAssignment = RunTypeAssignments
-                  .getPresetAssignment(runType, fileDefinition.getRunTypes());
+                  .getPresetAssignment(instrument.getVariables(), runType,
+                    fileDefinition.getRunTypes());
                 if (null != presetAssignment) {
                   guessedAssignment = presetAssignment;
                 } else {

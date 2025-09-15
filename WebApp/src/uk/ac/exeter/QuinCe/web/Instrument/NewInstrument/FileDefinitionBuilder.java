@@ -579,10 +579,7 @@ public class FileDefinitionBuilder extends FileDefinition {
     return values;
   }
 
-  @Override
-  public void addRunTypeColumn(int runTypeColumn) {
-    super.addRunTypeColumn(runTypeColumn);
-
+  public void buildRunTypeCategories() {
     runTypes.clear();
     for (String runType : getUniqueRunTypes()) {
       setRunTypeCategory(runType, RunTypeCategory.IGNORED);
