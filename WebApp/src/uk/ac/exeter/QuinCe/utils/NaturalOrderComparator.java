@@ -7,8 +7,9 @@ import java.util.Comparator;
  *
  * <p>
  * This is a copy of the class written by Pierre-Luc Paour, updated for newer
- * versions of Java. The remainder of this description is from the original
- * implementation. The original can be accessed at
+ * versions of Java and with adjustments to better fit this code base. The
+ * remainder of this description is from the original implementation. The
+ * original can be accessed at
  * <a href="https://github.com/paour/natorder" target=
  * "_blank">https://github.com/paour/natorder</a>.
  * </p>
@@ -50,7 +51,13 @@ import java.util.Comparator;
  */
 public class NaturalOrderComparator implements Comparator<String> {
 
-  int compareRight(String a, String b) {
+  private static NaturalOrderComparator INSTANCE = null;
+
+  private NaturalOrderComparator() {
+
+  }
+
+  private int compareRight(String a, String b) {
     int bias = 0, ia = 0, ib = 0;
 
     // The longest run of digits wins. That aside, the greatest
@@ -144,15 +151,15 @@ public class NaturalOrderComparator implements Comparator<String> {
     }
   }
 
-  static boolean isDigit(char c) {
+  private boolean isDigit(char c) {
     return Character.isDigit(c) || c == '.' || c == ',';
   }
 
-  static char charAt(String s, int i) {
+  private char charAt(String s, int i) {
     return i >= s.length() ? 0 : s.charAt(i);
   }
 
-  static int compareEqual(String a, String b, int nza, int nzb) {
+  private int compareEqual(String a, String b, int nza, int nzb) {
     if (nza - nzb != 0)
       return nza - nzb;
 
@@ -162,17 +169,11 @@ public class NaturalOrderComparator implements Comparator<String> {
     return a.length() - b.length();
   }
 
-  static void compareSymmetric() {
-    NaturalOrderComparator naturalOrderComparator = new NaturalOrderComparator();
+  public static NaturalOrderComparator getInstance() {
+    if (null == INSTANCE) {
+      INSTANCE = new NaturalOrderComparator();
+    }
 
-    int compare1 = naturalOrderComparator.compare("1-2", "1-02");
-    int compare2 = naturalOrderComparator.compare("1-02", "1-2");
-
-    System.out.println(compare1 + " == " + compare2);
-
-    compare1 = naturalOrderComparator.compare("pic 5", "pic05");
-    compare2 = naturalOrderComparator.compare("pic05", "pic 5");
-
-    System.out.println(compare1 + " == " + compare2);
+    return INSTANCE;
   }
 }

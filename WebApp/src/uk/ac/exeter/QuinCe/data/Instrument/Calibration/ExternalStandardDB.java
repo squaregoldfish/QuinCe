@@ -82,7 +82,7 @@ public class ExternalStandardDB extends CalibrationDB {
     }
 
     Map<String, String> result = new TreeMap<String, String>(
-      new NaturalOrderComparator());
+      NaturalOrderComparator.getInstance());
     for (String name : standardNames) {
       result.put(name, name);
     }

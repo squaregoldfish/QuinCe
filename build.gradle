@@ -198,6 +198,13 @@ task sensorCalibrationsBeanEditTest(type: Test) {
   }
 }
 
+task uncertaintiesBeanEditTest(type: Test) {
+  useJUnitPlatform()
+  filter {
+    includeTestsMatching "uk.ac.exeter.QuinCe.web.Instrument.UncertaintiesBeanMultipleEditTest"
+  }
+}
+
 task sensorCalibrationsBeanEditTestReport(type: JacocoReport) {
   dependsOn sensorCalibrationsBeanEditTest
 
@@ -210,6 +217,20 @@ task sensorCalibrationsBeanEditTestReport(type: JacocoReport) {
 
   sourceSets sourceSets.main
   executionData sensorCalibrationsBeanEditTest
+}
+
+task uncertaintiesBeanEditTestReport(type: JacocoReport) {
+  dependsOn uncertaintiesBeanEditTest
+
+  reports {
+    xml.required = true
+    xml.destination = file("${buildDir}/reports/jacoco/report.xml")
+    csv.required = false
+    html.required = false
+  }
+
+  sourceSets sourceSets.main
+  executionData uncertaintiesBeanEditTest
 }
 
 task calculationCoefficientsBeanEditTest(type: Test) {

@@ -746,12 +746,6 @@ public abstract class CalibrationBean extends BaseManagedBean {
           calibrations.get(originalCalibration.getTarget())
             .remove(originalCalibration);
 
-          if (!calibrations.containsKey(editedCalibration.getTarget())
-            || null == calibrations.get(editedCalibration.getTarget())) {
-            calibrations.put(editedCalibration.getTarget(),
-              new TreeSet<Calibration>());
-          }
-
           calibrations.get(editedCalibration.getTarget())
             .add(editedCalibration);
 

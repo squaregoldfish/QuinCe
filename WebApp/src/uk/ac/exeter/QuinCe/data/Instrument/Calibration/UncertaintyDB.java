@@ -1,11 +1,14 @@
 package uk.ac.exeter.QuinCe.data.Instrument.Calibration;
 
 import java.sql.Connection;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.TreeSet;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignmentNameComparator;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignments;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
@@ -44,18 +47,29 @@ public class UncertaintyDB extends CalibrationDB {
   public Map<String, String> getTargets(Connection conn, Instrument instrument)
     throws DatabaseException, RecordNotFoundException, InstrumentException {
 
-    Map<String, String> targets = new TreeMap<String, String>();
-
     SensorAssignments assignments = instrument.getSensorAssignments();
+
+    // Get the SensorAssignment objects in our desired display order
+    TreeSet<SensorAssignment> targets = new TreeSet<SensorAssignment>(
+      new SensorAssignmentNameComparator());
 
     // Get all the sensor names for the non-diagnostic sensor types
     assignments.keySet().stream().filter(st -> !st.isDiagnostic())
       .forEach(st -> {
-        assignments.get(st).stream()
-          .forEach(a -> targets.put(a.getSensorName(), a.getSensorName()));
+        assignments.get(st).stream().forEach(a -> targets.add(a));
       });
 
-    return targets;
+    Map<String, String> result = new LinkedHashMap<String, String>();
+    targets.forEach(t -> {
+      if (instrument.getFileDefinitions().size() == 1) {
+        result.put(String.valueOf(t.getDatabaseId()), t.getSensorName());
+      } else {
+        result.put(String.valueOf(t.getDatabaseId()),
+          t.getDataFile() + ":" + t.getSensorName());
+      }
+    });
+
+    return result;
   }
 
   @Override
