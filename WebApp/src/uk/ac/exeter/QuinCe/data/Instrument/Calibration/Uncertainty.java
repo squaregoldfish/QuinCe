@@ -1,10 +1,13 @@
 package uk.ac.exeter.QuinCe.data.Instrument.Calibration;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.web.html.SelectItem;
 
 /**
  * Holds the uncertainty for a sensor in an instrument.
@@ -15,6 +18,17 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
  * </p>
  */
 public class Uncertainty extends Calibration {
+
+  /**
+   * Indicates that the uncertainty is an absolute value (in the units of the
+   * sensor).
+   */
+  public static final String TYPE_ABSOLUTE = "0";
+
+  /**
+   * Indicates that the uncertainty is a percentage of the measured value.
+   */
+  public static final String TYPE_PERCENTAGE = "1";
 
   /**
    * A fixed set of coefficient names for the Uncertainty.
@@ -63,6 +77,23 @@ public class Uncertainty extends Calibration {
   }
 
   @Override
+  public void initialiseCoefficients() {
+    coefficients = new ArrayList<CalibrationCoefficient>(2);
+
+    CalibrationCoefficient typeCoefficient = new CalibrationCoefficient("Type",
+      CalibrationCoefficient.TYPE_RADIO);
+
+    List<SelectItem> typeItems = new ArrayList<SelectItem>(2);
+    typeItems.add(new SelectItem("Absolute", TYPE_ABSOLUTE));
+    typeItems.add(new SelectItem("Percentage", TYPE_PERCENTAGE));
+    typeCoefficient.setSelectItems(typeItems);
+
+    coefficients.add(typeCoefficient);
+    coefficients.add(
+      new CalibrationCoefficient("Value", CalibrationCoefficient.TYPE_TEXT));
+  }
+
+  @Override
   public boolean coefficientsValid() {
     return true;
   }
@@ -91,5 +122,17 @@ public class Uncertainty extends Calibration {
   @Override
   protected boolean timeAffectsCalibration() {
     return false;
+  }
+
+  @Override
+  protected String buildHumanReadableCoefficients() {
+    List<CalibrationCoefficient> coefficients = getCoefficients();
+
+    StringBuilder result = new StringBuilder(coefficients.get(1).getValue());
+    if (coefficients.get(0).getValue().equals(Uncertainty.TYPE_PERCENTAGE)) {
+      result.append('%');
+    }
+
+    return result.toString();
   }
 }

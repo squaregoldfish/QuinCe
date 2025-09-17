@@ -25,9 +25,12 @@
       </h:form>
 
       <h:form id="deploymentForm" method="post" charset="utf8">
+        <h:inputHidden id="selectedCalibrationJson" value="#{sessionScope[beanName].selectedCalibrationJson}"/>
+
         <p:remoteCommand name="selectCalibration"
           action="#{sessionScope[beanName].loadSelectedCalibration}"
-          process="calibrationId action" update="@(form :not(.noupdate))"
+          process="calibrationId action"
+          update="@(form :not(.noupdate))"
           oncomplete="showSelectionDetails()"/>
 
         <p:remoteCommand name="newCalibration"
@@ -61,8 +64,7 @@
                 <h:outputLabel>Date:</h:outputLabel>
               </td>
               <td>
-                <h:outputText id="selectedDate"
-                  value="#{sessionScope[beanName].editedCalibration.deploymentDate}"/>
+                <span id="selectedDate"></span>
               </td>
             </tr>
             <tr>
@@ -70,8 +72,7 @@
                 <h:outputLabel>Target:</h:outputLabel>
               </td>
               <td>
-                <h:outputText id="selectedTarget"
-                  value="#{sessionScope[beanName].editedCalibrationTargetName}"/>
+                <span id="selectedTarget"></span>
               </td>
             </tr>
             <tr>
@@ -80,8 +81,7 @@
                   value="#{sessionScope[beanName].coefficientsLabel}"/>:
               </td>
               <td>
-                <h:outputText id="selectedCoefficients"
-                  value="#{sessionScope[beanName].editedCalibration.humanReadableCoefficients}"/>
+                <span id="selectedCoefficients"></span>
               </td>
             </tr>
           </table>
@@ -151,15 +151,33 @@
                     <ui:repeat
                       value="#{sessionScope[beanName].editedCalibration.editableCoefficients}"
                       var="coefficient" varStatus="varStatus">
-                      <tr>
-                        <td>
-                          <p:outputLabel for="value" value="#{coefficient.name}:" />
-                        </td>
-                        <td>
-                        <p:inputText id="value" widgetVar="coefficient-#{varStatus.index}"
-                          value="#{coefficient.value}" size="12" />
-                        </td>
-                      </tr>
+
+                      <ui:fragment rendered="#{coefficient.type eq 0}">
+                        <tr>
+                          <td>
+                            <p:outputLabel for="textValue" value="#{coefficient.name}:" />
+                          </td>
+                          <td>
+                          <p:inputText id="textValue" widgetVar="coefficient-#{varStatus.index}"
+                            value="#{coefficient.value}" size="12" />
+                          </td>
+                        </tr>
+                      </ui:fragment>
+
+                      <ui:fragment rendered="#{coefficient.type eq 1}">
+                        <tr>
+                          <td>
+                            <p:outputLabel for="radioValue" value="#{coefficient.name}:" />
+                          </td>
+                          <td>
+                            <p:selectOneRadio id="radioValue" widgetVar="coefficient-#{varStatus.index}"
+                              value="#{coefficient.value}">
+                              <f:selectItems value="#{coefficient.selectItems}" var="option"
+                                itemLabel="#{option.label}" itemValue="#{option.value}"/>
+                            </p:selectOneRadio>
+                          </td>
+                        </tr>
+                      </ui:fragment>
                     </ui:repeat>
                   </table>
                 </div>

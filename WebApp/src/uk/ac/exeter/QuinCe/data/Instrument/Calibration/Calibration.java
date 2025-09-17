@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -37,6 +39,8 @@ import uk.ac.exeter.QuinCe.utils.StringUtils;
  * </p>
  */
 public abstract class Calibration implements Comparable<Calibration> {
+
+  private static Gson gson;
 
   /**
    * The database ID of this calibration.
@@ -78,6 +82,12 @@ public abstract class Calibration implements Comparable<Calibration> {
    * </p>
    */
   protected List<CalibrationCoefficient> coefficients = null;
+
+  static {
+    gson = new GsonBuilder()
+      .registerTypeAdapter(Calibration.class, new CalibrationSerializer())
+      .create();
+  }
 
   /**
    * Create a Calibration from a database record with no specified target.
@@ -553,6 +563,14 @@ public abstract class Calibration implements Comparable<Calibration> {
     return result.toString();
   }
 
+  public String toJson() {
+    /*
+     * Have to specify the class because for some reason the custom serializer
+     * doesn't recognise the subclasses. Even though I thought it does.
+     */
+    return gson.toJson(this, Calibration.class);
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(coefficients, deploymentDate, id, target);
@@ -699,7 +717,7 @@ public abstract class Calibration implements Comparable<Calibration> {
     Calibration calibration) {
 
     return calibration.coefficients.stream()
-      .map(c -> new CalibrationCoefficient(c.getName(), c.getValue())).toList();
+      .map(c -> new CalibrationCoefficient(c)).toList();
   }
 
   /**

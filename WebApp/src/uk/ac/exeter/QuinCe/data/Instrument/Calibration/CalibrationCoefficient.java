@@ -1,11 +1,33 @@
 package uk.ac.exeter.QuinCe.data.Instrument.Calibration;
 
+import java.util.List;
 import java.util.Objects;
+
+import uk.ac.exeter.QuinCe.web.html.SelectItem;
 
 /**
  * Simple object for a single calibration coefficient
  */
 public class CalibrationCoefficient implements Cloneable {
+
+  /**
+   * Indicates a text input.
+   *
+   * @see #type
+   */
+  protected static final int TYPE_TEXT = 0;
+
+  /**
+   * Indicates a radio button set.
+   *
+   * @see #type
+   */
+  protected static final int TYPE_RADIO = 1;
+
+  /**
+   * The type of input that should be displayed for the user to enter a value.
+   */
+  private int type;
 
   /**
    * The coefficient's name
@@ -18,26 +40,46 @@ public class CalibrationCoefficient implements Cloneable {
   private String value = "0";
 
   /**
-   * Creates an empty (zero) coefficient
+   * The items to be displayed in a radio button set, dropdown menu etc.
+   */
+  private List<SelectItem> selectItems = null;
+
+  /**
+   * Creates an empty (zero) coefficient with a default text input type.
    *
    * @param name
-   *          The coefficient name
+   *          The coefficient name.
    */
   protected CalibrationCoefficient(String name) {
     this.name = name;
+    this.type = TYPE_TEXT;
   }
 
   /**
-   * Create a coefficient with a value
+   * Create an empty (zero) coefficient with the specified input type.
    *
    * @param name
-   *          The coefficient name
-   * @param value
-   *          The value
+   *          The coefficient name.
+   * @param type
+   *          The input type.
    */
-  protected CalibrationCoefficient(String name, String value) {
+  protected CalibrationCoefficient(String name, int type) {
     this.name = name;
-    this.value = value;
+    this.type = type;
+  }
+
+  /**
+   * Copy constructor
+   *
+   * @param name
+   * @param value
+   * @param type
+   */
+  protected CalibrationCoefficient(CalibrationCoefficient source) {
+    this.name = source.name;
+    this.value = source.value;
+    this.type = source.type;
+    this.selectItems = source.selectItems;
   }
 
   /**
@@ -58,6 +100,22 @@ public class CalibrationCoefficient implements Cloneable {
     return value;
   }
 
+  /**
+   * Get the items to be displayed in a radio button set, dropdown menu etc.
+   *
+   * @return
+   */
+  public List<SelectItem> getSelectItems() {
+    return selectItems;
+  }
+
+  /**
+   * Set the items to be displayed in a radio button set, dropdown menu etc.
+   */
+  public void setSelectItems(List<SelectItem> selectItems) {
+    this.selectItems = selectItems;
+  }
+
   public Double getDoubleValue() {
     return Double.parseDouble(value);
   }
@@ -72,6 +130,15 @@ public class CalibrationCoefficient implements Cloneable {
     this.value = value;
   }
 
+  /**
+   * Get the input type to be used for getting a value.
+   *
+   * @return The input type.
+   */
+  public int getType() {
+    return type;
+  }
+
   @Override
   public String toString() {
     return name + ": " + value;
@@ -79,7 +146,7 @@ public class CalibrationCoefficient implements Cloneable {
 
   @Override
   public Object clone() {
-    return new CalibrationCoefficient(name, value);
+    return new CalibrationCoefficient(this);
   }
 
   @Override

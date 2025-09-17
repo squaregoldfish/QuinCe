@@ -43,6 +43,9 @@ public class CalibrationFactory {
     Map<String, String> coefficients) throws CalibrationException {
     Calibration result;
 
+    // TODO I'm not sure why all these are different, but I don't have time to
+    // look at it now.
+
     switch (calibrationType) {
     case ExternalStandardDB.EXTERNAL_STANDARD_CALIBRATION_TYPE: {
       try {
@@ -79,6 +82,11 @@ public class CalibrationFactory {
         throw new CalibrationException(e);
       }
 
+      break;
+    }
+    case UncertaintyDB.UNCERTAINTY_CALIBRATION_TYPE: {
+      result = new Uncertainty(id, instrument, target, deploymentDate,
+        coefficients);
       break;
     }
     default: {

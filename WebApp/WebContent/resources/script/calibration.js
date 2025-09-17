@@ -66,6 +66,10 @@ function deleteSelection() {
 }
 
 function showSelectionDetails() {
+  let calibrationInfo = JSON.parse($('#deploymentForm\\:selectedCalibrationJson').val());
+  $('#selectedDate').text(calibrationInfo.deploymentDate);
+  $('#selectedTarget').text(calibrationInfo.target);
+  $('#selectedCoefficients').text(calibrationInfo.humanReadableCoefficients);
   PF('selectionDetails').jq.show();
 }
 

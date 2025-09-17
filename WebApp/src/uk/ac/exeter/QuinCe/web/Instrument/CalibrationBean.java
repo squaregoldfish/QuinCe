@@ -461,6 +461,15 @@ public abstract class CalibrationBean extends BaseManagedBean {
     setLastDate(editedCalibration.getDeploymentDate());
   }
 
+  public String getSelectedCalibrationJson() {
+    Calibration selectedCalibration = getCalibration(selectedCalibrationId);
+    return null != selectedCalibration ? (selectedCalibration).toJson() : null;
+  }
+
+  public void setSelectedCalibrationJson(String dummy) {
+    // noop
+  }
+
   public void newCalibration() throws Exception {
     editedCalibration = initNewCalibration(generateNewId(), getLastDate());
   }
@@ -672,18 +681,23 @@ public abstract class CalibrationBean extends BaseManagedBean {
         edits.put(editedCalibration.getId(),
           new CalibrationEdit(action, editedCalibration));
 
-        // Update calibrations in bean and calculate which DataSets have been
-        // affected
-
+        /*
+         * Update calibrations in bean and calculate which DataSets have been
+         * affected
+         */
         switch (action) {
         case CalibrationEdit.ADD: {
-          // The list of calibrations for the same target as the one that is
-          // being edited (includes the edited calibration pre-edit).
+          /*
+           * The list of calibrations for the same target as the one that is
+           * being edited (includes the edited calibration pre-edit).
+           */
           TreeSet<Calibration> targetCalibrations = calibrations
             .get(editedCalibration.getTarget());
 
-          // Handle the case where we were missing one of the targets in the
-          // original data.
+          /*
+           * Handle the case where we were missing one of the targets in the
+           * original data.
+           */
           if (null == targetCalibrations) {
             targetCalibrations = new TreeSet<Calibration>();
             calibrations.put(editedCalibration.getTarget(), targetCalibrations);
@@ -694,31 +708,50 @@ public abstract class CalibrationBean extends BaseManagedBean {
           break;
         }
         case CalibrationEdit.DELETE: {
-          // The list of calibrations for the same target as the one that is
-          // being edited (includes the edited calibration pre-edit).
+          /*
+           * The editedCalibration can sometimes get screwed up during AJAX
+           * communications. Explicitly re-fetching the calibration using its ID
+           * ensures that if this does happen, processing won't be affected.
+           *
+           * The screw-up only happens for deletes, because if the
+           * communications get out of sync then the calibration has disappeared
+           * and everything reverts to being a new 'blank' calibration.
+           */
+          Calibration calibration = getCalibration(editedCalibration.getId());
+
+          /*
+           * The list of calibrations for the same target as the one that is
+           * being edited (includes the edited calibration pre-edit).
+           */
           TreeSet<Calibration> targetCalibrations = calibrations
-            .get(editedCalibration.getTarget());
+            .get(calibration.getTarget());
 
           // The editedCalibration is an independent copy of the "real" one held
           // in the data structures. Get the real one
           Calibration deletedCalibration = targetCalibrations.stream()
-            .filter(c -> c.getId() == editedCalibration.getId()).findFirst()
-            .get();
+            .filter(c -> c.getId() == calibration.getId()).findFirst().get();
 
           targetCalibrations.remove(deletedCalibration);
           break;
         }
         case CalibrationEdit.EDIT: {
-
-          // An edit may include a change of calibration target
-          // The editedCalibration has the new target, but we need
-          // to get the original calibration to make sure we cover the old
-          // target
+          /*
+           * An edit may include a change of calibration target. The
+           * editedCalibration has the new target, but we need to get the
+           * original calibration to make sure we remove it from the old target.
+           */
           Calibration originalCalibration = getCalibration(
             editedCalibration.getId());
 
           calibrations.get(originalCalibration.getTarget())
             .remove(originalCalibration);
+
+          if (!calibrations.containsKey(editedCalibration.getTarget())
+            || null == calibrations.get(editedCalibration.getTarget())) {
+            calibrations.put(editedCalibration.getTarget(),
+              new TreeSet<Calibration>());
+          }
+
           calibrations.get(editedCalibration.getTarget())
             .add(editedCalibration);
 

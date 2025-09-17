@@ -65,6 +65,11 @@ public class UncertaintiesBean extends CalibrationBean {
   }
 
   @Override
+  public String getCoefficientsLabel() {
+    return "Uncertainty";
+  }
+
+  @Override
   protected boolean changeAffectsDatasetsAfterOnly() {
     return true;
   }
