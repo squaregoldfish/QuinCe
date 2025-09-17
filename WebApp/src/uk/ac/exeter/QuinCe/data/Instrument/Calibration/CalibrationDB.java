@@ -218,17 +218,22 @@ public abstract class CalibrationDB {
     CalibrationEdit calibrationEdit) throws DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
-    MissingParam.checkPositive(calibrationEdit.getCalibrationId(),
-      "edit calibrationId");
+    MissingParam.checkMissing(calibrationEdit, "calibrationEdit");
 
-    try (PreparedStatement stmt = conn
-      .prepareStatement(DELETE_CALIBRATION_STATEMENT);) {
+    /*
+     * Calibrations with negative IDs are not yet stored in the database, so we
+     * don't need to delete them.
+     */
+    if (calibrationEdit.getCalibrationId() > 0) {
+      try (PreparedStatement stmt = conn
+        .prepareStatement(DELETE_CALIBRATION_STATEMENT);) {
 
-      stmt.setLong(1, calibrationEdit.getCalibrationId());
-      stmt.execute();
+        stmt.setLong(1, calibrationEdit.getCalibrationId());
+        stmt.execute();
 
-    } catch (SQLException e) {
-      throw new DatabaseException("Error while deleting calibration", e);
+      } catch (SQLException e) {
+        throw new DatabaseException("Error while deleting calibration", e);
+      }
     }
   }
 
