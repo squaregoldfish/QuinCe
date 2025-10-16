@@ -16,12 +16,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import uk.ac.exeter.QuinCe.TestBase.TestSetLine;
 
 /**
- * Tests of multiple calibration edits for the
- * {@link CalculationCoefficientsBean}.
+ * Tests of multiple calibration edits for the {@link UncertaintiessBean}.
  *
  * <p>
  * Much of the code for these tests is inherited from
- * {@link CalculationCoefficientsBeanTest}.
+ * {@link UncertaintiesBeanTest}.
  * </p>
  */
 @TestInstance(Lifecycle.PER_CLASS)
@@ -64,7 +63,6 @@ public class UncertaintiesBeanMultipleEditTest
    * @throws Exception
    */
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument", "resources/sql/testbase/variable",
     "resources/sql/web/Instrument/CalibrationBeanTest/base",
     "resources/sql/web/Instrument/CalibrationBeanTest/uncertaintiesEdit" })
   @ParameterizedTest
@@ -151,7 +149,7 @@ public class UncertaintiesBeanMultipleEditTest
 
   @Override
   protected String getTestSetName() {
-    return "SensorCalibrationsBeanMultipleEditTest";
+    return "UncertaintiesBeanMultipleEditTest";
   }
 
 }

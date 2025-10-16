@@ -40,7 +40,6 @@ public class UncertaintiesBeanSingleEditTest extends UncertaintiesBeanEditTest {
    * @throws Exception
    */
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
-    "resources/sql/testbase/instrument", "resources/sql/testbase/variable",
     "resources/sql/web/Instrument/CalibrationBeanTest/base",
     "resources/sql/web/Instrument/CalibrationBeanTest/uncertaintiesEdit" })
   @ParameterizedTest
@@ -102,6 +101,6 @@ public class UncertaintiesBeanSingleEditTest extends UncertaintiesBeanEditTest {
 
   @Override
   protected String getTestSetName() {
-    return "UncertaintiesSingleCalibrationEditTest";
+    return "UncertaintiesSingleEditTest";
   }
 }

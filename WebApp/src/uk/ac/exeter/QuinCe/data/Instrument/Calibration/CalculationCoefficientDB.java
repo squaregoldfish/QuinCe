@@ -105,7 +105,7 @@ public class CalculationCoefficientDB extends CalibrationDB {
   }
 
   @Override
-  public boolean completeSetRequired() {
-    return true;
+  public int getCalibrationSetRequirements() {
+    return SET_COMPLETE;
   }
 }

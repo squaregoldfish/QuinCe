@@ -81,7 +81,7 @@ public class SensorCalibrationDB extends CalibrationDB {
   }
 
   @Override
-  public boolean completeSetRequired() {
-    return false;
+  public int getCalibrationSetRequirements() {
+    return SET_ANY;
   }
 }

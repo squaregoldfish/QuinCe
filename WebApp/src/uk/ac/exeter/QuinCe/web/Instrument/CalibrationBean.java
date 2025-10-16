@@ -24,8 +24,8 @@ import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Calibration;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationCoefficient;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationDB;
+import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationException;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.InvalidCalibrationDateException;
 import uk.ac.exeter.QuinCe.jobs.Job;
 import uk.ac.exeter.QuinCe.jobs.JobManager;
 import uk.ac.exeter.QuinCe.jobs.files.DataSetJob;
@@ -767,8 +767,7 @@ public abstract class CalibrationBean extends BaseManagedBean {
     return nav;
   }
 
-  private void calculateAffectedDatasets()
-    throws InvalidCalibrationDateException {
+  private void calculateAffectedDatasets() throws CalibrationException {
 
     for (DataSet dataset : datasets.keySet()) {
       CalibrationSet originalSet = new CalibrationSet(calibrationTargets,
@@ -777,12 +776,39 @@ public abstract class CalibrationBean extends BaseManagedBean {
       CalibrationSet editedSet = new CalibrationSet(calibrationTargets,
         dataset.getStart(), dataset.getEnd(), dbInstance, calibrations);
 
-      if (!editedSet.hasSameEffect(originalSet)) {
-        datasets.get(dataset).set(true,
-          !dbInstance.completeSetRequired() || editedSet.hasCompletePrior());
-      } else {
-        datasets.get(dataset).set(false, editedCalibrationValid);
+      boolean recalculationRequired = !editedSet.hasSameEffect(originalSet);
+      boolean canBeRecalculated = true;
+
+      if (recalculationRequired) {
+        switch (dbInstance.getCalibrationSetRequirements()) {
+        case CalibrationDB.SET_ANY: {
+          canBeRecalculated = true;
+          break;
+        }
+        case CalibrationDB.SET_COMPLETE: {
+          if (!editedSet.hasCompletePrior()) {
+            canBeRecalculated = false;
+          } else {
+            canBeRecalculated = editedCalibrationValid;
+          }
+          break;
+        }
+        case CalibrationDB.SET_COMPLETE_OR_EMPTY: {
+          if (editedSet.hasCompletePrior() || editedSet.hasEmptyPrior()) {
+            canBeRecalculated = editedCalibrationValid;
+          } else {
+            canBeRecalculated = false;
+          }
+          break;
+        }
+        default: {
+          throw new CalibrationException(
+            "Unrecognised value from CalibrationDB.getSetRequirements");
+        }
+        }
       }
+
+      datasets.get(dataset).set(recalculationRequired, canBeRecalculated);
     }
   }
 

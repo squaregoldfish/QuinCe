@@ -79,7 +79,7 @@ public class UncertaintyDB extends CalibrationDB {
 
   @Override
   public boolean allowCalibrationChangeInDataset() {
-    return true;
+    return false;
   }
 
   @Override
@@ -93,8 +93,7 @@ public class UncertaintyDB extends CalibrationDB {
   }
 
   @Override
-  public boolean completeSetRequired() {
-    return false;
+  public int getCalibrationSetRequirements() {
+    return SET_COMPLETE_OR_EMPTY;
   }
-
 }

@@ -69,7 +69,7 @@ public abstract class UncertaintiesBeanEditTest extends TestSetTest {
     }
     default: {
       throw new IllegalArgumentException(
-        "Invalid action '" + line.getStringField(actionCol, false));
+        "Invalid action " + line.getStringField(actionCol, false));
     }
     }
 

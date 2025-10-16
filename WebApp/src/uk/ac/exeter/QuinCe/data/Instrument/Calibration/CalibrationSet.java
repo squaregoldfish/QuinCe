@@ -248,6 +248,32 @@ public class CalibrationSet {
   }
 
   /**
+   * Determines whether or not there are <i>no</i> {@link Calibration}s before
+   * the {@link #start} time.
+   *
+   * @return {@code true} if there are no {@link Calibration}s before the
+   *         {@link #start} time; {@code false} if there is one or more
+   *         {@link Calibration}.
+   */
+  public boolean hasEmptyPrior() {
+    boolean result = false;
+
+    if (priors.size() == 0) {
+      result = true;
+    } else {
+      LocalDateTime firstTime = priors.firstKey();
+      if (firstTime.isBefore(start)) {
+        TreeMap<String, Calibration> priorSet = priors.get(firstTime);
+        if (isEmpty(priorSet)) {
+          result = true;
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Determine whether or not there is a complete set of {@link Calibration}s
    * after the {@link #end} time.
    *
@@ -362,6 +388,28 @@ public class CalibrationSet {
   public boolean isComplete(Map<String, Calibration> calibrations) {
     return CollectionUtils.isEqualCollection(calibrations.keySet(), targets)
       && !calibrations.values().contains(null);
+  }
+
+  /**
+   * Determines whether or not a {@link Map} of {@link Calibration}s is empty,
+   * i.e. contains no entry or a {@code null} value for each target.
+   *
+   * @param calibrations
+   *          The {@link Map} to check
+   * @return {@code true} if there is no entry, or a {@code null} entry, in the
+   *         {@link Map} for each target; {@code false} otherwise.
+   */
+  public boolean isEmpty(Map<String, Calibration> calibrations) {
+    boolean result = true;
+
+    for (String target : targets) {
+      if (null != calibrations.get(target)) {
+        result = false;
+        break;
+      }
+    }
+
+    return result;
   }
 
   /**

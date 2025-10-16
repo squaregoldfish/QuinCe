@@ -37,6 +37,25 @@ import uk.ac.exeter.QuinCe.web.Instrument.InvalidCalibrationEditException;
 public abstract class CalibrationDB {
 
   /**
+   * Indicates that any number of calibrations can be present for a dataset to
+   * be processed successfully.
+   */
+  public static final int SET_ANY = 0;
+
+  /**
+   * Indicates that a complete set of calibrations must be present for a dataset
+   * to be processed successfully.
+   */
+  public static final int SET_COMPLETE = 1;
+
+  /**
+   * Indicates that there must either be a complete set or no calibrations for a
+   * dataset to be processed successfully. A partial set of calibrations is
+   * invalid.
+   */
+  public static final int SET_COMPLETE_OR_EMPTY = 2;
+
+  /**
    * Statement to add a new {@link Calibration} to the database.
    *
    * @see #addCalibration(Connection, CalibrationEdit)
@@ -650,7 +669,7 @@ public abstract class CalibrationDB {
    * @return {@code true} if a complete set of {@link Calibration}s is required,
    *         {@code false} if not.
    */
-  public abstract boolean completeSetRequired();
+  public abstract int getCalibrationSetRequirements();
 
   /**
    * Apply the supplied set of {@link CalibrationEdit}s to the database.
