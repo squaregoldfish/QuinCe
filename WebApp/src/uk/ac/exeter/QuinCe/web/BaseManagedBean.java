@@ -237,6 +237,7 @@ public abstract class BaseManagedBean {
       .getAttribute(LoginBean.USER_PREFS_ATTR);
     if (null == result) {
       result = new UserPreferences(getUser().getDatabaseID());
+      getSession().setAttribute(LoginBean.USER_PREFS_ATTR, result);
     }
 
     return result;

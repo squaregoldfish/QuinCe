@@ -23,7 +23,7 @@ public abstract class CalculationCoefficientsBeanEditTest extends TestSetTest {
   /**
    * Dummy Instrument ID.
    */
-  private static final long INSTRUMENT_ID = 1L;
+  private static final long INSTRUMENT_ID = 2L;
 
   /**
    * Value to use when editing the value of an existing coefficient.

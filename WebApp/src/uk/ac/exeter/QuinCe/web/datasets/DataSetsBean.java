@@ -14,7 +14,6 @@ import java.util.TreeMap;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
-import javax.faces.context.FacesContext;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -486,13 +485,8 @@ public class DataSetsBean extends BaseManagedBean {
    */
   public void checkValidCalibration() {
     validCalibration = true;
-    Map<String, String> params = FacesContext.getCurrentInstance()
-      .getExternalContext().getRequestParameterMap();
 
-    String startTime = params.get("uploadForm:startDate_input");
-    String endTime = params.get("uploadForm:endDate_input");
-
-    if (startTime.length() > 0) {
+    if (null != newDataSet.getStart()) {
       try {
         // Check for external standards if required.
         if (getCurrentInstrument().hasInternalCalibrations()) {
@@ -500,8 +494,7 @@ public class DataSetsBean extends BaseManagedBean {
           // Check internal calibration standards
           CalibrationSet standards = ExternalStandardDB.getInstance()
             .getCalibrationSet(getDataSource(), getCurrentInstrument(),
-              DateTimeUtils.parseDisplayDateTime(startTime),
-              DateTimeUtils.parseDisplayDateTime(endTime));
+              newDataSet.getStart(), newDataSet.getEnd());
 
           if (!standards.hasCompletePrior()) {
             validCalibration = false;
@@ -525,9 +518,8 @@ public class DataSetsBean extends BaseManagedBean {
 
               CalibrationSet coefficients = CalculationCoefficientDB
                 .getInstance().getCalibrationSet(getDataSource(),
-                  getCurrentInstrument(),
-                  DateTimeUtils.parseDisplayDateTime(startTime),
-                  DateTimeUtils.parseDisplayDateTime(endTime));
+                  getCurrentInstrument(), newDataSet.getStart(),
+                  newDataSet.getEnd());
 
               if (!coefficients.hasCompletePrior()) {
                 validCalibration = false;

@@ -12,7 +12,7 @@ public abstract class UncertaintiesBeanEditTest extends TestSetTest {
 
   private static final long USER_ID = 1L;
 
-  private static final long INSTRUMENT_ID = 1L;
+  private static final long INSTRUMENT_ID = 3L;
 
   protected static final String REPLACEMENT_VALUE = "7.5";
 

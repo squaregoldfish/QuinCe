@@ -35,7 +35,7 @@ public class CalibrationEdit {
    */
   private Calibration calibration;
 
-  protected CalibrationEdit(int action, Calibration editedCalibration) {
+  public CalibrationEdit(int action, Calibration editedCalibration) {
     this.action = action;
     this.calibration = editedCalibration.makeCopy();
   }

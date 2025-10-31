@@ -63,6 +63,7 @@ public class UncertaintiesBeanMultipleEditTest
    * @throws Exception
    */
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
+    "resources/sql/testbase/instrument",
     "resources/sql/web/Instrument/CalibrationBeanTest/base",
     "resources/sql/web/Instrument/CalibrationBeanTest/uncertaintiesEdit" })
   @ParameterizedTest

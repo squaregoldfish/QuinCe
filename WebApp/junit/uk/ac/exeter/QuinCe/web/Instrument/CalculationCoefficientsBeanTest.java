@@ -39,7 +39,7 @@ public class CalculationCoefficientsBeanTest extends BaseTest {
   /**
    * Dummy Instrument ID.
    */
-  private static final long INSTRUMENT_ID = 1L;
+  private static final long INSTRUMENT_ID = 2L;
 
   /**
    * Name of the first target in a pair of created calibrations.

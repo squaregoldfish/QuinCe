@@ -27,13 +27,15 @@ public class UncertaintiesBeanTest extends BaseTest {
 
   private static final long USER_ID = 1L;
 
-  private static final long INSTRUMENT_ID = 1L;
+  private static final long INSTRUMENT_ID = 3L;
 
-  private static final String TARGET_1 = "1";
+  private static final String TARGET_1 = "10000";
 
-  private static final String TARGET_2 = "3";
+  private static final String TARGET_2 = "10001";
 
   private static final String REPLACEMENT_VALUE = "7.5";
+
+  private static final long EDITED_CALIBRATION_ID = 21L;
 
   private UncertaintiesBean init() throws Exception {
     initResourceManager();
@@ -52,6 +54,7 @@ public class UncertaintiesBeanTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
+    "resources/sql/testbase/instrument",
     "resources/sql/web/Instrument/CalibrationBeanTest/base",
     "resources/sql/web/Instrument/CalibrationBeanTest/uncertaintiesEdit" })
   @Test
@@ -69,12 +72,13 @@ public class UncertaintiesBeanTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
+    "resources/sql/testbase/instrument",
     "resources/sql/web/Instrument/CalibrationBeanTest/base",
     "resources/sql/web/Instrument/CalibrationBeanTest/uncertaintiesEdit" })
   @Test
   public void editClashTimeTest() throws Exception {
     UncertaintiesBean bean = init();
-    bean.setSelectedCalibrationId(1L);
+    bean.setSelectedCalibrationId(EDITED_CALIBRATION_ID);
     bean.loadSelectedCalibration();
     bean.setAction(CalibrationEdit.EDIT);
     bean.getEditedCalibration()
@@ -85,12 +89,13 @@ public class UncertaintiesBeanTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
+    "resources/sql/testbase/instrument",
     "resources/sql/web/Instrument/CalibrationBeanTest/base",
     "resources/sql/web/Instrument/CalibrationBeanTest/uncertaintiesEdit" })
   @Test
   public void editClashTargetTest() throws Exception {
     UncertaintiesBean bean = init();
-    bean.setSelectedCalibrationId(1L);
+    bean.setSelectedCalibrationId(EDITED_CALIBRATION_ID);
     bean.loadSelectedCalibration();
     bean.setAction(CalibrationEdit.EDIT);
     bean.getEditedCalibration().setTarget(TARGET_2);
@@ -100,12 +105,13 @@ public class UncertaintiesBeanTest extends BaseTest {
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
+    "resources/sql/testbase/instrument",
     "resources/sql/web/Instrument/CalibrationBeanTest/base",
     "resources/sql/web/Instrument/CalibrationBeanTest/uncertaintiesEdit" })
   @Test
   public void editClashTimeAndTargetTest() throws Exception {
     UncertaintiesBean bean = init();
-    bean.setSelectedCalibrationId(1L);
+    bean.setSelectedCalibrationId(EDITED_CALIBRATION_ID);
     bean.loadSelectedCalibration();
     bean.setAction(CalibrationEdit.EDIT);
     bean.getEditedCalibration()
