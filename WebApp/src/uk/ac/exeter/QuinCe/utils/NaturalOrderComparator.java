@@ -16,12 +16,13 @@ import java.util.Comparator;
  *
  * <p>
  * NaturalOrderComparator.java -- Perform 'natural order' comparisons of strings
- * in Java. Copyright (C) 2003 by Pierre-Luc Paour <natorder@paour.com>
+ * in Java. Copyright (C) 2003 by Pierre-Luc Paour &lt;natorder@paour.com&gt;
  * </p>
  *
  * <p>
  * Based on the C version by Martin Pool, of which this is more or less a
- * straight conversion. Copyright (C) 2000 by Martin Pool <mbp@humbug.org.au>
+ * straight conversion. Copyright (C) 2000 by Martin Pool
+ * &lt;mbp@humbug.org.au&gt;
  * </p>
  *
  * <p>
@@ -46,8 +47,6 @@ import java.util.Comparator;
  * <li>This notice may not be removed or altered from any source distribution.
  * </li>
  * </ol>
- *
- * @see https://github.com/paour/natorder
  */
 public class NaturalOrderComparator implements Comparator<String> {
 
