@@ -15,6 +15,14 @@ INSERT INTO file_definition VALUES
    '{"assignments":{"0":{"assignmentIndex":0,"column":-1,"properties":{}},"1":{"assignmentIndex":1,"column":-1,"properties":{}},"2":{"assignmentIndex":2,"column":3,"properties":{"formatString":"dd/MM/yy"}},"3":{"assignmentIndex":3,"column":-1,"properties":{}},"4":{"assignmentIndex":4,"column":-1,"properties":{}},"5":{"assignmentIndex":5,"column":-1,"properties":{}},"6":{"assignmentIndex":6,"column":-1,"properties":{}},"7":{"assignmentIndex":7,"column":-1,"properties":{}},"8":{"assignmentIndex":8,"column":4,"properties":{"formatString":"HH:mm:ss"}},"9":{"assignmentIndex":9,"column":-1,"properties":{}},"10":{"assignmentIndex":10,"column":-1,"properties":{}},"11":{"assignmentIndex":11,"column":-1,"properties":{}},"12":{"assignmentIndex":12,"column":-1,"properties":{}}},"fileHasHeader":false}',
    '2019-01-28 13:31:21','2019-01-28 14:31:21');
 
+-- Run Types
+INSERT INTO run_type (file_definition_id, run_name, category_code) VALUES
+  (1, 'equ', 1);
+INSERT INTO run_type (file_definition_id, run_name, category_code) VALUES
+  (1, 'std1', -3);
+INSERT INTO run_type (file_definition_id, run_name, category_code) VALUES
+  (1, 'std3', -3);
+   
 -- File Columns
 
 -- Water temperature

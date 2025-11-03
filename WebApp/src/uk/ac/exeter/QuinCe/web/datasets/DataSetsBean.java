@@ -25,11 +25,7 @@ import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficientDB;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationDB;
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.ExternalStandardDB;
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.InvalidCalibrationDateException;
 import uk.ac.exeter.QuinCe.jobs.JobManager;
 import uk.ac.exeter.QuinCe.jobs.files.AutoQCJob;
 import uk.ac.exeter.QuinCe.jobs.files.DataSetJob;
@@ -117,7 +113,7 @@ public class DataSetsBean extends BaseManagedBean {
   /**
    * The message to be displayed if any calibrations are invalid
    */
-  private String validCalibrationMessage = null;
+  private List<String> validCalibrationMessage = new ArrayList<String>();
 
   /**
    * The ID of the datasets whose processing messages are being displayed.
@@ -135,7 +131,7 @@ public class DataSetsBean extends BaseManagedBean {
     timelineEntriesJson = null;
     calibrationsJson = null;
     validCalibration = true;
-    validCalibrationMessage = null;
+    validCalibrationMessage = new ArrayList<String>();
 
     return NAV_NEW_DATASET;
   }
@@ -478,8 +474,19 @@ public class DataSetsBean extends BaseManagedBean {
     }
   }
 
+  private void checkValidCalibrationAction(
+    DatasetValidCalibrationChecker checker) throws Exception {
+    checker.validateCalibrations(getDataSource(), getCurrentInstrument(),
+      newDataSet.getStart(), newDataSet.getEnd());
+
+    if (!checker.isValid()) {
+      validCalibration = false;
+      validCalibrationMessage.addAll(checker.getValidationMessages());
+    }
+  }
+
   /**
-   * Check if this instrument has a valid calibration for the start-time of the
+   * Check if this instrument has a valid calibrations for the duration of the
    * data set the user wants to create. Checks both sensor calibrations and
    * external standards.
    */
@@ -490,51 +497,24 @@ public class DataSetsBean extends BaseManagedBean {
       try {
         // Check for external standards if required.
         if (getCurrentInstrument().hasInternalCalibrations()) {
-
-          // Check internal calibration standards
-          CalibrationSet standards = ExternalStandardDB.getInstance()
-            .getCalibrationSet(getDataSource(), getCurrentInstrument(),
-              newDataSet.getStart(), newDataSet.getEnd());
-
-          if (!standards.hasCompletePrior()) {
-            validCalibration = false;
-            validCalibrationMessage = "No complete set of external standards is available";
-          }
-
-          // Disable zero standard check. #2037
-          // May be reinstated for different types of pCO2 system in the
-          // future.
-          /*
-           * else if (!ExternalStandardDB.hasZeroStandard(standards)) {
-           * validCalibration = false; validCalibrationMessage =
-           * "One external standard must have a zero concentration"; }
-           */
+          checkValidCalibrationAction(
+            new ExternalStandardsValidCalibrationChecker());
         }
 
-        if (validCalibration) {
-          // Check calculation coefficients, if there are any
-          if (getCurrentInstrument().hasCalculationCoefficients()) {
-            try {
+        checkValidCalibrationAction(
+          new SensorCalibrationsValidCalibrationChecker());
 
-              CalibrationSet coefficients = CalculationCoefficientDB
-                .getInstance().getCalibrationSet(getDataSource(),
-                  getCurrentInstrument(), newDataSet.getStart(),
-                  newDataSet.getEnd());
-
-              if (!coefficients.hasCompletePrior()) {
-                validCalibration = false;
-                validCalibrationMessage = "One or more calculation coefficents are missing";
-              }
-            } catch (InvalidCalibrationDateException e) {
-              validCalibration = false;
-              validCalibrationMessage = "Cannot change calculation coefficients within a dataset";
-            }
-          }
+        if (getCurrentInstrument().hasCalculationCoefficients()) {
+          checkValidCalibrationAction(
+            new CalculationCoefficientsValidCalibrationChecker());
         }
+
+        checkValidCalibrationAction(new UncertaintiesValidCalibrationChecker());
+
       } catch (Exception e) {
         ExceptionUtils.printStackTrace(e);
         validCalibration = false;
-        validCalibrationMessage = "Error while checking calibrations";
+        validCalibrationMessage.add("Error while checking calibrations");
       }
     }
   }
@@ -552,7 +532,7 @@ public class DataSetsBean extends BaseManagedBean {
    *
    * @return The error message
    */
-  public String getValidCalibrationMessage() {
+  public List<String> getValidCalibrationMessage() {
     return validCalibrationMessage;
   }
 

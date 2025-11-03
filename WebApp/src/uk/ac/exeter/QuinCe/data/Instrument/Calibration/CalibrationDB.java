@@ -666,8 +666,22 @@ public abstract class CalibrationDB {
    * {@link DataSet} that have not changed.
    * </p>
    *
-   * @return {@code true} if a complete set of {@link Calibration}s is required,
-   *         {@code false} if not.
+   * <p>
+   * Different types of calibration require a different setup of priors, which
+   * can be one of:
+   * </p>
+   * <ul>
+   * <li>A complete set of priors is required</li>
+   * <li>The set of priors must be either complete or empty (i.e. a partial set
+   * of priors is not allowed)</li>
+   * <li>Any combination of priors is allowed</li>
+   * </ul>
+   * <p>
+   * The return value of this method will be one of {@link #SET_COMPLETE},
+   * {@link #SET_COMPLETE_OR_EMPTY} or {@link #SET_ANY} respectively.
+   * </p>
+   *
+   * @return An integer indicating the allowed combination of priors.
    */
   public abstract int getCalibrationSetRequirements();
 
