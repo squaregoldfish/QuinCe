@@ -193,7 +193,7 @@ public class DefaultMeasurementValueCalculator
 
     SensorValuesList sensorValues = allSensorValues.getColumnValues(columnId);
 
-    SensorValuesListValue sensorValue = null == sensorValues ? null
+    SensorValuesListOutput sensorValue = null == sensorValues ? null
       : sensorValues.getValue(positionCoordinate, true);
 
     result = null == sensorValue ? null

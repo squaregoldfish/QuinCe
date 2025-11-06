@@ -103,12 +103,6 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
   private final Collection<SensorValue> sourceSensorValues;
 
   /**
-   * Indicates whether or not this value is constructed by interpolating around
-   * already-flagged {@link SensorValue}s.
-   */
-  private boolean interpolatesAroundFlags = false;
-
-  /**
    * Constructor for a value based on a single {@link SensorValue}. The type and
    * QC flag are determined automatically.
    *
@@ -141,8 +135,6 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
       qcMessage = sourceSensorValue.getDisplayQCMessage(allSensorValues);
       doubleValue = null;
     }
-
-    this.interpolatesAroundFlags = false;
   }
 
   /**
@@ -162,8 +154,7 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
   protected TimestampSensorValuesListValue(TimeCoordinate startTime,
     TimeCoordinate endTime, TimeCoordinate nominalTime,
     Collection<SensorValue> sourceSensorValues, SensorType sensorType,
-    String value, Flag qcFlag, String qcMessage,
-    boolean interpolatesAroundFlags) {
+    String value, Flag qcFlag, String qcMessage) {
     this.startTime = startTime;
     this.endTime = endTime;
     this.nominalTime = nominalTime;
@@ -184,7 +175,6 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
     this.doubleValue = null;
     this.qcFlag = qcFlag;
     this.qcMessage = qcMessage;
-    this.interpolatesAroundFlags = interpolatesAroundFlags;
   }
 
   /**
@@ -209,58 +199,6 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
     this.qcMessage = original.qcMessage;
     this.sourceSensorValues = new ArrayList<SensorValue>(
       original.sourceSensorValues);
-    this.interpolatesAroundFlags = original.interpolatesAroundFlags;
-  }
-
-  /**
-   * Create a copy of an existing {@link TimestampSensorValuesListValue} with a
-   * new {@code interpolatesAroundFlags} parameter.
-   *
-   * @param original
-   *          The original value.
-   * @param interpolatesAroundFlags
-   *          The new {@code interpolatesAroundFlags} parameter.
-   */
-  public TimestampSensorValuesListValue(TimestampSensorValuesListValue original,
-    boolean interpolatesAroundFlags) {
-
-    this.sensorType = original.sensorType;
-    this.doubleValue = original.doubleValue;
-    this.stringValue = original.stringValue;
-    this.startTime = original.startTime;
-    this.endTime = original.endTime;
-    this.nominalTime = original.nominalTime;
-    this.qcFlag = original.qcFlag;
-    this.qcMessage = original.qcMessage;
-    this.sourceSensorValues = new ArrayList<SensorValue>(
-      original.sourceSensorValues);
-    this.interpolatesAroundFlags = interpolatesAroundFlags;
-  }
-
-  /**
-   * Create a copy of an existing {@link TimestampSensorValuesListValue} with a
-   * new nominal time.
-   *
-   * @param original
-   *          The original value.
-   * @param nominalTime
-   *          The new nominal time.
-   */
-  protected TimestampSensorValuesListValue(
-    TimestampSensorValuesListValue original, TimeCoordinate nominalTime,
-    boolean interpolatesAroundFlags) {
-
-    this.sensorType = original.sensorType;
-    this.doubleValue = original.doubleValue;
-    this.stringValue = original.stringValue;
-    this.startTime = original.startTime;
-    this.endTime = original.endTime;
-    this.nominalTime = nominalTime;
-    this.qcFlag = original.qcFlag;
-    this.qcMessage = original.qcMessage;
-    this.sourceSensorValues = new ArrayList<SensorValue>(
-      original.sourceSensorValues);
-    this.interpolatesAroundFlags = interpolatesAroundFlags;
   }
 
   /**
@@ -280,8 +218,7 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
   protected TimestampSensorValuesListValue(TimeCoordinate startTime,
     TimeCoordinate endTime, TimeCoordinate nominalTime,
     Collection<SensorValue> sourceSensorValues, SensorType sensorType,
-    Double value, Flag qcFlag, String qcMessage,
-    boolean interpolatesAroundFlags) {
+    Double value, Flag qcFlag, String qcMessage) {
     this.startTime = startTime;
     this.endTime = endTime;
     this.nominalTime = nominalTime;
@@ -292,7 +229,6 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
     this.stringValue = null;
     this.qcFlag = qcFlag;
     this.qcMessage = qcMessage;
-    this.interpolatesAroundFlags = interpolatesAroundFlags;
   }
 
   /**
@@ -314,7 +250,6 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
     this.qcMessage = original.qcMessage;
     this.sourceSensorValues = new ArrayList<SensorValue>(
       original.sourceSensorValues);
-    this.interpolatesAroundFlags = original.interpolatesAroundFlags;
   }
 
   /**
@@ -447,49 +382,5 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
   public boolean encompasses(TimeCoordinate time) {
     return DateTimeUtils.isBetween(time.getTime(), startTime.getTime(),
       endTime.getTime());
-  }
-
-  /**
-   * Determine whether or not this SensorValuesListValue has been constructed by
-   * interpolating around already flagged {@link SensorValue}s.
-   *
-   * @return {@code true} if the value interpolates around flagged values;
-   *         {@code false} if it does not.
-   */
-  @Override
-  public boolean interpolatesAroundFlags() {
-    return interpolatesAroundFlags;
-  }
-
-  /**
-   * Set the flag indicating that this value is constructed by interpolating
-   * around already-flagged {@link SensorValue}s.
-   */
-  protected void setInterpolatesAroundFlags() {
-    interpolatesAroundFlags = true;
-  }
-
-  /**
-   * Check multiple SensorValuesListOutput objects to see if any of them have
-   * their {@link #interpolatesAroundFlag} flag set.
-   *
-   * @param values
-   *          The values to check.
-   * @return {@code true} if any value has the {@link #interpolatesAroundFlag}
-   *         set; {@code false} otherwise.
-   */
-  protected static boolean interpolatesAroundFlags(
-    TimestampSensorValuesListValue... values) {
-
-    boolean result = false;
-
-    for (TimestampSensorValuesListValue value : values) {
-      if (null != value && value.interpolatesAroundFlags) {
-        result = true;
-        break;
-      }
-    }
-
-    return result;
   }
 }

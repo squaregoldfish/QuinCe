@@ -95,7 +95,7 @@ public class TimestampSensorValuesListGetValueContinuousTest
     TimestampSensorValuesList list = (TimestampSensorValuesList) allSensorValues
       .getColumnValues(1L);
 
-    TimestampSensorValuesListValue value = getValue(list, line);
+    TimestampSensorValuesListOutput value = getValue(list, line);
 
     String expectedValueString = line.getStringField(getExpectedValueCol(),
       true);
@@ -144,10 +144,10 @@ public class TimestampSensorValuesListGetValueContinuousTest
     }
   }
 
-  protected TimestampSensorValuesListValue getValue(
+  protected TimestampSensorValuesListOutput getValue(
     TimestampSensorValuesList list, TestSetLine line)
     throws SensorValuesListException, CoordinateException {
-    return (TimestampSensorValuesListValue) list.getValue(
+    return (TimestampSensorValuesListOutput) list.getValue(
       makeCoordinate(line.getIntField(getRequestedMinuteCol())),
       getInterpolationAllowed(line));
   }

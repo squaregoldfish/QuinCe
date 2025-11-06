@@ -72,14 +72,13 @@ public class ProOceanusMeasurementValueCollector
         .getAllSensorTypes(!dataSet.fixedPosition())) {
 
         if (INTERNAL_SENSOR_TYPES.contains(sensorType.getShortName())) {
-
           try {
             long columnId = instrument.getSensorAssignments()
               .getColumnIds(sensorType).get(0);
             TimestampSensorValuesList sensorValuesList = (TimestampSensorValuesList) allSensorValues
               .getColumnValues(columnId);
 
-            SensorValuesListValue value = sensorValuesList
+            SensorValuesListOutput value = sensorValuesList
               .getValue(referenceValue.getCoordinate(), true);
 
             result.add(new MeasurementValue(sensorType, value));

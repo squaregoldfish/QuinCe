@@ -344,7 +344,7 @@ public abstract class SensorValuesList {
    * @throws SensorValuesListException
    *
    */
-  public abstract SensorValuesListValue getValue(Coordinate coordinate,
+  public abstract SensorValuesListOutput getValue(Coordinate coordinate,
     boolean interpolate) throws SensorValuesListException;
 
   /**

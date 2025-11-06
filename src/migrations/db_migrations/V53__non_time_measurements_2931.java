@@ -25,7 +25,7 @@ import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
  * error will be thrown if anything is amiss.
  * </p>
  */
-public class V52__non_time_measurements_2931 extends BaseJavaMigration {
+public class V53__non_time_measurements_2931 extends BaseJavaMigration {
 
   @Override
   public void migrate(Context context) throws Exception {

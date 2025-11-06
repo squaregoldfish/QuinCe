@@ -92,18 +92,4 @@ public interface SensorValuesListValue {
    * @return The coordinate.
    */
   public Coordinate getCoordinate();
-
-  /**
-   * Determine whether or not this SensorValuesListValue has been constructed by
-   * interpolating around already flagged {@link SensorValue}s.
-   *
-   * <p>
-   * This is only valid for values using {@link TimeCoordinate}s; all other
-   * types of value should return {@code false}.
-   * </p>
-   *
-   * @return {@code true} if the value interpolates around flagged values;
-   *         {@code false} if it does not.
-   */
-  public boolean interpolatesAroundFlags();
 }

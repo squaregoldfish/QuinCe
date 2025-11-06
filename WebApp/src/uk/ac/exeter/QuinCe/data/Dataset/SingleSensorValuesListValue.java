@@ -70,6 +70,13 @@ public class SingleSensorValuesListValue implements SensorValuesListValue {
     qcMessage = sensorValue.getDisplayQCMessage(allSensorValues);
   }
 
+  protected SingleSensorValuesListValue(SingleSensorValuesListValue source) {
+    this.sensorType = source.sensorType;
+    this.sensorValue = source.sensorValue;
+    this.qcFlag = source.qcFlag;
+    this.qcMessage = source.qcMessage;
+  }
+
   @Override
   public SensorType getSensorType() {
     return sensorType;
@@ -134,10 +141,5 @@ public class SingleSensorValuesListValue implements SensorValuesListValue {
   @Override
   public Coordinate getCoordinate() {
     return sensorValue.getCoordinate();
-  }
-
-  @Override
-  public boolean interpolatesAroundFlags() {
-    return false;
   }
 }

@@ -40,7 +40,7 @@ public class TimestampSensorValuesListGetValueRangeTest
   }
 
   @Override
-  protected TimestampSensorValuesListValue getValue(
+  protected TimestampSensorValuesListOutput getValue(
     TimestampSensorValuesList list, TestSetLine line)
     throws SensorValuesListException, CoordinateException {
 

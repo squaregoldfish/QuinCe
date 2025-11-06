@@ -29,11 +29,24 @@ public class SimpleSensorValuesList extends SensorValuesList {
   }
 
   @Override
-  public SensorValuesListValue getValue(Coordinate coordinate,
+  public SensorValuesListOutput getValue(Coordinate coordinate,
     boolean interpolate) throws SensorValuesListException {
 
+    SingleSensorValuesListOutput result = null;
+
+    if (null == outputValues) {
+      buildOutputValues();
+    }
+
     int index = Collections.binarySearch(getOutputCoordinates(), coordinate);
-    return index >= 0 ? getOutputValues().get(index) : null;
+    SingleSensorValuesListValue value = index >= 0 ? outputValues.get(index)
+      : null;
+
+    if (null != value) {
+      result = new SingleSensorValuesListOutput(value);
+    }
+
+    return result;
   }
 
   private void buildOutputValues() throws SensorValuesListException {
