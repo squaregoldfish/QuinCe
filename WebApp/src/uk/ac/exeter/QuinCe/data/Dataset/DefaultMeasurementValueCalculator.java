@@ -124,7 +124,8 @@ public class DefaultMeasurementValueCalculator
       if (allowCalibration && requiredSensorType.hasInternalCalibration()
         && instrument.hasInternalCalibrations()) {
         calibrate(instrument, (TimeDataSet) dataSet, baseValue,
-          requiredSensorType, result, allMeasurements, sensorValues, conn);
+          requiredSensorType, result, allMeasurements, sensorValues,
+          coreAssignment.getDatabaseId(), conn);
       }
     }
 
@@ -233,7 +234,7 @@ public class DefaultMeasurementValueCalculator
   protected void calibrate(Instrument instrument, TimeDataSet dataset,
     SensorValuesListValue baseValue, SensorType sensorType,
     MeasurementValue value, DatasetMeasurements allMeasurements,
-    SensorValuesList sensorValues, Connection conn)
+    SensorValuesList sensorValues, long columnId, Connection conn)
     throws MeasurementValueCalculatorException {
 
     if (baseValue.getCoordinate() instanceof TimeCoordinate
@@ -250,11 +251,13 @@ public class DefaultMeasurementValueCalculator
         // Get the calibration offset for the standard run prior to the
         // measurement
         CalibrationOffset prior = getCalibrationOffset(PRIOR, externalStandards,
-          allMeasurements, sensorValues, sensorType, coordinate, value);
+          allMeasurements, sensorValues, columnId, sensorType, coordinate,
+          value);
 
         // Get the calibration offset for the standard run after the measurement
         CalibrationOffset post = getCalibrationOffset(POST, externalStandards,
-          allMeasurements, sensorValues, sensorType, coordinate, value);
+          allMeasurements, sensorValues, columnId, sensorType, coordinate,
+          value);
 
         /*
          * Note that even though we know QC messages are required here, we can't
@@ -294,7 +297,7 @@ public class DefaultMeasurementValueCalculator
 
   private CalibrationOffset getCalibrationOffset(int direction,
     CalibrationSet externalStandards, DatasetMeasurements allMeasurements,
-    SensorValuesList sensorValues, SensorType sensorType,
+    SensorValuesList sensorValues, long columnId, SensorType sensorType,
     TimeCoordinate measurementTime, MeasurementValue value)
     throws RecordNotFoundException {
 
@@ -328,7 +331,7 @@ public class DefaultMeasurementValueCalculator
          * filtering out any bad ones.
          */
         List<SensorValue> runSensorValues = runTypeMeasurements.stream()
-          .map(m -> sensorValues.getRawSensorValue(m.getCoordinate()))
+          .map(m -> sensorValues.getRawSensorValue(m.getCoordinate(), columnId))
           .filter(v -> null != v).filter(v -> !v.getDoubleValue().isNaN())
           .filter(v -> v.getUserQCFlag().isGood()).collect(Collectors.toList());
 

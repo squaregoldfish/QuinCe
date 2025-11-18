@@ -84,7 +84,7 @@ public class DataSetDataDBTest extends BaseTest {
     SensorValuesList columnValues = storedValues.getColumnValues(COLUMN_ID);
 
     assertEquals(1, columnValues.rawSize());
-    return columnValues.getRawSensorValue(coordinate);
+    return columnValues.getRawSensorValue(coordinate, COLUMN_ID);
   }
 
   /**

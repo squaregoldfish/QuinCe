@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
+import uk.ac.exeter.QuinCe.utils.StringUtils;
 
 /**
  * Coordinate for Argo measurements.
@@ -236,5 +237,11 @@ public class ArgoCoordinate extends Coordinate {
    */
   public String getSourceFile() {
     return sourceFile;
+  }
+
+  @Override
+  public String toString() {
+    return "" + cycleNumber + "-" + nProf + "-" + direction + "-"
+      + StringUtils.formatNumber(pres);
   }
 }

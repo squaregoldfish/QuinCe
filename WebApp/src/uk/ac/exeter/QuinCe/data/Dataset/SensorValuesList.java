@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignments;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
-import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**
@@ -440,9 +439,9 @@ public abstract class SensorValuesList {
    * @return The value with the specified {@link Coordinate}, or {@code null} if
    *         there is not one.
    */
-  public SensorValue getRawSensorValue(Coordinate coordinate) {
+  public SensorValue getRawSensorValue(Coordinate coordinate, long columnId) {
     int searchIndex = Collections.binarySearch(list,
-      makeDummySensorValue(coordinate));
+      makeDummySensorValue(coordinate, columnId));
     return searchIndex < 0 ? null : list.get(searchIndex);
   }
 
@@ -458,9 +457,10 @@ public abstract class SensorValuesList {
    *          The required coordinate.
    * @return The dummy value.
    */
-  private SensorValue makeDummySensorValue(Coordinate coordinate) {
-    return new SensorValue(DatabaseUtils.NO_DATABASE_RECORD,
-      DatabaseUtils.NO_DATABASE_RECORD, coordinate, null);
+  private SensorValue makeDummySensorValue(Coordinate coordinate,
+    long columnId) {
+    return new SensorValue(allSensorValues.getDatasetId(), columnId, coordinate,
+      null);
   }
 
   /**

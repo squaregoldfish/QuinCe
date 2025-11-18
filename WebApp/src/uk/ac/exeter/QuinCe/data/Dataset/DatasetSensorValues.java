@@ -529,7 +529,8 @@ public class DatasetSensorValues {
     Map<Long, SensorValue> result = new HashMap<Long, SensorValue>();
 
     for (Map.Entry<Long, SensorValuesList> entry : valuesByColumn.entrySet()) {
-      SensorValue value = entry.getValue().getRawSensorValue(coordinate);
+      SensorValue value = entry.getValue().getRawSensorValue(coordinate,
+        entry.getKey());
       if (null != value) {
         result.put(entry.getKey(), value);
       }
@@ -554,12 +555,13 @@ public class DatasetSensorValues {
 
     if (columnID == SensorType.LONGITUDE_ID) {
       result = null == longitudes ? null
-        : longitudes.getRawSensorValue(coordinate);
+        : longitudes.getRawSensorValue(coordinate, columnID);
     } else if (columnID == SensorType.LATITUDE_ID) {
       result = null == latitudes ? null
-        : latitudes.getRawSensorValue(coordinate);
+        : latitudes.getRawSensorValue(coordinate, columnID);
     } else if (valuesByColumn.containsKey(columnID)) {
-      result = valuesByColumn.get(columnID).getRawSensorValue(coordinate);
+      result = valuesByColumn.get(columnID).getRawSensorValue(coordinate,
+        columnID);
     }
 
     return result;
@@ -904,7 +906,7 @@ public class DatasetSensorValues {
     Coordinate coordinate) throws PositionException {
 
     SensorValue value = getPositionValuesList(columnId)
-      .getRawSensorValue(coordinate);
+      .getRawSensorValue(coordinate, columnId);
     return null == value ? null : new SensorValuePlotPageTableValue(value);
   }
 

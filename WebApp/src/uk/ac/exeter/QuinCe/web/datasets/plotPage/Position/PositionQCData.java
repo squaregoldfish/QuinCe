@@ -130,24 +130,24 @@ public class PositionQCData extends ManualQCData {
 
     try {
 
-      List<Coordinate> times = sensorValues.getRawPositionCoordinates();
+      List<Coordinate> coordinates = sensorValues.getRawPositionCoordinates();
 
       // Make sure we don't fall off the end of the dataset
       int lastRecord = start + length;
-      if (lastRecord > times.size()) {
-        lastRecord = times.size();
+      if (lastRecord > coordinates.size()) {
+        lastRecord = coordinates.size();
       }
 
       for (int i = start; i < lastRecord; i++) {
-        PlotPageTableRecord record = new PlotPageTableRecord(times.get(i));
+        PlotPageTableRecord record = new PlotPageTableRecord(coordinates.get(i));
 
         // Timestamp
-        record.addColumn(times.get(i));
+        record.addColumn(coordinates.get(i));
 
         PlotPageTableValue longitude = sensorValues
-          .getRawPositionTableValue(SensorType.LONGITUDE_ID, times.get(i));
+          .getRawPositionTableValue(SensorType.LONGITUDE_ID, coordinates.get(i));
         PlotPageTableValue latitude = sensorValues
-          .getRawPositionTableValue(SensorType.LATITUDE_ID, times.get(i));
+          .getRawPositionTableValue(SensorType.LATITUDE_ID, coordinates.get(i));
 
         // The lon/lat can be null if the instrument has a fixed position
         if (null != longitude && null != latitude

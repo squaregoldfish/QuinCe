@@ -1352,7 +1352,7 @@ public class TimestampSensorValuesList extends SensorValuesList {
   }
 
   @Override
-  public SensorValue getRawSensorValue(Coordinate coordinate) {
+  public SensorValue getRawSensorValue(Coordinate coordinate, long columnId) {
     int searchIndex = Collections.binarySearch(getRawCoordinates(), coordinate);
     return searchIndex < 0 ? null : list.get(searchIndex);
   }
