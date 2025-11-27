@@ -98,13 +98,13 @@ public class TimeDataSetExtractor extends DataSetExtractor {
     }
 
     LocalDateTime filesLatestStart = TimeRange
-      .getLatestStart(fileDefinitionRanges.values());
+      .getLatestStart(fileDefinitionRanges.values(), 3600);
     if (filesLatestStart.isAfter(castDataSet.getStartTime())) {
       castDataSet.setStartTime(filesLatestStart);
     }
 
     LocalDateTime filesEarliestEnd = TimeRange
-      .getEarliestEnd(fileDefinitionRanges.values());
+      .getEarliestEnd(fileDefinitionRanges.values(), 3600);
     if (filesEarliestEnd.isBefore(castDataSet.getEndTime())) {
       castDataSet.setEndTime(filesEarliestEnd);
     }
