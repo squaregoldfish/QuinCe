@@ -252,6 +252,11 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
+      <from-outcome>argo_manual_qc</from-outcome>
+      <to-view-id>/dataset/argo_manual_qc.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
       <from-outcome>export</from-outcome>
       <to-view-id>/dataset/export.xhtml</to-view-id>
       <redirect/>
