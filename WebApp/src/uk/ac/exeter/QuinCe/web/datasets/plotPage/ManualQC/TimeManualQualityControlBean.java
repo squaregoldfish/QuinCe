@@ -20,7 +20,7 @@ import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageData;
 
 @ManagedBean
 @SessionScoped
-public class ManualQualityControlBean extends PlotPageBean {
+public class TimeManualQualityControlBean extends PlotPageBean {
 
   /**
    * The data for the page
@@ -30,7 +30,7 @@ public class ManualQualityControlBean extends PlotPageBean {
   /**
    * Navigation to the calibration data plot page
    */
-  private static final String NAV_PLOT = "user_qc";
+  private static final String NAV_PLOT = "time_manual_qc";
 
   @Override
   protected String getScreenNavigation() {

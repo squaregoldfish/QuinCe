@@ -247,8 +247,8 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
-      <from-outcome>user_qc</from-outcome>
-      <to-view-id>/dataset/manual_qc.xhtml</to-view-id>
+      <from-outcome>time_manual_qc</from-outcome>
+      <to-view-id>/dataset/time_manual_qc.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>

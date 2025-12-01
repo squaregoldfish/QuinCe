@@ -23,8 +23,8 @@
 
       function goToQc(id) {
         window['keepAliveActive'] = false;
-        $('#datasetListForm\\:manualQCDatasetId').val(id);
-        $('#datasetListForm\\:manualQCLink').click();
+        $('#datasetListForm\\:timeManualQCDatasetId').val(id);
+        $('#datasetListForm\\:timeManualQCLink').click();
         return false;
       }
 
@@ -149,9 +149,9 @@
        <p:commandLink id="approveLink" ajax="true"
          action="#{dataSetsBean.approve}" oncomplete="updateList()" />
 
-       <h:inputHidden id="manualQCDatasetId" value="#{manualQualityControlBean.datasetId}" />
-       <p:commandLink id="manualQCLink" ajax="false"
-         action="#{manualQualityControlBean.start}" />
+       <h:inputHidden id="timeManualQCDatasetId" value="#{timeManualQualityControlBean.datasetId}" />
+       <p:commandLink id="timeManualQCLink" ajax="false"
+         action="#{timeManualQualityControlBean.start}" />
 
        <h:inputHidden id="positionQCDatasetId" value="#{positionQualityControlBean.datasetId}" />
        <p:commandLink id="positionQCLink" ajax="false"
