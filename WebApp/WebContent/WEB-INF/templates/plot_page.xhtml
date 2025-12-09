@@ -48,12 +48,7 @@
     <h:inputHidden id="dataBounds"
       value="#{sessionScope[beanName].dataBounds}" />
 
-    <p:remoteCommand name="loadData"
-      action="#{sessionScope[beanName].loadData}"
-      process="@this" update="error :plot1Form:plot1XAxis :plot1Form:plot1YAxis :plot1Form:plot1Y2Axis
-        :plot1Form:map1Column :plot2Form:plot2XAxis :plot2Form:plot2YAxis :plot2Form:plot2Y2Axis
-        :plot2Form:map2Column columnHeadings extendedColumnHeadings rowIDs :statusForm"
-      oncomplete="dataLoaded()" onerror="plotError(xhr)" async="true"/>
+  <ui:insert name="loadDataCommand"></ui:insert>
 
   </h:form>
 
@@ -79,9 +74,10 @@
   <p:dialog header="Please wait" widgetVar="pleaseWait" modal="true"
     resizable="false" closable="false">
     <h:form id="pleaseWaitForm">
-    <p:remoteCommand name="updateProgress"
-      action="#{sessionScope[beanName].noop}"
-      process="@none" update="progressName progressBar"/>
+      <p:remoteCommand name="updateProgress"
+        action="#{sessionScope[beanName].noop}"
+        process="@none" update="progressName progressBar"/>
+        
       Preparing data. This can take quite a while, so please be patient...
       <h:panelGrid columns="1" cellpadding="5" style="width: 100%">
         <h:outputText id="progressName" value="#{sessionScope[beanName].progress.name}"/>
@@ -100,18 +96,20 @@
   <p:dialog header="Error" widgetVar="errorMessage" modal="true"
     resizable="false" closable="false">
 
-    <div class="error">
-      ERROR: An error occurred during processing.
-      Please report the following to site support:
-    </div>
+    <h:form id="errorMessageFirm">
+      <div class="error">
+        ERROR: An error occurred during processing.
+        Please report the following to site support:
+      </div>
 
-    <div id="errorMessageString" class="instructions">
-      ...
-    </div>
-    <h:panelGrid columns="1" cellpadding="5" styleClass="buttonPanel">
-      <p:commandButton id="abortButton" value="Close"
-        action="#{sessionScope[beanName].abort}" />
-    </h:panelGrid>
+      <div id="errorMessageString" class="instructions">
+        ...
+      </div>
+      <h:panelGrid columns="1" cellpadding="5" styleClass="buttonPanel">
+        <p:commandButton id="abortButton" value="Close"
+          action="#{sessionScope[beanName].abort}" />
+      </h:panelGrid>
+    </h:form>
   </p:dialog>
 
   <p:dialog widgetVar="variableDialog" modal="true" header="Variables"
@@ -161,9 +159,11 @@
       </ui:repeat>
     </div>
     <h:panelGrid columns="2" styleClass="buttonPanel">
-      <p:commandButton widgetVar="variableOk" value="OK"
-        onclick="applyVariables();" />
-      <p:commandButton value="Cancel" onclick="PF('variableDialog').hide();" />
+      <h:form id="applyVariablesForm">
+        <p:commandButton widgetVar="variableOk" value="OK"
+          onclick="applyVariables();" />
+        <p:commandButton value="Cancel" onclick="PF('variableDialog').hide();" />
+      </h:form>
     </h:panelGrid>
   </p:dialog>
 

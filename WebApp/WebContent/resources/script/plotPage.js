@@ -225,7 +225,6 @@ function initPage() {
 
   // Trigger data loading on back end
   // PrimeFaces remoteCommand. Calls dataLoaded() when complete.
-  //PF('progressBar');
   loadData();
 }
 
@@ -241,40 +240,6 @@ function errorCheck() {
   }
 
   return errorFound;
-}
-
-// Lay out the overall page structure
-function layoutPage() {
-  $('#plotPageContent').split({
-    orientation: 'horizontal',
-    onDragEnd: function(){
-      scaleTableSplit()}
-    });
-
-  $('#plots').split({
-    orientation: 'vertical',
-    onDragEnd: function(){
-      resizePlots()}
-    });
-}
-
-// Handle table/plot split adjustment
-function scaleTableSplit() {
-  tableSplitProportion = $('#plotPageContent').split().position() / $('#plotPageContent').height();
-  resizeAllContent();
-}
-
-// Handle split adjustment between the two plots
-function resizePlots() {
-
-  for (let i = 1; i <= 2; i++) {
-    resizePlot(i);
-
-    if (null != window['map' + i]) {
-      $('#map' + i + 'Container').width($('#plot' + i + 'Panel').width());
-      $('#map' + i + 'Container').height($('#plot' + i + 'Panel').height() - 40);
-    }
-  }
 }
 
 function resizePlot(index) {
@@ -299,28 +264,7 @@ function resizePlot(index) {
   }
 }
 
-// Adjust the size of all page elements after a window
-// resize or split adjustment
-function resizeAllContent() {
-  $('#plotPageContent').height(window.innerHeight - 73);
-
-  $('#plotPageContent').split().position($('#plotPageContent').height() * tableSplitProportion);
-  resizePlots();
-
-  if (typeof variable !== 'undefined' && null != jsDataTable) {
-    let tableHeight = calcTableScrollY();
-    $('.dataTables_scrollBody').css('max-height',tableHeight);
-    $('.dataTables_scrollBody').css('height', tableHeight);
-    jsDataTable.draw();
-  }
-
-  if (PF('variableDialog').isVisible()) {
-    resizeVariablesDialog();
-  }
-}
-
 function showQCMessage(qcFlag, qcMessage) {
-
   if (qcMessage != '') {
 
     let content = '';
@@ -366,8 +310,6 @@ function dataLoaded() {
   if (!errorCheck()) {
     columnHeaders = JSON.parse($('#plotPageForm\\:columnHeadings').val());
     extendedColumnHeaders = JSON.parse($('#plotPageForm\\:extendedColumnHeadings').val());
-    initPlot(1);
-    initPlot(2);
 
     if (typeof dataLoadedLocal === 'function') {
       dataLoadedLocal();
@@ -502,7 +444,7 @@ function getColumnIdsWork(headers) {
 }
 
 function getReferenceValues(index) {
-  return getColumnById($('#plot' + index + 'Form\\:plot' + index + 'YAxis').val()).referenceValues;
+  return getColumnById($(getPlotFormName(index) + '\\:plot' + index + 'YAxis').val()).referenceValues;
 }
 
 function getYRange(index) {
@@ -1094,9 +1036,9 @@ function initPlot(index) {
   let mode = getPlotMode(index);
   let redraw = false;
 
-  window['plot' + index + 'XAxisVar'] = $('#plot' + index + 'Form\\:plot' + index + 'XAxis').val();
-  window['plot' + index + 'YAxisVar'] = $('#plot' + index + 'Form\\:plot' + index + 'YAxis').val();
-  window['plot' + index + 'Y2AxisVar'] = $('#plot' + index + 'Form\\:plot' + index + 'Y2Axis').val();
+  window['plot' + index + 'XAxisVar'] = $(getPlotFormName(index) + '\\:plot' + index + 'XAxis').val();
+  window['plot' + index + 'YAxisVar'] = $(getPlotFormName(index) + '\\:plot' + index + 'YAxis').val();
+  window['plot' + index + 'Y2AxisVar'] = $(getPlotFormName(index) + '\\:plot' + index + 'Y2Axis').val();
 
   if (mode == PLOT_MODE_PLOT) {
     $('#map' + index + 'Container').hide();
@@ -1134,26 +1076,26 @@ function initPlot(index) {
 }
 
 function getPlotLabels(index) {
-  return JSON.parse($('#plot' + index + 'Form\\:plot' + index + 'DataLabels').val());
+  return JSON.parse($(getPlotFormName(index) + '\\:plot' + index + 'DataLabels').val());
 }
 
 function getPlotY2Labels(index) {
-  return JSON.parse($('#plot' + index + 'Form\\:plot' + index + 'Y2Labels').val());
+  return JSON.parse($(getPlotFormName(index) + '\\:plot' + index + 'Y2Labels').val());
 }
 
 function hasY2(index) {
-  return $('#plot' + index + 'Form\\:plot' + index + 'Y2Labels').val().length > 0;
+  return $(getPlotFormName(index) + '\\:plot' + index + 'Y2Labels').val().length > 0;
 }
 
 function drawY2Plot(index, keepZoom) {
   let y2Var = 'y2Plot' + index;
 
-  let newY2Data = $('#plot' + index + 'Form\\:plot' + index + 'Y2Data').val();
+  let newY2Data = $(getPlotFormName(index) + '\\:plot' + index + 'Y2Data').val();
   if (newY2Data) {
     window['y2Plot' + index + 'Data'] = parseJsonWithDates(newY2Data);
 
     // Clear input so it doesn't get sent back to the server
-    $('#plot' + index + 'Form\\:plot' + index + 'Y2Data').val('');
+    $(getPlotFormName(index) + '\\:plot' + index + 'Y2Data').val('');
   }
 
   let labels = getPlotY2Labels(index);
@@ -1259,10 +1201,10 @@ function drawDataPlot1Y(index, keepZoom) {
   let plotVar = 'dataPlot' + index;
 
   // If there's new data, extract it
-  let newPlotData = $('#plot' + index + 'Form\\:plot' + index + 'Data').val();
+  let newPlotData = $(getPlotFormName(index) + '\\:plot' + index + 'Data').val();
   if (newPlotData) {
     window['dataPlot' + index + 'Data'] = parseJsonWithDates(newPlotData);
-    $('#plot' + index + 'Form\\:plot' + index + 'Data').val('');
+    $(getPlotFormName(index) + '\\:plot' + index + 'Data').val('');
   }
 
   let labels = getPlotLabels(index);
@@ -1375,11 +1317,11 @@ function drawDataPlot2Y(index, keepZoom) {
   let plotVar = 'dataPlot' + index;
 
   // If there's new data, extract it
-  let newPlotData = $('#plot' + index + 'Form\\:plot' + index + 'Data').val();
+  let newPlotData = $(getPlotFormName(index) + '\\:plot' + index + 'Data').val();
   if (newPlotData) {
     window['dataPlot' + index + 'Data'] = parseJsonWithDates(newPlotData);
-    $('#plot' + index + 'Form\\:plot' + index + 'Data').val('');
-    $('#plot' + index + 'Form\\:plot' + index + 'Y2Data').val('');
+    $(getPlotFormName(index) + '\\:plot' + index + 'Data').val('');
+    $(getPlotFormName(index) + '\\:plot' + index + 'Y2Data').val('');
   }
 
   let labels = getPlotLabels(index);
@@ -1465,7 +1407,7 @@ function drawDataPlot2Y(index, keepZoom) {
   };
 
   // Reference value for gas standards and similar
-  let referenceValue = getColumnById($('#plot' + index + 'Form\\:plot' + index + 'YAxis').val()).referenceValue;
+  let referenceValue = getColumnById($(getPlotFormName(index) + '\\:plot' + index + 'YAxis').val()).referenceValue;
   if (null != referenceValue) {
     data_options.underlayCallback = function(canvas, area, g) {
       let xmin = g.toDomXCoord(g.xAxisExtremes()[0]);
@@ -1527,7 +1469,7 @@ function drawPlot(index, drawOtherPlots, keepZoom) {
 
   // Enable/disable the selection mode controls
   if (canEdit()) {
-    let plotVariable = $('#plot' + index + 'Form\\:plot' + index + 'YAxis').val();
+    let plotVariable = $(getPlotFormName(index) + '\\:plot' + index + 'YAxis').val();
     if (getColumnById(plotVariable).editable) {
       PF('plot' + index + 'SelectMode').enable();
     } else {
@@ -1546,9 +1488,9 @@ function drawPlot(index, drawOtherPlots, keepZoom) {
 
 function drawFlagPlot1Y(index) {
   window['flagPlot' + index + 'Data'] =
-  parseJsonWithDates($('#plot' + index + 'Form\\:plot' + index + 'Flags').val());
+  parseJsonWithDates($(getPlotFormName(index) + '\\:plot' + index + 'Flags').val());
 
-  $('#plot' + index + 'Form\\:plot' + index + 'Flags').val('');
+  $(getPlotFormName(index) + '\\:plot' + index + 'Flags').val('');
 
   if (null != window['flagPlot' + index]) {
     window['flagPlot' + index].destroy();
@@ -1563,7 +1505,7 @@ function drawFlagPlot1Y(index) {
     flag_options.colors = ['#FF0000', '#FFA42B', '#AC9326', '#817FFF', '#FFA42B'];
     flag_options.xlabel = ' ';
     flag_options.ylabel = ' ';
-    flag_options.labels = JSON.parse($('#plot' + index + 'Form\\:plot' + index + 'FlagLabels').val());
+    flag_options.labels = JSON.parse($(getPlotFormName(index) + '\\:plot' + index + 'FlagLabels').val());
     flag_options.pointSize = FLAG_POINT_SIZE;
     flag_options.highlightCircleSize = 0;
     flag_options.selectMode = 'euclidian';
@@ -1591,11 +1533,11 @@ function drawFlagPlot1Y(index) {
 
 function drawFlagPlot2Y(index) {
   window['flagPlot' + index + 'Data'] =
-  parseJsonWithDates($('#plot' + index + 'Form\\:plot' + index + 'Flags').val());
+  parseJsonWithDates($(getPlotFormName(index) + '\\:plot' + index + 'Flags').val());
 
-  let labels = JSON.parse($('#plot' + index + 'Form\\:plot' + index + 'FlagLabels').val());
+  let labels = JSON.parse($(getPlotFormName(index) + '\\:plot' + index + 'FlagLabels').val());
 
-  $('#plot' + index + 'Form\\:plot' + index + 'Flags').val('');
+  $(getPlotFormName(index) + '\\:plot' + index + 'Flags').val('');
 
   if (null != window['flagPlot' + index]) {
     window['flagPlot' + index].destroy();
@@ -1611,7 +1553,7 @@ function drawFlagPlot2Y(index) {
     flag_options.xlabel = ' ';
     flag_options.ylabel = ' ';
     flag_options.y2label = ' ';
-    flag_options.labels = JSON.parse($('#plot' + index + 'Form\\:plot' + index + 'FlagLabels').val());
+    flag_options.labels = JSON.parse($(getPlotFormName(index) + '\\:plot' + index + 'FlagLabels').val());
     flag_options.pointSize = FLAG_POINT_SIZE;
     flag_options.highlightCircleSize = 0;
     flag_options.selectMode = 'euclidian';
@@ -1937,7 +1879,7 @@ function setupMapVariables(plotIndex) {
       mapWidget.jq.show();
     }
   });
-  updateMapCheckboxes($('#plot' + plotIndex + 'Form\\:map' + plotIndex + 'Column').val());
+  updateMapCheckboxes($(getMapFormName(index) + '\\:map' + plotIndex + 'Column').val());
 }
 
 //Select the specified variable in the dialog
@@ -1953,7 +1895,7 @@ function updateMapCheckboxes(variable) {
         if (widget) {
           if (id == variable) {
             widget.check();
-            $('#plot' + currentPlot + 'Form\\:map' + currentPlot + 'Column').val(variable);
+            $(getMapFormName(index) + '\\:map' + currentPlot + 'Column').val(variable);
           } else {
             widget.uncheck();
           }
@@ -2044,18 +1986,18 @@ function setPlotAxes(index) {
   let xAxis = getSelectedXAxis();
   window['plot' + index + 'XAxisVar'] = xAxis;
   if (xAxis != 0) {
-    $('#plot' + index + 'Form\\:plot' + index + 'XAxis').val(xAxis);
+    $(getPlotFormName(index) + '\\:plot' + index + 'XAxis').val(xAxis);
   }
 
   let yAxis = getSelectedYAxis();
   window['plot' + index + 'YAxisVar'] = yAxis;
   if (yAxis != 0) {
-    $('#plot' + index + 'Form\\:plot' + index + 'YAxis').val(yAxis);
+    $(getPlotFormName(index) + '\\:plot' + index + 'YAxis').val(yAxis);
   }
 
   let y2Axis = getSelectedY2Axis();
   window['plot' + index + 'Y2AxisVar'] = y2Axis;
-  $('#plot' + index + 'Form\\:plot' + index + 'Y2Axis').val(y2Axis);
+  $(getPlotFormName(index) + '\\:plot' + index + 'Y2Axis').val(y2Axis);
 }
 
 function setPlotSelectMode(index) {
@@ -2087,7 +2029,7 @@ function selectModeMouseUp(event, g, context) {
   g.clearZoomRect_();
 
   let plotIndex = g.maindiv_.id.substring(4,5);
-  let plotVar = $('#plot' + plotIndex + 'Form\\:plot' + plotIndex + 'YAxis').val();
+  let plotVar = $(getPlotFormName(index) + '\\:plot' + plotIndex + 'YAxis').val();
 
   if (getColumn(extendedColumnHeaders, getColumnIndex(plotVar)).editable) {
     let minX = g.toDataXCoord(context.dragStartX);
@@ -2228,7 +2170,7 @@ function initMap(index) {
   window[mapVar].on('moveend', updateMapData);
   window[mapVar].on('zoomend', updateMapData);
 
-  $('#plot' + index + 'Form\\:mapUpdateScale').val(true);
+  $(getMapFormName(index) + '\\:mapUpdateScale').val(true);
   getMapData(index);
 }
 
@@ -2250,10 +2192,10 @@ function getMapData(index) {
   extent.push(visibleBounds._northEast.lng);
   extent.push(visibleBounds._northEast.lat);
 
-  $('#plot' + index + 'Form\\:map' + index + 'Bounds').val(extent);
-  $('#plot' + index + 'Form\\:plot' + index + 'Data').val('');
-  $('#plot' + index + 'Form\\:plot' + index + 'Y2Data').val('');
-  $('#plot' + index + 'Form\\:map' + index + 'Data').val('');
+  $(getMapFormName(index) + '\\:map' + index + 'Bounds').val(extent);
+  $(getPlotFormName(index) + '\\:plot' + index + 'Data').val('');
+  $(getPlotFormName(index) + '\\:plot' + index + 'Y2Data').val('');
+  $(getMapFormName(index) + '\\:map' + index + 'Data').val('');
   eval('map' + index + 'GetData()');
 }
 
@@ -2271,19 +2213,19 @@ function drawMap(index) {
     window[selectionLayerVar].removeFrom(window[mapVar]);
   }
 
-  let mapData = JSON.parse($('#plot' + index + 'Form\\:map' + index + 'Data').val());
+  let mapData = JSON.parse($(getMapFormName(index) + '\\:map' + index + 'Data').val());
 
   window[flagLayerVar] = makeMapLayer(index, mapData[1], false).addTo(window[mapVar]);
   window[selectionLayerVar] = makeMapLayer(index, mapData[2], false).addTo(window[mapVar]);
   window[dataLayerVar] = makeMapLayer(index, mapData[0], true).addTo(window[mapVar]);
 
-  let scaleLimits = JSON.parse($('#plot' + index + 'Form\\:map' + index + 'ScaleLimits').val());
+  let scaleLimits = JSON.parse($(getMapFormName(index) + '\\:map' + index + 'ScaleLimits').val());
   window[colorScaleVar].setValueRange(scaleLimits[0], scaleLimits[1]);
   window[colorScaleVar].drawScale($('#map' + index + 'Scale'), scaleOptions);
 
   if (redrawMap) {
-    $('#plot' + index + 'Form\\:map' + index + 'UpdateScale').val(false);
-    let bounds = JSON.parse($('#plot' + index + 'Form\\:map' + index + 'DataBounds').val());
+    $(getMapFormName(index) + '\\:map' + index + 'UpdateScale').val(false);
+    let bounds = JSON.parse($(getMapFormName(index) + '\\:map' + index + 'DataBounds').val());
     window[mapVar].fitBounds([[bounds[1], bounds[0]], [bounds[3], bounds[2]]]);
     resetZoom(index);
   }
@@ -2326,7 +2268,7 @@ function makeMapLayer(mapIndex, geojson, interactive) {
 }
 
 function makeTooltip(point, mapIndex) {
-  if ($('#plot' + mapIndex + 'Form\\:map' + mapIndex + 'Column').val() == TIME_COLUMN_ID) {
+  if ($(getMapFormName(index) + '\\:map' + mapIndex + 'Column').val() == TIME_COLUMN_ID) {
     return '' + new Date(Math.round(point.properties.value)).toISOString();
   } else {
     return '' + point.properties.value;
@@ -2383,7 +2325,7 @@ function resetZoom(index) {
   let mode = getPlotMode(index)
 
   if (mode == PLOT_MODE_MAP) {
-    let bounds = JSON.parse($('#plot' + index + 'Form\\:map' + index + 'DataBounds').val());
+    let bounds = JSON.parse($(getMapFormName(index) + '\\:map' + index + 'DataBounds').val());
     window['map' + index].fitBounds([[bounds[1], bounds[0]], [bounds[3], bounds[2]]]);
     window['map' + index + 'Zoomed'] = false;
   } else {

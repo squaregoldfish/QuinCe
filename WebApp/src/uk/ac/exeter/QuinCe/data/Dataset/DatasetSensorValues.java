@@ -317,7 +317,8 @@ public class DatasetSensorValues {
     } else {
       values = valuesByColumn.get(columnId);
       if (null == values) {
-        values = new TimestampSensorValuesList(columnId, this, false);
+        values = SensorValuesListFactory.makeSensorValuesList(columnId, this,
+          false);
       }
     }
 

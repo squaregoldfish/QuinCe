@@ -1,6 +1,5 @@
 package uk.ac.exeter.QuinCe.web.datasets.plotPage.ManualQC;
 
-import java.sql.SQLException;
 import java.util.Properties;
 
 import javax.faces.bean.ManagedBean;
@@ -25,7 +24,7 @@ public class ArgoManualQualityControlBean extends PlotPageBean {
   /**
    * The data for the page
    */
-  protected ManualQCData data;
+  protected ArgoManualQCData data;
 
   /**
    * Navigation to the calibration data plot page
@@ -38,8 +37,8 @@ public class ArgoManualQualityControlBean extends PlotPageBean {
   }
 
   @Override
-  public void initDataObject(DataSource dataSource) throws SQLException {
-    data = new ManualQCData(dataSource, getCurrentInstrument(), dataset);
+  public void initDataObject(DataSource dataSource) throws Exception {
+    data = new ArgoManualQCData(dataSource, getCurrentInstrument(), dataset);
   }
 
   @Override
@@ -91,11 +90,11 @@ public class ArgoManualQualityControlBean extends PlotPageBean {
 
   @Override
   public boolean dualYAxes() {
-    return true;
+    return false;
   }
 
   @Override
   public boolean allowMaps() {
-    return !dataset.fixedPosition();
+    return false;
   }
 }

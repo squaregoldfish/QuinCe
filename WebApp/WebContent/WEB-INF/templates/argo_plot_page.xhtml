@@ -6,6 +6,44 @@
   template="/WEB-INF/templates/plot_page.xhtml">
 
   <ui:define name="plots">
-	PLOTS GO HERE.
+  <div id="profileInfo">
+    <div id="profileList">
+      Profile List
+    </div>
+    <div id="profileMap">
+      <h:form id="profileMapForm" method="post">
+        <h:inputHidden id="map1Column"
+          value="#{sessionScope[beanName].data.map1.column}"/>
+        <h:inputHidden id="map1Data"
+          value="#{sessionScope[beanName].data.map1.data}"/>
+        <h:inputHidden id="map1ScaleLimits"
+          value="#{sessionScope[beanName].data.map1.scaleLimits}"/>
+        <h:inputHidden id="map1DataBounds"
+          value="#{sessionScope[beanName].data.map1.dataBounds}"/>
+        <h:inputHidden id="map1Bounds"
+          value="#{sessionScope[beanName].data.map1.viewBounds}"/>
+        <h:inputHidden id="map1UpdateScale"
+          value="#{sessionScope[beanName].data.map1.updateScale}"/>
+
+        <p:remoteCommand name="map1GetData"
+          action="#{sessionScope[beanName].data.map1.generateMapData}"
+          process="map1Bounds map1UpdateScale"
+          update="map1DataBounds map1Data map1ScaleLimits"
+          oncomplete="drawMap(1)" onerror="plotError(xhr)"/>
+
+        <div id="map1Container">
+        </div>
+      </h:form>
+    </div>
+  </div>
+  <div id="profilePlots">
+      <div id="plot1Panel" class="plotContainer">
+        Plot 1
+      </div>
+      <div id="plot2Panel" class="plotContainer">
+      Plot 2
+      </div>
+    </div>
+
   </ui:define>
 </ui:composition>

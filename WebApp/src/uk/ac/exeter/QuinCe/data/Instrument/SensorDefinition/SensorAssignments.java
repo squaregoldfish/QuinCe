@@ -851,6 +851,17 @@ public class SensorAssignments
   }
 
   /**
+   * Get the column IDs of all sensor columns in a specified group.
+   * 
+   * @param group
+   *          The group.
+   * @return The matching column IDs.
+   */
+  public List<Long> getGroupColumnIds(String group) {
+    return getColumnIds(s -> s.getGroup().equals(group));
+  }
+
+  /**
    * Get the column IDs of all diagnostic columns
    *
    * @return The sensor column IDs

@@ -217,40 +217,77 @@ public class ManualQCData extends PlotPageData {
     }
   }
 
-  @Override
-  protected void buildColumnHeadings() {
-
-    columnHeadings = new LinkedHashMap<String, List<PlotPageColumnHeading>>();
-    extendedColumnHeadings = new LinkedHashMap<String, List<PlotPageColumnHeading>>();
-
-    // Time and Position
-    List<PlotPageColumnHeading> rootColumns = new ArrayList<PlotPageColumnHeading>(
+  /**
+   * Build the list of columns to be added to the root column group.
+   * 
+   * <p>
+   * This is typically the set of columns that contribute to the
+   * {@link Coordinate} for a data point. Position is typically added too, even
+   * if it is not part of the {@link Coordinate} in terms of defining data
+   * points.
+   * </p>
+   * 
+   * @return The root column headings.
+   * @see PlotPageData#ROOT_FIELD_GROUP
+   */
+  protected List<PlotPageColumnHeading> buildRootColumns()
+    throws SensorTypeNotFoundException {
+    List<PlotPageColumnHeading> columns = new ArrayList<PlotPageColumnHeading>(
       3);
-    rootColumns.add(new PlotPageColumnHeading(
-      FileDefinition.TIME_COLUMN_HEADING, false, false, false));
+    columns.add(new PlotPageColumnHeading(FileDefinition.TIME_COLUMN_HEADING,
+      false, false, false));
 
     if (!dataset.fixedPosition()) {
-      rootColumns
-        .add(new PlotPageColumnHeading(FileDefinition.LONGITUDE_COLUMN_ID,
-          "Position", "Position", "POSITION", null, true, false, false, false));
+      columns.add(new PlotPageColumnHeading(FileDefinition.LONGITUDE_COLUMN_ID,
+        "Position", "Position", "POSITION", null, true, false, false, false));
     }
 
-    columnHeadings.put(ROOT_FIELD_GROUP, rootColumns);
+    return columns;
+  }
 
-    // Extended Time and Position
-    List<PlotPageColumnHeading> extendedRootColumns = new ArrayList<PlotPageColumnHeading>(
+  /**
+   * Build the list of columns to be added to the root column group of the
+   * extended column headings (which have more detail than the 'normal'
+   * headings.
+   * 
+   * <p>
+   * This is typically the set of columns that contribute to the
+   * {@link Coordinate} for a data point. Position is typically added too, even
+   * if it is not part of the {@link Coordinate} in terms of defining data
+   * points.
+   * </p>
+   * 
+   * @return The root column headings.
+   * @see PlotPageData#ROOT_FIELD_GROUP
+   */
+  protected List<PlotPageColumnHeading> buildExtendedRootColumns()
+    throws SensorTypeNotFoundException {
+
+    List<PlotPageColumnHeading> columns = new ArrayList<PlotPageColumnHeading>(
       3);
-    extendedRootColumns.add(new PlotPageColumnHeading(
-      FileDefinition.TIME_COLUMN_HEADING, false, false, false));
+    columns.add(new PlotPageColumnHeading(FileDefinition.TIME_COLUMN_HEADING,
+      false, false, false));
 
     if (!dataset.fixedPosition()) {
-      extendedRootColumns.add(new PlotPageColumnHeading(
+      columns.add(new PlotPageColumnHeading(
         FileDefinition.LONGITUDE_COLUMN_HEADING, false, false, false));
-      extendedRootColumns
+      columns
         .add(new PlotPageColumnHeading(FileDefinition.LATITUDE_COLUMN_HEADING,
           false, false, false, FileDefinition.LONGITUDE_COLUMN_ID));
     }
 
+    return columns;
+  }
+
+  @Override
+  protected void buildColumnHeadings() throws SensorTypeNotFoundException {
+
+    columnHeadings = new LinkedHashMap<String, List<PlotPageColumnHeading>>();
+    List<PlotPageColumnHeading> rootColumns = buildRootColumns();
+    columnHeadings.put(ROOT_FIELD_GROUP, rootColumns);
+
+    extendedColumnHeadings = new LinkedHashMap<String, List<PlotPageColumnHeading>>();
+    List<PlotPageColumnHeading> extendedRootColumns = buildExtendedRootColumns();
     extendedColumnHeadings.put(ROOT_FIELD_GROUP, extendedRootColumns);
 
     // Sensor Assignments are divided into sensors and diagnostics
@@ -260,8 +297,12 @@ public class ManualQCData extends PlotPageData {
     for (Map.Entry<SensorType, TreeSet<SensorAssignment>> entry : instrument
       .getSensorAssignments().entrySet()) {
 
-      // Skip the position
-      if (!entry.getKey().isPosition()) {
+      // Skip the position and anything already in the root columns
+      SensorType sensorType = entry.getKey();
+      if (!sensorType.isPosition()
+        && !PlotPageColumnHeading.contains(rootColumns, sensorType)
+        && !PlotPageColumnHeading.contains(extendedRootColumns, sensorType)) {
+
         for (SensorAssignment assignment : entry.getValue()) {
 
           if (entry.getKey().isSensor()) {
@@ -807,6 +848,9 @@ public class ManualQCData extends PlotPageData {
 
     TreeMap<Coordinate, PlotPageTableValue> result = new TreeMap<Coordinate, PlotPageTableValue>();
 
+    List<Long> coordinateColumnIds = instrument.getSensorAssignments()
+      .getGroupColumnIds(SensorType.COORDINATE_GROUP);
+
     List<Long> sensorColumnIds = instrument.getSensorAssignments()
       .getSensorColumnIds();
 
@@ -826,7 +870,8 @@ public class ManualQCData extends PlotPageData {
           new TimestampSensorValuesListOutput(
             (TimestampSensorValuesListOutput) v, false))));
 
-    } else if (sensorColumnIds.contains(column.getId())
+    } else if (coordinateColumnIds.contains(column.getId())
+      || sensorColumnIds.contains(column.getId())
       || diagnosticColumnIds.contains(column.getId())) {
 
       SensorType sensorType = instrument.getSensorAssignments()

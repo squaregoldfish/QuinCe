@@ -1,6 +1,7 @@
 package uk.ac.exeter.QuinCe.web.datasets.plotPage;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.TreeMap;
 
 import uk.ac.exeter.QuinCe.data.Dataset.ColumnHeading;
@@ -215,5 +216,36 @@ public class PlotPageColumnHeading extends ColumnHeading {
 
   public boolean questionableAllowed() {
     return questionableAllowed;
+  }
+
+  /**
+   * See if a {@link Collection} of {@link PlotPageColumnHeading}s contains the
+   * specified {@link ColumnHeading}.
+   * 
+   * <p>
+   * The entries in the {@link Collection} are cast to {@link ColumnHeading} for
+   * comparison.
+   * </p>
+   * 
+   * @param headings
+   *          The collection of headings.
+   * @param heading
+   *          The heading to be located.
+   * @return {@code true} if the collection contains the heading; {@code false}
+   *         if not.
+   */
+  public static boolean contains(Collection<PlotPageColumnHeading> headings,
+    ColumnHeading heading) {
+
+    boolean result = false;
+
+    for (PlotPageColumnHeading test : headings) {
+      if (((ColumnHeading) test).equals(heading)) {
+        result = true;
+        break;
+      }
+    }
+
+    return result;
   }
 }

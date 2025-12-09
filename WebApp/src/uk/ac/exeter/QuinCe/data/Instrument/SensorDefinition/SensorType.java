@@ -20,6 +20,8 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 public class SensorType extends ColumnHeading
   implements Comparable<SensorType> {
 
+  public static final String COORDINATE_GROUP = "Coordinate";
+
   /**
    * Value to use when a SensorType has no parent
    *
