@@ -852,7 +852,7 @@ public class SensorAssignments
 
   /**
    * Get the column IDs of all sensor columns in a specified group.
-   * 
+   *
    * @param group
    *          The group.
    * @return The matching column IDs.

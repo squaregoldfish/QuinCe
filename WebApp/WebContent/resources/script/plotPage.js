@@ -2227,11 +2227,8 @@ function drawMap(index) {
     $(getMapFormName(index) + '\\:map' + index + 'UpdateScale').val(false);
     let bounds = JSON.parse($(getMapFormName(index) + '\\:map' + index + 'DataBounds').val());
     window[mapVar].fitBounds([[bounds[1], bounds[0]], [bounds[3], bounds[2]]]);
-    resetZoom(index);
+    resetMapZoom(index);
   }
-
-  // Destroy the plot, which is no longer visible
-  window['plot' + index] = null;
 
   // We can't use the window object here because consts don't get put there.
   if (index == 1) {
@@ -2268,7 +2265,7 @@ function makeMapLayer(mapIndex, geojson, interactive) {
 }
 
 function makeTooltip(point, mapIndex) {
-  if ($(getMapFormName(index) + '\\:map' + mapIndex + 'Column').val() == TIME_COLUMN_ID) {
+  if ($(getMapFormName(mapIndex) + '\\:map' + mapIndex + 'Column').val() == TIME_COLUMN_ID) {
     return '' + new Date(Math.round(point.properties.value)).toISOString();
   } else {
     return '' + point.properties.value;
@@ -2321,13 +2318,17 @@ function getPointSize(point) {
   }
 }
 
+function resetMapZoom(index) {
+  let bounds = JSON.parse($(getMapFormName(index) + '\\:map' + index + 'DataBounds').val());
+  window['map' + index].fitBounds([[bounds[1], bounds[0]], [bounds[3], bounds[2]]]);
+  window['map' + index + 'Zoomed'] = false;
+}
+
 function resetZoom(index) {
-  let mode = getPlotMode(index)
+  let mode = getPlotMode(index);
 
   if (mode == PLOT_MODE_MAP) {
-    let bounds = JSON.parse($(getMapFormName(index) + '\\:map' + index + 'DataBounds').val());
-    window['map' + index].fitBounds([[bounds[1], bounds[0]], [bounds[3], bounds[2]]]);
-    window['map' + index + 'Zoomed'] = false;
+    resetMapZoom(index);
   } else {
     window['dataPlot' + index].updateOptions({
       yRangePad: 10,

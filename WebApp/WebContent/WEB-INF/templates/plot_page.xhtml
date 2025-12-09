@@ -77,7 +77,7 @@
       <p:remoteCommand name="updateProgress"
         action="#{sessionScope[beanName].noop}"
         process="@none" update="progressName progressBar"/>
-        
+
       Preparing data. This can take quite a while, so please be patient...
       <h:panelGrid columns="1" cellpadding="5" style="width: 100%">
         <h:outputText id="progressName" value="#{sessionScope[beanName].progress.name}"/>

@@ -221,12 +221,12 @@ public class PlotPageColumnHeading extends ColumnHeading {
   /**
    * See if a {@link Collection} of {@link PlotPageColumnHeading}s contains the
    * specified {@link ColumnHeading}.
-   * 
+   *
    * <p>
    * The entries in the {@link Collection} are cast to {@link ColumnHeading} for
    * comparison.
    * </p>
-   * 
+   *
    * @param headings
    *          The collection of headings.
    * @param heading

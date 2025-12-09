@@ -219,14 +219,14 @@ public class ManualQCData extends PlotPageData {
 
   /**
    * Build the list of columns to be added to the root column group.
-   * 
+   *
    * <p>
    * This is typically the set of columns that contribute to the
    * {@link Coordinate} for a data point. Position is typically added too, even
    * if it is not part of the {@link Coordinate} in terms of defining data
    * points.
    * </p>
-   * 
+   *
    * @return The root column headings.
    * @see PlotPageData#ROOT_FIELD_GROUP
    */
@@ -249,14 +249,14 @@ public class ManualQCData extends PlotPageData {
    * Build the list of columns to be added to the root column group of the
    * extended column headings (which have more detail than the 'normal'
    * headings.
-   * 
+   *
    * <p>
    * This is typically the set of columns that contribute to the
    * {@link Coordinate} for a data point. Position is typically added too, even
    * if it is not part of the {@link Coordinate} in terms of defining data
    * points.
    * </p>
-   * 
+   *
    * @return The root column headings.
    * @see PlotPageData#ROOT_FIELD_GROUP
    */
@@ -858,6 +858,9 @@ public class ManualQCData extends PlotPageData {
       .getDiagnosticColumnIds();
 
     if (column.getId() == FileDefinition.TIME_COLUMN_ID) {
+      // This is a special instance of the coordinate handler for
+      // TimeCoordinates.
+      // Because times are weird.
       for (Coordinate coordinate : getCoordinates()) {
         result.put(coordinate, new SimplePlotPageTableValue(coordinate));
       }
@@ -869,9 +872,18 @@ public class ManualQCData extends PlotPageData {
         new MeasurementValue(v.getSensorType(),
           new TimestampSensorValuesListOutput(
             (TimestampSensorValuesListOutput) v, false))));
+    } else if (coordinateColumnIds.contains(column.getId())) {
 
-    } else if (coordinateColumnIds.contains(column.getId())
-      || sensorColumnIds.contains(column.getId())
+      SensorType sensorType = instrument.getSensorAssignments()
+        .getSensorTypeForDBColumn(column.getId());
+
+      for (Coordinate coordinate : getCoordinates()) {
+        result.put(coordinate,
+          new SimplePlotPageTableValue(coordinate.getValue(sensorType),
+            Flag.GOOD, null, false, 'C', coordinate.getId()));
+      }
+
+    } else if (sensorColumnIds.contains(column.getId())
       || diagnosticColumnIds.contains(column.getId())) {
 
       SensorType sensorType = instrument.getSensorAssignments()

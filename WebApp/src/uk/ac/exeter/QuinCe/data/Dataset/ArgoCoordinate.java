@@ -3,6 +3,8 @@ package uk.ac.exeter.QuinCe.data.Dataset;
 import java.time.LocalDateTime;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 
@@ -243,5 +245,44 @@ public class ArgoCoordinate extends Coordinate {
   public String toString() {
     return "" + cycleNumber + "-" + nProf + "-" + direction + "-"
       + StringUtils.formatNumber(pres);
+  }
+
+  @Override
+  public String getValue(SensorType sensorType)
+    throws SensorTypeNotFoundException {
+
+    String result = null;
+
+    switch (sensorType.getShortName()) {
+    case "Cycle Number": {
+      result = String.valueOf(cycleNumber);
+      break;
+    }
+    case "Profile": {
+      result = String.valueOf(nProf);
+      break;
+    }
+    case "Direction": {
+      result = String.valueOf(direction);
+      break;
+    }
+    case "Level": {
+      result = String.valueOf(nLevel);
+      break;
+    }
+    case "Pressure (Depth)": {
+      result = String.valueOf(pres);
+      break;
+    }
+    case "Source File": {
+      result = sourceFile;
+      break;
+    }
+    default: {
+      throw new SensorTypeNotFoundException(sensorType);
+    }
+    }
+
+    return result;
   }
 }

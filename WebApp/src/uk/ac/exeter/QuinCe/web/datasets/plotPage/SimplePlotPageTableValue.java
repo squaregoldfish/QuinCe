@@ -1,6 +1,7 @@
 package uk.ac.exeter.QuinCe.web.datasets.plotPage;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
@@ -61,6 +62,31 @@ public class SimplePlotPageTableValue implements PlotPageTableValue {
     this.flagNeeded = flagNeeded;
     this.type = type;
     this.sources = sources;
+  }
+
+  /**
+   * Simple constructor with all values.
+   *
+   * @param value
+   *          The value.
+   * @param used
+   *          Whether the value is used in a calculation.
+   * @param qcFlag
+   *          The QC flag.
+   * @param qcMessage
+   *          The QC message.
+   * @param flagNeeded
+   *          Whether or not user QC is required.
+   */
+  public SimplePlotPageTableValue(String value, Flag qcFlag, String qcMessage,
+    boolean flagNeeded, char type, Long source) {
+    this.value = StringUtils.formatNumber(value);
+    this.rawValue = value;
+    this.qcFlag = qcFlag;
+    this.qcMessage = qcMessage;
+    this.flagNeeded = flagNeeded;
+    this.type = type;
+    this.sources = Collections.singleton(source);
   }
 
   /**

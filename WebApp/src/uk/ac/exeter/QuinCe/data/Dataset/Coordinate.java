@@ -5,6 +5,8 @@ import java.util.Objects;
 
 import javax.sound.midi.Instrument;
 
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.MissingParam;
 
@@ -233,4 +235,16 @@ public abstract class Coordinate implements Comparable<Coordinate> {
   public boolean isInDatabase() {
     return getId() != DatabaseUtils.NO_DATABASE_RECORD;
   }
+
+  /**
+   * Get the coordinate value corresponding to the specified {@link SensorType}
+   *
+   * @param sensorType
+   *          The {@link SensorType} to be located.
+   * @return The corresponding value.
+   * @throws SensorTypeNotFoundException
+   *           If the coordinate does not contain values of the SensorType.
+   */
+  public abstract String getValue(SensorType sensorType)
+    throws SensorTypeNotFoundException;
 }
