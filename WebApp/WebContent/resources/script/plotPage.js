@@ -8,8 +8,7 @@ const UPDATE_DATA = 1 << 5;
 
 const TIME_COLUMN_ID = -1100;
 
-// Initially the table and both plots are loading
-var loadingItems = TABLE_LOADING | PLOT1_LOADING | PLOT2_LOADING;
+var loadingItems = getInitialLoadingItems();
 
 var progressBarUpdater = null;
 
@@ -315,11 +314,11 @@ function dataLoaded() {
       dataLoadedLocal();
     }
 
-  drawTable();
+    drawTable();
 
-  // Hide the progress bar on the popup
-  $("#pleaseWaitForm\\:progressName").hide();
-  PF('progressBar').jq.hide();
+    // Hide the progress bar on the popup
+    $("#pleaseWaitForm\\:progressName").hide();
+    PF('progressBar').jq.hide();
   }
 }
 

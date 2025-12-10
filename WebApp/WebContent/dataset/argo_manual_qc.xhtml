@@ -14,7 +14,8 @@
   <ui:define name="loadDataCommand">
     <p:remoteCommand name="loadData"
       action="#{sessionScope[beanName].loadData}"
-      process="@this" update="error columnHeadings extendedColumnHeadings rowIDs :statusForm"
+      process="@this"
+      update="error columnHeadings extendedColumnHeadings rowIDs :statusForm :profileListForm"
       oncomplete="dataLoaded()" onerror="plotError(xhr)" async="true"/>
   </ui:define>
 

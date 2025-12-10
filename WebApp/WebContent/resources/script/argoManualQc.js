@@ -1,14 +1,18 @@
+const PROFILE_TABLE_LOADING = 1 << 11;
+const PROFILE_INFO_LOADING = 1 << 12;
+
 function dataLoadedLocal() {
 
-	initMap(1);
-	
-    itemNotLoading(PLOT1_LOADING);
-	itemNotLoading(PLOT2_LOADING);
-	itemNotLoading(MAP1_LOADING);
+  initMap(1);
+  drawProfileListTable();
+
+  itemNotLoading(PLOT1_LOADING);
+  itemNotLoading(PLOT2_LOADING);
+  itemNotLoading(MAP1_LOADING);
 }
 
 function getInitialLoadingItems() {
-	return TABLE_LOADING | PLOT1_LOADING | PLOT2_LOADING | MAP1_LOADING;
+	return TABLE_LOADING | PLOT1_LOADING | PLOT2_LOADING | MAP1_LOADING | PROFILE_TABLE_LOADING;
 }
 
 // Lay out the overall page structure
@@ -19,23 +23,29 @@ function layoutPage() {
       scaleTableSplit()}
     });
 
-	$('#plots').split({
-	  orientation: 'vertical',
-	  onDragEnd: function(){
-	    resizePlots()}
-	  });
+  $('#plots').split({
+    orientation: 'vertical',
+    onDragEnd: function(){
+    resizePlots()}
+  });
 
-	  $('#profilePlots').split({
-	    orientation: 'vertical',
-	    onDragEnd: function(){
-	      resizePlots()}
-	    });
+  $('#profilePlots').split({
+    orientation: 'vertical',
+    onDragEnd: function(){
+      resizePlots()}
+  });
 
-	$('#profileInfo').split({
-	  orientation: 'horizontal',
-	  onDragEnd: function(){
-	    resizeProfileInfo()}
-	  });
+  $('#profileInfo').split({
+    orientation: 'horizontal',
+    onDragEnd: function(){
+    resizeProfileInfo()}
+  });
+	  
+  $('#profileData').split({
+    orientation: 'horizontal',
+    onDragEnd: function(){
+    resizeProfileInfo()}
+  });
 }
 
 function resizeAllContent() {
@@ -56,4 +66,33 @@ function getPlotFormName(index) {
 function getMapFormName(index) {
 	// There's only one map, so we ignore the index
 	return '#profileMapForm';
+}
+
+// Handle table/plot split adjustment
+function scaleTableSplit() {
+  tableSplitProportion = $('#plotPageContent').split().position() / $('#plotPageContent').height();
+  resizeAllContent();
+}
+
+function drawProfileListTable() {
+
+  let tableColumns = [];
+  
+  let profileColumnList = JSON.parse($('#profileListForm\\:profileListColumns').val());
+  
+  profileColumnList.forEach(column => {
+	tableColumns.push({'title': column});
+  });
+	
+  new DataTable('#profileListTable', {
+	ordering: false,
+	searching: false,
+	paging: false,
+	bInfo: false,
+    columns : tableColumns,
+    data: JSON.parse($('#profileListForm\\:profileListData').val())
+    }
+  )
+  
+  itemNotLoading(PROFILE_TABLE_LOADING);
 }

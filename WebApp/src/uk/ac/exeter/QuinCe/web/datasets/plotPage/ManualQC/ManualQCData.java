@@ -414,7 +414,6 @@ public class ManualQCData extends PlotPageData {
       length);
 
     try {
-
       List<Coordinate> coordinates = sensorValues.getCoordinates();
 
       // Make sure we don't fall off the end of the dataset

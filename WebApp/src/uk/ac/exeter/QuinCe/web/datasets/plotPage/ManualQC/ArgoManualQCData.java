@@ -2,10 +2,14 @@ package uk.ac.exeter.QuinCe.web.datasets.plotPage.ManualQC;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import com.google.gson.Gson;
+
+import uk.ac.exeter.QuinCe.data.Dataset.ArgoCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -17,7 +21,11 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 public class ArgoManualQCData extends ManualQCData {
 
+  private static Gson gson = new Gson();
+
   private PlotPageColumnHeading cycleNumberHeading;
+
+  private List<List<String>> profileTableData = null;
 
   /**
    * Construct the data object.
@@ -92,5 +100,23 @@ public class ArgoManualQCData extends ManualQCData {
     throws SensorTypeNotFoundException {
 
     return buildRootColumns();
+  }
+
+  public String getProfileTableColumns() {
+    return gson
+      .toJson(Arrays.asList(new String[] { "Cycle Number", "Direction" }));
+  }
+
+  public String getProfileTableData() {
+    if (null != sensorValues && null == profileTableData) {
+      profileTableData = getCoordinates().stream()
+        .map(ArgoCoordinate.class::cast)
+        .map(
+          c -> Arrays.asList(new String[] { String.valueOf(c.getCycleNumber()),
+            String.valueOf(c.getDirection()) }))
+        .distinct().toList();
+    }
+
+    return gson.toJson(profileTableData);
   }
 }

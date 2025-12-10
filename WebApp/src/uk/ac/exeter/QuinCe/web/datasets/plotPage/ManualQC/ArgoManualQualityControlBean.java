@@ -46,6 +46,10 @@ public class ArgoManualQualityControlBean extends PlotPageBean {
     return data;
   }
 
+  public ArgoManualQCData getProfileData() {
+    return data;
+  }
+
   @Override
   protected void processDirtyData() {
     try {
