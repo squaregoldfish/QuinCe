@@ -24,11 +24,11 @@ public class DatasetExport {
 
   private double minLon = Double.MAX_VALUE;
 
-  private double maxLon = Double.MIN_VALUE;
+  private double maxLon = -Double.MAX_VALUE;
 
   private double minLat = Double.MAX_VALUE;
 
-  private double maxLat = Double.MIN_VALUE;
+  private double maxLat = -Double.MAX_VALUE;
 
   private TimeCoordinate startDate = null;
 
@@ -112,7 +112,7 @@ public class DatasetExport {
     if (!Double.isNaN(lon)) {
       if (lon < minLon) {
         minLon = lon;
-        if (maxLon == Double.MIN_VALUE) {
+        if (maxLon == -Double.MAX_VALUE) {
           maxLon = lon;
         }
       }
@@ -130,7 +130,7 @@ public class DatasetExport {
     if (!Double.isNaN(lat)) {
       if (lat < minLat) {
         minLat = lat;
-        if (maxLat == Double.MIN_VALUE) {
+        if (maxLat == -Double.MAX_VALUE) {
           maxLat = lat;
         }
       }
