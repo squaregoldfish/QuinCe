@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 
 import com.google.gson.Gson;
 
+import uk.ac.exeter.QuinCe.data.Dataset.ArgoCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
 import uk.ac.exeter.QuinCe.jobs.JobManager;
@@ -25,6 +26,11 @@ public class ArgoManualQualityControlBean extends PlotPageBean {
    * The data for the page
    */
   protected ArgoManualQCData data;
+
+  /**
+   * The currently select profile
+   */
+  protected int selectedProfile;
 
   /**
    * Navigation to the calibration data plot page
@@ -100,5 +106,16 @@ public class ArgoManualQualityControlBean extends PlotPageBean {
   @Override
   public boolean allowMaps() {
     return false;
+  }
+
+  @Override
+  public void loadData() {
+    super.loadData();
+    selectedProfile = ((ArgoCoordinate) data.getCoordinates().get(0))
+      .toProfile();
+  }
+
+  public String getSelectedProfile() {
+    return null == selectedProfile ? null : selectedProfile.toJson();
   }
 }

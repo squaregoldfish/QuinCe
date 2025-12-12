@@ -247,6 +247,10 @@ public class ArgoCoordinate extends Coordinate {
       + StringUtils.formatNumber(pres);
   }
 
+  public ArgoProfile toProfile() {
+    return new ArgoProfile(this);
+  }
+
   @Override
   public String getValue(SensorType sensorType)
     throws SensorTypeNotFoundException {

@@ -14,6 +14,8 @@
               value="${sessionScope[beanName].profileData.profileTableColumns}"/>
             <h:inputHidden id="profileListData"
               value="${sessionScope[beanName].profileData.profileTableData}"/>
+            <h:inputHidden id="selectedProfile"
+              value="${sessionScope[beanName].selectedProfile}"/>
 
             <table id="profileListTable" class="cell-border compact nowrap"></table>
           </h:form>

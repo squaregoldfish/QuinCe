@@ -4,12 +4,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import javax.sql.DataSource;
 
 import com.google.gson.Gson;
 
 import uk.ac.exeter.QuinCe.data.Dataset.ArgoCoordinate;
+import uk.ac.exeter.QuinCe.data.Dataset.ArgoProfile;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -24,6 +26,8 @@ public class ArgoManualQCData extends ManualQCData {
   private static Gson gson = new Gson();
 
   private PlotPageColumnHeading cycleNumberHeading;
+
+  private List<ArgoProfile> profiles = null;
 
   private List<List<String>> profileTableData = null;
 
@@ -103,18 +107,22 @@ public class ArgoManualQCData extends ManualQCData {
   }
 
   public String getProfileTableColumns() {
-    return gson
-      .toJson(Arrays.asList(new String[] { "Cycle Number", "Direction" }));
+    return gson.toJson(
+      Arrays.asList(new String[] { "index", "Cycle Number", "Direction" }));
   }
 
   public String getProfileTableData() {
     if (null != sensorValues && null == profileTableData) {
-      profileTableData = getCoordinates().stream()
-        .map(ArgoCoordinate.class::cast)
-        .map(
-          c -> Arrays.asList(new String[] { String.valueOf(c.getCycleNumber()),
-            String.valueOf(c.getDirection()) }))
-        .distinct().toList();
+
+      profiles = getCoordinates().stream().map(ArgoCoordinate.class::cast)
+        .map(c -> c.toProfile()).distinct().toList();
+
+      profileTableData = new ArrayList<List<String>>(profiles.size());
+      IntStream.range(0, profiles.size()).forEach(i -> {
+        profileTableData.add(Arrays.asList(new String[] { String.valueOf(i),
+          String.valueOf(profiles.get(i).cycleNumber()),
+          String.valueOf(profiles.get(i).direction()) }));
+      });
     }
 
     return gson.toJson(profileTableData);
