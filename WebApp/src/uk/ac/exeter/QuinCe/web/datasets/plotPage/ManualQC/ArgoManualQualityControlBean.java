@@ -9,6 +9,7 @@ import javax.sql.DataSource;
 import com.google.gson.Gson;
 
 import uk.ac.exeter.QuinCe.data.Dataset.ArgoCoordinate;
+import uk.ac.exeter.QuinCe.data.Dataset.ArgoProfile;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
 import uk.ac.exeter.QuinCe.jobs.JobManager;
@@ -30,7 +31,7 @@ public class ArgoManualQualityControlBean extends PlotPageBean {
   /**
    * The currently select profile
    */
-  protected int selectedProfile;
+  protected ArgoProfile selectedProfile;
 
   /**
    * Navigation to the calibration data plot page
