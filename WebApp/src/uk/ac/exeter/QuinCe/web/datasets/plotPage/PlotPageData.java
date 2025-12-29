@@ -152,7 +152,7 @@ public abstract class PlotPageData {
   /**
    * Cache of data structured for maps
    */
-  private Map<PlotPageColumnHeading, MapRecords> mapCache = new HashMap<PlotPageColumnHeading, MapRecords>();
+  protected Map<PlotPageColumnHeading, MapRecords> mapCache = new HashMap<PlotPageColumnHeading, MapRecords>();
 
   /**
    * The indicator of the root field group.
@@ -986,7 +986,7 @@ public abstract class PlotPageData {
       hideNonGoodFlags);
   }
 
-  private void buildMapCache(PlotPageColumnHeading column) throws Exception {
+  protected void buildMapCache(PlotPageColumnHeading column) throws Exception {
 
     MapRecords records = new MapRecords(size(), getAllSensorValues());
 

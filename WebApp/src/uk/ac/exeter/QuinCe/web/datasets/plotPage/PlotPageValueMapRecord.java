@@ -10,7 +10,7 @@ public class PlotPageValueMapRecord extends MapRecord {
 
   private PlotPageTableValue value;
 
-  protected PlotPageValueMapRecord(LatLng position, Coordinate coordinate,
+  public PlotPageValueMapRecord(LatLng position, Coordinate coordinate,
     PlotPageTableValue value) {
     super(position, coordinate.getId());
     this.value = value;

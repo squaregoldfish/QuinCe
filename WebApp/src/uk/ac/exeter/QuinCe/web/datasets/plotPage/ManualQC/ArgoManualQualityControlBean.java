@@ -119,4 +119,9 @@ public class ArgoManualQualityControlBean extends PlotPageBean {
   public String getSelectedProfile() {
     return null == selectedProfile ? null : selectedProfile.toJson();
   }
+
+  @Override
+  public void generateTableData() {
+    tableJsonData = data.generateTableData(selectedProfile);
+  }
 }
