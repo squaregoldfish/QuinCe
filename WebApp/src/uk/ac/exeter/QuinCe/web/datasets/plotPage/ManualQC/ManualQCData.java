@@ -301,7 +301,8 @@ public class ManualQCData extends PlotPageData {
       SensorType sensorType = entry.getKey();
       if (!sensorType.isPosition()
         && !PlotPageColumnHeading.contains(rootColumns, sensorType)
-        && !PlotPageColumnHeading.contains(extendedRootColumns, sensorType)) {
+        && !PlotPageColumnHeading.contains(extendedRootColumns, sensorType)
+        && !sensorType.getGroup().equals(SensorType.COORDINATE_GROUP)) {
 
         for (SensorAssignment assignment : entry.getValue()) {
 

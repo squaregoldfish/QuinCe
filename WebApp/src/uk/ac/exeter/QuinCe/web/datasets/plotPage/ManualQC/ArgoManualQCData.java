@@ -18,7 +18,6 @@ import uk.ac.exeter.QuinCe.data.Dataset.ArgoCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.ArgoProfile;
 import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
-import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
@@ -96,20 +95,18 @@ public class ArgoManualQCData extends ManualQCData {
     SensorsConfiguration sensorConfig = ResourceManager.getInstance()
       .getSensorsConfiguration();
 
-    // We don't include the cycle number, direction or profile because they are
-    // specified as part of the selected profile.
-
+    /*
+     * We don't include the cycle number, direction or profile because they are
+     * specified as part of the selected profile.
+     * 
+     * Source File and Time are shown in the Profile Details and not as part of
+     * the table.
+     */
     rootColumns.add(new PlotPageColumnHeading(
       sensorConfig.getSensorType("Level"), true, false, false));
 
     rootColumns.add(new PlotPageColumnHeading(
       sensorConfig.getSensorType("Pressure (Depth)"), true, false, false));
-
-    rootColumns.add(new PlotPageColumnHeading(
-      sensorConfig.getSensorType("Source File"), false, false, false));
-
-    rootColumns.add(new PlotPageColumnHeading(
-      FileDefinition.TIME_COLUMN_HEADING, false, false, false));
 
     return rootColumns;
   }
