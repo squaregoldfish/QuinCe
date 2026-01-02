@@ -69,6 +69,17 @@ public class DatasetSensorValues {
   private List<Coordinate> coordinatesCache = null;
 
   /**
+   * Cache of all the position value (i.e. after interpolation)
+   * {@link Coordinate}s in the {@link DataSet}.
+   */
+  private List<Coordinate> positionValueCoordinatesCache = null;
+
+  /**
+   * Cache of all the raw position {@link Coordinate}s in the {@link DataSet}.
+   */
+  private List<Coordinate> rawPositionCoordinatesCache = null;
+
+  /**
    * A special {@link Map} key used to indicate a summed total of flag values.
    *
    * <p>
@@ -181,6 +192,8 @@ public class DatasetSensorValues {
       }
       longitudes.add(sensorValue);
       addById(sensorValue);
+      positionValueCoordinatesCache = null;
+      rawPositionCoordinatesCache = null;
     } else if (sensorValue.getColumnId() == SensorType.LATITUDE_ID) {
       if (null == latitudes) {
         latitudes = SensorValuesListFactory
@@ -188,6 +201,8 @@ public class DatasetSensorValues {
       }
       latitudes.add(sensorValue);
       addById(sensorValue);
+      positionValueCoordinatesCache = null;
+      rawPositionCoordinatesCache = null;
     } else if (!contains(sensorValue)) {
       addById(sensorValue);
       addByColumn(sensorValue);
@@ -488,31 +503,42 @@ public class DatasetSensorValues {
 
   public List<Coordinate> getPositionValueCoordinates()
     throws SensorValuesListException {
-    TreeSet<Coordinate> result = new TreeSet<Coordinate>();
 
-    if (null != longitudes) {
-      result.addAll(longitudes.getValueCoordinates());
+    if (null == positionValueCoordinatesCache) {
+      TreeSet<Coordinate> result = new TreeSet<Coordinate>();
+
+      if (null != longitudes) {
+        result.addAll(longitudes.getValueCoordinates());
+      }
+
+      if (null != latitudes) {
+        result.addAll(latitudes.getValueCoordinates());
+      }
+
+      positionValueCoordinatesCache = new ArrayList<Coordinate>(result);
     }
 
-    if (null != latitudes) {
-      result.addAll(latitudes.getValueCoordinates());
-    }
-
-    return new ArrayList<Coordinate>(result);
+    return positionValueCoordinatesCache;
   }
 
   public List<Coordinate> getRawPositionCoordinates() {
-    TreeSet<Coordinate> result = new TreeSet<Coordinate>();
 
-    if (null != longitudes) {
-      result.addAll(longitudes.getRawCoordinates());
+    if (null == rawPositionCoordinatesCache) {
+
+      TreeSet<Coordinate> result = new TreeSet<Coordinate>();
+
+      if (null != longitudes) {
+        result.addAll(longitudes.getRawCoordinates());
+      }
+
+      if (null != latitudes) {
+        result.addAll(latitudes.getRawCoordinates());
+      }
+
+      rawPositionCoordinatesCache = new ArrayList<Coordinate>(result);
     }
 
-    if (null != latitudes) {
-      result.addAll(latitudes.getRawCoordinates());
-    }
-
-    return new ArrayList<Coordinate>(result);
+    return rawPositionCoordinatesCache;
   }
 
   /**
