@@ -32,4 +32,10 @@ public record ArgoProfile(int cycleNumber, char direction, int profile) {
   public String toJson() {
     return gson.toJson(this);
   }
+
+  public boolean matches(ArgoCoordinate coordinate) {
+    return coordinate.getCycleNumber() == cycleNumber
+      && coordinate.getDirection() == direction
+      && coordinate.getNProf() == profile;
+  }
 }

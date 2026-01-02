@@ -108,7 +108,7 @@ public class ManualQCData extends PlotPageData {
    *
    * @see Measurement#getMeasurementValue(SensorType)
    */
-  private TreeSet<MeasurementValueSensorType> measurementSensorTypes = null;
+  protected TreeSet<MeasurementValueSensorType> measurementSensorTypes = null;
 
   /**
    * All row IDs for the {@link DataSet}. Row IDs are the IDs of the
@@ -135,13 +135,13 @@ public class ManualQCData extends PlotPageData {
    * The list of sensor column IDs in the same order as they are represented in
    * {@link #columnHeaders}.
    */
-  private List<Long> sensorColumnIds = null;
+  protected List<Long> sensorColumnIds = null;
 
   /**
    * The list of diagnostic column IDs in the same order as they are represented
    * in {@link #columnHeaders}.
    */
-  private List<Long> diagnosticColumnIds = null;
+  protected List<Long> diagnosticColumnIds = null;
 
   /**
    * The flag set during user QC
@@ -432,7 +432,7 @@ public class ManualQCData extends PlotPageData {
           coordinates.get(i));
 
         // Timestamp
-        record.addColumn(coordinates.get(i));
+        record.addCoordinate(coordinates.get(i));
 
         Map<Long, SensorValue> recordSensorValues = sensorValues
           .get(coordinates.get(i));
@@ -488,12 +488,7 @@ public class ManualQCData extends PlotPageData {
           }
         }
 
-        // Diagnostic values
-        if (null != diagnosticColumnIds) {
-          for (long columnId : diagnosticColumnIds) {
-            record.addColumn(recordSensorValues.get(columnId));
-          }
-        }
+        addDiagnosticColumns(record, recordSensorValues);
 
         Long measurementId = null;
         Measurement measurement = measurements.get(coordinates.get(i));
@@ -501,21 +496,7 @@ public class ManualQCData extends PlotPageData {
           measurementId = measurement.getId();
         }
 
-        if (null == measurement) {
-          record.addBlankColumns(measurementSensorTypes.size(),
-            PlotPageTableValue.MEASURED_TYPE);
-        } else {
-          // MeasurementValues
-          measurementSensorTypes.forEach(s -> {
-
-            if (!s.isPosition()) {
-              record.addColumn(measurement.hasMeasurementValue(s)
-                ? measurement.getMeasurementValue(s)
-                : new NullPlotPageTableValue());
-            }
-
-          });
-        }
+        addMeasurementColumns(record, measurement);
 
         Map<Variable, ReadOnlyDataReductionRecord> dataReductionData = null;
 
@@ -524,56 +505,90 @@ public class ManualQCData extends PlotPageData {
           dataReductionData = dataReduction.get(measurementId);
         }
 
-        // If there's no measurement, or no data reduction for that measurement
-        // (which can happen if the instrument is in a flushing period or in
-        // calibration mode), make a blank data reduction set.
-        if (null == dataReductionData) {
-          // Make a blank set
-          dataReductionData = new HashMap<Variable, ReadOnlyDataReductionRecord>();
-          for (Variable variable : instrument.getVariables()) {
-            dataReductionData.put(variable, null);
-          }
-        }
-
-        // Variables
-        for (Variable variable : instrument.getVariables()) {
-          DataReductionRecord variableDataReduction = dataReductionData
-            .get(variable);
-
-          if (null != variableDataReduction) {
-            List<CalculationParameter> params = DataReducerFactory
-              .getCalculationParameters(variable, true);
-
-            for (CalculationParameter param : params) {
-              Double value = variableDataReduction
-                .getCalculationValue(param.getShortName());
-              String stringValue = null == value ? "" : String.valueOf(value);
-
-              record.addColumn(stringValue, variableDataReduction.getQCFlag(),
-                variableDataReduction.getQCMessages().toString(), false,
-                PlotPageTableValue.DATA_REDUCTION_TYPE,
-                Arrays.asList(variableDataReduction.getMeasurementId()));
-            }
-          } else {
-            // Make blank columns because this measurement doesn't have data
-            // reduction for the variable.
-            if (columnHeadings.containsKey(variable.getName())) {
-              record.addBlankColumns(
-                columnHeadings.get(variable.getName()).size(),
-                PlotPageTableValue.DATA_REDUCTION_TYPE);
-            }
-          }
-        }
+        addDataReductionColumns(record, dataReductionData);
 
         records.add(record);
       }
-    } catch (
-
-    Exception e) {
+    } catch (Exception e) {
       error("Error loading table data", e);
     }
 
     return records;
+  }
+
+  protected void addDataReductionColumns(PlotPageTableRecord record,
+    Map<Variable, ReadOnlyDataReductionRecord> dataReductionData)
+    throws DataReductionException {
+
+    // If there's no measurement, or no data reduction for that measurement
+    // (which can happen if the instrument is in a flushing period or in
+    // calibration mode), make a blank data reduction set.
+    if (null == dataReductionData) {
+      // Make a blank set
+      dataReductionData = new HashMap<Variable, ReadOnlyDataReductionRecord>();
+      for (Variable variable : instrument.getVariables()) {
+        dataReductionData.put(variable, null);
+      }
+    }
+
+    // Variables
+    for (Variable variable : instrument.getVariables()) {
+      DataReductionRecord variableDataReduction = dataReductionData
+        .get(variable);
+
+      if (null != variableDataReduction) {
+        List<CalculationParameter> params = DataReducerFactory
+          .getCalculationParameters(variable, true);
+
+        for (CalculationParameter param : params) {
+          Double value = variableDataReduction
+            .getCalculationValue(param.getShortName());
+          String stringValue = null == value ? "" : String.valueOf(value);
+
+          record.addColumn(stringValue, variableDataReduction.getQCFlag(),
+            variableDataReduction.getQCMessages().toString(), false,
+            PlotPageTableValue.DATA_REDUCTION_TYPE,
+            Arrays.asList(variableDataReduction.getMeasurementId()));
+        }
+      } else {
+        // Make blank columns because this measurement doesn't have data
+        // reduction for the variable.
+        if (columnHeadings.containsKey(variable.getName())) {
+          record.addBlankColumns(columnHeadings.get(variable.getName()).size(),
+            PlotPageTableValue.DATA_REDUCTION_TYPE);
+        }
+      }
+    }
+  }
+
+  protected void addDiagnosticColumns(PlotPageTableRecord record,
+    Map<Long, SensorValue> recordSensorValues) {
+    // Diagnostic values
+    if (null != diagnosticColumnIds) {
+      for (long columnId : diagnosticColumnIds) {
+        record.addColumn(recordSensorValues.get(columnId));
+      }
+    }
+  }
+
+  protected void addMeasurementColumns(PlotPageTableRecord record,
+    Measurement measurement) {
+
+    if (null == measurement) {
+      record.addBlankColumns(measurementSensorTypes.size(),
+        PlotPageTableValue.MEASURED_TYPE);
+    } else {
+      // MeasurementValues
+      measurementSensorTypes.forEach(s -> {
+
+        if (!s.isPosition()) {
+          record.addColumn(measurement.hasMeasurementValue(s)
+            ? measurement.getMeasurementValue(s)
+            : new NullPlotPageTableValue());
+        }
+
+      });
+    }
   }
 
   private boolean isCoreSensorType(SensorType sensorType) {

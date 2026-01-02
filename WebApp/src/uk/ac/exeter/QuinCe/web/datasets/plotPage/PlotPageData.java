@@ -77,7 +77,7 @@ public abstract class PlotPageData {
   /**
    * Gson instance for serializing table data
    */
-  private Gson tableDataGson;
+  protected Gson tableDataGson;
 
   /**
    * Gson instance for serializing column headings
@@ -205,11 +205,7 @@ public abstract class PlotPageData {
         runTypePeriods = new RunTypePeriods();
       }
 
-      // Initialise Gson builder
-      tableDataGson = new GsonBuilder()
-        .registerTypeAdapter(PlotPageTableRecord.class,
-          new PlotPageTableRecordSerializer(getAllSensorValues()))
-        .create();
+      initTableDataGson();
 
       columnHeadingsGson = new GsonBuilder()
         .registerTypeAdapter(new TreeMap<LocalDateTime, Double>().getClass(),
@@ -228,6 +224,13 @@ public abstract class PlotPageData {
     } catch (Exception e) {
       error("Error while loading dataset data", e);
     }
+  }
+
+  protected void initTableDataGson() {
+    tableDataGson = new GsonBuilder()
+      .registerTypeHierarchyAdapter(PlotPageTableRecord.class,
+        new PlotPageTableRecordSerializer(getAllSensorValues()))
+      .create();
   }
 
   /**
@@ -575,7 +578,6 @@ public abstract class PlotPageData {
    *          The underlying cause.
    */
   protected void error(String message, Throwable cause) {
-
     long millis = DateTimeUtils.dateToLong(LocalDateTime.now());
     this.errorMessage = millis + ": " + message;
     ExceptionUtils.printStackTrace(cause);

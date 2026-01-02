@@ -53,7 +53,12 @@ public class PlotPageTableRecord {
   }
 
   /**
-   * Add a {@link Coordinate} column.
+   * Add a {@link Coordinate}.
+   *
+   * <p>
+   * By default this adds a single column containing
+   * {@link Coordinate#toString()}.
+   * </p>
    *
    * @param value
    *          The time value.
@@ -66,7 +71,7 @@ public class PlotPageTableRecord {
    * @param flagNeeded
    *          Indicates whether or not a user QC flag is needed.
    */
-  public void addColumn(Coordinate coordinate) {
+  public void addCoordinate(Coordinate coordinate) {
     addColumn(new SimplePlotPageTableValue(coordinate));
   }
 

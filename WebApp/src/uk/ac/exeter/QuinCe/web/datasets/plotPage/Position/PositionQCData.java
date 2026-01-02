@@ -139,13 +139,14 @@ public class PositionQCData extends ManualQCData {
       }
 
       for (int i = start; i < lastRecord; i++) {
-        PlotPageTableRecord record = new PlotPageTableRecord(coordinates.get(i));
+        PlotPageTableRecord record = new PlotPageTableRecord(
+          coordinates.get(i));
 
         // Timestamp
-        record.addColumn(coordinates.get(i));
+        record.addCoordinate(coordinates.get(i));
 
-        PlotPageTableValue longitude = sensorValues
-          .getRawPositionTableValue(SensorType.LONGITUDE_ID, coordinates.get(i));
+        PlotPageTableValue longitude = sensorValues.getRawPositionTableValue(
+          SensorType.LONGITUDE_ID, coordinates.get(i));
         PlotPageTableValue latitude = sensorValues
           .getRawPositionTableValue(SensorType.LATITUDE_ID, coordinates.get(i));
 

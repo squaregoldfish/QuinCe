@@ -22,8 +22,8 @@ public class TimeCoordinate extends Coordinate {
    *
    * <p>
    * This is used by {@link #toString()} to present the time in the desired
-   * format. The default format (including when the formatter is {@code null} is
-   * ISO, but can be overridden by {@link #setFormatter(DateTimeFormatter)}.
+   * format. The default format (including when the formatter is {@code null})
+   * is ISO, but can be overridden by {@link #setFormatter(DateTimeFormatter)}.
    * </p>
    *
    * @see DateTimeUtils#toIsoDate(LocalDateTime)

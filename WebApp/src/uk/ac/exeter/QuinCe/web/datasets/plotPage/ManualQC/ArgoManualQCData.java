@@ -12,18 +12,27 @@ import java.util.stream.IntStream;
 import javax.sql.DataSource;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.javadocmd.simplelatlng.LatLng;
 
 import uk.ac.exeter.QuinCe.data.Dataset.ArgoCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.ArgoProfile;
 import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
+import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
+import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
+import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.ReadOnlyDataReductionRecord;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoPlotPageTableRecord;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.CoordinateIdSerializer;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.MapRecords;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageColumnHeading;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableRecord;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableRecordSerializer;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageValueMapRecord;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -49,6 +58,8 @@ public class ArgoManualQCData extends ManualQCData {
    * The contents of the Profiles table as a JSON String.
    */
   private String profileTableData = null;
+
+  private int profileRecordCount = -1;
 
   /**
    * Construct the data object.
@@ -98,7 +109,7 @@ public class ArgoManualQCData extends ManualQCData {
     /*
      * We don't include the cycle number, direction or profile because they are
      * specified as part of the selected profile.
-     * 
+     *
      * Source File and Time are shown in the Profile Details and not as part of
      * the table.
      */
@@ -161,11 +172,61 @@ public class ArgoManualQCData extends ManualQCData {
    * The format of this method's output is the same as for that method.
    * </p>
    */
-  public String generateTableData(ArgoProfile selectedCycle) {
+  public String generateTableData(ArgoProfile selectedProfile) {
 
     // Get the Coordinates matching the profile
+    List<Coordinate> cycleCoordinates = getCoordinates().stream()
+      .filter(c -> selectedProfile.matches((ArgoCoordinate) c)).toList();
 
-    return null;
+    profileRecordCount = cycleCoordinates.size();
+
+    List<PlotPageTableRecord> records = new ArrayList<PlotPageTableRecord>(
+      cycleCoordinates.size());
+
+    try {
+      for (Coordinate baseCoordinate : cycleCoordinates) {
+        ArgoCoordinate coordinate = (ArgoCoordinate) baseCoordinate;
+
+        PlotPageTableRecord record = new ArgoPlotPageTableRecord(coordinate);
+        record.addCoordinate(coordinate);
+
+        Map<Long, SensorValue> recordSensorValues = sensorValues
+          .get(coordinate);
+
+        Long measurementId = null;
+        Measurement measurement = measurements.get(coordinate);
+        if (null != measurement) {
+          measurementId = measurement.getId();
+        }
+
+        Map<Variable, ReadOnlyDataReductionRecord> dataReductionData = null;
+
+        if (null != measurementId) {
+          // Retrieve the data reduction data
+          dataReductionData = dataReduction.get(measurementId);
+        }
+
+        for (long columnId : sensorColumnIds) {
+          record.addColumn(recordSensorValues.get(columnId));
+        }
+
+        addDiagnosticColumns(record, recordSensorValues);
+        addMeasurementColumns(record, measurement);
+        addDataReductionColumns(record, dataReductionData);
+
+        records.add(record);
+      }
+
+    } catch (Exception e) {
+      error("Error building table data", e);
+    }
+
+    return tableDataGson.toJson(records);
+  }
+
+  @Override
+  public int size() {
+    return profileRecordCount;
   }
 
   /**
@@ -174,14 +235,12 @@ public class ArgoManualQCData extends ManualQCData {
   @Override
   protected void buildMapCache(PlotPageColumnHeading column) throws Exception {
 
-    MapRecords records = new MapRecords(size(), getAllSensorValues());
+    MapRecords records = new MapRecords(0, getAllSensorValues());
 
     TreeMap<Coordinate, PlotPageTableValue> values = getColumnValues(column);
-
     HashSet<Integer> usedCycleNumbers = new HashSet<Integer>();
 
     for (Map.Entry<Coordinate, PlotPageTableValue> entry : values.entrySet()) {
-
       ArgoCoordinate coordinate = (ArgoCoordinate) entry.getKey();
 
       if (!usedCycleNumbers.contains(coordinate.getCycleNumber())) {
@@ -195,5 +254,15 @@ public class ArgoManualQCData extends ManualQCData {
     }
 
     mapCache.put(column, records);
+  }
+
+  @Override
+  protected void initTableDataGson() {
+    tableDataGson = new GsonBuilder()
+      .registerTypeHierarchyAdapter(PlotPageTableRecord.class,
+        new PlotPageTableRecordSerializer(getAllSensorValues()))
+      .registerTypeHierarchyAdapter(Coordinate.class,
+        new CoordinateIdSerializer())
+      .create();
   }
 }
