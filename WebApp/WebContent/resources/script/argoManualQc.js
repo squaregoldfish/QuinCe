@@ -90,9 +90,34 @@ function drawProfileListTable() {
 	paging: false,
 	bInfo: false,
     columns : tableColumns,
-    data: JSON.parse($('#profileListForm\\:profileListData').val())
+    data: JSON.parse($('#profileListForm\\:profileListData').val()),
+	drawCallback: function (settings) {
+	  setupProfileTableClickHandlers();
+	}
     }
   )
   
   itemNotLoading(PROFILE_TABLE_LOADING);
+}
+
+// Initialise the click event handlers for the table
+function setupProfileTableClickHandlers() {
+  // Remove any existing handlers
+  $('#profileListTable').off('click', 'tbody tr');
+
+  // Set click handler
+  $('#profileListTable').on('click', 'tbody tr', function() {
+    selectProfileClick(this);
+  })
+}
+
+function selectProfileClick(row) {
+  console.log(row);
+  console.log(row._DT_RowIndex);
+  $('#profileListForm\\:selectedProfile').val(row._DT_RowIndex);
+  selectProfile();
+}
+
+function newProfileLoaded() {
+	drawTable();
 }

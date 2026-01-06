@@ -716,10 +716,10 @@ function calcTableScrollY() {
 // Initialise the click event handlers for the table
 function setupTableClickHandlers() {
   // Remove any existing handlers
-  $('.dataTable').off('click', 'tbody td');
+  $('#dataTable').off('click', 'tbody td');
 
   // Set click handler
-  $('.dataTable').on('click', 'tbody td', function() {
+  $('#dataTable').on('click', 'tbody td', function() {
     clickCellAction(this, event.shiftKey);
   })
 }

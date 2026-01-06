@@ -130,8 +130,8 @@ public class ArgoManualQCData extends ManualQCData {
   }
 
   public String getProfileTableColumns() {
-    return gson.toJson(Arrays.asList(
-      new String[] { "index", "Cycle Number", "Direction", "Profile" }));
+    return gson.toJson(
+      Arrays.asList(new String[] { "Cycle Number", "Direction", "Profile" }));
   }
 
   public String getProfileTableData() {
@@ -146,10 +146,10 @@ public class ArgoManualQCData extends ManualQCData {
 
         ArgoProfile profile = profiles.get(i);
 
-        profileData.add(Arrays.asList(new String[] { String.valueOf(i),
-          String.valueOf(profile.cycleNumber()),
-          String.valueOf(profile.direction()),
-          String.valueOf(profile.profile()) }));
+        profileData.add(
+          Arrays.asList(new String[] { String.valueOf(profile.cycleNumber()),
+            String.valueOf(profile.direction()),
+            String.valueOf(profile.profile()) }));
       });
 
       profileTableData = gson.toJson(profileData);
@@ -172,7 +172,9 @@ public class ArgoManualQCData extends ManualQCData {
    * The format of this method's output is the same as for that method.
    * </p>
    */
-  public String generateTableData(ArgoProfile selectedProfile) {
+  public String generateTableData(int selectedProfileIndex) {
+
+    ArgoProfile selectedProfile = profiles.get(selectedProfileIndex);
 
     // Get the Coordinates matching the profile
     List<Coordinate> cycleCoordinates = getCoordinates().stream()
