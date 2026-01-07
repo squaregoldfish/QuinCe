@@ -105,10 +105,15 @@ table.dataTable.compact td {
 /*
  *************************
  * Table
- *************************
+ ********************1*****
  */
 td.selected > div {
   background-color: #FFFF00 !important;
+}
+
+table.dataTable tbody tr.selected > * {
+  box-shadow: #FFFF00E6 0px 0px 0px 9999px inset;
+  color: #000000;
 }
 
 .interpolated {

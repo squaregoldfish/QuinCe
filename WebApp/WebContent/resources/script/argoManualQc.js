@@ -1,11 +1,16 @@
 const PROFILE_TABLE_LOADING = 1 << 11;
 const PROFILE_INFO_LOADING = 1 << 12;
 
+window['SELECTED_PROFILE_ROW'] = 0;
+
 function dataLoadedLocal() {
 
   initMap(1);
   drawProfileListTable();
-
+  
+  // Highlight the first row as the current selection
+  $($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).addClass('selected');
+  
   itemNotLoading(PLOT1_LOADING);
   itemNotLoading(PLOT2_LOADING);
   itemNotLoading(MAP1_LOADING);
@@ -89,6 +94,7 @@ function drawProfileListTable() {
 	searching: false,
 	paging: false,
 	bInfo: false,
+	scrollY: 400,
     columns : tableColumns,
     data: JSON.parse($('#profileListForm\\:profileListData').val()),
 	drawCallback: function (settings) {
@@ -119,5 +125,11 @@ function selectProfileClick(row) {
 }
 
 function newProfileLoaded() {
+	// Redraw the main QC table
 	drawTable();
+	
+	// Update the profile table row highlight
+	$($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).removeClass('selected');
+	window['SELECTED_PROFILE_ROW'] = $('#profileListForm\\:selectedProfile').val();;
+	$($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).addClass('selected');
 }

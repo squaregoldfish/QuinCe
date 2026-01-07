@@ -118,7 +118,6 @@ public class ArgoManualQualityControlBean extends PlotPageBean {
   }
 
   public void setSelectedProfile(int index) {
-    System.out.println(index);
     selectedProfile = index;
   }
 
