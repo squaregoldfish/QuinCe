@@ -857,7 +857,7 @@ public class ManualQCData extends PlotPageData {
   }
 
   @Override
-  protected TreeMap<Coordinate, PlotPageTableValue> getColumnValues(
+  public TreeMap<Coordinate, PlotPageTableValue> getColumnValues(
     PlotPageColumnHeading column) throws Exception {
 
     TreeMap<Coordinate, PlotPageTableValue> result = new TreeMap<Coordinate, PlotPageTableValue>();

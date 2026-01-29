@@ -82,6 +82,11 @@ public class ArgoManualQCData extends ManualQCData {
   private ArgoPlot plot2;
 
   /**
+   * The index of the currently selected profile
+   */
+  private int selectedProfile;
+
+  /**
    * Construct the data object.
    *
    * <p>
@@ -199,13 +204,13 @@ public class ArgoManualQCData extends ManualQCData {
    * The format of this method's output is the same as for that method.
    * </p>
    */
-  public String generateTableData(int selectedProfileIndex) {
+  public String generateTableData() {
 
-    ArgoProfile selectedProfile = profiles.get(selectedProfileIndex);
+    ArgoProfile profile = profiles.get(selectedProfile);
 
     // Get the Coordinates matching the profile
     List<Coordinate> cycleCoordinates = getCoordinates().stream()
-      .filter(c -> selectedProfile.matches((ArgoCoordinate) c)).toList();
+      .filter(c -> profile.matches((ArgoCoordinate) c)).toList();
 
     profileRecordCount = cycleCoordinates.size();
 
@@ -337,4 +342,15 @@ public class ArgoManualQCData extends ManualQCData {
       !dataset.isNrt());
   }
 
+  public int getSelectedProfile() {
+    return selectedProfile;
+  }
+
+  public void setSelectedProfile(int profileIndex) {
+    this.selectedProfile = profileIndex;
+  }
+
+  public List<ArgoProfile> getProfiles() {
+    return profiles;
+  }
 }

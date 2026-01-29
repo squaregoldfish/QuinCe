@@ -85,7 +85,9 @@ const FLAG_NEEDS_FLAG = -10;
 const FLAG_IGNORED = -1002;
 
 // VARIABLES FOR THE PLOT/TABLE LAYOUT
-
+function plotStrokeWidth() {
+  return (typeof getStrokeWidth === 'function') ? getStrokeWidth() : 0;
+}
 
 // Timer used to prevent event spamming during page resizes
 var resizeEventTimer = null;
@@ -153,7 +155,6 @@ var plot2Y2AxisVar = null;
 
 var BASE_PLOT_OPTIONS = {
   drawPoints: true,
-  strokeWidth: 0.0,
   labelsUTC: true,
   labelsSeparateLine: true,
   digitsAfterDecimal: 2,
@@ -310,15 +311,15 @@ function dataLoaded() {
     columnHeaders = JSON.parse($('#plotPageForm\\:columnHeadings').val());
     extendedColumnHeaders = JSON.parse($('#plotPageForm\\:extendedColumnHeadings').val());
 
-	let tableDrawn = false;
-	
+  let tableDrawn = false;
+
     if (typeof dataLoadedLocal === 'function') {
       tableDrawn = dataLoadedLocal();
     }
 
     if (!tableDrawn) {
       drawTable();
-	}
+  }
 
     // Hide the progress bar on the popup
     $("#pleaseWaitForm\\:progressName").hide();
@@ -1124,6 +1125,7 @@ function drawY2Plot(index, keepZoom) {
   y2_options.xlabel = labels[0];
   y2_options.ylabel = labels[2];
   y2_options.y2label = labels[7];
+  y2_options.strokeWidth = plotStrokeWidth();
   y2_options.legend = 'never';
   y2_options.visibility = [false, true, true, true, true, true, true];
   y2_options.colors = ['#00000000', '#00000000', '#E6B6A6', '#EFDCBF', '#CCCBAF', '#C0C0C0', '#A9DBF9'];
@@ -1240,7 +1242,8 @@ function drawDataPlot1Y(index, keepZoom) {
   data_options.pointSize = DATA_POINT_SIZE;
   data_options.highlightCircleSize = DATA_POINT_HIGHLIGHT_SIZE;
   data_options.selectMode = 'euclidian';
-  
+  data_options.strokeWidth = plotStrokeWidth();
+
   if (keepZoom && null != zoomOptions) {
     data_options.dateWindow = zoomOptions.dateWindow;
     data_options.valueRange = zoomOptions.valueRange;
@@ -1277,12 +1280,12 @@ function drawDataPlot1Y(index, keepZoom) {
       drawGrid: true,
       gridLinePattern: [1, 3],
       gridLineColor: 'rbg(200, 200, 200)',
-	  axisLabelFormatter: function(d) {
-		return typeof formatYAxisLabel === 'function' ? formatYAxisLabel(d) : d;
+    axisLabelFormatter: function(d) {
+    return typeof formatYAxisLabel === 'function' ? formatYAxisLabel(d) : d;
       },
-	  valueFormatter: function (d) {
-	    return typeof formatYAxisValue === 'function' ? formatYAxisValue(d) : d;
-	  } 
+    valueFormatter: function (d) {
+      return typeof formatYAxisValue === 'function' ? formatYAxisValue(d) : d;
+    }
     }
   }
 
@@ -1373,6 +1376,7 @@ function drawDataPlot2Y(index, keepZoom) {
   data_options.pointSize = DATA_POINT_SIZE;
   data_options.highlightCircleSize = DATA_POINT_HIGHLIGHT_SIZE;
   data_options.selectMode = 'euclidian';
+  data_options.strokeWidth = plotStrokeWidth();
 
   if (keepZoom && null != zoomOptions) {
     data_options.dateWindow = zoomOptions.dateWindow;
@@ -1531,6 +1535,7 @@ function drawFlagPlot1Y(index) {
     flag_options.pointSize = FLAG_POINT_SIZE;
     flag_options.highlightCircleSize = 0;
     flag_options.selectMode = 'euclidian';
+  flag_options.strokeWidth = 0;
     flag_options.xRangePad = 10;
     flag_options.yRangePad = 10;
     flag_options.axes = {
@@ -1578,6 +1583,7 @@ function drawFlagPlot2Y(index) {
     flag_options.labels = JSON.parse($(getPlotFormName(index) + '\\:plot' + index + 'FlagLabels').val());
     flag_options.pointSize = FLAG_POINT_SIZE;
     flag_options.highlightCircleSize = 0;
+  flag_options.strokeWidth = 0;
     flag_options.selectMode = 'euclidian';
     flag_options.xRangePad = 10;
     flag_options.yRangePad = 10;
@@ -1623,7 +1629,7 @@ function drawSelectionPlot(index) {
 
       let plotLabels = getPlotLabels(index);
 
-      // Convert X values to dates if required
+      // Convert X values to dates if requiredf
       if (plotLabels[0] == 'Time') {
         for (let i = 0; i < selectionData.length; i++) {
           selectionData[i][0] = new Date(selectionData[i][0]);
@@ -1638,6 +1644,7 @@ function drawSelectionPlot(index) {
       selection_options.pointSize = SELECTION_POINT_SIZE;
       selection_options.highlightCircleSize = 0;
       selection_options.selectMode = 'euclidian';
+    selection_options.strokeWidth = 0;
       selection_options.xRangePad = 0;
       selection_options.yRangePad = 0;
       selection_options.axes = {

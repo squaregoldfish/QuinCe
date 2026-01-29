@@ -22,7 +22,7 @@ public class Plot {
   /**
    * The source data for the plot
    */
-  private final PlotPageData data;
+  protected final PlotPageData data;
 
   /**
    * Indicates whether or not NEEDED flags should be displayed.
@@ -34,17 +34,17 @@ public class Plot {
   /**
    * The column ID of the X axis
    */
-  private PlotPageColumnHeading xAxis = null;
+  protected PlotPageColumnHeading xAxis = null;
 
   /**
    * The column ID of the Y axis
    */
-  private PlotPageColumnHeading yAxis = null;
+  protected PlotPageColumnHeading yAxis = null;
 
   /**
    * The column ID of the second Y axis
    */
-  private PlotPageColumnHeading y2Axis = null;
+  protected PlotPageColumnHeading y2Axis = null;
 
   /**
    * The plot values.
@@ -190,15 +190,9 @@ public class Plot {
 
   protected void makePlotValues() throws Exception {
 
-    TreeMap<Coordinate, PlotPageTableValue> xValues = data
-      .getColumnValues(xAxis);
-
-    TreeMap<Coordinate, PlotPageTableValue> yValues = data
-      .getColumnValues(yAxis);
-
-    TreeMap<Coordinate, PlotPageTableValue> y2Values = null == y2Axis
-      ? new TreeMap<>()
-      : data.getColumnValues(y2Axis);
+    TreeMap<Coordinate, PlotPageTableValue> xValues = getXValues();
+    TreeMap<Coordinate, PlotPageTableValue> yValues = getYValues();
+    TreeMap<Coordinate, PlotPageTableValue> y2Values = getY2Values();
 
     plotValues = new TreeSet<>();
 
@@ -258,20 +252,38 @@ public class Plot {
     }
   }
 
+  protected TreeMap<Coordinate, PlotPageTableValue> getXValues()
+    throws Exception {
+
+    return data.getColumnValues(xAxis);
+  }
+
+  protected TreeMap<Coordinate, PlotPageTableValue> getYValues()
+    throws Exception {
+
+    return data.getColumnValues(yAxis);
+  }
+
+  protected TreeMap<Coordinate, PlotPageTableValue> getY2Values()
+    throws Exception {
+
+    return null == y2Axis ? new TreeMap<>() : data.getColumnValues(y2Axis);
+  }
+
   /**
    * Get the multiplier for Y values.
-   * 
+   *
    * <p>
    * Sometimes we may want to scale the values on the Y axis, or make another
    * adjustment (e.g. make it negative for depths. All Y values are passed
    * through this method to have the scale applied.
    * </p>
-   * 
+   *
    * <p>
    * The default implementation simply returns the value unchanged. Override
    * this method if scaling is required.
    * </p>
-   * 
+   *
    * @param yValue
    *          The original Y value.
    * @return The scaled Y value.

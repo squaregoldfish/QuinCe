@@ -7,3 +7,9 @@
   font-weight: bold;
   padding-left: 10px !important;
 }
+
+.plot {
+  position: absolute;
+  top: 45px;
+  left: 0px;
+}

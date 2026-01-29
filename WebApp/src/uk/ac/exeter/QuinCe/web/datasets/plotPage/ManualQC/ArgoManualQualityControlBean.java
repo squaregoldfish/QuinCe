@@ -137,10 +137,11 @@ public class ArgoManualQualityControlBean extends PlotPageBean {
 
   @Override
   public void generateTableData() {
-    tableJsonData = data.generateTableData(selectedProfile);
+    tableJsonData = data.generateTableData();
   }
 
   public void selectProfile() {
+    data.setSelectedProfile(selectedProfile);
     generateTableData();
   }
 

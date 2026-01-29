@@ -3,6 +3,10 @@ const PROFILE_INFO_LOADING = 1 << 12;
 
 window['SELECTED_PROFILE_ROW'] = 0;
 
+function getStrokeWidth() {
+  return 1;
+}
+
 function dataLoadedLocal() {
 
   initMap(1);

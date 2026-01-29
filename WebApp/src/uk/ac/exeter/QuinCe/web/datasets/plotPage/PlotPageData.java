@@ -226,7 +226,7 @@ public abstract class PlotPageData {
 
   /**
    * Create the first plot.
-   * 
+   *
    * @throws Exception
    *           If the plot cannot be created.
    */
@@ -237,7 +237,7 @@ public abstract class PlotPageData {
 
   /**
    * Create the second plot.
-   * 
+   *
    * @throws Exception
    *           If the plot cannot be created.
    */
@@ -248,7 +248,7 @@ public abstract class PlotPageData {
 
   /**
    * Create the first map.
-   * 
+   *
    * @throws Exception
    *           If the map cannot be created.
    */
@@ -258,7 +258,7 @@ public abstract class PlotPageData {
 
   /**
    * Create the second map.
-   * 
+   *
    * @throws Exception
    *           If the map cannot be created.
    */
