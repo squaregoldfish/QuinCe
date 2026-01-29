@@ -5,6 +5,10 @@
   xmlns:c="http://java.sun.com/jsp/jstl/core"
   template="/WEB-INF/templates/plot_page.xhtml">
 
+  <ui:define name="localStylesheets">
+    <h:outputStylesheet name="style/argoPlotPage.css" />
+  </ui:define>
+
   <ui:define name="plots">
     <div id="profileInfo">
       <div id="profileData">
@@ -58,7 +62,64 @@
     </div>
     <div id="profilePlots">
       <div id="plot1Panel" class="plotContainer">
-        Plot 1
+        <h:form id="plot1Form" method="post">
+          <h:inputHidden id="plot1Data"
+            value="#{sessionScope[beanName].data.plot1.mainData}"/>
+          <h:inputHidden id="plot1DataLabels"
+            value="#{sessionScope[beanName].data.plot1.dataLabels}"/>
+          <h:inputHidden id="plot1Flags"
+            value="#{sessionScope[beanName].data.plot1.flagData}"/>
+          <h:inputHidden id="plot1FlagLabels"
+            value="#{sessionScope[beanName].data.plot1.flagLabels}"/>
+          <h:inputHidden id="plot1Y2Data"
+            value="#{sessionScope[beanName].data.plot1.y2Data}"/>
+          <h:inputHidden id="plot1Y2Labels"
+            value="#{sessionScope[beanName].data.plot1.y2Labels}"/>
+          <h:inputHidden id="plot1XAxis"
+            value="#{sessionScope[beanName].data.plot1.xaxis}"/>
+          <h:inputHidden id="plot1YAxis"
+            value="#{sessionScope[beanName].data.plot1.yaxis}"/>
+          <h:inputHidden id="plot1Y2Axis"
+            value="#{sessionScope[beanName].data.plot1.y2axis}"/>
+
+          <p:remoteCommand name="loadPlot1"
+            action="#{sessionScope[beanName].data.plot1.init}"
+            process="@this plot1XAxis plot1YAxis plot1HideFlags"
+            update=":plotPageForm:error plot1Data plot1Flags plot1DataLabels
+              plot1FlagLabels"
+            oncomplete="drawPlot(1, true, false)" onerror="plotError(xhr)"/>
+
+          <div id="plot1Container">
+            <div id="plot1Y2Plot" class="plot y2Plot"></div>
+            <div id="plot1DataPlot" class="plot dataPlot"></div>
+            <div id="plot1SelectionPlot" class="plot selectionPlot"></div>
+            <div id="plot1FlagPlot" class="plot flagPlot"></div>
+          </div>
+          <div id="plot1Label" class="plotLabels"></div>
+
+          <p:toolbar id="plot1Toolbar" styleClass="plotPageHeader">
+            <f:facet name="left">
+              <div class="plotFooterButtonContainer">
+                <p:commandButton icon="zoomOutButton" onclick="resetZoom(1); return false;"
+                  styleClass="inlineButton tightIconButton plotFooterButton" />
+                <p:selectBooleanButton onIcon="hideFlagsButton" offIcon="hideFlagsButton"
+                  value="#{sessionScope[beanName].data.plot1HideFlags}"
+                  id="plot1HideFlags" onchange="hideFlags(1); return false;"
+                  styleClass="tightIconButton plotFooterButton" />
+              </div>
+              <p:selectOneButton id="plot1SelectMode" widgetVar="plot1SelectMode"
+                value="zoom" styleClass="selectModeButtons"
+                onchange="setPlotSelectMode(1)" unselectable="false">
+                <f:selectItem itemLabel=" " itemValue="zoom" />
+                <f:selectItem itemLabel=" " itemValue="select" />
+              </p:selectOneButton>
+            
+              <p:selectOneMenu id="plot1Variable" value="" dynamic="true">
+                <f:selectItems value="#{sessionScope[beanName].plotMenuEntries}"/>
+              </p:selectOneMenu>
+            </f:facet>
+          </p:toolbar>
+        </h:form>
       </div>
       <div id="plot2Panel" class="plotContainer">
         Plot 2

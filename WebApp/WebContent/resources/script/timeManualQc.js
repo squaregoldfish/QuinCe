@@ -84,6 +84,8 @@ function dataLoadedLocal() {
   initPlot(2);
 
   updateFlagCounts();
+  
+  return false;
 }
 
 function getInitialLoadingItems() {

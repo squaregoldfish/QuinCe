@@ -11,9 +11,14 @@ function dataLoadedLocal() {
   // Highlight the first row as the current selection
   $($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).addClass('selected');
   
+  newProfileLoaded();
+  
   itemNotLoading(PLOT1_LOADING);
   itemNotLoading(PLOT2_LOADING);
   itemNotLoading(MAP1_LOADING);
+  
+  // We drew the table ourselves
+  return true;
 }
 
 function getInitialLoadingItems() {
@@ -118,8 +123,6 @@ function setupProfileTableClickHandlers() {
 }
 
 function selectProfileClick(row) {
-  console.log(row);
-  console.log(row._DT_RowIndex);
   $('#profileListForm\\:selectedProfile').val(row._DT_RowIndex);
   selectProfile();
 }
@@ -132,4 +135,21 @@ function newProfileLoaded() {
 	$($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).removeClass('selected');
 	window['SELECTED_PROFILE_ROW'] = $('#profileListForm\\:selectedProfile').val();;
 	$($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).addClass('selected');
+	
+	loadPlot1(); // PF RemoteCommand
 }
+
+function mapsAllowed() {
+  return false;
+}
+
+// Default y axis formatter does nothing
+function formatYAxisLabel(value) {
+  return value * -1;
+}
+
+// Default y axis value formatter does nothing
+function formatYAxisValue(value) {
+  return value * -1;
+}
+

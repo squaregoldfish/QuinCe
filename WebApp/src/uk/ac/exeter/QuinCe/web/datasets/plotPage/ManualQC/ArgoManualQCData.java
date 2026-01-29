@@ -27,9 +27,11 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoPlot;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoPlotPageTableRecord;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.CoordinateIdSerializer;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.MapRecords;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.Plot;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageColumnHeading;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableRecord;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableRecordSerializer;
@@ -59,7 +61,25 @@ public class ArgoManualQCData extends ManualQCData {
    */
   private String profileTableData = null;
 
+  /**
+   * The number of records in the currently selected profile.
+   */
   private int profileRecordCount = -1;
+
+  /**
+   * All plots use the Depth column as the Y axis. We cache it here.
+   */
+  private PlotPageColumnHeading depthColumn = null;
+
+  /**
+   * Details for the first plot. We use a special plot implementation.
+   */
+  private ArgoPlot plot1;
+
+  /**
+   * Details for the second plot. We use a special plot implementation.
+   */
+  private ArgoPlot plot2;
 
   /**
    * Construct the data object.
@@ -113,11 +133,18 @@ public class ArgoManualQCData extends ManualQCData {
      * Source File and Time are shown in the Profile Details and not as part of
      * the table.
      */
-    rootColumns.add(new PlotPageColumnHeading(
-      sensorConfig.getSensorType("Level"), true, false, false));
 
-    rootColumns.add(new PlotPageColumnHeading(
-      sensorConfig.getSensorType("Pressure (Depth)"), true, false, false));
+    rootColumns
+      .add(new PlotPageColumnHeading(
+        instrument.getSensorAssignments()
+          .get(sensorConfig.getSensorType("Level")).first().getColumnHeading(),
+        true, false, false));
+
+    depthColumn = new PlotPageColumnHeading(instrument.getSensorAssignments()
+      .get(sensorConfig.getSensorType("Pressure (Depth)")).first()
+      .getColumnHeading(), true, false, false);
+
+    rootColumns.add(depthColumn);
 
     return rootColumns;
   }
@@ -267,4 +294,47 @@ public class ArgoManualQCData extends ManualQCData {
         new CoordinateIdSerializer())
       .create();
   }
+
+  @Override
+  protected PlotPageColumnHeading getDefaultXAxis1() throws Exception {
+    return getColumnHeadings().get(SENSORS_FIELD_GROUP).get(0);
+  }
+
+  @Override
+  protected PlotPageColumnHeading getDefaultXAxis2() throws Exception {
+    return getColumnHeadings().get(SENSORS_FIELD_GROUP).get(1);
+  }
+
+  @Override
+  protected PlotPageColumnHeading getDefaultYAxis1() throws Exception {
+    return depthColumn;
+  }
+
+  @Override
+  protected PlotPageColumnHeading getDefaultYAxis2() throws Exception {
+    return depthColumn;
+  }
+
+  @Override
+  public Plot getPlot1() {
+    return plot1;
+  }
+
+  @Override
+  public Plot getPlot2() {
+    return plot2;
+  }
+
+  @Override
+  protected void createPlot1() throws Exception {
+    plot1 = new ArgoPlot(this, getDefaultXAxis1(), getDefaultYAxis1(),
+      !dataset.isNrt());
+  }
+
+  @Override
+  protected void createPlot2() throws Exception {
+    plot2 = new ArgoPlot(this, getDefaultXAxis1(), getDefaultYAxis1(),
+      !dataset.isNrt());
+  }
+
 }

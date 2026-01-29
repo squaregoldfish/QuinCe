@@ -213,17 +213,57 @@ public abstract class PlotPageData {
         .serializeNulls().create();
 
       // Initialise the plots
-      plot1 = new Plot(this, getDefaultXAxis1(), getDefaultYAxis1(),
-        !dataset.isNrt());
-      plot2 = new Plot(this, getDefaultXAxis2(), getDefaultYAxis2(),
-        !dataset.isNrt());
-      map1 = new QCMap(this, getDefaultMap1Column(), !dataset.isNrt());
-      map2 = new QCMap(this, getDefaultMap2Column(), !dataset.isNrt());
+      createPlot1();
+      createPlot2();
+      createMap1();
+      createMap2();
 
       loaded = true;
     } catch (Exception e) {
       error("Error while loading dataset data", e);
     }
+  }
+
+  /**
+   * Create the first plot.
+   * 
+   * @throws Exception
+   *           If the plot cannot be created.
+   */
+  protected void createPlot1() throws Exception {
+    plot1 = new Plot(this, getDefaultXAxis1(), getDefaultYAxis1(),
+      !dataset.isNrt());
+  }
+
+  /**
+   * Create the second plot.
+   * 
+   * @throws Exception
+   *           If the plot cannot be created.
+   */
+  protected void createPlot2() throws Exception {
+    plot2 = new Plot(this, getDefaultXAxis2(), getDefaultYAxis2(),
+      !dataset.isNrt());
+  }
+
+  /**
+   * Create the first map.
+   * 
+   * @throws Exception
+   *           If the map cannot be created.
+   */
+  protected void createMap1() throws Exception {
+    map1 = new QCMap(this, getDefaultMap1Column(), !dataset.isNrt());
+  }
+
+  /**
+   * Create the second map.
+   * 
+   * @throws Exception
+   *           If the map cannot be created.
+   */
+  protected void createMap2() throws Exception {
+    map2 = new QCMap(this, getDefaultMap2Column(), !dataset.isNrt());
   }
 
   protected void initTableDataGson() {
@@ -861,8 +901,8 @@ public abstract class PlotPageData {
   }
 
   protected void initPlots() {
-    plot1.init();
-    plot2.init();
+    getPlot1().init();
+    getPlot2().init();
   }
 
   /**
@@ -1017,20 +1057,30 @@ public abstract class PlotPageData {
     throws Exception;
 
   public boolean getPlot1HideFlags() {
-    return null == plot1 ? false : plot1.getHideFlags();
+    return null == getPlot1() ? false : getPlot1().getHideFlags();
   }
 
   public void setPlot1HideFlags(boolean hide) {
-    plot1.setHideFlags(hide);
-    map1.setHideFlags(hide);
+    if (null != getPlot1()) {
+      getPlot1().setHideFlags(hide);
+    }
+
+    if (null != getMap1()) {
+      getMap1().setHideFlags(hide);
+    }
   }
 
   public boolean getPlot2HideFlags() {
-    return null == plot2 ? false : plot1.getHideFlags();
+    return null == getPlot2() ? false : getPlot2().getHideFlags();
   }
 
   public void setPlot2HideFlags(boolean hide) {
-    plot2.setHideFlags(hide);
-    map2.setHideFlags(hide);
+    if (null != getPlot2()) {
+      getPlot2().setHideFlags(hide);
+    }
+
+    if (null != getMap2()) {
+      getMap2().setHideFlags(hide);
+    }
   }
 }

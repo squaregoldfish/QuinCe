@@ -1,0 +1,9 @@
+.plotPageHeader {
+  position: absolute;
+  top: 0px;
+  height: 43px;
+  width: 100%;
+  color: #2779AA !important;
+  font-weight: bold;
+  padding-left: 10px !important;
+}

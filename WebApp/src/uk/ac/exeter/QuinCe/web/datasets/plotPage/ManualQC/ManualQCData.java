@@ -431,7 +431,6 @@ public class ManualQCData extends PlotPageData {
         Measurement concurrentMeasurement = getConcurrentMeasurement(
           coordinates.get(i));
 
-        // Timestamp
         record.addCoordinate(coordinates.get(i));
 
         Map<Long, SensorValue> recordSensorValues = sensorValues
@@ -888,7 +887,6 @@ public class ManualQCData extends PlotPageData {
           new TimestampSensorValuesListOutput(
             (TimestampSensorValuesListOutput) v, false))));
     } else if (coordinateColumnIds.contains(column.getId())) {
-
       SensorType sensorType = instrument.getSensorAssignments()
         .getSensorTypeForDBColumn(column.getId());
 

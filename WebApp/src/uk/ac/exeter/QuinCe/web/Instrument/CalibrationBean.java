@@ -911,8 +911,8 @@ public abstract class CalibrationBean extends BaseManagedBean {
    */
   private boolean isInDataset(LocalDateTime time) {
     return datasets.keySet().stream()
-      .anyMatch(d -> !DateTimeUtils.isEqualOrBefore(d.getEnd(), time)
-        && !DateTimeUtils.isEqualOrAfter(d.getStart(), time));
+      .anyMatch(d -> !DateTimeUtils.isEqualOrBefore(d.getEndTime(), time)
+        && !DateTimeUtils.isEqualOrAfter(d.getStartTime(), time));
   }
 
   /**

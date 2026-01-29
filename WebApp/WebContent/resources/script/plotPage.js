@@ -310,11 +310,15 @@ function dataLoaded() {
     columnHeaders = JSON.parse($('#plotPageForm\\:columnHeadings').val());
     extendedColumnHeaders = JSON.parse($('#plotPageForm\\:extendedColumnHeadings').val());
 
+	let tableDrawn = false;
+	
     if (typeof dataLoadedLocal === 'function') {
-      dataLoadedLocal();
+      tableDrawn = dataLoadedLocal();
     }
 
-    drawTable();
+    if (!tableDrawn) {
+      drawTable();
+	}
 
     // Hide the progress bar on the popup
     $("#pleaseWaitForm\\:progressName").hide();
@@ -1030,6 +1034,10 @@ function canSelectCell(rowIndex, colIndex) {
 }
 
 // PLOT FUNCTIONS
+function mapsAllowed() {
+  return true;
+}
+
 function initPlot(index) {
   currentPlot = index;
   let mode = getPlotMode(index);
@@ -1212,7 +1220,7 @@ function drawDataPlot1Y(index, keepZoom) {
 
   // Destroy the old plot
   if (null != window[plotVar]) {
-    zoomOptions = {
+    zoomdata = {
       dateWindow: window[plotVar].xAxisRange(),
       valueRange: window[plotVar].yAxisRange()
     };
@@ -1232,7 +1240,7 @@ function drawDataPlot1Y(index, keepZoom) {
   data_options.pointSize = DATA_POINT_SIZE;
   data_options.highlightCircleSize = DATA_POINT_HIGHLIGHT_SIZE;
   data_options.selectMode = 'euclidian';
-
+  
   if (keepZoom && null != zoomOptions) {
     data_options.dateWindow = zoomOptions.dateWindow;
     data_options.valueRange = zoomOptions.valueRange;
@@ -1242,7 +1250,6 @@ function drawDataPlot1Y(index, keepZoom) {
     data_options.xRangePad = 10;
     data_options.yRangePad = 10;
   }
-
 
   data_options.interactionModel = getInteractionModel(index);
   data_options.clickCallback = function(e, x, points) {
@@ -1270,6 +1277,12 @@ function drawDataPlot1Y(index, keepZoom) {
       drawGrid: true,
       gridLinePattern: [1, 3],
       gridLineColor: 'rbg(200, 200, 200)',
+	  axisLabelFormatter: function(d) {
+		return typeof formatYAxisLabel === 'function' ? formatYAxisLabel(d) : d;
+      },
+	  valueFormatter: function (d) {
+	    return typeof formatYAxisValue === 'function' ? formatYAxisValue(d) : d;
+	  } 
     }
   }
 
@@ -1310,6 +1323,16 @@ function drawDataPlot1Y(index, keepZoom) {
     data_options
     );
 
+}
+
+// Default y axis formatter does nothing
+function yAxisLabelFormatter(value) {
+  return value;
+}
+
+// Default y axis value formatter does nothing
+function yAxisValueFormatter(value) {
+  return value;
 }
 
 function drawDataPlot2Y(index, keepZoom) {
@@ -1929,7 +1952,7 @@ function resizeVariablesDialog() {
 }
 
 function getPlotMode(index) {
-  if (PF('plot' + index + 'Mode')) {
+  if (PrimeFaces.widgets['plot' + index + 'Mode']) {
     return +$('[id^=plot' + index + 'Form\\:plot' + index + 'Mode]:checked').val();
   } else {
     return PLOT_MODE_PLOT;

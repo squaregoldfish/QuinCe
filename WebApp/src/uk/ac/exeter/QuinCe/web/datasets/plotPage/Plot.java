@@ -220,7 +220,7 @@ public class Plot {
           boolean yGhost = false;
           Flag yFlag = null;
           if (null != y) {
-            yValue = MathUtils.nullableParseDouble(y.getValue());
+            yValue = scaleYValue(MathUtils.nullableParseDouble(y.getValue()));
             yGhost = y.getQcFlag(data.getAllSensorValues())
               .equals(Flag.FLUSHING);
             yFlag = y.getQcFlag(data.getAllSensorValues());
@@ -233,7 +233,7 @@ public class Plot {
           boolean y2Ghost = false;
           Flag y2Flag = null;
           if (null != y2) {
-            y2Value = MathUtils.nullableParseDouble(y2.getValue());
+            y2Value = scaleYValue(MathUtils.nullableParseDouble(y2.getValue()));
             y2Ghost = y2.getQcFlag(data.getAllSensorValues())
               .equals(Flag.FLUSHING);
             y2Flag = y2.getQcFlag(data.getAllSensorValues());
@@ -256,6 +256,28 @@ public class Plot {
         }
       }
     }
+  }
+
+  /**
+   * Get the multiplier for Y values.
+   * 
+   * <p>
+   * Sometimes we may want to scale the values on the Y axis, or make another
+   * adjustment (e.g. make it negative for depths. All Y values are passed
+   * through this method to have the scale applied.
+   * </p>
+   * 
+   * <p>
+   * The default implementation simply returns the value unchanged. Override
+   * this method if scaling is required.
+   * </p>
+   * 
+   * @param yValue
+   *          The original Y value.
+   * @return The scaled Y value.
+   */
+  protected Double scaleYValue(Double yValue) {
+    return yValue;
   }
 
   /**
