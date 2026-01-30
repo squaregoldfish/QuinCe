@@ -146,7 +146,7 @@ function selectXAxis(index) {
     $(getPlotFormName(index) + '\\:plot' + index + 'XAxis').val(xAxis);
   }
   
-  eval('loadPlot' + currentPlot + '()');
+  eval('loadPlot' + index + '()');
 }
 
 function mapsAllowed() {
