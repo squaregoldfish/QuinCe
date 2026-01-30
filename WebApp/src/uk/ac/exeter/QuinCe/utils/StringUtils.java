@@ -624,6 +624,23 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
   }
 
   /**
+   * Format a number to an integer via truncation.
+   *
+   * @param value
+   *          The number.
+   * @return The integer-formatted number.
+   */
+  public static String formatNumberToInt(Double value) {
+    String result = null;
+
+    if (null != value) {
+      result = String.valueOf(value.intValue());
+    }
+
+    return result;
+  }
+
+  /**
    * Replace all instances of a tab character in a {@link String} with a single
    * space.
    *

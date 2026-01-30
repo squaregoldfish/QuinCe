@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -41,26 +42,48 @@ public class MapRecords extends ArrayList<MapRecord> {
 
   private Double maxNoFlags = Double.NaN;
 
+  public MapRecords(int size, DatasetSensorValues allSensorValues,
+    Function<Double, String> valueFormatter) {
+
+    super(size);
+    buildGsons(allSensorValues, valueFormatter);
+  }
+
   public MapRecords(int size, DatasetSensorValues allSensorValues) {
     super(size);
+    buildGsons(allSensorValues, null);
+  }
 
-    valueGson = new GsonBuilder().registerTypeHierarchyAdapter(MapRecord.class,
-      new MapRecordJsonSerializer(MapRecordJsonSerializer.VALUE,
-        allSensorValues))
-      .create();
+  private void buildGsons(DatasetSensorValues allSensorValues,
+    Function<Double, String> valueFormatter) {
+
+    if (null == valueFormatter) {
+      valueGson = new GsonBuilder()
+        .registerTypeHierarchyAdapter(MapRecord.class,
+          new MapRecordJsonSerializer(MapRecordJsonSerializer.VALUE,
+            allSensorValues))
+        .create();
+    } else {
+      valueGson = new GsonBuilder()
+        .registerTypeHierarchyAdapter(MapRecord.class,
+          new MapRecordJsonSerializer(MapRecordJsonSerializer.VALUE,
+            allSensorValues, valueFormatter))
+        .create();
+    }
+
     flagGson = new GsonBuilder().registerTypeHierarchyAdapter(MapRecord.class,
-      new MapRecordJsonSerializer(MapRecordJsonSerializer.FLAG,
-        allSensorValues))
+      new MapRecordJsonSerializer(MapRecordJsonSerializer.FLAG, allSensorValues,
+        valueFormatter))
       .create();
     flagNrtGson = new GsonBuilder()
       .registerTypeHierarchyAdapter(MapRecord.class,
         new MapRecordJsonSerializer(MapRecordJsonSerializer.FLAG_IGNORE_NEEDED,
-          allSensorValues))
+          allSensorValues, null))
       .create();
     selectionGson = new GsonBuilder()
       .registerTypeHierarchyAdapter(MapRecord.class,
         new MapRecordJsonSerializer(MapRecordJsonSerializer.SELECTION,
-          allSensorValues))
+          allSensorValues, null))
       .create();
   }
 

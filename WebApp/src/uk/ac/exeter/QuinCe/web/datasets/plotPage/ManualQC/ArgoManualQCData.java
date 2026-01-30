@@ -27,6 +27,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoPlot;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoPlotPageTableRecord;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.CoordinateIdSerializer;
@@ -269,7 +270,8 @@ public class ArgoManualQCData extends ManualQCData {
   @Override
   protected void buildMapCache(PlotPageColumnHeading column) throws Exception {
 
-    MapRecords records = new MapRecords(0, getAllSensorValues());
+    MapRecords records = new MapRecords(0, getAllSensorValues(),
+      StringUtils::formatNumberToInt);
 
     TreeMap<Coordinate, PlotPageTableValue> values = getColumnValues(column);
     HashSet<Integer> usedCycleNumbers = new HashSet<Integer>();

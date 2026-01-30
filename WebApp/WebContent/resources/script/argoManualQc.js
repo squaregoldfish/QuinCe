@@ -176,3 +176,7 @@ function getAxesAtZero() {
 function getIncludeZero() {
   return true;
 }
+
+function legendFormatter(data) {
+  return 'PRES: ' + formatYAxisValue(data.series[2].y) + '&nbsp;' + data.dygraph.user_attrs_.xlabel + ': ' + data.x;
+}

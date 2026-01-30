@@ -1201,12 +1201,12 @@ function drawY2Plot(index, keepZoom) {
       axisLabelFormatter: function(y) {
         return '';
       },
-	  includeZero: includeZero()
+    includeZero: includeZero()
     },
     y2: {
       drawGrid: false,
       valueRange: keepZoom && null != zoomOptions ? zoomOptions.valueRanges[1] : null,
-	  includeZero: includeZero()
+    includeZero: includeZero()
     }
   }
 
@@ -1255,6 +1255,7 @@ function drawDataPlot1Y(index, keepZoom) {
   data_options.selectMode = 'euclidian';
   data_options.strokeWidth = plotStrokeWidth();
   data_options.drawAxesAtZero = axesAtZero();
+  data_options.legendFormatter = (typeof legendFormatter === 'function') ? legendFormatter : null;
 
   if (keepZoom && null != zoomOptions) {
     data_options.dateWindow = zoomOptions.dateWindow;
@@ -1298,7 +1299,7 @@ function drawDataPlot1Y(index, keepZoom) {
     valueFormatter: function (d) {
       return typeof formatYAxisValue === 'function' ? formatYAxisValue(d) : d;
     },
-	includeZero: includeZero()
+  includeZero: includeZero()
     }
   }
 
@@ -1418,7 +1419,7 @@ function drawDataPlot2Y(index, keepZoom) {
       drawGrid: true,
       gridLinePattern: [1, 3],
       gridLineColor: 'rbg(200, 200, 200)',
-	  includeZero: includeZero()
+    includeZero: includeZero()
     },
     y2: {
       drawGrid: false,
@@ -1426,7 +1427,7 @@ function drawDataPlot2Y(index, keepZoom) {
         return '';
       },
       valueRange: keepZoom && null != zoomOptions ? zoomOptions.valueRanges[1] : null,
-	  includeZero: includeZero()
+    includeZero: includeZero()
     }
   }
 
@@ -1552,7 +1553,7 @@ function drawFlagPlot1Y(index) {
     flag_options.highlightCircleSize = 0;
     flag_options.selectMode = 'euclidian';
     flag_options.strokeWidth = 0;
-	flag_options.drawAxesAtZero = axesAtZero();
+  flag_options.drawAxesAtZero = axesAtZero();
     flag_options.xRangePad = 10;
     flag_options.yRangePad = 10;
     flag_options.axes = {
@@ -1561,7 +1562,7 @@ function drawFlagPlot1Y(index) {
       },
       y: {
         drawGrid: false,
-		includeZero: includeZero()
+    includeZero: includeZero()
       }
     };
     flag_options.axisLabelFontSize = 0;
@@ -1602,7 +1603,7 @@ function drawFlagPlot2Y(index) {
     flag_options.pointSize = FLAG_POINT_SIZE;
     flag_options.highlightCircleSize = 0;
     flag_options.strokeWidth = 0;
-	flag_options.drawAxesAtZero = axesAtZero();
+  flag_options.drawAxesAtZero = axesAtZero();
     flag_options.selectMode = 'euclidian';
     flag_options.xRangePad = 10;
     flag_options.yRangePad = 10;
@@ -1618,7 +1619,7 @@ function drawFlagPlot2Y(index) {
       },
       y: {
         drawGrid: false,
-		includeZero: includeZero()
+    includeZero: includeZero()
       }
     };
     flag_options.axisLabelFontSize = 0;
@@ -1665,7 +1666,7 @@ function drawSelectionPlot(index) {
       selection_options.highlightCircleSize = 0;
       selection_options.selectMode = 'euclidian';
       selection_options.strokeWidth = 0;
-	  selection_options.drawAxesAtZero = axesAtZero();
+    selection_options.drawAxesAtZero = axesAtZero();
       selection_options.xRangePad = 0;
       selection_options.yRangePad = 0;
       selection_options.axes = {
@@ -1696,11 +1697,11 @@ function drawSelectionPlot(index) {
           },
           y: {
             drawGrid: false,
-			includeZero: includeZero()
+      includeZero: includeZero()
           },
           y2: {
             drawGrid: false,
-			includeZero: includeZero()
+      includeZero: includeZero()
           }
         };
       }

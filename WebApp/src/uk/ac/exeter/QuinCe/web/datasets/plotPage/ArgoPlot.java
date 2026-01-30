@@ -41,12 +41,12 @@ public class ArgoPlot extends Plot {
 
   /**
    * Get the values for a given column in the specified profile.
-   * 
+   *
    * <p>
    * This calls {@link PlotPageData#getColumnValues(PlotPageColumnHeading)} to
    * retrieve the data.
    * </p>
-   * 
+   *
    * @param column
    *          The column.
    * @param profile
