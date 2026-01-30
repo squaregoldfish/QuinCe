@@ -13,3 +13,14 @@
   top: 45px;
   left: 0px;
 }
+
+.xAxisSelector {
+  top: -2px;
+  left: 5px;
+  height: 35px;
+}
+
+.xAxisSelector .ui-selectonemenu-label {
+  position: relative;
+  top: -3px;
+}

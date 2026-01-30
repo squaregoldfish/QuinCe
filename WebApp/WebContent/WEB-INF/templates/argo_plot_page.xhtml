@@ -81,14 +81,12 @@
             value="#{sessionScope[beanName].data.plot1.yaxis}"/>
           <h:inputHidden id="plot1Y2Axis"
             value="#{sessionScope[beanName].data.plot1.y2axis}"/>
-          <h:inputHidden id="plot1MaxDepth"
-            value="#{sessionScope[beanName].data.plot1.maxDepth}"/>
 
           <p:remoteCommand name="loadPlot1"
             action="#{sessionScope[beanName].data.plot1.init}"
             process="@this plot1XAxis plot1YAxis plot1HideFlags"
             update=":plotPageForm:error plot1Data plot1Flags plot1DataLabels
-              plot1FlagLabels plot1MaxDepth"
+              plot1FlagLabels"
             oncomplete="drawPlot(1, true, false)" onerror="plotError(xhr)"/>
 
           <div id="plot1Container">
@@ -116,7 +114,8 @@
                 <f:selectItem itemLabel=" " itemValue="select" />
               </p:selectOneButton>
 
-              <p:selectOneMenu id="plot1Variable" value="" dynamic="true">
+              <p:selectOneMenu widgetVar="plot1XAxisPicker" onchange="selectXAxis(1);"
+                value="#{sessionScope[beanName].data.plot1.xaxis}" styleClass="xAxisSelector">
                 <f:selectItems value="#{sessionScope[beanName].plotMenuEntries}"/>
               </p:selectOneMenu>
             </f:facet>

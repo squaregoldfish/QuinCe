@@ -139,12 +139,22 @@ function newProfileLoaded() {
 	loadPlot1(); // PF RemoteCommand
 }
 
+function selectXAxis(index) {
+  let xAxis = PF('plot' + index + 'XAxisPicker').input.val(); 
+  window['plot' + index + 'XAxisVar'] = xAxis;
+  if (xAxis != 0) {
+    $(getPlotFormName(index) + '\\:plot' + index + 'XAxis').val(xAxis);
+  }
+  
+  eval('loadPlot' + currentPlot + '()');
+}
+
 function mapsAllowed() {
   return false;
 }
 
 function getStrokeWidth() {
-  return 1;
+  return 0;
 }
 
 // Default y axis formatter does nothing
