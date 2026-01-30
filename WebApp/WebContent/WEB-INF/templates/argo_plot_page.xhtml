@@ -81,12 +81,14 @@
             value="#{sessionScope[beanName].data.plot1.yaxis}"/>
           <h:inputHidden id="plot1Y2Axis"
             value="#{sessionScope[beanName].data.plot1.y2axis}"/>
+          <h:inputHidden id="plot1MaxDepth"
+            value="#{sessionScope[beanName].data.plot1.maxDepth}"/>
 
           <p:remoteCommand name="loadPlot1"
             action="#{sessionScope[beanName].data.plot1.init}"
             process="@this plot1XAxis plot1YAxis plot1HideFlags"
             update=":plotPageForm:error plot1Data plot1Flags plot1DataLabels
-              plot1FlagLabels"
+              plot1FlagLabels plot1MaxDepth"
             oncomplete="drawPlot(1, true, false)" onerror="plotError(xhr)"/>
 
           <div id="plot1Container">

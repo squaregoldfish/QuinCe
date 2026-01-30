@@ -3,10 +3,6 @@ const PROFILE_INFO_LOADING = 1 << 12;
 
 window['SELECTED_PROFILE_ROW'] = 0;
 
-function getStrokeWidth() {
-  return 1;
-}
-
 function dataLoadedLocal() {
 
   initMap(1);
@@ -147,6 +143,10 @@ function mapsAllowed() {
   return false;
 }
 
+function getStrokeWidth() {
+  return 1;
+}
+
 // Default y axis formatter does nothing
 function formatYAxisLabel(value) {
   return value * -1;
@@ -157,3 +157,12 @@ function formatYAxisValue(value) {
   return value * -1;
 }
 
+// Draw axes at zero
+function getAxesAtZero() {
+  return true;
+}
+
+// Always include zero
+function getIncludeZero() {
+  return true;
+}

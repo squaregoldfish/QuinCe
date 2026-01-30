@@ -39,6 +39,22 @@ public class ArgoPlot extends Plot {
     return yValue * -1D;
   }
 
+  /**
+   * Get the values for a given column in the specified profile.
+   * 
+   * <p>
+   * This calls {@link PlotPageData#getColumnValues(PlotPageColumnHeading)} to
+   * retrieve the data.
+   * </p>
+   * 
+   * @param column
+   *          The column.
+   * @param profile
+   *          The profile.
+   * @return The profile's column values.
+   * @throws Exception
+   *           If the values cannot be retreived.
+   */
   private TreeMap<Coordinate, PlotPageTableValue> getColumnValues(
     PlotPageColumnHeading column, ArgoProfile profile) throws Exception {
 
