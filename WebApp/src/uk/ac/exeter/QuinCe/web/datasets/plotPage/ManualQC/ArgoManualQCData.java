@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -27,10 +28,12 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoPlot;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoPlotPageTableRecord;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.CoordinateIdSerializer;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.DataLatLng;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.MapRecords;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.Plot;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageColumnHeading;
@@ -83,9 +86,18 @@ public class ArgoManualQCData extends ManualQCData {
   private ArgoPlot argoPlot2;
 
   /**
-   * The index of the currently selected profile
+   * The index of the currently selected profile.
+   *
+   * <p>
+   * Defaults to the first profile.
+   * </p>
    */
-  private int selectedProfile;
+  private int selectedProfile = 0;
+
+  /**
+   * Extra details for the currently selected profile.
+   */
+  private LinkedHashMap<String, String> selectedProfileDetails;
 
   /**
    * Construct the data object.
@@ -167,11 +179,38 @@ public class ArgoManualQCData extends ManualQCData {
       Arrays.asList(new String[] { "Cycle Number", "Direction", "Profile" }));
   }
 
-  public String getProfileTableData() {
+  public String getProfileTableData() throws Exception {
     if (null != sensorValues && null == profileTableData) {
 
-      profiles = getCoordinates().stream().map(ArgoCoordinate.class::cast)
-        .map(c -> c.toProfile()).distinct().toList();
+      profiles = new ArrayList<ArgoProfile>();
+
+      ArgoProfile currentProfile = null;
+
+      for (Coordinate c : getCoordinates()) {
+        ArgoCoordinate coordinate = (ArgoCoordinate) c;
+
+        // See if we've started a new profile
+        if (null != currentProfile && !currentProfile.matches(coordinate)) {
+          profiles.add(currentProfile);
+          currentProfile = null;
+        }
+
+        if (null == currentProfile) {
+          currentProfile = new ArgoProfile(coordinate);
+        }
+
+        if (null == currentProfile.getTime() && null != coordinate.getTime()) {
+          currentProfile.setTime(coordinate.getTime());
+        }
+
+        if (null == currentProfile.getPosition()
+          && null != getMapPosition(coordinate)) {
+          currentProfile.setPosition(getMapPosition(coordinate));
+        }
+      }
+
+      // Store the last profile
+      profiles.add(currentProfile);
 
       List<List<String>> profileData = new ArrayList<List<String>>(
         profiles.size());
@@ -180,12 +219,15 @@ public class ArgoManualQCData extends ManualQCData {
         ArgoProfile profile = profiles.get(i);
 
         profileData.add(
-          Arrays.asList(new String[] { String.valueOf(profile.cycleNumber()),
-            String.valueOf(profile.direction()),
-            String.valueOf(profile.profile()) }));
+          Arrays.asList(new String[] { String.valueOf(profile.getCycleNumber()),
+            String.valueOf(profile.getDirection()),
+            String.valueOf(profile.getNProf()) }));
       });
 
       profileTableData = gson.toJson(profileData);
+
+      // Initialise the profile details now we have loaded them
+      buildProfileDetails();
     }
 
     return profileTableData;
@@ -350,9 +392,29 @@ public class ArgoManualQCData extends ManualQCData {
 
   public void setSelectedProfile(int profileIndex) {
     this.selectedProfile = profileIndex;
+    buildProfileDetails();
+  }
+
+  public Map<String, String> getSelectedProfileDetails() {
+    return selectedProfileDetails;
   }
 
   public List<ArgoProfile> getProfiles() {
     return profiles;
+  }
+
+  private void buildProfileDetails() {
+    ArgoProfile profile = profiles.get(selectedProfile);
+    selectedProfileDetails = new LinkedHashMap<String, String>();
+
+    selectedProfileDetails.put("Time",
+      DateTimeUtils.formatDateTime(profile.getTime()));
+
+    DataLatLng position = profile.getPosition();
+
+    selectedProfileDetails.put("Latitude",
+      StringUtils.formatNumber(position.getLatitude()));
+    selectedProfileDetails.put("Longitude",
+      StringUtils.formatNumber(position.getLongitude()));
   }
 }

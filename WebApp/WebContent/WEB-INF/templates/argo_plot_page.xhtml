@@ -24,14 +24,25 @@
             <p:remoteCommand name="selectProfile"
               action="#{sessionScope[beanName].selectProfile}"
               process="selectedProfile"
-              update=":tableForm"
+              update=":tableForm :profileDetailsForm"
               oncomplete="newProfileLoaded()" onerror="plotError(xhr)" async="true"/>
 
             <table id="profileListTable" class="cell-border compact nowrap"></table>
           </h:form>
         </div>
         <div id="profileDetails">
-          Profile Details
+          <h:form id="profileDetailsForm">
+            <p:dataTable id="profileInfo" value="#{sessionScope[beanName].data.selectedProfileDetails}"
+              var="item" stripedRows="true" emptyMessage="">
+
+              <p:column>
+                <h:outputText value="#{item.key}"/>
+              </p:column>
+              <p:column>
+                <h:outputText value="#{item.value}"/>
+              </p:column>
+            </p:dataTable>
+          </h:form>
         </div>
       </div>
       <div id="profileMap">

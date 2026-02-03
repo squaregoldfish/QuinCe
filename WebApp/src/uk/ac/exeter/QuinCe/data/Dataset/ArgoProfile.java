@@ -1,6 +1,10 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
+import java.time.LocalDateTime;
+
 import com.google.gson.Gson;
+
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.DataLatLng;
 
 /**
  * Represents an Argo cycle.
@@ -15,7 +19,18 @@ import com.google.gson.Gson;
  * work with Argo data.
  * </p>
  */
-public record ArgoProfile(int cycleNumber, char direction, int profile) {
+public class ArgoProfile {
+
+  private final int cycleNumber;
+
+  private final char direction;
+
+  private final int nProf;
+
+  private LocalDateTime time = null;
+
+  private DataLatLng position = null;
+
   private static Gson gson = new Gson();
 
   /**
@@ -25,8 +40,10 @@ public record ArgoProfile(int cycleNumber, char direction, int profile) {
    *          The source coordinate.
    */
   public ArgoProfile(ArgoCoordinate coordinate) {
-    this(coordinate.getCycleNumber(), coordinate.getDirection(),
-      coordinate.getNProf());
+    this.cycleNumber = coordinate.getCycleNumber();
+    this.direction = coordinate.getDirection();
+    this.nProf = coordinate.getNProf();
+    this.time = coordinate.getTime();
   }
 
   public String toJson() {
@@ -36,6 +53,34 @@ public record ArgoProfile(int cycleNumber, char direction, int profile) {
   public boolean matches(ArgoCoordinate coordinate) {
     return coordinate.getCycleNumber() == cycleNumber
       && coordinate.getDirection() == direction
-      && coordinate.getNProf() == profile;
+      && coordinate.getNProf() == nProf;
+  }
+
+  public int getCycleNumber() {
+    return cycleNumber;
+  }
+
+  public char getDirection() {
+    return direction;
+  }
+
+  public int getNProf() {
+    return nProf;
+  }
+
+  public LocalDateTime getTime() {
+    return time;
+  }
+
+  public void setTime(LocalDateTime time) {
+    this.time = time;
+  }
+
+  public DataLatLng getPosition() {
+    return position;
+  }
+
+  public void setPosition(DataLatLng position) {
+    this.position = position;
   }
 }

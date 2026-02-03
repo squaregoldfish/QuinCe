@@ -15,7 +15,8 @@
     <p:remoteCommand name="loadData"
       action="#{sessionScope[beanName].loadData}"
       process="@this"
-      update="error columnHeadings extendedColumnHeadings rowIDs :statusForm :profileListForm
+      update="error columnHeadings extendedColumnHeadings rowIDs :statusForm
+        :profileListForm :profileDetailsForm
         :plot1Form:plot1XAxis :plot1Form:plot1YAxis :plot1Form:plot1Y2Axis
         :plot2Form:plot2XAxis :plot2Form:plot2YAxis :plot2Form:plot2Y2Axis"
       oncomplete="dataLoaded()" onerror="plotError(xhr)" async="true"/>

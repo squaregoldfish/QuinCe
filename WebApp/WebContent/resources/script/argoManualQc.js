@@ -124,7 +124,7 @@ function setupProfileTableClickHandlers() {
 
 function selectProfileClick(row) {
   $('#profileListForm\\:selectedProfile').val(row._DT_RowIndex);
-  selectProfile();
+  selectProfile(); // PF RemoteCommand
 }
 
 function newProfileLoaded() {
