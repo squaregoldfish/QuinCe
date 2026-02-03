@@ -1083,4 +1083,72 @@ public abstract class PlotPageData {
       getMap2().setHideFlags(hide);
     }
   }
+
+  /**
+   * Get the X Axis for Plot 1.
+   *
+   * <p>
+   * If the plot has not yet been initialised, return the default X axis.
+   * </p>
+   *
+   * @return The X axis for Plot 1.
+   * @throws Exception
+   *           If the axis cannot be accessed.
+   */
+  public long getPlot1XAxis() throws Exception {
+    return null == getPlot1() ? getDefaultXAxis1().getId()
+      : getPlot1().getXaxis();
+  }
+
+  /**
+   * Set Plot 1's X Axis.
+   *
+   * <p>
+   * If the plot has not been initialised, the call is ignored.
+   * </p>
+   *
+   * @param xAxis
+   *          The new X axis.
+   * @throws Exception
+   *           If the axis cannot be set.
+   */
+  public void setPlot1XAxis(long xAxis) throws Exception {
+    if (null != getPlot1()) {
+      getPlot1().setXaxis(xAxis);
+    }
+  }
+
+  /**
+   * Get the X Axis for Plot 2.
+   *
+   * <p>
+   * If the plot has not yet been initialised, return the default X axis.
+   * </p>
+   *
+   * @return The X axis for Plot 2.
+   * @throws Exception
+   *           If the axis cannot be accessed.
+   */
+  public long getPlot2XAxis() throws Exception {
+    return null == getPlot2() ? getDefaultXAxis2().getId()
+      : getPlot2().getXaxis();
+  }
+
+  /**
+   * Set Plot 2's X Axis.
+   *
+   * <p>
+   * If the plot has not been initialised, the call is ignored.
+   * </p>
+   *
+   * @param xAxis
+   *          The new X axis.
+   * @throws Exception
+   *           If the axis cannot be set.
+   */
+  public void setPlot2XAxis(long xAxis) throws Exception {
+    if (null != getPlot2()) {
+      getPlot2().setXaxis(xAxis);
+    }
+  }
 }

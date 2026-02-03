@@ -75,12 +75,12 @@ public class ArgoManualQCData extends ManualQCData {
   /**
    * Details for the first plot. We use a special plot implementation.
    */
-  private ArgoPlot plot1;
+  private ArgoPlot argoPlot1;
 
   /**
    * Details for the second plot. We use a special plot implementation.
    */
-  private ArgoPlot plot2;
+  private ArgoPlot argoPlot2;
 
   /**
    * The index of the currently selected profile
@@ -324,23 +324,23 @@ public class ArgoManualQCData extends ManualQCData {
 
   @Override
   public Plot getPlot1() {
-    return plot1;
+    return argoPlot1;
   }
 
   @Override
   public Plot getPlot2() {
-    return plot2;
+    return argoPlot2;
   }
 
   @Override
   protected void createPlot1() throws Exception {
-    plot1 = new ArgoPlot(this, getDefaultXAxis1(), getDefaultYAxis1(),
+    argoPlot1 = new ArgoPlot(this, getDefaultXAxis1(), getDefaultYAxis1(),
       !dataset.isNrt());
   }
 
   @Override
   protected void createPlot2() throws Exception {
-    plot2 = new ArgoPlot(this, getDefaultXAxis1(), getDefaultYAxis1(),
+    argoPlot2 = new ArgoPlot(this, getDefaultXAxis2(), getDefaultYAxis2(),
       !dataset.isNrt());
   }
 

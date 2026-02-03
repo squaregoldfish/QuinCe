@@ -115,7 +115,7 @@
               </p:selectOneButton>
 
               <p:selectOneMenu widgetVar="plot1XAxisPicker" onchange="selectXAxis(1);"
-                value="#{sessionScope[beanName].data.plot1.xaxis}" styleClass="xAxisSelector">
+                value="#{sessionScope[beanName].data.plot1XAxis}" styleClass="xAxisSelector">
                 <f:selectItems value="#{sessionScope[beanName].plotMenuEntries}"/>
               </p:selectOneMenu>
             </f:facet>
@@ -123,7 +123,65 @@
         </h:form>
       </div>
       <div id="plot2Panel" class="plotContainer">
-        Plot 2
+        <h:form id="plot2Form" method="post">
+          <h:inputHidden id="plot2Data"
+            value="#{sessionScope[beanName].data.plot2.mainData}"/>
+          <h:inputHidden id="plot2DataLabels"
+            value="#{sessionScope[beanName].data.plot2.dataLabels}"/>
+          <h:inputHidden id="plot2Flags"
+            value="#{sessionScope[beanName].data.plot2.flagData}"/>
+          <h:inputHidden id="plot2FlagLabels"
+            value="#{sessionScope[beanName].data.plot2.flagLabels}"/>
+          <h:inputHidden id="plot2Y2Data"
+            value="#{sessionScope[beanName].data.plot2.y2Data}"/>
+          <h:inputHidden id="plot2Y2Labels"
+            value="#{sessionScope[beanName].data.plot2.y2Labels}"/>
+          <h:inputHidden id="plot2XAxis"
+            value="#{sessionScope[beanName].data.plot2.xaxis}"/>
+          <h:inputHidden id="plot2YAxis"
+            value="#{sessionScope[beanName].data.plot2.yaxis}"/>
+          <h:inputHidden id="plot2Y2Axis"
+            value="#{sessionScope[beanName].data.plot2.y2axis}"/>
+
+          <p:remoteCommand name="loadPlot2"
+            action="#{sessionScope[beanName].data.plot2.init}"
+            process="@this plot2XAxis plot2YAxis plot2HideFlags"
+            update=":plotPageForm:error plot2Data plot2Flags plot2DataLabels
+              plot2FlagLabels"
+            oncomplete="drawPlot(2, true, false)" onerror="plotError(xhr)"/>
+
+          <div id="plot2Container">
+            <div id="plot2Y2Plot" class="plot y2Plot"></div>
+            <div id="plot2DataPlot" class="plot dataPlot"></div>
+            <div id="plot2SelectionPlot" class="plot selectionPlot"></div>
+            <div id="plot2FlagPlot" class="plot flagPlot"></div>
+          </div>
+          <div id="plot2Label" class="plotLabels"></div>
+
+          <p:toolbar id="plot2Toolbar" styleClass="plotPageHeader">
+            <f:facet name="left">
+              <div class="plotFooterButtonContainer">
+                <p:commandButton icon="zoomOutButton" onclick="resetZoom(2); return false;"
+                  styleClass="inlineButton tightIconButton plotFooterButton" />
+                <p:selectBooleanButton onIcon="hideFlagsButton" offIcon="hideFlagsButton"
+                  value="#{sessionScope[beanName].data.plot2HideFlags}"
+                  id="plot2HideFlags" onchange="hideFlags(2); return false;"
+                  styleClass="tightIconButton plotFooterButton" />
+              </div>
+              <p:selectOneButton id="plot2SelectMode" widgetVar="plot2SelectMode"
+                value="zoom" styleClass="selectModeButtons"
+                onchange="setPlotSelectMode(2)" unselectable="false">
+                <f:selectItem itemLabel=" " itemValue="zoom" />
+                <f:selectItem itemLabel=" " itemValue="select" />
+              </p:selectOneButton>
+
+              <p:selectOneMenu widgetVar="plot2XAxisPicker" onchange="selectXAxis(2);"
+                value="#{sessionScope[beanName].data.plot2XAxis}" styleClass="xAxisSelector">
+                <f:selectItems value="#{sessionScope[beanName].plotMenuEntries}"/>
+              </p:selectOneMenu>
+            </f:facet>
+          </p:toolbar>
+        </h:form>
       </div>
     </div>
   </ui:define>

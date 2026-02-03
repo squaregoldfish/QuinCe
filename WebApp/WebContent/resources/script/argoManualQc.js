@@ -137,6 +137,7 @@ function newProfileLoaded() {
 	$($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).addClass('selected');
 	
 	loadPlot1(); // PF RemoteCommand
+	loadPlot2(); // PF RemoteCommand
 }
 
 function selectXAxis(index) {
