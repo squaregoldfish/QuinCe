@@ -12,19 +12,19 @@ table.dataTable.compact td {
 }
 
 .oddColGroupOddRow {
-  background-color: #ffffff;
+  background-color: #ffffff !important;
 }
 
 .oddColGroupEvenRow {
-  background-color: #f6f6ff;
+  background-color: #f6f6ff !important;
 }
 
 .evenColGroupOddRow {
-  background-color: #f6f6ff;
+  background-color: #f6f6ff !important;
 }
 
 .evenColGroupEvenRow {
-  background-color: #e9e9f9;
+  background-color: #e9e9f9 !important;
 }
 
 /* Force width of fixed left columns */

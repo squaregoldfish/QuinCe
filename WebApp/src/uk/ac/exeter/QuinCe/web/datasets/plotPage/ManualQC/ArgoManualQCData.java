@@ -4,7 +4,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -96,8 +95,12 @@ public class ArgoManualQCData extends ManualQCData {
 
   /**
    * Extra details for the currently selected profile.
+   *
+   * <p>
+   * Stored as a JSON string ready for sending to the front end.
+   * </p>
    */
-  private LinkedHashMap<String, String> selectedProfileDetails;
+  private String selectedProfileDetails;
 
   /**
    * Construct the data object.
@@ -395,7 +398,7 @@ public class ArgoManualQCData extends ManualQCData {
     buildProfileDetails();
   }
 
-  public Map<String, String> getSelectedProfileDetails() {
+  public String getSelectedProfileDetails() {
     return selectedProfileDetails;
   }
 
@@ -404,17 +407,22 @@ public class ArgoManualQCData extends ManualQCData {
   }
 
   private void buildProfileDetails() {
-    ArgoProfile profile = profiles.get(selectedProfile);
-    selectedProfileDetails = new LinkedHashMap<String, String>();
 
-    selectedProfileDetails.put("Time",
-      DateTimeUtils.formatDateTime(profile.getTime()));
+    List<List<String>> profileDetails = new ArrayList<List<String>>();
+
+    ArgoProfile profile = profiles.get(selectedProfile);
+
+    profileDetails.add(
+      Arrays.asList("Time", DateTimeUtils.formatDateTime(profile.getTime())));
 
     DataLatLng position = profile.getPosition();
 
-    selectedProfileDetails.put("Latitude",
-      StringUtils.formatNumber(position.getLatitude()));
-    selectedProfileDetails.put("Longitude",
-      StringUtils.formatNumber(position.getLongitude()));
+    profileDetails.add(Arrays.asList("Latitude",
+      StringUtils.formatNumber(position.getLatitude())));
+
+    profileDetails.add(Arrays.asList("Longitude",
+      StringUtils.formatNumber(position.getLongitude())));
+
+    selectedProfileDetails = gson.toJson(profileDetails);
   }
 }

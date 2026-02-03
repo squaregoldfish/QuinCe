@@ -1,4 +1,4 @@
-const PROFILE_TABLE_LOADING = 1 << 11;
+const PROFILE_LIST_LOADING = 1 << 11;
 const PROFILE_INFO_LOADING = 1 << 12;
 
 window['SELECTED_PROFILE_ROW'] = 0;
@@ -22,7 +22,7 @@ function dataLoadedLocal() {
 }
 
 function getInitialLoadingItems() {
-	return TABLE_LOADING | PLOT1_LOADING | PLOT2_LOADING | MAP1_LOADING | PROFILE_TABLE_LOADING;
+	return TABLE_LOADING | PLOT1_LOADING | PLOT2_LOADING | MAP1_LOADING | PROFILE_LIST_LOADING;
 }
 
 // Lay out the overall page structure
@@ -101,6 +101,7 @@ function drawProfileListTable() {
 	bInfo: false,
 	scrollY: 400,
     columns : tableColumns,
+	stripeClasses: ['evenColGroupOddRow','evenColGroupEvenRow'],
     data: JSON.parse($('#profileListForm\\:profileListData').val()),
 	drawCallback: function (settings) {
 	  setupProfileTableClickHandlers();
@@ -108,7 +109,7 @@ function drawProfileListTable() {
     }
   )
   
-  itemNotLoading(PROFILE_TABLE_LOADING);
+  itemNotLoading(PROFILE_LIST_LOADING);
 }
 
 // Initialise the click event handlers for the table
@@ -136,8 +137,31 @@ function newProfileLoaded() {
 	window['SELECTED_PROFILE_ROW'] = $('#profileListForm\\:selectedProfile').val();;
 	$($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).addClass('selected');
 	
+	// Redraw the profile details table
+	drawProfileDetailsTable();
+	
 	loadPlot1(); // PF RemoteCommand
 	loadPlot2(); // PF RemoteCommand
+}
+
+function drawProfileDetailsTable() {
+  let tableColumns = [];
+  let columnList = ['Item', 'Value'];
+  
+  columnList.forEach(column => {
+    tableColumns.push({'title': column});
+  });
+
+  new DataTable('#profileDetailsTable', {
+    ordering: false,
+    searching: false,
+    paging: false,
+    bInfo: false,
+    scrollY: 400,
+    columns : tableColumns,
+    stripeClasses: ['oddColGroupOddRow','oddColGroupEvenRow'],
+    data: JSON.parse($('#profileDetailsForm\\:profileDetailsData').val()),
+  });
 }
 
 function selectXAxis(index) {

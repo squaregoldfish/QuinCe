@@ -15,11 +15,11 @@
         <div id="profileList">
           <h:form id="profileListForm">
             <h:inputHidden id="profileListColumns"
-              value="${sessionScope[beanName].profileData.profileTableColumns}"/>
+              value="#{sessionScope[beanName].profileData.profileTableColumns}"/>
             <h:inputHidden id="profileListData"
-              value="${sessionScope[beanName].profileData.profileTableData}"/>
+              value="#{sessionScope[beanName].profileData.profileTableData}"/>
             <h:inputHidden id="selectedProfile"
-              value="${sessionScope[beanName].selectedProfile}"/>
+              value="#{sessionScope[beanName].selectedProfile}"/>
 
             <p:remoteCommand name="selectProfile"
               action="#{sessionScope[beanName].selectProfile}"
@@ -32,16 +32,9 @@
         </div>
         <div id="profileDetails">
           <h:form id="profileDetailsForm">
-            <p:dataTable id="profileInfo" value="#{sessionScope[beanName].data.selectedProfileDetails}"
-              var="item" stripedRows="true" emptyMessage="">
-
-              <p:column>
-                <h:outputText value="#{item.key}"/>
-              </p:column>
-              <p:column>
-                <h:outputText value="#{item.value}"/>
-              </p:column>
-            </p:dataTable>
+            <h:inputHidden id="profileDetailsData"
+              value="#{sessionScope[beanName].data.selectedProfileDetails}"/>
+            <table id="profileDetailsTable" class="cell-border compact nowrap"></table>
           </h:form>
         </div>
       </div>
