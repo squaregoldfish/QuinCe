@@ -6,10 +6,10 @@ window['SELECTED_PROFILE_ROW'] = 0;
 // Page-specific adjustment of plot height. See plotPage.js:resizePlot
 window['plotShrinkHeight'] = 10;
 
+mainTableSpitProportion = 0.65;
 plotProfileSplitProportion = 0.4;
-plotSplitProportion = 0.5;
 profileInfoSplitProportion = 0.7;
-profileListSplitProportion = 0.7;
+profileListSplitProportion = 0.6;
 
 function dataLoadedLocal() {
   initMap(1, true);
@@ -44,13 +44,14 @@ function layoutPage() {
 	}
   });
 
+  $('#plotPageContent').split().position($('#plotPageContent').height() * mainTableSpitProportion);
+
   // Splits the two profile plots from the profile info
   // (profile info = profile list, map, details)
   $('#plots').split({
     orientation: 'vertical',
     onDragEnd: function() {
-      resizePlots(false);
-	  resizeProfileLists(false);
+      resizeTopSection(true);
     }
   });
   
@@ -88,13 +89,25 @@ function scaleTableSplit() {
   resizeProfileInfo(false);
 }
 
+function resizeTopSection(updateSplitProportion) {
+  if (!updateSplitProportion) {
+    $('#plots').split().position($('#plots').width() * plotProfileSplitProportion);
+  }
+  
+  resizePlots(false);
+  resizeProfileInfo(false);
+  
+  if (updateSplitProportion) {
+    plotProfileSplitProportion = $('#plots').split().position() / $('#plots').width();
+  }
+}
+
 function resizeAllContent() {
   $('#plotPageContent').height(window.innerHeight - 73);
-  $('#plotPageContent').split().position($('#plotPageContent').height() * tableSplitProportion);
   
   // Main data table
   if (null != jsDataTable) {
-    let tableHeight = calcTableScrollY();
+    let tableHeight = $('#tableContent').height() - 33;
     $('#tableContent .dataTables_scrollBody').css('max-height', tableHeight);
     $('#tableContent .dataTables_scrollBody').css('height', tableHeight);
     jsDataTable.draw();
