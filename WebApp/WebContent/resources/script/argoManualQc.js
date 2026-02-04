@@ -27,32 +27,40 @@ function getInitialLoadingItems() {
 
 // Lay out the overall page structure
 function layoutPage() {
+
+  // Splits the bottom table (in plot_page.xhtml)
+  // from everything at the top
   $('#plotPageContent').split({
     orientation: 'horizontal',
     onDragEnd: function(){
       scaleTableSplit()}
     });
 
+  // Splits the two profile plots from the profile info
+  // (profile info = profile list, map, details)
   $('#plots').split({
     orientation: 'vertical',
     onDragEnd: function(){
     resizePlots()}
   });
 
+  // Splits the two plots
   $('#profilePlots').split({
     orientation: 'vertical',
     onDragEnd: function(){
       resizePlots()}
   });
 
-  $('#profileInfo').split({
+  // Splits the profile map and list from the profile details
+  $('#profiles').split({
     orientation: 'horizontal',
     onDragEnd: function(){
     resizeProfileInfo()}
   });
-	  
-  $('#profileData').split({
-    orientation: 'horizontal',
+
+  // Splits the profile map and profile list
+  $('#allProfiles').split({
+    orientation: 'vertical',
     onDragEnd: function(){
     resizeProfileInfo()}
   });
@@ -161,6 +169,9 @@ function drawProfileDetailsTable() {
     columns : tableColumns,
     stripeClasses: ['oddColGroupOddRow','oddColGroupEvenRow'],
     data: JSON.parse($('#profileDetailsForm\\:profileDetailsData').val()),
+    drawCallback: function( settings ) {
+        $("#profileDetails thead").hide();
+    }
   });
 }
 
