@@ -254,18 +254,21 @@ function resizePlot(index) {
   if (null != window['dataPlot' + index] && null != window['dataPlot' + index].maindiv_) {
     $('#plot' + index + 'Container').width('100%');
     $('#plot' + index + 'Container').height($('#plot' + index + 'Panel').height() - 40);
-    window['dataPlot' + index].resize($('#plot' + index + 'Container').width(), $('#plot' + index + 'Container').height());
+
+  let width = $('#plot' + index + 'Container').width();
+  let height = $('#plot' + index + 'Container').height() - window['plotShrinkHeight'];
+    window['dataPlot' + index].resize(width, height);
 
     if (null != window['y2Plot' + index]) {
-      window['y2Plot' + index].resize($('#plot' + index + 'Container').width(), $('#plot' + index + 'Container').height());
+      window['y2Plot' + index].resize(width, height);
     }
 
     if (null != window['flagPlot' + index]) {
-      window['flagPlot' + index].resize($('#plot' + index + 'Container').width(), $('#plot' + index + 'Container').height());
+      window['flagPlot' + index].resize(width, height);
     }
 
     if (null != window['selectionPlot' + index]) {
-      window['selectionPlot' + index].resize($('#plot' + index + 'Container').width(), $('#plot' + index + 'Container').height());
+      window['selectionPlot' + index].resize(width, height);
     }
 
     syncZoom(index);
@@ -2188,9 +2191,16 @@ function cancelNotes() {
 }
 
 function initMap(index) {
-  $('#map' + index +'Container').empty()
-  $('#map' + index + 'Container').width($('#plot' + index + 'Panel').width());
-  $('#map' + index + 'Container').height($('#plot' + index + 'Panel').height() - 40);
+  initMap(index, true);
+}
+
+function initMap(index, setSize) {
+  $('#map' + index +'Container').empty();
+
+  if (setSize) {
+    $('#map' + index + 'Container').width($('#plot' + index + 'Panel').width());
+    $('#map' + index + 'Container').height($('#plot' + index + 'Panel').height() - 40);
+  }
 
   let mapVar = 'map' + index;
 

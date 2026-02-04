@@ -1,3 +1,6 @@
+// Page-specific adjustment of plot height. See plotPage.js:resizePlot
+window['plotShrinkHeight'] = 5;
+
 function acceptAutoQc() {
   submitAutoQC(); // remoteCommand
 }
@@ -115,7 +118,6 @@ function scaleTableSplit() {
 
 // Handle split adjustment between the two plots
 function resizePlots() {
-
   for (let i = 1; i <= 2; i++) {
     resizePlot(i);
 
@@ -134,7 +136,7 @@ function resizeAllContent() {
   $('#plotPageContent').split().position($('#plotPageContent').height() * tableSplitProportion);
   resizePlots();
 
-  if (typeof variable !== 'undefined' && null != jsDataTable) {
+  if (null != jsDataTable) {
     let tableHeight = calcTableScrollY();
     $('.dataTables_scrollBody').css('max-height',tableHeight);
     $('.dataTables_scrollBody').css('height', tableHeight);

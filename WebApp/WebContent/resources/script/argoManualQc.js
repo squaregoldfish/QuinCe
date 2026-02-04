@@ -3,9 +3,16 @@ const PROFILE_INFO_LOADING = 1 << 12;
 
 window['SELECTED_PROFILE_ROW'] = 0;
 
-function dataLoadedLocal() {
+// Page-specific adjustment of plot height. See plotPage.js:resizePlot
+window['plotShrinkHeight'] = 10;
 
-  initMap(1);
+plotProfileSplitProportion = 0.4;
+plotSplitProportion = 0.5;
+profileInfoSplitProportion = 0.7;
+profileListSplitProportion = 0.7;
+
+function dataLoadedLocal() {
+  initMap(1, true);
   drawProfileListTable();
   
   // Highlight the first row as the current selection
@@ -32,49 +39,135 @@ function layoutPage() {
   // from everything at the top
   $('#plotPageContent').split({
     orientation: 'horizontal',
-    onDragEnd: function(){
-      scaleTableSplit()}
-    });
+    onDragEnd: function() {
+      scaleTableSplit();
+	}
+  });
 
   // Splits the two profile plots from the profile info
   // (profile info = profile list, map, details)
   $('#plots').split({
     orientation: 'vertical',
-    onDragEnd: function(){
-    resizePlots()}
+    onDragEnd: function() {
+      resizePlots(false);
+	  resizeProfileLists(false);
+    }
   });
+  
+  $('#plots').split().position($('#plots').width() * plotProfileSplitProportion);
 
   // Splits the two plots
   $('#profilePlots').split({
     orientation: 'vertical',
-    onDragEnd: function(){
-      resizePlots()}
+    onDragEnd: function() {
+      resizePlots(true);
+	}
   });
 
   // Splits the profile map and list from the profile details
   $('#profiles').split({
     orientation: 'horizontal',
-    onDragEnd: function(){
-    resizeProfileInfo()}
+    onDragEnd: function() {
+      resizeProfileInfo(true);
+    }
   });
 
   // Splits the profile map and profile list
-  $('#allProfiles').split({
+  $('#profileData').split({
     orientation: 'vertical',
-    onDragEnd: function(){
-    resizeProfileInfo()}
+    onDragEnd: function() {
+      resizeProfileLists(true);
+    }
   });
 }
 
+// Handle table/plot split adjustment
+function scaleTableSplit() {
+  tableSplitProportion = $('#plotPageContent').split().position() / $('#plotPageContent').height();
+  resizePlots(false);
+  resizeProfileInfo(false);
+}
+
 function resizeAllContent() {
+  $('#plotPageContent').height(window.innerHeight - 73);
+  $('#plotPageContent').split().position($('#plotPageContent').height() * tableSplitProportion);
+  
+  // Main data table
+  if (null != jsDataTable) {
+    let tableHeight = calcTableScrollY();
+    $('#tableContent .dataTables_scrollBody').css('max-height', tableHeight);
+    $('#tableContent .dataTables_scrollBody').css('height', tableHeight);
+    jsDataTable.draw();
+  }
+  
+  resizePlots(false);
+  resizeProfileInfo(false);
+  resizeProfileLists(false);
 }
 
-function resizePlots() {
-	
+function resizePlots(updateSplitProportion) {
+  $('#profilePlots').height('100%');
+  
+  if (!updateSplitProportion) {
+	$('#profilePlots').split().position($('#profilePlots').width() * plotSplitProportion);
+  }
+
+  resizePlot(1);
+  resizePlot(2);
+  
+  // Store the split proportion for later
+  if (updateSplitProportion) {
+    plotSplitProportion = $('#profilePlots').split().position() / $('#profilePlots').width();
+  }
 }
 
-function resizeProfileInfo() {
-	
+function resizeProfileInfo(updateSplitProportion) {
+  $('#profiles').height('100%');
+
+  if (!updateSplitProportion) {
+    $('#profiles').split().position($('#profiles').height() * profileInfoSplitProportion);
+  }
+  
+  if (null != profileDetailsTable) {
+    let tableHeight = $('#profileDetails').height();
+    $('#profileListTable .dataTables_scrollBody').css('max-height', tableHeight);
+    $('#profileListTable .dataTables_scrollBody').css('height', tableHeight);
+    profileDetailsTable.draw();
+  }
+  
+  if (updateSplitProportion) {
+	profileInfoSplitProportion = $('#profiles').split().position() / $('#profiles').height();
+  }
+  
+  resizeProfileLists(false);
+}
+
+function resizeProfileLists(updateSplitProportion) {
+  $('#profileMap').height('100%');
+  $('#profileList').height('100%');
+
+  if (!updateSplitProportion) {
+    $('#profileData').split().position($('#profileData').width() * profileListSplitProportion);
+  }
+  
+  if (null != profileListTable) {
+    let tableHeight = $('#profileList').height() - 30;
+	$('#profileList .dataTables_scrollBody').css('max-height', tableHeight);
+	$('#profileList .dataTables_scrollBody').css('height', tableHeight);
+	profileListTable.draw();
+  }
+  
+  if ($('#map1Container').width() != $('#profileMap').width() ||
+    $('#map1Container').height() != $('#profileMap').height()) {
+		
+    $('#map1Container').width($('#profileMap').width());
+    $('#map1Container').height($('#profileMap').height());
+    initMap(1, false);
+  }
+  
+  if (updateSplitProportion) {
+    profileListSplitProportion = $('#profileData').split().position() / $('#profileData').width();
+  }
 }
 
 function getPlotFormName(index) {
@@ -84,12 +177,6 @@ function getPlotFormName(index) {
 function getMapFormName(index) {
 	// There's only one map, so we ignore the index
 	return '#profileMapForm';
-}
-
-// Handle table/plot split adjustment
-function scaleTableSplit() {
-  tableSplitProportion = $('#plotPageContent').split().position() / $('#plotPageContent').height();
-  resizeAllContent();
 }
 
 function drawProfileListTable() {
@@ -102,7 +189,7 @@ function drawProfileListTable() {
 	tableColumns.push({'title': column});
   });
 	
-  new DataTable('#profileListTable', {
+  profileListTable = new DataTable('#profileListTable', {
 	ordering: false,
 	searching: false,
 	paging: false,
@@ -137,19 +224,21 @@ function selectProfileClick(row) {
 }
 
 function newProfileLoaded() {
-	// Redraw the main QC table
-	drawTable();
+  // NB For some reason the order of operations here is important
 	
-	// Update the profile table row highlight
-	$($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).removeClass('selected');
-	window['SELECTED_PROFILE_ROW'] = $('#profileListForm\\:selectedProfile').val();;
-	$($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).addClass('selected');
+  // Update the profile table row highlight
+  $($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).removeClass('selected');
+  window['SELECTED_PROFILE_ROW'] = $('#profileListForm\\:selectedProfile').val();;
+  $($('#profileListTable').DataTable().row(window['SELECTED_PROFILE_ROW']).node()).addClass('selected');
+
+  // Redraw the profile details table
+  drawProfileDetailsTable();
 	
-	// Redraw the profile details table
-	drawProfileDetailsTable();
-	
-	loadPlot1(); // PF RemoteCommand
-	loadPlot2(); // PF RemoteCommand
+  loadPlot1(); // PF RemoteCommand
+  loadPlot2(); // PF RemoteCommand
+
+  // Redraw the main QC table
+  drawTable();
 }
 
 function drawProfileDetailsTable() {
@@ -160,7 +249,7 @@ function drawProfileDetailsTable() {
     tableColumns.push({'title': column});
   });
 
-  new DataTable('#profileDetailsTable', {
+  profileDetailsTable = new DataTable('#profileDetailsTable', {
     ordering: false,
     searching: false,
     paging: false,
@@ -169,7 +258,7 @@ function drawProfileDetailsTable() {
     columns : tableColumns,
     stripeClasses: ['oddColGroupOddRow','oddColGroupEvenRow'],
     data: JSON.parse($('#profileDetailsForm\\:profileDetailsData').val()),
-    drawCallback: function( settings ) {
+    drawCallback: function() {
         $("#profileDetails thead").hide();
     }
   });
