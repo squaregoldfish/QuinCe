@@ -209,12 +209,18 @@ function drawProfileListTable() {
 	bInfo: false,
 	scrollY: 400,
     columns : tableColumns,
-	stripeClasses: ['evenColGroupOddRow','evenColGroupEvenRow'],
     data: JSON.parse($('#profileListForm\\:profileListData').val()),
 	drawCallback: function (settings) {
 	  setupProfileTableClickHandlers();
-	}
+	},
+	rowCallback: function(row, data, index) {
+	  if (index % 2 === 0) {
+		$(row).addClass('profileListEvenRow');
+	  } else {
+	    $(row).addClass('profileListOddRow');
+	  }
     }
+	}
   )
   
   itemNotLoading(PROFILE_LIST_LOADING);
@@ -269,11 +275,17 @@ function drawProfileDetailsTable() {
     bInfo: false,
     scrollY: 400,
     columns : tableColumns,
-    stripeClasses: ['oddColGroupOddRow','oddColGroupEvenRow'],
     data: JSON.parse($('#profileDetailsForm\\:profileDetailsData').val()),
     drawCallback: function() {
-        $("#profileDetails thead").hide();
-    }
+      $("#profileDetails thead").hide();
+    },
+    rowCallback: function(row, data, index) {
+	  if (index % 2 === 0) {
+		$(row).addClass('profileDetailsEvenRow');
+      } else {
+        $(row).addClass('profileDetailsOddRow');
+      }
+	}
   });
 }
 

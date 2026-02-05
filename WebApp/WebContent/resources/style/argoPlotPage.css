@@ -24,3 +24,19 @@
   position: relative;
   top: -3px;
 }
+
+.profileDetailsOddRow {
+  background-color: #f6f6ff !important;
+}
+
+.profileDetailsEvenRow {
+  background-color: #e9e9f9 !important;
+}
+
+.profileListOddRow {
+  background-color: #ffffff !important;
+}
+
+.profileListEvenRow {
+  background-color: #f6f6ff !important;
+}
