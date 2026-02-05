@@ -48,7 +48,7 @@
             <p:remoteCommand name="selectProfile"
               action="#{sessionScope[beanName].selectProfile}"
               process="selectedProfile"
-              update=":tableForm :profileDetailsForm"
+              update=":tableForm :profileDetailsForm :plotPageForm:rowIDs"
               oncomplete="newProfileLoaded()" onerror="plotError(xhr)" async="true"/>
 
             <table id="profileListTable" class="cell-border compact nowrap"></table>

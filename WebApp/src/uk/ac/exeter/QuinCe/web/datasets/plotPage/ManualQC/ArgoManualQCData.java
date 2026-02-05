@@ -29,6 +29,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
+import uk.ac.exeter.QuinCe.web.Progress;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoPlot;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoPlotPageTableRecord;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.CoordinateIdSerializer;
@@ -101,6 +102,11 @@ public class ArgoManualQCData extends ManualQCData {
    * </p>
    */
   private String selectedProfileDetails;
+
+  /**
+   * The data table row IDs for the currently selected profile.
+   */
+  private List<Long> profileRowIDs;
 
   /**
    * Construct the data object.
@@ -183,56 +189,6 @@ public class ArgoManualQCData extends ManualQCData {
   }
 
   public String getProfileTableData() throws Exception {
-    if (null != sensorValues && null == profileTableData) {
-
-      profiles = new ArrayList<ArgoProfile>();
-
-      ArgoProfile currentProfile = null;
-
-      for (Coordinate c : getCoordinates()) {
-        ArgoCoordinate coordinate = (ArgoCoordinate) c;
-
-        // See if we've started a new profile
-        if (null != currentProfile && !currentProfile.matches(coordinate)) {
-          profiles.add(currentProfile);
-          currentProfile = null;
-        }
-
-        if (null == currentProfile) {
-          currentProfile = new ArgoProfile(coordinate);
-        }
-
-        if (null == currentProfile.getTime() && null != coordinate.getTime()) {
-          currentProfile.setTime(coordinate.getTime());
-        }
-
-        if (null == currentProfile.getPosition()
-          && null != getMapPosition(coordinate)) {
-          currentProfile.setPosition(getMapPosition(coordinate));
-        }
-      }
-
-      // Store the last profile
-      profiles.add(currentProfile);
-
-      List<List<String>> profileData = new ArrayList<List<String>>(
-        profiles.size());
-      IntStream.range(0, profiles.size()).forEach(i -> {
-
-        ArgoProfile profile = profiles.get(i);
-
-        profileData.add(
-          Arrays.asList(new String[] { String.valueOf(profile.getCycleNumber()),
-            String.valueOf(profile.getDirection()),
-            String.valueOf(profile.getNProf()) }));
-      });
-
-      profileTableData = gson.toJson(profileData);
-
-      // Initialise the profile details now we have loaded them
-      buildProfileDetails();
-    }
-
     return profileTableData;
   }
 
@@ -424,5 +380,70 @@ public class ArgoManualQCData extends ManualQCData {
       StringUtils.formatNumber(position.getLongitude())));
 
     selectedProfileDetails = gson.toJson(profileDetails);
+
+    /**
+     * Set up the row IDs for the data table
+     */
+    profileRowIDs = getCoordinates().stream()
+      .filter(c -> profile.matches((ArgoCoordinate) c)).map(c -> c.getId())
+      .toList();
+  }
+
+  @Override
+  public List<Long> getRowIDs() {
+    return profileRowIDs;
+  }
+
+  @Override
+  public void loadDataAction(Progress progress) throws Exception {
+    super.loadDataAction(progress);
+
+    // Build profile details
+    profiles = new ArrayList<ArgoProfile>();
+
+    ArgoProfile currentProfile = null;
+
+    for (Coordinate c : getCoordinates()) {
+      ArgoCoordinate coordinate = (ArgoCoordinate) c;
+
+      // See if we've started a new profile
+      if (null != currentProfile && !currentProfile.matches(coordinate)) {
+        profiles.add(currentProfile);
+        currentProfile = null;
+      }
+
+      if (null == currentProfile) {
+        currentProfile = new ArgoProfile(coordinate);
+      }
+
+      if (null == currentProfile.getTime() && null != coordinate.getTime()) {
+        currentProfile.setTime(coordinate.getTime());
+      }
+
+      if (null == currentProfile.getPosition()
+        && null != getMapPosition(coordinate)) {
+        currentProfile.setPosition(getMapPosition(coordinate));
+      }
+    }
+
+    // Store the last profile
+    profiles.add(currentProfile);
+
+    List<List<String>> profileData = new ArrayList<List<String>>(
+      profiles.size());
+    IntStream.range(0, profiles.size()).forEach(i -> {
+
+      ArgoProfile profile = profiles.get(i);
+
+      profileData.add(
+        Arrays.asList(new String[] { String.valueOf(profile.getCycleNumber()),
+          String.valueOf(profile.getDirection()),
+          String.valueOf(profile.getNProf()) }));
+    });
+
+    profileTableData = gson.toJson(profileData);
+
+    // Initialise the profile details now we have loaded them
+    buildProfileDetails();
   }
 }
