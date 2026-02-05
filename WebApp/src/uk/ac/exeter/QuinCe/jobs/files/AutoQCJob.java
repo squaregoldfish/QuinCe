@@ -163,7 +163,7 @@ public class AutoQCJob extends DataSetJob {
 
         conn.setAutoCommit(false);
 
-        SensorAssignments sensorAssignments = instrument.getSensorAssignments();<>
+        SensorAssignments sensorAssignments = instrument.getSensorAssignments();
 
         DatasetSensorValues sensorValues = new DatasetSensorValues(conn,
           dataSet, true, true, rawSensorValues);
