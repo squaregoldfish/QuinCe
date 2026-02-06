@@ -40,3 +40,11 @@
 .profileListEvenRow {
   background-color: #f6f6ff !important;
 }
+
+.resetMapZoomButton {
+  position: absolute;
+  top: 8px;
+  left: -5px;
+  z-index: 1000;
+  background-color: #ffffff !important;
+}

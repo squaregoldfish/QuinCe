@@ -34,6 +34,8 @@
               oncomplete="drawMap(1)" onerror="plotError(xhr)"/>
 
             <div id="map1Container"></div>
+            <p:commandButton icon="zoomOutButton" onclick="resetMapZoom(1); return false;"
+              styleClass="tightIconButton plotFooterButton resetMapZoomButton" />
           </h:form>
         </div>
         <div id="profileList">
