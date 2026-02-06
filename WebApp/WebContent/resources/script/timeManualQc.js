@@ -121,10 +121,8 @@ function resizePlots() {
   for (let i = 1; i <= 2; i++) {
     resizePlot(i);
 
-    if (null != window['map' + i]) {
-      $('#map' + i + 'Container').width($('#plot' + i + 'Panel').width());
-      $('#map' + i + 'Container').height($('#plot' + i + 'Panel').height() - 40);
-    }
+    $('#map' + i + 'Container').width($('#plot' + i + 'Panel').width());
+    $('#map' + i + 'Container').height($('#plot' + i + 'Panel').height() - 40);
   }
 }
 
