@@ -16,6 +16,12 @@ public class PlotPageValueMapRecord extends MapRecord {
     this.value = value;
   }
 
+  public PlotPageValueMapRecord(LatLng position, long id,
+    PlotPageTableValue value) {
+    super(position, id);
+    this.value = value;
+  }
+
   @Override
   public boolean isGood(DatasetSensorValues allSensorValues) {
     return value.getQcFlag(allSensorValues).isGood();

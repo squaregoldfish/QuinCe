@@ -40,6 +40,22 @@ public class SimplePlotPageTableValue implements PlotPageTableValue {
   private Collection<Long> sources;
 
   /**
+   * Constructor for a straightforward nominal value.
+   *
+   * @param value
+   *          The value.
+   */
+  public SimplePlotPageTableValue(String value) {
+    this.value = value;
+    this.rawValue = value;
+    this.qcFlag = Flag.GOOD;
+    this.qcMessage = null;
+    this.flagNeeded = false;
+    this.type = NOMINAL_TYPE;
+    this.sources = null;
+  }
+
+  /**
    * Simple constructor with all values.
    *
    * @param value

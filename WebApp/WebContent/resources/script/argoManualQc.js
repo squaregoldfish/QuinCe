@@ -208,6 +208,7 @@ function drawProfileListTable() {
 	searching: false,
 	paging: false,
 	bInfo: false,
+	scroller: false,
 	scrollY: 400,
     columns : tableColumns,
     data: JSON.parse($('#profileListForm\\:profileListData').val()),
@@ -334,4 +335,12 @@ function getIncludeZero() {
 
 function legendFormatter(data) {
   return 'PRES: ' + formatYAxisValue(data.series[2].y) + '&nbsp;' + data.dygraph.user_attrs_.xlabel + ': ' + data.x;
+}
+
+function mapClick(id) {
+  $('#profileListForm\\:selectedProfile').val(id);
+  selectProfile(); // PF remote command
+  setTimeout(function() {
+    $('#profileList').find('.selected').get(0).scrollIntoView();
+  }, 1000);
 }

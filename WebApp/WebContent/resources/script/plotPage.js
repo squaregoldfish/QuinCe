@@ -2316,7 +2316,9 @@ function makeMapLayer(mapIndex, geojson, interactive) {
       })
       .bindTooltip(makeTooltip(feature, mapIndex))
       .on('click', function(e) {
-        scrollToTableRow(feature.properties.rowID)
+    if (typeof mapClick === 'function') {
+          mapClick(feature.properties.rowID);
+    }
       });
     },
     onEachFeature: (feature, layer) => {

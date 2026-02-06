@@ -6,14 +6,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.IntStream;
 
 import javax.sql.DataSource;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.javadocmd.simplelatlng.LatLng;
 
 import uk.ac.exeter.QuinCe.data.Dataset.ArgoCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.ArgoProfile;
@@ -39,8 +37,8 @@ import uk.ac.exeter.QuinCe.web.datasets.plotPage.Plot;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageColumnHeading;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableRecord;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableRecordSerializer;
-import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageValueMapRecord;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.SimplePlotPageTableValue;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 public class ArgoManualQCData extends ManualQCData {
@@ -274,18 +272,19 @@ public class ArgoManualQCData extends ManualQCData {
     MapRecords records = new MapRecords(0, getAllSensorValues(),
       StringUtils::formatNumberToInt);
 
-    TreeMap<Coordinate, PlotPageTableValue> values = getColumnValues(column);
     HashSet<Integer> usedCycleNumbers = new HashSet<Integer>();
 
-    for (Map.Entry<Coordinate, PlotPageTableValue> entry : values.entrySet()) {
-      ArgoCoordinate coordinate = (ArgoCoordinate) entry.getKey();
+    for (int i = 0; i < profiles.size(); i++) {
 
-      if (!usedCycleNumbers.contains(coordinate.getCycleNumber())) {
-        LatLng position = getMapPosition(entry.getKey());
-        if (null != position) {
-          records.add(
-            new PlotPageValueMapRecord(position, coordinate, entry.getValue()));
-          usedCycleNumbers.add(coordinate.getCycleNumber());
+      ArgoProfile profile = profiles.get(i);
+
+      if (!usedCycleNumbers.contains(profile.getCycleNumber())) {
+
+        if (null != profile.getPosition()) {
+          records.add(new PlotPageValueMapRecord(profile.getPosition(), i,
+            new SimplePlotPageTableValue(
+              String.valueOf(profile.getCycleNumber()))));
+          usedCycleNumbers.add(profile.getCycleNumber());
         }
       }
     }
@@ -295,13 +294,12 @@ public class ArgoManualQCData extends ManualQCData {
 
   @Override
   protected List<Long> getMapSelection() {
-
     long mapSelection = -1L;
 
-    for (Coordinate coord : getCoordinates()) {
-      if (((ArgoCoordinate) coord).getCycleNumber() == profiles
-        .get(selectedProfile).getCycleNumber()) {
-        mapSelection = coord.getId();
+    for (int i = 0; i < profiles.size(); i++) {
+      if (profiles.get(i).getCycleNumber() == profiles.get(selectedProfile)
+        .getCycleNumber()) {
+        mapSelection = i;
         break;
       }
     }

@@ -153,3 +153,7 @@ function getPlotFormName(index) {
 function getMapFormName(index) {
 	return getPlotFormName(index);
 }
+
+function mapClick(id) {
+  scrollToTableRow(id);
+}
