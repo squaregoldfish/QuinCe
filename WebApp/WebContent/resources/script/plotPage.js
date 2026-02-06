@@ -459,7 +459,7 @@ function getColumnIdsWork(headers) {
 }
 
 function getReferenceValues(index) {
-  return getColumnById($(getPlotFormName(index) + '\\:plot' + index + 'YAxis').val()).referenceValues;
+  return getColumnById($(getPlotFormName(index) + '\\:plot' + index + 'DisplayVariable').val()).referenceValues;
 }
 
 function getYRange(index) {
@@ -1453,7 +1453,7 @@ function drawDataPlot2Y(index, keepZoom) {
   };
 
   // Reference value for gas standards and similar
-  let referenceValue = getColumnById($(getPlotFormName(index) + '\\:plot' + index + 'YAxis').val()).referenceValue;
+  let referenceValue = getColumnById($(getPlotFormName(index) + '\\:plot' + index + 'DisplayVariable').val()).referenceValue;
   if (null != referenceValue) {
     data_options.underlayCallback = function(canvas, area, g) {
       let xmin = g.toDomXCoord(g.xAxisExtremes()[0]);
@@ -1515,7 +1515,7 @@ function drawPlot(index, drawOtherPlots, keepZoom) {
 
   // Enable/disable the selection mode controls
   if (canEdit()) {
-    let plotVariable = $(getPlotFormName(index) + '\\:plot' + index + 'YAxis').val();
+    let plotVariable = $(getPlotFormName(index) + '\\:plot' + index + 'DisplayVariable').val();
     if (getColumnById(plotVariable).editable) {
       PF('plot' + index + 'SelectMode').enable();
     } else {
@@ -2085,7 +2085,7 @@ function selectModeMouseUp(event, g, context) {
   g.clearZoomRect_();
 
   let plotIndex = g.maindiv_.id.substring(4,5);
-  let plotVar = $(getPlotFormName(index) + '\\:plot' + plotIndex + 'YAxis').val();
+  let plotVar = $(getPlotFormName([plotIndex]) + '\\:plot' + plotIndex + 'DisplayVariable').val();
 
   if (getColumn(extendedColumnHeaders, getColumnIndex(plotVar)).editable) {
     let minX = g.toDataXCoord(context.dragStartX);

@@ -102,6 +102,15 @@ public class Plot {
     return null == yAxis ? 0 : yAxis.getId();
   }
 
+  /**
+   * Get the variable being displayed in the plot. This is usually the Y Axis.
+   *
+   * @return The variable being displayed in the plot.
+   */
+  public long getDisplayVariable() {
+    return getYaxis();
+  }
+
   public void setYaxis(long yAxis) throws Exception {
     if (yAxis != 0) {
       this.yAxis = data.getColumnHeading(yAxis);

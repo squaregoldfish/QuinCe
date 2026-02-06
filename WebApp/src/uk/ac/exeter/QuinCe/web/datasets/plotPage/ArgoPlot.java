@@ -83,10 +83,17 @@ public class ArgoPlot extends Plot {
     return getColumnValues(yAxis, profile);
   }
 
+  @Override
   protected TreeMap<Coordinate, PlotPageTableValue> getY2Values()
     throws Exception {
 
     ArgoProfile profile = data.getProfiles().get(data.getSelectedProfile());
     return null == y2Axis ? new TreeMap<>() : getColumnValues(y2Axis, profile);
   }
+
+  @Override
+  public long getDisplayVariable() {
+    return getXaxis();
+  }
+
 }

@@ -26,6 +26,8 @@
           value="#{sessionScope[beanName].data.plot1.yaxis}"/>
         <h:inputHidden id="plot1Y2Axis"
           value="#{sessionScope[beanName].data.plot1.y2axis}"/>
+        <h:inputHidden id="plot1DisplayVariable"
+          value="#{sessionScope[beanName].data.plot1.displayVariable}"/>
         <h:inputHidden id="map1Column"
           value="#{sessionScope[beanName].data.map1.column}"/>
         <h:inputHidden id="map1Data"
@@ -43,7 +45,7 @@
           action="#{sessionScope[beanName].data.plot1.init}"
           process="@this plot1XAxis plot1YAxis plot1Y2Axis plot1HideFlags"
           update=":plotPageForm:error plot1Data plot1Flags plot1DataLabels
-            plot1FlagLabels plot1Y2Data plot1Y2Labels"
+            plot1FlagLabels plot1Y2Data plot1Y2Labels plot1DisplayVariable"
           oncomplete="drawPlot(1, true, false)" onerror="plotError(xhr)"/>
 
         <p:remoteCommand name="map1GetData"
@@ -116,6 +118,8 @@
           value="#{sessionScope[beanName].data.plot2.yaxis}"/>
         <h:inputHidden id="plot2Y2Axis"
           value="#{sessionScope[beanName].data.plot2.y2axis}"/>
+        <h:inputHidden id="plot2DisplayVariable"
+          value="#{sessionScope[beanName].data.plot2.displayVariable}"/>
         <h:inputHidden id="map2Column"
           value="#{sessionScope[beanName].data.map2.column}"/>
         <h:inputHidden id="map2Data"
@@ -133,7 +137,7 @@
           action="#{sessionScope[beanName].data.plot2.init}"
           process="@this plot2XAxis plot2YAxis plot2Y2Axis plot2HideFlags"
           update=":plotPageForm:error plot2Data plot2Flags plot2DataLabels
-            plot2FlagLabels plot2Y2Data plot2Y2Labels"
+            plot2FlagLabels plot2Y2Data plot2Y2Labels plot2DisplayVariable"
           oncomplete="drawPlot(2, true, false)" onerror="plotError(xhr)"/>
 
         <p:remoteCommand name="map2GetData"

@@ -86,12 +86,14 @@
             value="#{sessionScope[beanName].data.plot1.yaxis}"/>
           <h:inputHidden id="plot1Y2Axis"
             value="#{sessionScope[beanName].data.plot1.y2axis}"/>
+          <h:inputHidden id="plot1DisplayVariable"
+            value="#{sessionScope[beanName].data.plot1.displayVariable}"/>
 
           <p:remoteCommand name="loadPlot1"
             action="#{sessionScope[beanName].data.plot1.init}"
             process="@this plot1XAxis plot1YAxis plot1HideFlags"
             update=":plotPageForm:error plot1Data plot1Flags plot1DataLabels
-              plot1FlagLabels"
+              plot1FlagLabels plot1DisplayVariable"
             oncomplete="drawPlot(1, true, false)" onerror="plotError(xhr)"/>
 
           <div id="plot1Container">
@@ -112,7 +114,7 @@
                   id="plot1HideFlags" onchange="hideFlags(1); return false;"
                   styleClass="tightIconButton plotFooterButton" />
               </div>
-              <p:selectOneButton id="plot1SelectMode" widgetVar="plot1SelectMode"
+              <p:selectOneButton id="plotSelectMode" widgetVar="plot1SelectMode"
                 value="zoom" styleClass="selectModeButtons"
                 onchange="setPlotSelectMode(1)" unselectable="false">
                 <f:selectItem itemLabel=" " itemValue="zoom" />
@@ -147,12 +149,14 @@
             value="#{sessionScope[beanName].data.plot2.yaxis}"/>
           <h:inputHidden id="plot2Y2Axis"
             value="#{sessionScope[beanName].data.plot2.y2axis}"/>
+          <h:inputHidden id="plot2DisplayVariable"
+            value="#{sessionScope[beanName].data.plot2.displayVariable}"/>
 
           <p:remoteCommand name="loadPlot2"
             action="#{sessionScope[beanName].data.plot2.init}"
             process="@this plot2XAxis plot2YAxis plot2HideFlags"
             update=":plotPageForm:error plot2Data plot2Flags plot2DataLabels
-              plot2FlagLabels"
+              plot2FlagLabels plot2DisplayVariable"
             oncomplete="drawPlot(2, true, false)" onerror="plotError(xhr)"/>
 
           <div id="plot2Container">
@@ -173,7 +177,7 @@
                   id="plot2HideFlags" onchange="hideFlags(2); return false;"
                   styleClass="tightIconButton plotFooterButton" />
               </div>
-              <p:selectOneButton id="plot2SelectMode" widgetVar="plot2SelectMode"
+              <p:selectOneButton id="plotSelectMode" widgetVar="plot2SelectMode"
                 value="zoom" styleClass="selectModeButtons"
                 onchange="setPlotSelectMode(2)" unselectable="false">
                 <f:selectItem itemLabel=" " itemValue="zoom" />
