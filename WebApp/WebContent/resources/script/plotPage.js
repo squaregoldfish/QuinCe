@@ -2364,7 +2364,7 @@ function getPointColor(mapIndex, point) {
       }
     }
     case SELECTION_TYPE: {
-      return '#FFFF00';
+      return null != window['mapSelectionColor'] ? window['mapSelectionColor'] : '#FFFF00';
     }
     default: {
       console.log('INVALID TYPE ' + point.properties.type);

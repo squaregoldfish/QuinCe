@@ -2,6 +2,7 @@ const PROFILE_LIST_LOADING = 1 << 11;
 const PROFILE_INFO_LOADING = 1 << 12;
 
 window['SELECTED_PROFILE_ROW'] = 0;
+window['mapSelectionColor'] = '#8582FF';
 
 // Page-specific adjustment of plot height. See plotPage.js:resizePlot
 window['plotShrinkHeight'] = 10;
