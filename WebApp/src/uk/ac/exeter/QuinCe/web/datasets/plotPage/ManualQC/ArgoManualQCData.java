@@ -294,6 +294,22 @@ public class ArgoManualQCData extends ManualQCData {
   }
 
   @Override
+  protected List<Long> getMapSelection() {
+
+    long mapSelection = -1L;
+
+    for (Coordinate coord : getCoordinates()) {
+      if (((ArgoCoordinate) coord).getCycleNumber() == profiles
+        .get(selectedProfile).getCycleNumber()) {
+        mapSelection = coord.getId();
+        break;
+      }
+    }
+
+    return List.of(mapSelection);
+  }
+
+  @Override
   protected void initTableDataGson() {
     tableDataGson = new GsonBuilder()
       .registerTypeHierarchyAdapter(PlotPageTableRecord.class,

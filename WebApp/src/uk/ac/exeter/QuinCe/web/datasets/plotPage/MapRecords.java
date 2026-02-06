@@ -136,6 +136,8 @@ public class MapRecords extends ArrayList<MapRecord> {
 
       if (boundedRecords.size() <= DECIMATION_LIMIT) {
         decimated.addAll(boundedRecords);
+        selected = boundedRecords.stream()
+          .filter(r -> selectedRows.contains(r.getRowId())).toList();
       } else {
         int nth = (int) Math.floor(boundedRecords.size() / DECIMATION_LIMIT);
         int count = 0;

@@ -1014,8 +1014,21 @@ public abstract class PlotPageData {
       buildMapCache(column);
     }
 
-    return mapCache.get(column).getDisplayJson(bounds, selectedRows,
+    return mapCache.get(column).getDisplayJson(bounds, getMapSelection(),
       useNeededFlags, hideNonGoodFlags, allSensorValues);
+  }
+
+  /**
+   * Get the row IDs to be highlighted on the map.
+   *
+   * <p>
+   * By default this returns the list of selected records in the main QC table.
+   * </p>
+   *
+   * @return The selection to be displayed on the map.
+   */
+  protected List<Long> getMapSelection() {
+    return selectedRows;
   }
 
   public GeoBounds getMapBounds(PlotPageColumnHeading column,

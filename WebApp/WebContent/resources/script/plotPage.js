@@ -2259,7 +2259,7 @@ function getMapData(index) {
   $(getPlotFormName(index) + '\\:plot' + index + 'Data').val('');
   $(getPlotFormName(index) + '\\:plot' + index + 'Y2Data').val('');
   $(getMapFormName(index) + '\\:map' + index + 'Data').val('');
-  eval('map' + index + 'GetData()');
+  eval('map' + index + 'GetData()'); // PF remote command
 }
 
 function drawMap(index) {

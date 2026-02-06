@@ -258,6 +258,9 @@ function newProfileLoaded() {
 
   // Redraw the main QC table
   drawTable();
+  
+  // Redraw the map to show the selected cycle
+  getMapData(1);
 }
 
 function drawProfileDetailsTable() {
