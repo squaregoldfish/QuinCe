@@ -30,7 +30,8 @@ function dataLoadedLocal() {
 }
 
 function getInitialLoadingItems() {
-	return TABLE_LOADING | PLOT1_LOADING | PLOT2_LOADING | MAP1_LOADING | PROFILE_LIST_LOADING;
+	return TABLE_LOADING | PLOT1_LOADING | PLOT2_LOADING |
+	  MAP1_LOADING | PROFILE_LIST_LOADING | PROFILE_INFO_LOADING;
 }
 
 // Lay out the overall page structure
@@ -240,6 +241,10 @@ function setupProfileTableClickHandlers() {
 }
 
 function selectProfileClick(row) {
+  itemLoading(PROFILE_INFO_LOADING);
+  itemLoading(PLOT1_LOADING);
+  itemLoading(PLOT2_LOADING);
+  itemLoading(TABLE_LOADING);
   clearSelection();
   $('#profileListForm\\:selectedProfile').val(row._DT_RowIndex);
   selectProfile(); // PF RemoteCommand
@@ -293,6 +298,8 @@ function drawProfileDetailsTable() {
       }
 	}
   });
+  
+  itemNotLoading(PROFILE_INFO_LOADING);
 }
 
 function selectXAxis(index) {
@@ -338,6 +345,10 @@ function legendFormatter(data) {
 }
 
 function mapClick(id) {
+  itemLoading(PROFILE_INFO_LOADING);
+  itemLoading(PLOT1_LOADING);
+  itemLoading(PLOT2_LOADING);
+  itemLoading(TABLE_LOADING);
   $('#profileListForm\\:selectedProfile').val(id);
   selectProfile(); // PF remote command
   setTimeout(function() {
