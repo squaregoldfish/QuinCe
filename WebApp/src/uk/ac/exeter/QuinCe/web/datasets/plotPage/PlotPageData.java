@@ -1007,7 +1007,7 @@ public abstract class PlotPageData {
   protected abstract List<Coordinate> getCoordinates();
 
   public String getMapData(PlotPageColumnHeading column, GeoBounds bounds,
-    boolean useNeededFlags, boolean hideNonGoodFlags,
+    boolean useNeededFlags, boolean hideNonGoodFlags, boolean includePath,
     DatasetSensorValues allSensorValues) throws Exception {
 
     if (!mapCache.containsKey(column)) {
@@ -1015,7 +1015,7 @@ public abstract class PlotPageData {
     }
 
     return mapCache.get(column).getDisplayJson(bounds, getMapSelection(),
-      useNeededFlags, hideNonGoodFlags, allSensorValues);
+      useNeededFlags, hideNonGoodFlags, includePath, allSensorValues);
   }
 
   /**

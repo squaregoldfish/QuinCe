@@ -30,14 +30,17 @@ import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.Progress;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoPlot;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoPlotPageTableRecord;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.ArgoQCMap;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.CoordinateIdSerializer;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.DataLatLng;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.MapRecords;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.Plot;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageColumnHeading;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageData;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableRecord;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableRecordSerializer;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageValueMapRecord;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.QCMap;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.SimplePlotPageTableValue;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
@@ -82,6 +85,15 @@ public class ArgoManualQCData extends ManualQCData {
    * Details for the second plot. We use a special plot implementation.
    */
   private ArgoPlot argoPlot2;
+
+  /**
+   * Details for the profiles map.
+   *
+   * <p>
+   * This overrides {@link PlotPageData#map2} using a special QC Map
+   * implementation.
+   */
+  private ArgoQCMap profilesMap;
 
   /**
    * The index of the currently selected profile.
@@ -460,4 +472,15 @@ public class ArgoManualQCData extends ManualQCData {
     // Initialise the profile details now we have loaded them
     buildProfileDetails();
   }
+
+  @Override
+  protected void createMap1() throws Exception {
+    profilesMap = new ArgoQCMap(this, getDefaultMap1Column(), !dataset.isNrt());
+  }
+
+  @Override
+  public QCMap getMap1() {
+    return profilesMap;
+  }
+
 }

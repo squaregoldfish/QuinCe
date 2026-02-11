@@ -14,6 +14,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
@@ -88,7 +89,7 @@ public class MapRecords extends ArrayList<MapRecord> {
   }
 
   public String getDisplayJson(GeoBounds bounds, List<Long> selectedRows,
-    boolean useNeededFlags, boolean hideNonGoodFlags,
+    boolean useNeededFlags, boolean hideNonGoodFlags, boolean includePath,
     DatasetSensorValues allSensorValues) {
 
     Set<MapRecord> boundedRecords = new TreeSet<MapRecord>();
@@ -188,7 +189,35 @@ public class MapRecords extends ArrayList<MapRecord> {
     json.add(selectionGson
       .toJsonTree(makeFeatureCollection(selectionGson, selection)));
 
+    if (includePath) {
+      json.add(makeGeoJsonPath());
+    }
+
     return json.toString();
+  }
+
+  private JsonElement makeGeoJsonPath() {
+    JsonObject object = new JsonObject();
+    object.addProperty("type", "FeatureCollection");
+
+    JsonArray features = new JsonArray();
+
+    JsonObject line = new JsonObject();
+    line.addProperty("type", "LineString");
+
+    JsonArray coordinates = new JsonArray();
+    for (MapRecord record : this) {
+      JsonArray coordinate = new JsonArray();
+      coordinate.add(record.position.getLongitude());
+      coordinate.add(record.position.getLatitude());
+      coordinates.add(coordinate);
+    }
+
+    line.add("coordinates", coordinates);
+    features.add(line);
+    object.add("features", features);
+
+    return object;
   }
 
   private boolean showAsFlag(MapRecord record, boolean useNeededFlag,

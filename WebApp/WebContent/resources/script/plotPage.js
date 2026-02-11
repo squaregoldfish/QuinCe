@@ -73,6 +73,7 @@ const MAP_MANUAL_FLAG_INDEX = 3;
 const DATA_LAYER = 'data';
 const FLAG_LAYER = 'flags';
 const SELECTION_LAYER = 'selection';
+const PATH_LAYER = 'path';
 
 const FLAG_NOT_CALIBRATED = 1;
 const FLAG_GOOD = 2;
@@ -2272,6 +2273,7 @@ function drawMap(index) {
   let dataLayerVar = mapVar + DATA_LAYER;
   let flagLayerVar = mapVar + FLAG_LAYER;
   let selectionLayerVar = mapVar + SELECTION_LAYER;
+  let pathLayerVar = mapVar + PATH_LAYER;
   let colorScaleVar = mapVar + 'ColorScale';
 
   // Remove old layers
@@ -2279,13 +2281,19 @@ function drawMap(index) {
     window[dataLayerVar].removeFrom(window[mapVar]);
     window[flagLayerVar].removeFrom(window[mapVar]);
     window[selectionLayerVar].removeFrom(window[mapVar]);
+  window[pathLayerVar].removeFrom(window[mapVar]);
   }
 
   let mapData = JSON.parse($(getMapFormName(index) + '\\:map' + index + 'Data').val());
 
+  if (mapData.length >= 4) {
+  window[pathLayerVar] = makeMapPath(index, mapData[3]).addTo(window[mapVar]);
+  }
+
   window[flagLayerVar] = makeMapLayer(index, mapData[1], false).addTo(window[mapVar]);
   window[selectionLayerVar] = makeMapLayer(index, mapData[2], false).addTo(window[mapVar]);
   window[dataLayerVar] = makeMapLayer(index, mapData[0], true).addTo(window[mapVar]);
+
 
   let scaleLimits = JSON.parse($(getMapFormName(index) + '\\:map' + index + 'ScaleLimits').val());
   window[colorScaleVar].setValueRange(scaleLimits[0], scaleLimits[1]);
@@ -2330,6 +2338,18 @@ function makeMapLayer(mapIndex, geojson, interactive) {
       layer.addTo(result);
     }
   });
+
+  return result;
+}
+
+function makeMapPath(mapIndex, geojson) {
+  let result = L.layerGroup();
+
+  L.geoJSON(geojson, {
+    style: function (feature) {
+      return { color: '#888', weight: 1 }; // Customize your style here
+    }
+  }).addTo(result);
 
   return result;
 }
