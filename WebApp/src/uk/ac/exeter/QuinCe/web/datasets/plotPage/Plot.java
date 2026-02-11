@@ -1,9 +1,9 @@
 package uk.ac.exeter.QuinCe.web.datasets.plotPage;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
@@ -29,7 +29,7 @@ public class Plot {
    *
    * If {@code false}, the automatic QC flag is used.
    */
-  private final boolean useNeededFlags;
+  protected final boolean useNeededFlags;
 
   /**
    * The column ID of the X axis
@@ -49,8 +49,12 @@ public class Plot {
   /**
    * The plot values.
    */
-  private TreeSet<PlotValue> plotValues = null;
+  protected LinkedHashSet<PlotValue> plotValues = null;
 
+  /**
+   * Indicates whether or not values that have been flagged during QC should be
+   * hidden from the plot.
+   */
   private boolean hideFlags = false;
 
   static {
@@ -203,7 +207,7 @@ public class Plot {
     TreeMap<Coordinate, PlotPageTableValue> yValues = getYValues();
     TreeMap<Coordinate, PlotPageTableValue> y2Values = getY2Values();
 
-    plotValues = new TreeSet<>();
+    plotValues = new LinkedHashSet<>();
 
     for (Coordinate coordinate : xValues.keySet()) {
       if (yValues.containsKey(coordinate) || y2Values.containsKey(coordinate)) {

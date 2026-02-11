@@ -1,5 +1,7 @@
 package uk.ac.exeter.QuinCe.web.datasets.plotPage;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -7,6 +9,10 @@ import java.util.stream.Collectors;
 import uk.ac.exeter.QuinCe.data.Dataset.ArgoCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.ArgoProfile;
 import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
+import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
+import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
+import uk.ac.exeter.QuinCe.utils.MathUtils;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.ManualQC.ArgoManualQCData;
 
 public class ArgoPlot extends Plot {
@@ -96,4 +102,72 @@ public class ArgoPlot extends Plot {
     return getXaxis();
   }
 
+  @Override
+  protected void makePlotValues() throws Exception {
+
+    TreeMap<Coordinate, PlotPageTableValue> xValues = getXValues();
+    TreeMap<Coordinate, PlotPageTableValue> yValues = getYValues();
+    TreeMap<Coordinate, PlotPageTableValue> y2Values = getY2Values();
+
+    // Re-sort the y values by their ascending entry value.
+    LinkedHashMap<Coordinate, PlotPageTableValue> sortedYValues = sortValues(
+      yValues);
+
+    plotValues = new LinkedHashSet<>();
+
+    for (Coordinate coordinate : sortedYValues.keySet()) {
+      PlotPageTableValue x = xValues.get(coordinate);
+      PlotPageTableValue y = yValues.get(coordinate);
+      PlotPageTableValue y2 = y2Values.get(coordinate);
+
+      PlotValue plotValue = null;
+
+      Double yValue = null;
+      boolean yGhost = false;
+      Flag yFlag = null;
+      if (null != y) {
+        yValue = scaleYValue(MathUtils.nullableParseDouble(y.getValue()));
+        yGhost = y.getQcFlag(data.getAllSensorValues()).equals(Flag.FLUSHING);
+        yFlag = y.getQcFlag(data.getAllSensorValues());
+        if (useNeededFlags && y.getFlagNeeded()) {
+          yFlag = Flag.NEEDED;
+        }
+      }
+
+      Double y2Value = null;
+      boolean y2Ghost = false;
+      Flag y2Flag = null;
+      if (null != y2) {
+        y2Value = scaleYValue(MathUtils.nullableParseDouble(y2.getValue()));
+        y2Ghost = y2.getQcFlag(data.getAllSensorValues()).equals(Flag.FLUSHING);
+        y2Flag = y2.getQcFlag(data.getAllSensorValues());
+        // We never show NEEDED flags for Y2 axis
+      }
+
+      if (xAxis.getId() == FileDefinition.TIME_COLUMN_ID) {
+        plotValue = new PlotValue(coordinate.getId(),
+          (TimeCoordinate) coordinate, yValue, yGhost, yFlag, y2Value, y2Ghost,
+          y2Flag);
+      } else if (null != x && null != x.getValue() && null != y) {
+        plotValue = new PlotValue(coordinate.getId(),
+          MathUtils.nullableParseDouble(x.getValue()), yValue, yGhost, yFlag,
+          y2Value, y2Ghost, y2Flag);
+
+      }
+
+      if (null != plotValue) {
+        plotValues.add(plotValue);
+      }
+    }
+  }
+
+  private LinkedHashMap<Coordinate, PlotPageTableValue> sortValues(
+    Map<Coordinate, PlotPageTableValue> source) {
+
+    return source.entrySet().stream()
+      .sorted(
+        Map.Entry.comparingByValue(new PlotPageTableValueNumericComparator()))
+      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+        (e1, e2) -> e1, LinkedHashMap::new));
+  }
 }

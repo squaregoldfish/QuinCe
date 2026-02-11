@@ -317,7 +317,11 @@ function mapsAllowed() {
 }
 
 function getStrokeWidth() {
-  return 0;
+  return 1;
+}
+
+function getIsProfilePlot() {
+  return true;
 }
 
 // Default y axis formatter does nothing

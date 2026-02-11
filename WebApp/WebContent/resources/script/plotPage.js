@@ -89,6 +89,10 @@ function plotStrokeWidth() {
   return (typeof getStrokeWidth === 'function') ? getStrokeWidth() : 0;
 }
 
+function isProfilePlot() {
+  return (typeof getIsProfilePlot === 'function') ? getIsProfilePlot() : false;
+}
+
 function axesAtZero() {
   return (typeof getAxesAtZero === 'function') ? getAxesAtZero() : false;
 }
@@ -166,7 +170,8 @@ var BASE_PLOT_OPTIONS = {
   labelsUTC: true,
   labelsSeparateLine: true,
   digitsAfterDecimal: 2,
-  animatedZooms: false
+  animatedZooms: false,
+  dataOrdered: !isProfilePlot()
 }
 
 var updatingDialogButtons = false;
