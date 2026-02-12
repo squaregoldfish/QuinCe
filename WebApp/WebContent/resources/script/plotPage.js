@@ -1242,7 +1242,7 @@ function drawDataPlot1Y(index, keepZoom) {
 
   // Destroy the old plot
   if (null != window[plotVar]) {
-    zoomdata = {
+    zoomOptions = {
       dateWindow: window[plotVar].xAxisRange(),
       valueRange: window[plotVar].yAxisRange()
     };
@@ -2151,10 +2151,8 @@ function selectPointsInRect(data, variableId, minX, maxX, minY, maxY) {
   let pointsToSelect = [];
 
   for (var i = 0; i < data.length; i++) {
-    if (data[i][0] > maxX) {
-      break;
-    } else if (data[i][0] >= minX) {
-      // See if any of the Y values are in range
+  if (data[i][0] >= minX && data[i][0] <= maxX) {
+      // See if any of the Y values (remeber there can be 2 Y axes) are in range
       for (let y = 2; y < data[i].length; y++) {
         if (null != data[i][y] && data[i][y] >= minY && data[i][y] <= maxY) {
           pointsToSelect.push(data[i][1]);
