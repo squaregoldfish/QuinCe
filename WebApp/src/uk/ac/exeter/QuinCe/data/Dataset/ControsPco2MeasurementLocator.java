@@ -39,7 +39,7 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
       SensorsConfiguration sensorConfig = ResourceManager.getInstance()
         .getSensorsConfiguration();
 
-      Variable variable = sensorConfig.getInstrumentVariable("CONTROS pCO₂");
+      Variable variable = sensorConfig.getInstrumentVariable(getVariableName());
 
       long zeroFlushTime = Math.round(Double.parseDouble(dataset
         .getAllProperties().get(variable.getName()).getProperty("zero_flush")));
@@ -199,6 +199,10 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
       DatabaseUtils.rollBack(conn);
       throw new MeasurementLocatorException(e);
     }
+  }
+
+  protected String getVariableName() {
+    return "CONTROS pCO₂";
   }
 
   private int getRecordStatus(Map<Long, SensorValue> record, long zeroColumn,
