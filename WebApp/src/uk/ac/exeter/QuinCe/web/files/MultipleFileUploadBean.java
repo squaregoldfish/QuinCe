@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
@@ -17,6 +18,7 @@ import uk.ac.exeter.QuinCe.data.Files.FileExistsException;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
+import uk.ac.exeter.QuinCe.data.Instrument.MissingRunTypeException;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignments;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
@@ -194,8 +196,12 @@ public class MultipleFileUploadBean extends FileUploadBean {
           }
 
           // If there's nothing from a previous instrument, try the defaults.
-          foundAssignment = assignmentsFromDatabase
-            .get(runType.getRunType().getRunName());
+          try {
+            foundAssignment = assignmentsFromDatabase
+              .get(runType.getRunType().getRunName(), false);
+          } catch (MissingRunTypeException e) {
+            // Do nothing - the found assignment will remain null
+          }
 
           if (null != foundAssignment) {
             runType.setRunType(foundAssignment);
@@ -220,8 +226,15 @@ public class MultipleFileUploadBean extends FileUploadBean {
   }
 
   public List<String> getRunTypeValuesWithExclusion(String exclusion) {
-    return getCurrentInstrument().getFileDefinitions().stream()
-      .map(fd -> fd.getRunTypeValues()).flatMap(Collection::stream).distinct()
+
+    Stream<String> existingRunTypes = getCurrentInstrument()
+      .getFileDefinitions().stream().map(fd -> fd.getRunTypeValues())
+      .flatMap(Collection::stream).distinct();
+
+    Stream<String> newRunTypes = unrecognisedRunTypes.stream()
+      .map(r -> r.getRunType().getRunName());
+
+    return Stream.concat(existingRunTypes, newRunTypes).sorted()
       .filter(r -> !r.equals(exclusion)).toList();
   }
 

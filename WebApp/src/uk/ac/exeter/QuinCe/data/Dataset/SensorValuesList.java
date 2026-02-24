@@ -160,6 +160,12 @@ public class SensorValuesList {
   private int measurementMode = -1;
 
   /**
+   * For periodic mode, the interval between groups of measurements (in
+   * seconds).
+   */
+  private long periodicGroupTimeInterval = -1L;
+
+  /**
    * A cache of the timestamps of all the {@link SensorValue}s in the list.
    */
   private List<LocalDateTime> rawTimesCache = null;
@@ -641,7 +647,6 @@ public class SensorValuesList {
     LocalDateTime startTime = timestamps.get(0);
     LocalDateTime endTime = timestamps.get(timestamps.size() - 1);
 
-    // Work out which flags are represented in the sensor values
     List<Flag> presentFlags = sensorValues.stream()
       .map(sv -> sv.getDisplayFlag(allSensorValues)).distinct().toList();
 
@@ -654,6 +659,13 @@ public class SensorValuesList {
       chosenFlag = Flag.QUESTIONABLE;
     } else if (presentFlags.contains(Flag.BAD)) {
       chosenFlag = Flag.BAD;
+    } else if (presentFlags.stream().allMatch(f -> f.equals(Flag.NEEDED))) {
+      /*
+       * If all we have are NEEDED flags, get the flag from the underlying auto
+       * QC
+       */
+      chosenFlag = Flag.getMostSignificantFlag(
+        sensorValues.stream().map(sv -> sv.getAutoQcFlag()).toList());
     } else {
       throw new IllegalStateException("No valid flags in sensor values");
     }
@@ -1052,17 +1064,38 @@ public class SensorValuesList {
         : Math.abs(searchIndex) - 2;
 
       if (priorIndex >= 0 && priorIndex < outputValues.size()) {
-        prior = outputValues.get(priorIndex);
+        /*
+         * We don't interpolate missing values, so we look for the closest group
+         * only. To account for missing values we ensure that this group is
+         * within 1.5 times the mean period between measurement groups.
+         *
+         * The 1.5 factor is to allow some wiggle room for inconsistencies in
+         * timing.
+         */
+        SensorValuesListValue priorCandidate = outputValues.get(priorIndex);
+
+        if (DateTimeUtils.secondsBetween(priorCandidate.getNominalTime(),
+          time) <= periodicGroupTimeInterval * 1.5) {
+
+          prior = priorCandidate;
+        }
       }
 
       int postIndex = searchIndex >= 0 ? searchIndex + 1
         : Math.abs(searchIndex) - 1;
 
       if (postIndex >= 0 && postIndex < outputValues.size()) {
-        post = outputValues.get(postIndex);
+        SensorValuesListValue postCandidate = outputValues.get(postIndex);
+
+        if (DateTimeUtils.secondsBetween(time,
+          postCandidate.getNominalTime()) <= periodicGroupTimeInterval * 1.5) {
+          post = postCandidate;
+        }
       }
 
-      if (null == prior) {
+      if (null == prior && null == post) {
+        result = null;
+      } else if (null == prior) {
         result = new SensorValuesListOutput(post, time, false);
       } else if (null == post) {
         result = new SensorValuesListOutput(prior, time, false);
@@ -1279,6 +1312,9 @@ public class SensorValuesList {
     // The largest group size
     int largeGroupCount = 0;
 
+    // The start times of each group
+    List<LocalDateTime> groupStartTimes = new ArrayList<LocalDateTime>();
+
     // Calculate the mean group size as we go along
     int groupsByTime = 0;
     int totalGroupCount = 0;
@@ -1298,6 +1334,7 @@ public class SensorValuesList {
       if (newGroupFromTime || newGroupFromValue) {
         if (newGroupFromTime) {
           groupsByTime++;
+          groupStartTimes.add(list.get(i).getTime());
         }
 
         if (groupSize > 0) {
@@ -1336,6 +1373,15 @@ public class SensorValuesList {
     if (groupsByTime > 1 && (meanGroupSize <= MAX_PERIODIC_GROUP_SIZE
       && largeGroupCount <= LARGE_GROUP_LIMIT)) {
       measurementMode = MODE_PERIODIC;
+
+      // Calculate the mean time between groups
+      MeanCalculator mean = new MeanCalculator();
+      for (int i = 1; i < groupStartTimes.size(); i++) {
+        mean.add(DateTimeUtils.secondsBetween(groupStartTimes.get(i - 1),
+          groupStartTimes.get(i)));
+      }
+      periodicGroupTimeInterval = Math.round(mean.mean());
+
     } else {
       measurementMode = MODE_CONTINUOUS;
     }
