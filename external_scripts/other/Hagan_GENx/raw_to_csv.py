@@ -33,6 +33,7 @@ SENSOR_MULTIPLIERS = {
 
 # Holds details of an acquisition as it is extracted from the file.
 class Acquisition:
+    # The span slope value is stored as hex with a fixed offset.
     SPAN_SLOPE_HEX_OFFSET = int('800000', 16)
 
     def __init__(self, generation):
@@ -83,12 +84,28 @@ class Acquisition:
             self.data[column_name] = [mean, stdev]
 
     @staticmethod
-    def _get_time_ofsset(line, line_pos):
+    def _get_time_offset(line, line_pos):
         return int(line[line_pos:line_pos + 3], 16)
         
 
     def set_signature(self, line):
         
+        # Extract details from the encoded signature line
+        # (after the [PCO2 START ACQUISITION] line)
+
+        # Pos  Len    Type    Desc                                          Sample    Value       Units    Note
+        # 0      8    ASC     Instrument Serial Number                      M2406007  M2406007        
+        # 8      4    HEX     Span Gas Concentration * 100                  B2AC      457.4       ppm     this will change to len of 5 in GEN3 and may increase to 5 in GEN2 if ref value exceeds 655.35ppm
+        # 12     6    HEX     Span Slope Cal K * 10000000 + 0x800000        746239    -0.0761287        
+        # 18     3    HEX     Time offset to ZERO pre Licor CAL             110       272         s       seconds from start time to centre of sampling
+        # 21     3    HEX     Time offset to ZERO post Licor CAL            136       310         s       seconds from start time to centre of sampling; NOT USED CURRENTLY
+        # 24     3    HEX     Time offset to SPAN pre Licor CAL             22B       555         s       seconds from start time to centre of sampling
+        # 27     3    HEX     Time offset to SPAN post Licor CAL            251       593         s       seconds from start time to centre of sampling; NOT USED CURRENTLY
+        # 30     3    HEX     Time offset to AIR sample                     341       833         s       seconds from start time to centre of sampling
+        # 33     3    HEX     Time offset to EQ sample asociated with CAL   A23       2595        s       seconds from start time to centre of sampling
+        # 36     3    HEX     Time offset to EQ sample between CAL          31B       795         s       seconds from start time to centre of sampling
+        # 39     1    HEX     Equalise EQ Before Sampling                   1         1           -       currently always 1 but future development may make use of this; ONLY GEN3
+
         line_pos = 0
 
         # Serial number
@@ -110,19 +127,19 @@ class Acquisition:
         self.span_slope = (int(span_slope_hex, 16) - self.SPAN_SLOPE_HEX_OFFSET) / 10000000
         
         line_pos += 6
-        self.zero_pre_offset = self._get_time_ofsset(line, line_pos)
+        self.zero_pre_offset = self._get_time_offset(line, line_pos)
         line_pos += 3
-        self.zero_post_offset = self._get_time_ofsset(line, line_pos)
+        self.zero_post_offset = self._get_time_offset(line, line_pos)
         line_pos += 3
-        self.span_pre_offset = self._get_time_ofsset(line, line_pos)
+        self.span_pre_offset = self._get_time_offset(line, line_pos)
         line_pos += 3
-        self.span_post_offset = self._get_time_ofsset(line, line_pos)
+        self.span_post_offset = self._get_time_offset(line, line_pos)
         line_pos += 3
-        self.air_offset = self._get_time_ofsset(line, line_pos)
+        self.air_offset = self._get_time_offset(line, line_pos)
         line_pos += 3
-        self.eq_cal_offset = self._get_time_ofsset(line, line_pos)
+        self.eq_cal_offset = self._get_time_offset(line, line_pos)
         line_pos += 3
-        self.eq_between_cal_offset = self._get_time_ofsset(line, line_pos)
+        self.eq_between_cal_offset = self._get_time_offset(line, line_pos)
         line_pos += 3
         
         if self.generation == '3':
@@ -381,6 +398,7 @@ else:
 SEARCH_FOR_SEQUENCE = 0
 MEASUREMENT_SEQUENCE = 1
 
+# We start by looking for the beginning of an ACQUISITION sequence
 state = SEARCH_FOR_SEQUENCE
 
 # Current line in file
@@ -389,7 +407,7 @@ current_line = 0
 # Current count of 'START ACQUISITION' lines seen
 current_sequence = 0
 
-# The current mode (from [xxx] lines)
+# The current mode (from lines containing [???])
 current_mode = None
 
 # The current sensor
@@ -409,22 +427,27 @@ values = list()
 data_valid = True
 
 # Aux file handles.
-# Aux lines are written to their own files as they are encountered
+# Aux lines (defined by lines of the form'[AUX ???]')
+# are written to their own files as they are encountered. Each ??? is its own file.
 aux_data = dict()
 
 while current_line < len(lines):
     line = lines[current_line]
 
     if state == SEARCH_FOR_SEQUENCE:
-        # We aren't currently processing a measurement sequence,
+        # We aren't currently processing a measurement sequence (aka Acquisition),
         # so we wait for the start of one.
         if is_mode(line) and extract_mode(line) == 'START ACQUISITION':
             state = MEASUREMENT_SEQUENCE
             current_sequence += 1
             current_acquisition = Acquisition(args.generation)
             
+            # The next line contains the acquisition signature
             current_line += 1
             current_acquisition.set_signature(lines[current_line])
+            
+            # After that is the acquisition's timestamp. Parse it, and if fail,
+            # log the error and move on to the next acquisition.
             current_line += 1
 
             try:
@@ -522,8 +545,10 @@ while current_line < len(lines):
 
 # Write the data out as CSV
 if data_valid:
+    # Write the main data
     df.to_csv(f'{args.out_file_root}.csv', index=False, date_format='%Y-%m-%dT%H:%M:%SZ')
 
+    # Write each AUX data to its file
     for (aux_type, contents) in aux_data.items():
         with open(f'{args.out_file_root}_{aux_type}.dat', 'w') as aux_out:
             aux_out.write(contents)
