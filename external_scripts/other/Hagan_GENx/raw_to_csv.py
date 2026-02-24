@@ -1,5 +1,5 @@
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import logging
 import numpy as np
 import os
@@ -93,7 +93,7 @@ class Acquisition:
         # Extract details from the encoded signature line
         # (after the [PCO2 START ACQUISITION] line)
 
-        # Pos  Len    Type    Desc                                          Sample    Value       Units    Note
+        # Pos  Len    Type    Desc                                          Sample    Value       Units   Note
         # 0      8    ASC     Instrument Serial Number                      M2406007  M2406007        
         # 8      4    HEX     Span Gas Concentration * 100                  B2AC      457.4       ppm     this will change to len of 5 in GEN3 and may increase to 5 in GEN2 if ref value exceeds 655.35ppm
         # 12     6    HEX     Span Slope Cal K * 10000000 + 0x800000        746239    -0.0761287        
@@ -145,23 +145,30 @@ class Acquisition:
         if self.generation == '3':
             self.eq_before_sample = int(line[-1:])
 
+    def _calc_offset_timestamp(self, offset_from_start):
+        # The various offsets from the signature are from the
+        # start of the acquisition to the centre of the thing being measured.
+        # We convert these to true timestamps, stored as milliseconds since the epoch.
+        return (self.start_timestamp + timedelta(seconds=offset_from_start)).timestamp() * 1000
+        
+    
     def write(self, df, sequence):
         # If this acquisition is not complete, do nothing.
         if self.is_complete():
-            df.at[sequence, 'Time'] = self.end_timestamp
+            df.at[sequence, 'Time'] = self.end_timestamp.replace(tzinfo=None)
             df.at[sequence, 'StatusCode'] = self.status
 
             # Signature details
             df.at[sequence, 'Serial Number'] = self.serial_number
             df.at[sequence, 'Span Concentration'] = self.span_concentration
             df.at[sequence, 'Span Slope'] = self.span_slope
-            df.at[sequence, 'Zero Pre Time'] = self.zero_pre_offset
-            df.at[sequence, 'Zero Post Time'] = self.zero_post_offset
-            df.at[sequence, 'Span Pre Time'] = self.span_pre_offset
-            df.at[sequence, 'Span Post Time'] = self.span_post_offset
-            df.at[sequence, 'Air Time'] = self.air_offset
-            df.at[sequence, 'Eq CAL Time'] = self.eq_cal_offset
-            df.at[sequence, 'Eq Between CAL Time'] = self.eq_between_cal_offset
+            df.at[sequence, 'Zero Pre Time'] = self._calc_offset_timestamp(self.zero_pre_offset)
+            df.at[sequence, 'Zero Post Time'] = self._calc_offset_timestamp(self.zero_post_offset)
+            df.at[sequence, 'Span Pre Time'] = self._calc_offset_timestamp(self.span_pre_offset)
+            df.at[sequence, 'Span Post Time'] = self._calc_offset_timestamp(self.span_post_offset)
+            df.at[sequence, 'Air Time'] = self._calc_offset_timestamp(self.air_offset)
+            df.at[sequence, 'Eq CAL Time'] = self._calc_offset_timestamp(self.eq_cal_offset)
+            df.at[sequence, 'Eq Between CAL Time'] = self._calc_offset_timestamp(self.eq_between_cal_offset)
             df.at[sequence, 'Eq Before Sample'] = self.eq_before_sample
 
             if self.longitude is not None:
@@ -306,7 +313,7 @@ def parse_position_line(line):
     return(lon, lat)
 
 def get_timestamp(line):
-    return datetime.strptime(line, '%Y/%m/%d %H:%M:%S')
+    return datetime.strptime(line, '%Y/%m/%d %H:%M:%S').replace(tzinfo=timezone.utc)
 
 def extract_values(line):
     values = list()
