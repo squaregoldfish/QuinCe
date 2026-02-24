@@ -1,9 +1,10 @@
 import argparse
-import re
-import pandas as pd
 from datetime import datetime
-import numpy as np
 import logging
+import numpy as np
+import os
+import pandas as pd
+import re
 
 from warnings import simplefilter
 simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
@@ -330,6 +331,12 @@ parser.add_argument("in_file", help="Input SD card file")
 parser.add_argument("out_file_root", help="Root of output file(s). Suffixes will be added automatically.")
 
 args = parser.parse_args()
+
+# If the output root is a folder, we abort. The root must be a path and the beginning of a filename
+if os.path.isdir(args.out_file_root):
+    print('ERROR: out_file_root must not be a directory. It must be a path with a filename prefix')
+    print('e.g. /home/temp/output will generate /home/temp/output_<files>')
+    exit(1)
 
 logger.log(20, f"Processing file {args.in_file}")
 
