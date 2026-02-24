@@ -306,10 +306,17 @@ def parse_position_field(value, hemisphere, negative_hemisphere):
     return value
 
 
-def parse_position_line(line):
+def parse_position_line(line, use_ddmm_pos):
     fields = line.split()
-    lat = parse_position_field(fields[0], fields[1], 'S')
-    lon = parse_position_field(fields[2], fields[3], 'W')
+    
+    if use_ddmm_pos:
+        lat = parse_position_field(fields[0], fields[1], 'S')
+        lon = parse_position_field(fields[2], fields[3], 'W')
+    else:
+        print(fields)
+        lon = fields[0]
+        lat = fields[1]
+
     return(lon, lat)
 
 def get_timestamp(line):
@@ -350,6 +357,7 @@ parser = argparse.ArgumentParser(
                     prog="raw_to_csv",
                     description="Convert data direct from GENx sensor to CSV for QuinCe")
 
+parser.add_argument("--ddmm_pos", action='store_true', help='Use DDMM.MMM position format')
 parser.add_argument("generation", help="Sensor generation", choices=['2', '3'])
 parser.add_argument("in_file", help="Input SD card file")
 parser.add_argument("out_file_root", help="Root of output file(s). Suffixes will be added automatically.")
@@ -533,7 +541,7 @@ while current_line < len(lines):
 
                         # Position
                         current_line += 1
-                        (lon, lat) = parse_position_line(lines[current_line])
+                        (lon, lat) = parse_position_line(lines[current_line], args.ddmm_pos)
                         current_acquisition.set_position(lon, lat)
 
         elif current_mode is not None:
