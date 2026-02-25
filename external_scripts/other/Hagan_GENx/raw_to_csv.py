@@ -31,6 +31,45 @@ SENSOR_MULTIPLIERS = {
     'EnclPCBTemp': 0.01
 }
 
+# While column order is not strictly meaningful, it's useful if our columns are
+# in the same order as the reference software for easier comparison.
+# Any columns encountered that are not in this list will be added to the right end
+# of the file in an undefined order.
+OUTPUT_COLUMN_ORDER = ['ZEROPUMPON_CO2Calc_AV', 'ZEROPUMPON_CO2Calc_SD', 'ZEROPUMPON_CO2Temp_AV',
+  'ZEROPUMPON_CO2Temp_SD', 'ZEROPUMPON_CO2Pres_AV', 'ZEROPUMPON_CO2Pres_SD', 'ZEROPUMPON_CO2Raw1_AV',
+  'ZEROPUMPON_CO2Raw1_SD', 'ZEROPUMPON_CO2Raw2_AV', 'ZEROPUMPON_CO2Raw2_SD', 'ZEROPUMPON_RHCalc_AV',
+  'ZEROPUMPON_RHCalc_SD', 'ZEROPUMPON_RHTemp_AV', 'ZEROPUMPON_RHTemp_SD', 'ZERO_CO2Calc_AV',
+  'ZERO_CO2Calc_SD', 'ZERO_CO2Temp_AV', 'ZERO_CO2Temp_SD', 'ZERO_CO2Pres_AV', 'ZERO_CO2Pres_SD',
+  'ZERO_CO2Raw1_AV', 'ZERO_CO2Raw1_SD', 'ZERO_CO2Raw2_AV', 'ZERO_CO2Raw2_SD', 'ZERO_RHCalc_AV',
+  'ZERO_RHCalc_SD', 'ZERO_RHTemp_AV', 'ZERO_RHTemp_SD', 'ZEROPOST_CO2Calc_AV', 'ZEROPOST_CO2Calc_SD',
+  'ZEROPOST_CO2Temp_AV', 'ZEROPOST_CO2Temp_SD', 'ZEROPOST_CO2Pres_AV', 'ZEROPOST_CO2Pres_SD',
+  'ZEROPOST_CO2Raw1_AV', 'ZEROPOST_CO2Raw1_SD', 'ZEROPOST_CO2Raw2_AV', 'ZEROPOST_CO2Raw2_SD',
+  'ZEROPOST_RHCalc_AV', 'ZEROPOST_RHCalc_SD', 'ZEROPOST_RHTemp_AV', 'ZEROPOST_RHTemp_SD',
+  'SPANPUMPON_CO2Calc_AV', 'SPANPUMPON_CO2Calc_SD', 'SPANPUMPON_CO2Temp_AV', 'SPANPUMPON_CO2Temp_SD',
+  'SPANPUMPON_CO2Pres_AV', 'SPANPUMPON_CO2Pres_SD', 'SPANPUMPON_CO2Raw1_AV', 'SPANPUMPON_CO2Raw1_SD',
+  'SPANPUMPON_CO2Raw2_AV', 'SPANPUMPON_CO2Raw2_SD', 'SPANPUMPON_RHCalc_AV', 'SPANPUMPON_RHCalc_SD',
+  'SPANPUMPON_RHTemp_AV', 'SPANPUMPON_RHTemp_SD', 'SPAN_CO2Calc_AV', 'SPAN_CO2Calc_SD', 'SPAN_CO2Temp_AV',
+  'SPAN_CO2Temp_SD', 'SPAN_CO2Pres_AV', 'SPAN_CO2Pres_SD', 'SPAN_CO2Raw1_AV', 'SPAN_CO2Raw1_SD',
+  'SPAN_CO2Raw2_AV', 'SPAN_CO2Raw2_SD', 'SPAN_RHCalc_AV', 'SPAN_RHCalc_SD', 'SPAN_RHTemp_AV',
+  'SPAN_RHTemp_SD', 'SPANPOST_CO2Calc_AV', 'SPANPOST_CO2Calc_SD', 'SPANPOST_CO2Temp_AV',
+  'SPANPOST_CO2Temp_SD', 'SPANPOST_CO2Pres_AV', 'SPANPOST_CO2Pres_SD', 'SPANPOST_CO2Raw1_AV',
+  'SPANPOST_CO2Raw1_SD', 'SPANPOST_CO2Raw2_AV', 'SPANPOST_CO2Raw2_SD', 'SPANPOST_RHCalc_AV',
+  'SPANPOST_RHCalc_SD', 'SPANPOST_RHTemp_AV', 'SPANPOST_RHTemp_SD', 'LICOR_ZEROCALK', 'LICOR_SPANCALK',
+  'AIRPUMPON_CO2Calc_AV', 'AIRPUMPON_CO2Calc_SD', 'AIRPUMPON_CO2Temp_AV', 'AIRPUMPON_CO2Temp_SD',
+  'AIRPUMPON_CO2Pres_AV', 'AIRPUMPON_CO2Pres_SD', 'AIRPUMPON_CO2Raw1_AV', 'AIRPUMPON_CO2Raw1_SD',
+  'AIRPUMPON_CO2Raw2_AV', 'AIRPUMPON_CO2Raw2_SD', 'AIRPUMPON_RHCalc_AV', 'AIRPUMPON_RHCalc_SD',
+  'AIRPUMPON_RHTemp_AV', 'AIRPUMPON_RHTemp_SD', 'AIR_CO2Calc_AV', 'AIR_CO2Calc_SD', 'AIR_CO2Temp_AV',
+  'AIR_CO2Temp_SD', 'AIR_CO2Pres_AV', 'AIR_CO2Pres_SD', 'AIR_CO2Raw1_AV', 'AIR_CO2Raw1_SD', 'AIR_CO2Raw2_AV',
+  'AIR_CO2Raw2_SD', 'AIR_RHCalc_AV', 'AIR_RHCalc_SD', 'AIR_RHTemp_AV', 'AIR_RHTemp_SD', 'EQPUMPON_CO2Calc_AV',
+  'EQPUMPON_CO2Calc_SD', 'EQPUMPON_CO2Temp_AV', 'EQPUMPON_CO2Temp_SD', 'EQPUMPON_CO2Pres_AV', 'EQPUMPON_CO2Pres_SD',
+  'EQPUMPON_CO2Raw1_AV', 'EQPUMPON_CO2Raw1_SD', 'EQPUMPON_CO2Raw2_AV', 'EQPUMPON_CO2Raw2_SD', 'EQPUMPON_RHCalc_AV',
+  'EQPUMPON_RHCalc_SD', 'EQPUMPON_RHTemp_AV', 'EQPUMPON_RHTemp_SD', 'EQ_CO2Calc_AV', 'EQ_CO2Calc_SD', 'EQ_CO2Temp_AV',
+  'EQ_CO2Temp_SD', 'EQ_CO2Pres_AV', 'EQ_CO2Pres_SD', 'EQ_CO2Raw1_AV', 'EQ_CO2Raw1_SD', 'EQ_CO2Raw2_AV', 'EQ_CO2Raw2_SD',
+  'EQ_RHCalc_AV', 'EQ_RHCalc_SD', 'EQ_RHTemp_AV', 'EQ_RHTemp_SD', 'EQ_WaterLevel', 'ENCL_Pres_AV', 'ENCL_Pres_SD',
+  'ENCL_AirTemp_AV', 'ENCL_AirTemp_SD', 'ENCL_RH_AV', 'ENCL_RH_SD', 'ENCL_PCBTemp_AV', 'ENCL_PCBTemp_SD', 'Eng_Status',
+  'Data_Status', 'Bad_Sample']
+
+
 # Holds details of an acquisition as it is extracted from the file.
 class Acquisition:
     # The span slope value is stored as hex with a fixed offset.
@@ -181,8 +220,8 @@ class Acquisition:
                 if values[1] == -1:
                     df.at[sequence, column] = values[0]
                 else:
-                    df.at[sequence, f'{column}_mean'] = values[0]
-                    df.at[sequence, f'{column}_sd'] = values[1]
+                    df.at[sequence, f'{column}_AV'] = values[0]
+                    df.at[sequence, f'{column}_SD'] = values[1]
             
 
 def write_file_header(outfile, lines):
@@ -279,18 +318,31 @@ def get_sensor_headers(lines):
     return headers
 
 def make_data_columns(sensor_headers):
-    columns = list()
+    
+    # Extract the columns from the input file
+    file_columns = list()
     for mode, sensors in sensor_headers.items():
         if len(sensors) == 0:
             # This mode has no sensors - just a value.
-            columns.append(mode)
+            file_columns.append(mode)
         else:
             for sensor in sensors:
                 # We need columns for the mean and standard deviation
-                columns.append(f'{mode}_{sensor}_mean')
-                columns.append(f'{mode}_{sensor}_sd')
+                file_columns.append(f'{mode}_{sensor}_AV')
+                file_columns.append(f'{mode}_{sensor}_SD')
 
-    return columns
+
+    # Reorder the columns
+    output_columns = list()
+
+    for col in OUTPUT_COLUMN_ORDER:
+        if col in file_columns:
+            output_columns.append(col)
+            file_columns.remove(col)
+
+    output_columns = output_columns + file_columns
+
+    return output_columns
 
 
 def parse_position_field(value, hemisphere, negative_hemisphere):
