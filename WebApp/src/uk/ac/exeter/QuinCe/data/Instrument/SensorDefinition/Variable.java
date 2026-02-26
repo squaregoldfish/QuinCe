@@ -373,11 +373,25 @@ public class Variable implements Comparable<Variable> {
   }
 
   public boolean requiresRunType() {
-    return properties.hasPresetRunTypes();
+    return properties.hasPresetRunTypes() && properties.userSelectableRunType();
   }
 
-  public String getRunType() {
-    return properties.getRunType(id);
+  /**
+   * Get the default Run Type for this Variable.
+   * 
+   * @return The default Run Type.
+   */
+  public String getDefaultRunType() {
+    return getAllRunTypes().get(0);
+  }
+
+  /**
+   * Get all the Run Types associated with this Variable.
+   * 
+   * @return The Variable's Run Types.
+   */
+  public List<String> getAllRunTypes() {
+    return properties.getRunTypes(id);
   }
 
   @Override

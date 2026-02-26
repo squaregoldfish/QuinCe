@@ -22,15 +22,18 @@ public class VariableProperties {
 
   private List<PresetRunType> presetRunTypes;
 
+  private boolean userSelectableRunType;
+
   protected VariableProperties() {
     this.coefficients = new ArrayList<String>();
     this.presetRunTypes = new ArrayList<PresetRunType>();
     this.dependsQuestionAnswers = new HashMap<Long, Boolean>();
+    this.userSelectableRunType = true;
   }
 
   protected VariableProperties(List<String> coefficients,
     Map<Long, Boolean> dependsQuestionAnswers,
-    List<PresetRunType> presetRunTypes) {
+    List<PresetRunType> presetRunTypes, boolean userSelectableRunType) {
 
     this.coefficients = null != coefficients ? coefficients
       : new ArrayList<String>();
@@ -41,25 +44,40 @@ public class VariableProperties {
 
     this.presetRunTypes = null != presetRunTypes ? presetRunTypes
       : new ArrayList<PresetRunType>();
+
+    this.userSelectableRunType = userSelectableRunType;
   }
 
   public List<String> getCoefficients() {
     return coefficients;
   }
 
-  public String getRunType(long variableId) {
+  /**
+   * Get the Run Type strings that represent a measurement for the
+   * {@link Variable} with the specified ID.
+   * 
+   * <p>
+   * In most cases there will only be one Run Type defined. Where there are
+   * multiple entries, the default Run Type will be first in the list.
+   * </p>
+   * 
+   * @param variableId
+   *          The Variable's ID
+   * @return The run types
+   */
+  public List<String> getRunTypes(long variableId) {
 
-    String runType = null;
+    List<String> runTypes = null;
 
     PresetRunType variableRunType = presetRunTypes.stream()
       .filter(prt -> prt.getCategory().getType() == variableId).findFirst()
       .orElse(null);
 
     if (null != variableRunType) {
-      runType = variableRunType.getDefaultRunType();
+      runTypes = variableRunType.getAllRunTypes();
     }
 
-    return runType;
+    return runTypes;
   }
 
   public Map<Long, Boolean> getDependsQuestionAnswers() {
@@ -70,7 +88,11 @@ public class VariableProperties {
     return presetRunTypes.size() > 0;
   }
 
-  protected List<PresetRunType> getPresetRunTypes() {
+  public List<PresetRunType> getPresetRunTypes() {
     return presetRunTypes;
+  }
+
+  public boolean userSelectableRunType() {
+    return userSelectableRunType;
   }
 }

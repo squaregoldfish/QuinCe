@@ -188,7 +188,7 @@ class Acquisition:
         # The various offsets from the signature are from the
         # start of the acquisition to the centre of the thing being measured.
         # We convert these to true timestamps, stored as milliseconds since the epoch.
-        return (self.start_timestamp + timedelta(seconds=offset_from_start)).timestamp() * 1000
+        return int((self.start_timestamp + timedelta(seconds=offset_from_start)).timestamp() * 1000)
         
     
     def write(self, df, sequence):
@@ -445,7 +445,7 @@ if args.generation == '2':
     df = pd.DataFrame(columns=columns, dtype=float)
     df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
         'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
-        'Span Post Time': int, 'Air Time': int, 'Eq CAL Time': int})
+        'Span Post Time': int, 'Air Time': int, 'Eq Between CAL Time': int, 'Eq CAL Time': int})
 else:
     columns = ['Time', 'StatusCode', 'Serial Number', 'Span Concentration',
         'Span Slope', 'Zero Pre Time', 'Zero Post Time', 'Span Pre Time', 'Span Post Time',
@@ -455,8 +455,9 @@ else:
     df = pd.DataFrame(columns=columns, dtype=float)
     df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
         'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
-        'Span Post Time': int, 'Air Time': int, 'Eq CAL Time': int,
+        'Span Post Time': int, 'Air Time': int, 'Eq Between CAL Time': int, 'Eq CAL Time': int,
         'Eq Before Sample': int})
+
 
 # Now for the main data extraction.
 
@@ -612,8 +613,20 @@ while current_line < len(lines):
 
 # Write the data out as CSV
 if data_valid:
+
+    # Coerce columns
+    if args.generation == '2':
+        df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
+            'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
+            'Span Post Time': int, 'Air Time': int, 'Eq Between CAL Time': int, 'Eq CAL Time': int})
+    else:
+        df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
+            'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
+            'Span Post Time': int, 'Air Time': int, 'Eq Between CAL Time': int, 'Eq CAL Time': int,
+            'Eq Before Sample': int})
+
     # Write the main data
-    df.to_csv(f'{args.out_file_root}.csv', index=False, date_format='%Y-%m-%dT%H:%M:%SZ')
+    df.to_csv(f'{args.out_file_root}.csv', index=False, date_format='%Y-%m-%dT%H:%M:%SZ', na_rep='NaN')
 
     # Write each AUX data to its file
     for (aux_type, contents) in aux_data.items():

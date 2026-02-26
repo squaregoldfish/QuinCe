@@ -29,6 +29,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignments;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategoryException;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.PresetRunType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignments;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorGroups;
@@ -39,7 +40,6 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariableNotFoundException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
-import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
  * Holds all the details of an instrument.
@@ -432,11 +432,10 @@ public class Instrument {
    * @param runTypeEntry
    *          The map entry.
    * @return The Run Type category
-   * @throws RunTypeCategoryException
-   *           If the category cannot be determined.
+   * @throws InstrumentException
    */
   public RunTypeCategory getRunTypeCategory(
-    Map.Entry<Long, String> runTypeEntry) throws RunTypeCategoryException {
+    Map.Entry<Long, String> runTypeEntry) throws InstrumentException {
     return getRunTypeCategory(runTypeEntry.getKey(), runTypeEntry.getValue());
   }
 
@@ -449,57 +448,65 @@ public class Instrument {
    * @param runTypeValue
    *          The Run Type value
    * @return The Run Type category
-   * @throws RunTypeCategoryException
-   *           If the category cannot be determined.
+   * @throws InstrumentException
    */
   public RunTypeCategory getRunTypeCategory(long variableId,
-    String runTypeValue) throws RunTypeCategoryException {
+    String runTypeValue) throws InstrumentException {
 
     RunTypeCategory result = null;
 
-    // Fixed run types are those defined in code (see Measurement.java), and
-    // determined programmatically.
-    // Non-fixed ones are provided as a column in the data
+    /*
+     * There are three places that Run Type Categories can be defined:
+     * 
+     * 1. A Variable can have preset run types defined in its database
+     * configuration.
+     * 
+     * 2. Fixed run types can be defined in the code.
+     * 
+     * 3. The run types can be specified by the user during instrument setup.
+     */
 
-    // Start by testing the fixed run types
-    switch (runTypeValue) {
-    case Measurement.IGNORED_RUN_TYPE: {
-      result = RunTypeCategory.IGNORED;
-      break;
-    }
-    case Measurement.INTERNAL_CALIBRATION_RUN_TYPE: {
-      result = RunTypeCategory.INTERNAL_CALIBRATION;
-      break;
-    }
-    case Measurement.MEASUREMENT_RUN_TYPE: {
-      try {
-        Variable variable = ResourceManager.getInstance()
-          .getSensorsConfiguration().getInstrumentVariable(variableId);
-        result = new RunTypeCategory(variableId, variable.getName());
-      } catch (VariableNotFoundException e) {
-        throw new RunTypeCategoryException(
-          "Variable not found for variable ID " + variableId);
+    Variable variable = getVariable(variableId);
+
+    result = PresetRunType.getRunTypeCategory(variable.getPresetRunTypes(),
+      runTypeValue);
+
+    if (null == result) {
+
+      // Start by testing the fixed run types
+      switch (runTypeValue) {
+      case Measurement.IGNORED_RUN_TYPE: {
+        result = RunTypeCategory.IGNORED;
+        break;
       }
-      break;
-    }
-    default: {
-      // We didn't see anything for the fixed run types. See if there are custom
-      // ones defined.
-      TreeSet<SensorAssignment> runTypeAssignments = getSensorAssignments()
-        .get(SensorType.RUN_TYPE_SENSOR_TYPE);
-      if (null == runTypeAssignments || runTypeAssignments.size() == 0) {
-        throw new RunTypeCategoryException(
-          "No custom run types defined for variable ID " + variableId);
-      } else {
-        FileDefinition fileDef = getFileDefinitions()
-          .get(runTypeAssignments.first().getDataFile());
-        result = fileDef.getRunTypes().getRunTypeCategory(runTypeValue);
-        if (null == result) {
+      case Measurement.INTERNAL_CALIBRATION_RUN_TYPE: {
+        result = RunTypeCategory.INTERNAL_CALIBRATION;
+        break;
+      }
+      case Measurement.MEASUREMENT_RUN_TYPE: {
+        result = new RunTypeCategory(variableId, variable.getName());
+        break;
+      }
+      default: {
+        // We didn't see anything for the fixed run types. See if there are
+        // custom
+        // ones defined.
+        TreeSet<SensorAssignment> runTypeAssignments = getSensorAssignments()
+          .get(SensorType.RUN_TYPE_SENSOR_TYPE);
+        if (null == runTypeAssignments || runTypeAssignments.size() == 0) {
           throw new RunTypeCategoryException(
-            "Unrecognised run type " + runTypeValue);
+            "No custom run types defined for variable ID " + variableId);
+        } else {
+          FileDefinition fileDef = getFileDefinitions()
+            .get(runTypeAssignments.first().getDataFile());
+          result = fileDef.getRunTypes().getRunTypeCategory(runTypeValue);
+          if (null == result) {
+            throw new RunTypeCategoryException(
+              "Unrecognised run type " + runTypeValue);
+          }
         }
       }
-    }
+      }
     }
 
     return result;
@@ -558,11 +565,10 @@ public class Instrument {
    *          The Run Type value.
    * @return {@code true} if the Run Type corresponds to the instrument's
    *         measuring mode; {@code false} if it does not.
-   * @throws RunTypeCategoryException
-   *           If the Run Type category cannot be determined.
+   * @throws InstrumentException
    */
   public boolean isMeasurementRunType(String runType)
-    throws RunTypeCategoryException {
+    throws InstrumentException {
 
     boolean result = false;
 
@@ -876,29 +882,42 @@ public class Instrument {
   /**
    * Determine whether a Run Type indicates that the instrument is taking a
    * measurement for the specified {@link Variable} in the instrument.
+   * 
+   * <p>
+   * The method checks the preset Run Types defined for the Variable first. If
+   * there are no preset Run Types, or the Run Type is not one of the presets,
+   * search the user-defined Run Types for the specified {@code runType} and see
+   * if it is assigned to the {@link Variable}.
+   * </p>
    *
    * @param variable
-   *          The variable.
+   *          The {@link Variable}.
    * @param runType
    *          The Run Type value.
    * @return {@code true} if the Run Type value indicates the {@link Variable}
    *         is being measured.
-   *
-   * @throws RunTypeCategoryException
-   *           If the Run Type's category cannot be established.
+   * @throws InstrumentException
    */
   public boolean isRunTypeForVariable(Variable variable, String runType)
-    throws RunTypeCategoryException {
+    throws InstrumentException {
 
     boolean result = false;
 
     if (null != runType) {
-      if (null != variable.getRunType()
-        && variable.getRunType().equals(runType)) {
-        result = true;
-      } else if (getRunTypeCategory(variable.getId(), runType)
-        .getType() == variable.getId()) {
-        result = true;
+
+      List<String> runTypes = variable.getAllRunTypes();
+
+      if (null != runTypes && runTypes.size() > 0) {
+        result = runTypes.contains(runType.toLowerCase());
+      }
+
+      if (!result) {
+        RunTypeCategory runTypeCategory = getRunTypeCategory(variable.getId(),
+          runType);
+        if (null != runTypeCategory
+          && runTypeCategory.getType() == variable.getId()) {
+          result = true;
+        }
       }
     }
 
@@ -1053,13 +1072,12 @@ public class Instrument {
    * @param runType
    *          The Run Type value.
    * @return The column headings associated with the Run Type value.
-   * @throws RunTypeCategoryException
-   *           If the Run Type value's category cannot be determined.
+   * @throws InstrumentException
    * @see #isRunTypeForVariable(Variable, String)
    * @see ColumnHeading
    */
   public Set<ColumnHeading> getAllVariableColumnHeadings(String runType)
-    throws RunTypeCategoryException {
+    throws InstrumentException {
     Set<ColumnHeading> result = new HashSet<ColumnHeading>();
 
     for (Variable variable : variables) {

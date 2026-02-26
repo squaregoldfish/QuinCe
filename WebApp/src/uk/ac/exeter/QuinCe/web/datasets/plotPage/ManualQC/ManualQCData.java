@@ -39,7 +39,6 @@ import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.PositionException;
-import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategoryException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
@@ -533,7 +532,7 @@ public class ManualQCData extends PlotPageData {
   }
 
   private boolean isMeasurementForAnyVariable(Measurement measurement)
-    throws RunTypeCategoryException {
+    throws InstrumentException {
     boolean result = false;
 
     for (Map.Entry<Long, String> runTypeEntry : measurement.getRunTypes()

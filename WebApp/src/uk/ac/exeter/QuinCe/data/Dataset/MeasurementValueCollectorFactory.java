@@ -22,6 +22,10 @@ public class MeasurementValueCollectorFactory {
       result = new ControsPco2MeasurementValueCollector();
       break;
     }
+    case "Hagan GenX": {
+      result = new HaganGenXMeasurementValueCollector();
+      break;
+    }
     default: {
       result = new DefaultMeasurementValueCollector();
     }

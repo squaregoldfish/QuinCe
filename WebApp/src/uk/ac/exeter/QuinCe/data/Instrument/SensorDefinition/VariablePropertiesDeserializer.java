@@ -93,11 +93,16 @@ public class VariablePropertiesDeserializer
 
         presetRunTypes.add(new PresetRunType(runTypes, runTypeCategory));
       });
+    }
 
+    boolean userSelectableRunType = true;
+    if (jsonObj.has("userSelectableRunType")) {
+      userSelectableRunType = jsonObj.get("userSelectableRunType")
+        .getAsBoolean();
     }
 
     return new VariableProperties(coefficients, dependsQuestionAnswers,
-      presetRunTypes);
+      presetRunTypes, userSelectableRunType);
   }
 
 }

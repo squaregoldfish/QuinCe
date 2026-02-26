@@ -92,6 +92,10 @@ public abstract class MeasurementLocator {
         result = new DummyMeasurementLocator();
         break;
       }
+      case "Hagan GenX": {
+        result = new HaganGenXMeasurementLocator();
+        break;
+      }
       default: {
         result = new SimpleMeasurementLocator(variable);
       }
