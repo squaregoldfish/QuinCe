@@ -12,7 +12,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.Routine;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineFlag;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
-import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategoryException;
+import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
@@ -91,12 +91,11 @@ public class PositionQCCascadeRoutine implements Routine {
    *
    * @throws RecordNotFoundException
    *           If the SensorValue details cannot be retrieved.
-   * @throws RunTypeCategoryException
-   *           If the Run Type cannot be determined.
+   * @throws InstrumentException
    */
   private boolean shouldApplyFlag(Instrument instrument,
     RunTypePeriods runTypePeriods, LocalDateTime time, SensorValue value)
-    throws RecordNotFoundException, RunTypeCategoryException {
+    throws RecordNotFoundException, InstrumentException {
 
     boolean result = true;
 
