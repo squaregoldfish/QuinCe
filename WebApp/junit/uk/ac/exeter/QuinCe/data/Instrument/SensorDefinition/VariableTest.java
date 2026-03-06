@@ -11,6 +11,7 @@ import org.flywaydb.test.annotation.FlywayTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
@@ -123,5 +124,22 @@ public class VariableTest extends BaseTest {
     });
 
     assertTrue(e.getCause() instanceof SensorConfigurationException);
+  }
+
+  @ParameterizedTest
+  @CsvSource({ "-1, -1, -1", "-1, 0, 0", "0, -1, 0", "0, 0, 0", "-1, 1, 1",
+    "1, -1, 1", "1, 1, 1" })
+  public void combineForcedMeasurementModeValidTest(int mode1, int mode2,
+    int expectedResult) throws VariablePropertiesException {
+    assertEquals(expectedResult,
+      Variable.combineForcedMeasurementMode(mode1, mode2));
+  }
+
+  @ParameterizedTest
+  @CsvSource({ "0, 1", "1, 0" })
+  public void combineForcedMeasurementModeInvalidTest(int mode1, int mode2)
+    throws VariablePropertiesException {
+    assertThrows(VariablePropertiesException.class,
+      () -> Variable.combineForcedMeasurementMode(mode1, mode2));
   }
 }

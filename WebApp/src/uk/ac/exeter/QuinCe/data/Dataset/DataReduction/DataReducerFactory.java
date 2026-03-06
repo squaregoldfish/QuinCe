@@ -25,7 +25,8 @@ public class DataReducerFactory {
   static {
     reducers = new HashMap<String, Class<? extends DataReducer>>();
     reducers.put("CONTROS pCO₂", ControsPco2Reducer.class);
-    reducers.put("CONTROS pCO₂ via FerryBox", ControsPco2XFerryBoxReducer.class);
+    reducers.put("CONTROS pCO₂ via FerryBox",
+      ControsPco2XFerryBoxReducer.class);
     reducers.put("SailDrone Atmospheric CO₂ NRT",
       SaildroneAtmosphericPco2Reducer.class);
     reducers.put("SailDrone Marine CO₂ NRT", SaildroneMarinePco2Reducer.class);
@@ -53,6 +54,8 @@ public class DataReducerFactory {
     reducers.put("TA [discrete]", NoReductionReducer.class);
     reducers.put("SubCTech CO₂ Water", SubCTechCO2WaterReducer.class);
     reducers.put("SubCTech CO₂ Air", SubCTechCO2AirReducer.class);
+    reducers.put("Hagan GenX Water", HaganGenXEqReducer.class);
+    reducers.put("Hagan GenX Air", HaganGenXAirReducer.class);
   }
 
   /**

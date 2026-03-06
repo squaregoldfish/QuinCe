@@ -8,6 +8,7 @@ import java.util.List;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.jobs.files.DataReductionJob;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
@@ -97,7 +98,8 @@ public class ProOceanusMeasurementValueCollector
 
   private SensorValuesListValue getReferenceValue(Instrument instrument,
     Measurement measurement, DatasetSensorValues allSensorValues)
-    throws SensorValuesListException, RecordNotFoundException {
+    throws SensorValuesListException, RecordNotFoundException,
+    VariablePropertiesException {
 
     long runTypeColumn = instrument.getSensorAssignments()
       .getColumnIds(SensorType.RUN_TYPE_SENSOR_TYPE).get(0);

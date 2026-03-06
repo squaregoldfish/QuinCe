@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesList;
+
 /**
  * The properties for a variable.
  *
@@ -22,6 +24,20 @@ public class VariableProperties {
 
   private List<PresetRunType> presetRunTypes;
 
+  /**
+   * Indicates whether the {@link Variable} requires a fixed measurement mode.
+   *
+   * <p>
+   * By default, QuinCe will auto-detect whether an instrument is running in
+   * Periodic mode or Continuous mode. Some {@link Variable}s require a certain
+   * mode but take measurements in such a way that QuinCe detects it
+   * incorrectly. This value allows the measurement mode to be forced.
+   * </p>
+   *
+   * @see SensorValuesList
+   */
+  private int forceMeasurementMode = SensorValuesList.AUTO_DETECT_MEASUREMENT_MODE;
+
   protected VariableProperties() {
     this.coefficients = new ArrayList<String>();
     this.presetRunTypes = new ArrayList<PresetRunType>();
@@ -30,7 +46,7 @@ public class VariableProperties {
 
   protected VariableProperties(List<String> coefficients,
     Map<Long, Boolean> dependsQuestionAnswers,
-    List<PresetRunType> presetRunTypes) {
+    List<PresetRunType> presetRunTypes, int forceMeasurementMode) {
 
     this.coefficients = null != coefficients ? coefficients
       : new ArrayList<String>();
@@ -41,6 +57,8 @@ public class VariableProperties {
 
     this.presetRunTypes = null != presetRunTypes ? presetRunTypes
       : new ArrayList<PresetRunType>();
+
+    this.forceMeasurementMode = forceMeasurementMode;
   }
 
   public List<String> getCoefficients() {
@@ -72,5 +90,19 @@ public class VariableProperties {
 
   protected List<PresetRunType> getPresetRunTypes() {
     return presetRunTypes;
+  }
+
+  /**
+   * Get the forced measurement mode for the {@link Variable}.
+   *
+   * <p>
+   * This may be {@link #AUTO_DETECT_MEASUREMENT_MODE} which indicates that
+   * QuinCe should be left to auto-detect the mode.
+   * </p>
+   *
+   * @return The forced measurement mode.
+   */
+  public int getForceMeasurementMode() {
+    return forceMeasurementMode;
   }
 }

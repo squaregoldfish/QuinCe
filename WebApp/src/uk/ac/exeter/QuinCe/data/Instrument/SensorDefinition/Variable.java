@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import uk.ac.exeter.QuinCe.data.Dataset.ColumnHeading;
+import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesList;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.InvalidFlagException;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -397,5 +398,77 @@ public class Variable implements Comparable<Variable> {
 
   public List<PresetRunType> getPresetRunTypes() {
     return properties.getPresetRunTypes();
+  }
+
+  public int getForcedMeasurementMode() {
+    return properties.getForceMeasurementMode();
+  }
+
+  /**
+   * Combine two {@code Variable}'s {@code forceMeasurementMode} properties.
+   *
+   * <ul>
+   * <li>If both are auto-detect, then the result is auto-detect.</li>
+   * <li>If one is not auto-detect, then that is the result.</li>
+   * <li>If both are not auto-detect and are the same, then that is the
+   * result.</li>
+   * <li>If both are not auto-detect and are different, an
+   * {@link VariablePropertiesException} is thrown.</li>
+   * </ul>
+   *
+   * @param mode1
+   *          The first measurement mode.
+   * @param mode2
+   *          The second measurement mode.
+   * @return The combined result.
+   * @throws VariablePropertiesException
+   *           If the measurement modes are incompatible.
+   *
+   * @see SensorValuesList
+   */
+  public static int combineForcedMeasurementMode(int mode1, int mode2)
+    throws VariablePropertiesException {
+    int result;
+
+    if (!SensorValuesList.isValidMeasurementMode(mode1)) {
+      throw new VariablePropertiesException(
+        "Invalid measurement mode " + mode1);
+    }
+
+    if (!SensorValuesList.isValidMeasurementMode(mode2)) {
+      throw new VariablePropertiesException(
+        "Invalid measurement mode " + mode1);
+    }
+
+    if (mode1 == mode2) {
+      result = mode1;
+    } else if (mode1 == SensorValuesList.AUTO_DETECT_MEASUREMENT_MODE) {
+      result = mode2;
+    } else if (mode2 == SensorValuesList.AUTO_DETECT_MEASUREMENT_MODE) {
+      result = mode1;
+    } else {
+      throw new VariablePropertiesException("Conflicting measurement modes");
+    }
+
+    return result;
+  }
+
+  /**
+   * Combine a pre-computed measurement mode with that from the specified
+   * {@code Variable}.
+   *
+   * @param existingMode
+   *          The existing measurement mode.
+   * @param variable
+   *          The Variable whose measurement mode is to be combined.
+   * @return The combined measurement mode.
+   * @throws VariablePropertiesException
+   *           If the measurement modes are incompatible.
+   * @see #combineForcedMeasurementMode(int, int)
+   */
+  public static int combineForcedMeasurementMode(int existingMode,
+    Variable variable) throws VariablePropertiesException {
+    return combineForcedMeasurementMode(existingMode,
+      variable.getForcedMeasurementMode());
   }
 }

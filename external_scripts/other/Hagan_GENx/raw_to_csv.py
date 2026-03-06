@@ -52,6 +52,9 @@ class Acquisition:
         self.latitude = None
         self.status = None
 
+        self.zero_calk = None
+        self.span_calk = None
+
         # Signature info
         self.serial_number = None
         self.span_concentration = None
@@ -75,20 +78,26 @@ class Acquisition:
         self.latitude = lat
 
     def add_values(self, mode, sensor, values):
-        # Write the current values
-        if len(values) > 0:
-            column_name = mode
-            if sensor is not None:
-                column_name += f'_{sensor}'
 
-            calc_values = np.array(values, dtype=np.float64)
-            if sensor is not None:
-                calc_values = calc_values * SENSOR_MULTIPLIERS[sensor]
+        if mode == 'ZEROCALK':
+            self.zero_calk = float(values[0])
+        elif mode == 'SPANCALK':
+            self.span_calk = float(values[0])
+        else:
+            # Write the current values
+            if len(values) > 0:
+                column_name = mode
+                if sensor is not None:
+                    column_name += f'_{sensor}'
 
-            mean = np.mean(calc_values)
-            stdev = -1 if sensor is None else np.std(calc_values, ddof=1)
+                calc_values = np.array(values, dtype=np.float64)
+                if sensor is not None:
+                    calc_values = calc_values * SENSOR_MULTIPLIERS[sensor]
 
-            self.data[column_name] = [mean, stdev]
+                mean = np.mean(calc_values)
+                stdev = -1 if sensor is None else np.std(calc_values, ddof=1)
+
+                self.data[column_name] = [mean, stdev]
 
     @staticmethod
     def _get_time_offset(line, line_pos):
@@ -201,6 +210,11 @@ class Acquisition:
         df.at[row, 'RhCalc_SD'] = self.data[f'{run_type}_RhCalc'][1]
         df.at[row, 'RhTemp_AV'] = self.data[f'{run_type}_RhTemp'][0]
         df.at[row, 'RhTemp_SD'] = self.data[f'{run_type}_RhTemp'][1]
+        
+        if run_type == 'ZERO':
+            df.at[row, 'CALK'] = self.zero_calk
+        elif run_type == 'SPAN':
+            df.at[row, 'CALK'] = self.span_calk
 
         if f'{run_type}POST_CO2Calc' in self.data.keys():
             df.at[row, 'POST_CO2Calc_AV'] = self.data[f'{run_type}POST_CO2Calc'][0]
@@ -450,10 +464,10 @@ columns = ['Time', 'RunType', 'StatusCode', 'Serial Number', 'Span Concentration
     'PUMPON_CO2Raw2_AV', 'PUMPON_CO2Raw2_SD', 'PUMPON_RhCalc_AV', 'PUMPON_RhCalc_SD',
     'PUMPON_RhTemp_AV', 'PUMPON_RhTemp_SD',
     'CO2Calc_AV', 'CO2Calc_SD', 'CO2Temp_AV', 'CO2Temp_SD', 'CO2Pres_AV', 'CO2Pres_SD',
-    'CO2Raw1_AV', 'CO2Raw1_SD', 'CO2Raw2_AV', 'CO2Raw2_SD', 'RhCalc_AV', 'RhCalc_SD', 'RhTemp_AV', 'RhTemp_SD',
+    'CO2Raw1_AV', 'CO2Raw1_SD', 'CO2Raw2_AV', 'CO2Raw2_SD', 'RhCalc_AV', 'RhCalc_SD', 'RhTemp_AV', 'RhTemp_SD', 'CALK',
     'POST_CO2Calc_AV', 'POST_CO2Calc_SD', 'POST_CO2Temp_AV', 'POST_CO2Temp_SD',
     'POST_CO2Pres_AV', 'POST_CO2Pres_SD', 'POST_CO2Raw1_AV', 'POST_CO2Raw1_SD', 'POST_CO2Raw2_AV',
-    'POST_CO2Raw2_SD', 'POST_RhCalc_AV', 'POST_RhCalc_SD', 'RhTemp_AV', 'RhTemp_SD']
+    'POST_CO2Raw2_SD', 'POST_RhCalc_AV', 'POST_RhCalc_SD', 'POST_RhTemp_AV', 'POST_RhTemp_SD']
 
 df = pd.DataFrame(columns=columns, dtype=float)
 df = df.astype({'Time': 'datetime64[ns]', 'RunType': str, 'StatusCode': str, 'Serial Number': str})
@@ -613,18 +627,6 @@ while current_line < len(lines):
 
 # Write the data out as CSV
 if data_valid:
-
-    # Coerce columns
-    # if args.generation == '2':
-    #     df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
-    #         'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
-    #         'Span Post Time': int, 'Air Time': int, 'Eq Between CAL Time': int, 'Eq CAL Time': int})
-    # else:
-    #     df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
-    #         'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
-    #         'Span Post Time': int, 'Air Time': int, 'Eq Between CAL Time': int, 'Eq CAL Time': int,
-    #         'Eq Before Sample': int})
-
     # Write the main data
     df.to_csv(f'{args.out_file_root}.csv', index=False, date_format='%Y-%m-%dT%H:%M:%SZ', na_rep='NaN')
 

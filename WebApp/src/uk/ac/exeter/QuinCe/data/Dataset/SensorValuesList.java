@@ -49,6 +49,13 @@ import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
  * </ul>
  *
  * <p>
+ * In most cases the measurement mode will be determined automatically. However,
+ * some {@link Variable}s require a specific mode to always be used. In this
+ * case it will be set when a {@code SensorValuesList} is constructed, and will
+ * not change.
+ * </p>
+ *
+ * <p>
  * {@code get} methods for the list allow access in two ways:
  * </p>
  *
@@ -61,12 +68,8 @@ import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
  * <p>
  * Methods are named accordingly, e.g. {@code valuesSize} or {@code rawSize}.
  * Typically, QC activities will access the {@code raw} methods and data
- * reduction will access the {@code values} methods.
- * </p>
- *
- * <p>
- * Values mode results are automatically stripped of {@link Flag#FLUSHING}
- * values.
+ * reduction will access the {@code values} methods. {@code Values} results are
+ * automatically stripped of {@link Flag#FLUSHING} values.
  * </p>
  *
  * <p>
@@ -118,6 +121,11 @@ public class SensorValuesList {
   private static final int LARGE_GROUP_LIMIT = 5;
 
   /**
+   * Indicator that the measurement mode should be auto-detected.
+   */
+  public static final int AUTO_DETECT_MEASUREMENT_MODE = -1;
+
+  /**
    * Indicator for measurements in continuous mode.
    */
   public static final int MODE_CONTINUOUS = 0;
@@ -157,7 +165,13 @@ public class SensorValuesList {
   /**
    * The measurement mode of these {@link SensorValue}s.
    */
-  private int measurementMode = -1;
+  private int measurementMode = AUTO_DETECT_MEASUREMENT_MODE;
+
+  /**
+   * Indicates whether or not the measurement mode has been fixed when the list
+   * was created.
+   */
+  private boolean measurementModeFixed = false;
 
   /**
    * For periodic mode, the interval between groups of measurements (in
@@ -210,12 +224,13 @@ public class SensorValuesList {
    *           If the {@link SensorType} for the column cannot be established.
    */
   public SensorValuesList(long columnId, DatasetSensorValues allSensorValues,
-    boolean forceString) throws RecordNotFoundException {
+    int measurementMode, boolean forceString) throws RecordNotFoundException {
     columnIds = new TreeSet<Long>();
     columnIds.add(columnId);
     this.allSensorValues = allSensorValues;
     this.sensorType = allSensorValues.getInstrument().getSensorAssignments()
       .getSensorTypeForDBColumn(columnId);
+    initMeasurementMode(measurementMode);
     this.forceString = forceString;
   }
 
@@ -236,8 +251,8 @@ public class SensorValuesList {
    *           If the {@link SensorType} for any column cannot be established.
    */
   public SensorValuesList(Collection<Long> columnIds,
-    DatasetSensorValues allSensorValues, boolean forceString)
-    throws RecordNotFoundException {
+    DatasetSensorValues allSensorValues, int measurementMode,
+    boolean forceString) throws RecordNotFoundException {
 
     SensorType testingSensorType = null;
     SensorAssignments sensorAssignments = allSensorValues.getInstrument()
@@ -259,7 +274,13 @@ public class SensorValuesList {
     this.columnIds = new TreeSet<Long>(columnIds);
     this.sensorType = testingSensorType;
     this.allSensorValues = allSensorValues;
+    initMeasurementMode(measurementMode);
     this.forceString = forceString;
+  }
+
+  private void initMeasurementMode(int measurementMode) {
+    this.measurementMode = measurementMode;
+    this.measurementModeFixed = measurementMode != AUTO_DETECT_MEASUREMENT_MODE;
   }
 
   /**
@@ -281,13 +302,13 @@ public class SensorValuesList {
    */
   public static SensorValuesList newFromSensorValueCollection(
     Collection<SensorValue> values, DatasetSensorValues allSensorValues,
-    boolean forceString) throws RecordNotFoundException {
+    int measurementMode, boolean forceString) throws RecordNotFoundException {
 
     TreeSet<Long> columnIds = values.stream().map(SensorValue::getColumnId)
       .collect(Collectors.toCollection(TreeSet::new));
 
     SensorValuesList list = new SensorValuesList(columnIds, allSensorValues,
-      forceString);
+      measurementMode, forceString);
     list.addAll(values);
 
     return list;
@@ -346,7 +367,9 @@ public class SensorValuesList {
     }
 
     // Reset list properties for recalculation
-    measurementMode = -1;
+    if (!measurementModeFixed) {
+      measurementMode = -1;
+    }
     rawTimesCache = null;
     outputValues = null;
     valueTimesCache = null;
@@ -1281,10 +1304,7 @@ public class SensorValuesList {
    * @return The measurement mode.
    */
   public int getMeasurementMode() {
-    if (measurementMode == -1) {
-      calculateMeasurementMode();
-    }
-
+    calculateMeasurementMode();
     return measurementMode;
   }
 
@@ -1303,87 +1323,97 @@ public class SensorValuesList {
    * If the list contains String values, we also create new groups whenever the
    * value changes (in addition to the time difference threshold).
    * </p>
+   *
+   * <p>
+   * If the measurement mode has already been calculated or set directly, this
+   * method does nothing.
+   * </p>
    */
   private void calculateMeasurementMode() {
 
-    // If the list contains string values, we operate slightly differently.
-    boolean stringMode = allowStringPeriodicGroups && containsStringValue();
+    // If the measurementMode has already been set,
+    // don't do anything.
+    if (measurementMode == AUTO_DETECT_MEASUREMENT_MODE) {
 
-    // The largest group size
-    int largeGroupCount = 0;
+      // If the list contains string values, we operate slightly differently.
+      boolean stringMode = allowStringPeriodicGroups && containsStringValue();
 
-    // The start times of each group
-    List<LocalDateTime> groupStartTimes = new ArrayList<LocalDateTime>();
+      // The largest group size
+      int largeGroupCount = 0;
 
-    // Calculate the mean group size as we go along
-    int groupsByTime = 0;
-    int totalGroupCount = 0;
-    float meanGroupSize = 0f;
+      // The start times of each group
+      List<LocalDateTime> groupStartTimes = new ArrayList<LocalDateTime>();
 
-    int groupSize = 0;
-    for (int i = 1; i < list.size(); i++) {
-      long timeDiff = DateTimeUtils.secondsBetween(list.get(i - 1).getTime(),
-        list.get(i).getTime());
+      // Calculate the mean group size as we go along
+      int groupsByTime = 0;
+      int totalGroupCount = 0;
+      float meanGroupSize = 0f;
 
-      boolean newGroupFromTime = timeDiff > CONTINUOUS_MEASUREMENT_LIMIT;
+      int groupSize = 0;
+      for (int i = 1; i < list.size(); i++) {
+        long timeDiff = DateTimeUtils.secondsBetween(list.get(i - 1).getTime(),
+          list.get(i).getTime());
 
-      boolean newGroupFromValue = stringMode
-        ? SensorValue.valuesEqual(list.get(i - 1), list.get(i))
-        : false;
+        boolean newGroupFromTime = timeDiff > CONTINUOUS_MEASUREMENT_LIMIT;
 
-      if (newGroupFromTime || newGroupFromValue) {
-        if (newGroupFromTime) {
-          groupsByTime++;
-          groupStartTimes.add(list.get(i).getTime());
-        }
+        boolean newGroupFromValue = stringMode
+          ? SensorValue.valuesEqual(list.get(i - 1), list.get(i))
+          : false;
 
-        if (groupSize > 0) {
-
-          // Update the max group size
-          if (groupSize > MAX_PERIODIC_GROUP_SIZE) {
-            largeGroupCount++;
+        if (newGroupFromTime || newGroupFromValue) {
+          if (newGroupFromTime) {
+            groupsByTime++;
+            groupStartTimes.add(list.get(i).getTime());
           }
 
-          // Update the running mean group size
-          totalGroupCount++;
-          meanGroupSize = meanGroupSize
-            + (groupSize - meanGroupSize) / totalGroupCount;
+          if (groupSize > 0) {
 
-          // Reset the group
-          groupSize = 0;
+            // Update the max group size
+            if (groupSize > MAX_PERIODIC_GROUP_SIZE) {
+              largeGroupCount++;
+            }
+
+            // Update the running mean group size
+            totalGroupCount++;
+            meanGroupSize = meanGroupSize
+              + (groupSize - meanGroupSize) / totalGroupCount;
+
+            // Reset the group
+            groupSize = 0;
+          }
         }
+
+        groupSize++;
       }
 
-      groupSize++;
-    }
+      // Tidy up from the last value
+      if (groupSize > 0) {
+        // Update the max group size
+        if (groupSize > MAX_PERIODIC_GROUP_SIZE) {
+          largeGroupCount++;
+        }
 
-    // Tidy up from the last value
-    if (groupSize > 0) {
-      // Update the max group size
-      if (groupSize > MAX_PERIODIC_GROUP_SIZE) {
-        largeGroupCount++;
+        // Update the running mean group size
+        totalGroupCount++;
+        meanGroupSize = meanGroupSize
+          + (groupSize - meanGroupSize) / (float) totalGroupCount;
       }
 
-      // Update the running mean group size
-      totalGroupCount++;
-      meanGroupSize = meanGroupSize
-        + (groupSize - meanGroupSize) / (float) totalGroupCount;
-    }
+      if (groupsByTime > 1 && (meanGroupSize <= MAX_PERIODIC_GROUP_SIZE
+        && largeGroupCount <= LARGE_GROUP_LIMIT)) {
+        measurementMode = MODE_PERIODIC;
 
-    if (groupsByTime > 1 && (meanGroupSize <= MAX_PERIODIC_GROUP_SIZE
-      && largeGroupCount <= LARGE_GROUP_LIMIT)) {
-      measurementMode = MODE_PERIODIC;
+        // Calculate the mean time between groups
+        MeanCalculator mean = new MeanCalculator();
+        for (int i = 1; i < groupStartTimes.size(); i++) {
+          mean.add(DateTimeUtils.secondsBetween(groupStartTimes.get(i - 1),
+            groupStartTimes.get(i)));
+        }
+        periodicGroupTimeInterval = Math.round(mean.mean());
 
-      // Calculate the mean time between groups
-      MeanCalculator mean = new MeanCalculator();
-      for (int i = 1; i < groupStartTimes.size(); i++) {
-        mean.add(DateTimeUtils.secondsBetween(groupStartTimes.get(i - 1),
-          groupStartTimes.get(i)));
+      } else {
+        measurementMode = MODE_CONTINUOUS;
       }
-      periodicGroupTimeInterval = Math.round(mean.mean());
-
-    } else {
-      measurementMode = MODE_CONTINUOUS;
     }
   }
 
@@ -1716,6 +1746,11 @@ public class SensorValuesList {
       allowStringPeriodicGroups = allow;
       resetOutput();
     }
+  }
+
+  public static boolean isValidMeasurementMode(int mode) {
+    return mode == AUTO_DETECT_MEASUREMENT_MODE || mode == MODE_CONTINUOUS
+      || mode == MODE_PERIODIC;
   }
 }
 

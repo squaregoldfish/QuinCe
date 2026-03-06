@@ -154,7 +154,7 @@ public class SensorType extends ColumnHeading
   static {
     RUN_TYPE_SENSOR_TYPE = new SensorType(RUN_TYPE_ID, "Run Type", "Run Type",
       RUN_TYPE_ORDER, null, "RUNTYPE",
-      new String[] { "Type", "Measurement Type" });
+      new String[] { "Type", "Measurement Type", "Run Type", "RunType" });
     LONGITUDE_SENSOR_TYPE = new SensorType(LONGITUDE_ID, "Longitude",
       "Longitude", LONGITUDE_ORDER, "degrees_east", "ALONGP01", null);
     LATITUDE_SENSOR_TYPE = new SensorType(LATITUDE_ID, "Latitude", "Latitude",

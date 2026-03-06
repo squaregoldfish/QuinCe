@@ -21,6 +21,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.PositionException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
@@ -133,11 +134,12 @@ public class DatasetSensorValues {
    * @return The values.
    * @throws DatabaseException
    * @throws RecordNotFoundException
+   * @throws VariablePropertiesException
    */
   public DatasetSensorValues(Connection conn, Instrument instrument,
     long datasetId, boolean ignoreFlushing, boolean ignoreInternalCalibrations,
-    Collection<SensorValue> rawSensorValues)
-    throws DatabaseException, RecordNotFoundException {
+    Collection<SensorValue> rawSensorValues) throws DatabaseException,
+    RecordNotFoundException, VariablePropertiesException {
 
     valuesById = new HashMap<Long, SensorValue>();
     valuesByColumn = new HashMap<Long, SensorValuesList>();
@@ -167,18 +169,22 @@ public class DatasetSensorValues {
    *          The SensorValue.
    * @throws RecordNotFoundException
    *           If the {@link Instrument} configuration is invalid.
+   * @throws VariablePropertiesException
    */
-  public void add(SensorValue sensorValue) throws RecordNotFoundException {
+  public void add(SensorValue sensorValue)
+    throws RecordNotFoundException, VariablePropertiesException {
 
     if (sensorValue.getColumnId() == SensorType.LONGITUDE_ID) {
       if (null == longitudes) {
-        longitudes = new SensorValuesList(SensorType.LONGITUDE_ID, this, false);
+        longitudes = new SensorValuesList(SensorType.LONGITUDE_ID, this,
+          instrument.getMeasurementMode(), false);
       }
       longitudes.add(sensorValue);
       addById(sensorValue);
     } else if (sensorValue.getColumnId() == SensorType.LATITUDE_ID) {
       if (null == latitudes) {
-        latitudes = new SensorValuesList(SensorType.LATITUDE_ID, this, false);
+        latitudes = new SensorValuesList(SensorType.LATITUDE_ID, this,
+          instrument.getMeasurementMode(), false);
       }
       latitudes.add(sensorValue);
       addById(sensorValue);
@@ -297,9 +303,10 @@ public class DatasetSensorValues {
    *          The {@link FileColumn} ID.
    * @return The {@link SensorValue}s in the column.
    * @throws RecordNotFoundException
+   * @throws VariablePropertiesException
    */
   public SensorValuesList getColumnValues(long columnId)
-    throws RecordNotFoundException {
+    throws RecordNotFoundException, VariablePropertiesException {
 
     SensorValuesList values;
 
@@ -310,7 +317,8 @@ public class DatasetSensorValues {
     } else {
       values = valuesByColumn.get(columnId);
       if (null == values) {
-        values = new SensorValuesList(columnId, this, false);
+        values = new SensorValuesList(columnId, this,
+          instrument.getMeasurementMode(), false);
       }
     }
 
@@ -405,9 +413,10 @@ public class DatasetSensorValues {
    * @param sensorValue
    *          The {@link SensorValue}.
    * @throws RecordNotFoundException
+   * @throws VariablePropertiesException
    */
   private void addByColumn(SensorValue sensorValue)
-    throws RecordNotFoundException {
+    throws RecordNotFoundException, VariablePropertiesException {
 
     long columnId = sensorValue.getColumnId();
 
@@ -415,7 +424,8 @@ public class DatasetSensorValues {
     optionalColumns.remove(columnId);
 
     if (!valuesByColumn.containsKey(columnId)) {
-      valuesByColumn.put(columnId, new SensorValuesList(columnId, this, false));
+      valuesByColumn.put(columnId, new SensorValuesList(columnId, this,
+        instrument.getMeasurementMode(), false));
     }
 
     valuesByColumn.get(columnId).add(sensorValue);
@@ -686,9 +696,11 @@ public class DatasetSensorValues {
    *         selected {@link SensorValue}s.
    * @throws RecordNotFoundException
    *           If the {@link Instrument}'s configuration is invalid.
+   * @throws VariablePropertiesException
    */
   public DatasetSensorValues subset(TreeSet<LocalDateTime> times,
-    TreeSet<Long> ids) throws RecordNotFoundException {
+    TreeSet<Long> ids)
+    throws RecordNotFoundException, VariablePropertiesException {
 
     DatasetSensorValues result = new DatasetSensorValues(instrument);
 
@@ -1003,10 +1015,11 @@ public class DatasetSensorValues {
   }
 
   public SensorValuesList getSensorValues(Collection<Long> columnIds,
-    boolean forceString) throws RecordNotFoundException {
+    boolean forceString)
+    throws RecordNotFoundException, VariablePropertiesException {
 
     SensorValuesList result = new SensorValuesList(columnIds, this,
-      forceString);
+      instrument.getMeasurementMode(), forceString);
 
     for (long id : columnIds) {
       result.addAll(valuesByColumn.get(id));
@@ -1016,11 +1029,12 @@ public class DatasetSensorValues {
   }
 
   public SensorValuesList getColumnValues(SensorAssignment assignment)
-    throws RecordNotFoundException {
+    throws RecordNotFoundException, VariablePropertiesException {
     return getColumnValues(assignment.getDatabaseId());
   }
 
-  public SensorValuesList getRunTypes() throws RecordNotFoundException {
+  public SensorValuesList getRunTypes()
+    throws RecordNotFoundException, VariablePropertiesException {
     return getSensorValues(
       getInstrument().getSensorAssignments().getRunTypeColumnIDs(), true);
   }

@@ -20,6 +20,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorGroupPair;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorGroupsException;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.jobs.JobManager;
 import uk.ac.exeter.QuinCe.jobs.files.DataSetJob;
 import uk.ac.exeter.QuinCe.jobs.files.LocateMeasurementsJob;
@@ -168,8 +169,8 @@ public class SensorOffsetsBean extends BaseManagedBean {
     return currentPair;
   }
 
-  public void setCurrentPair(int currentPair)
-    throws SensorGroupsException, RecordNotFoundException {
+  public void setCurrentPair(int currentPair) throws SensorGroupsException,
+    RecordNotFoundException, VariablePropertiesException {
     this.currentPair = currentPair;
     preparePlotData();
   }
@@ -189,8 +190,8 @@ public class SensorOffsetsBean extends BaseManagedBean {
     return result;
   }
 
-  private void preparePlotData()
-    throws SensorGroupsException, RecordNotFoundException {
+  private void preparePlotData() throws SensorGroupsException,
+    RecordNotFoundException, VariablePropertiesException {
     if (null != sensorValues) {
       SensorGroupPair pair = getCurrentPairObject();
 
@@ -200,8 +201,8 @@ public class SensorOffsetsBean extends BaseManagedBean {
     }
   }
 
-  public void preparePageData()
-    throws SensorGroupsException, RecordNotFoundException {
+  public void preparePageData() throws SensorGroupsException,
+    RecordNotFoundException, VariablePropertiesException {
     preparePlotData();
   }
 

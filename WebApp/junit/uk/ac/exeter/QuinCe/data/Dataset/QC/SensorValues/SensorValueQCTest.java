@@ -20,6 +20,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineFlag;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorGroupsException;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
@@ -267,9 +268,10 @@ public class SensorValueQCTest extends BaseTest {
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
     "resources/sql/testbase/instrument" })
   @Test
-  public void oneCascadeTest() throws InvalidFlagException,
-    RecordNotFoundException, RoutineException, MissingParamException,
-    DatabaseException, InstrumentException, SensorGroupsException {
+  public void oneCascadeTest()
+    throws InvalidFlagException, RecordNotFoundException, RoutineException,
+    MissingParamException, DatabaseException, InstrumentException,
+    SensorGroupsException, VariablePropertiesException {
     SensorValue source = makeSensorValue(1L, 1L);
     source.setUserQC(Flag.BAD, "Source Bad");
 
@@ -288,9 +290,10 @@ public class SensorValueQCTest extends BaseTest {
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
     "resources/sql/testbase/instrument" })
   @Test
-  public void twoCascadesTest() throws InvalidFlagException,
-    RecordNotFoundException, RoutineException, MissingParamException,
-    DatabaseException, InstrumentException, SensorGroupsException {
+  public void twoCascadesTest()
+    throws InvalidFlagException, RecordNotFoundException, RoutineException,
+    MissingParamException, DatabaseException, InstrumentException,
+    SensorGroupsException, VariablePropertiesException {
     SensorValue source1 = makeSensorValue(1L, 1L);
     source1.setUserQC(Flag.BAD, "One Bad");
     SensorValue source2 = makeSensorValue(2L, 1L);
@@ -313,9 +316,10 @@ public class SensorValueQCTest extends BaseTest {
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
     "resources/sql/testbase/instrument" })
   @Test
-  public void removeOneCascadeTest() throws InvalidFlagException,
-    RecordNotFoundException, RoutineException, MissingParamException,
-    DatabaseException, InstrumentException, SensorGroupsException {
+  public void removeOneCascadeTest()
+    throws InvalidFlagException, RecordNotFoundException, RoutineException,
+    MissingParamException, DatabaseException, InstrumentException,
+    SensorGroupsException, VariablePropertiesException {
     SensorValue source1 = makeSensorValue(1L, 1L);
     source1.setUserQC(Flag.BAD, "One Bad");
     SensorValue source2 = makeSensorValue(2L, 1L);
@@ -340,9 +344,10 @@ public class SensorValueQCTest extends BaseTest {
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
     "resources/sql/testbase/instrument" })
   @Test
-  public void removeAllCascadeAutoQCTest() throws InvalidFlagException,
-    RecordNotFoundException, RoutineException, MissingParamException,
-    DatabaseException, InstrumentException, SensorGroupsException {
+  public void removeAllCascadeAutoQCTest()
+    throws InvalidFlagException, RecordNotFoundException, RoutineException,
+    MissingParamException, DatabaseException, InstrumentException,
+    SensorGroupsException, VariablePropertiesException {
 
     SensorValue source = makeSensorValue(1L, 1L);
     source.setUserQC(Flag.BAD, "Source Bad");
@@ -364,9 +369,10 @@ public class SensorValueQCTest extends BaseTest {
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
     "resources/sql/testbase/instrument" })
   @Test
-  public void removeAllCascadeNoAutoQCTest() throws InvalidFlagException,
-    RecordNotFoundException, RoutineException, MissingParamException,
-    DatabaseException, InstrumentException, SensorGroupsException {
+  public void removeAllCascadeNoAutoQCTest()
+    throws InvalidFlagException, RecordNotFoundException, RoutineException,
+    MissingParamException, DatabaseException, InstrumentException,
+    SensorGroupsException, VariablePropertiesException {
 
     SensorValue source = makeSensorValue(1L, 1L);
     source.setUserQC(Flag.BAD, "Source Bad");

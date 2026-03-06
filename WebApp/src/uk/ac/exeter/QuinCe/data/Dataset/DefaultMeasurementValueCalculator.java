@@ -20,6 +20,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorGroupsException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
@@ -67,7 +68,7 @@ public class DefaultMeasurementValueCalculator
     SensorType requiredSensorType, DatasetMeasurements allMeasurements,
     DatasetSensorValues allSensorValues, Connection conn)
     throws MeasurementValueCalculatorException, SensorValuesListException,
-    RecordNotFoundException {
+    RecordNotFoundException, VariablePropertiesException {
 
     return getSensorValue(instrument, dataSet, timeReference, variable,
       requiredSensorType, allMeasurements, allSensorValues, true, conn);
@@ -77,8 +78,9 @@ public class DefaultMeasurementValueCalculator
     DataSet dataSet, SensorValuesListValue timeReference, Variable variable,
     SensorType requiredSensorType, DatasetMeasurements allMeasurements,
     DatasetSensorValues allSensorValues, boolean allowCalibration,
-    Connection conn) throws MeasurementValueCalculatorException,
-    SensorValuesListException, RecordNotFoundException {
+    Connection conn)
+    throws MeasurementValueCalculatorException, SensorValuesListException,
+    RecordNotFoundException, VariablePropertiesException {
 
     SensorAssignment requiredAssignment = instrument.getSensorAssignments()
       .get(requiredSensorType).first();
@@ -157,13 +159,14 @@ public class DefaultMeasurementValueCalculator
    * @throws MeasurementValueCalculatorException
    *           If the value cannot be constructed.
    * @throws RecordNotFoundException
+   * @throws VariablePropertiesException
    */
   private MeasurementValue getPositionValue(Instrument instrument,
     DataSet dataSet, SensorValuesListValue timeReference, Variable variable,
     SensorType requiredSensorType, DatasetMeasurements allMeasurements,
     DatasetSensorValues allSensorValues, Connection conn)
     throws SensorValuesListException, MeasurementValueCalculatorException,
-    RecordNotFoundException {
+    RecordNotFoundException, VariablePropertiesException {
 
     MeasurementValue result;
 

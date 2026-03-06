@@ -24,6 +24,7 @@ import uk.ac.exeter.QuinCe.User.User;
 import uk.ac.exeter.QuinCe.data.Dataset.ColumnHeading;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.MeasurementLocator;
+import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesList;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficient;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignments;
@@ -37,6 +38,8 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorGroupsSerializ
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariableNotFoundException;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariableProperties;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -1428,5 +1431,32 @@ public class Instrument {
   @Override
   public String toString() {
     return platformName + ":" + name;
+  }
+
+  /**
+   * Get the required measurement mode for this {@code Instrument}.
+   *
+   * <p>
+   * In most cases QuinCe will automatically detect the measurement mode (see
+   * {@link SensorValuesList}), but some {@link Variable}s require the
+   * measurement mode to be fixed. This method will examine the
+   * {@code Instrument}'s {@link Variable}s to determine the measurement mode.
+   * </p>
+   *
+   * @return The measurement mode for the Instrument.
+   * @throws VariablePropertiesException
+   *           If the measurement mode of the {@code Instrument}'s
+   *           {@link Variable}s are incompatible.
+   * @see SensorValuesList
+   * @see VariableProperties
+   */
+  public int getMeasurementMode() throws VariablePropertiesException {
+
+    int result = SensorValuesList.AUTO_DETECT_MEASUREMENT_MODE;
+    for (Variable variable : variables) {
+      result = Variable.combineForcedMeasurementMode(result, variable);
+    }
+
+    return result;
   }
 }

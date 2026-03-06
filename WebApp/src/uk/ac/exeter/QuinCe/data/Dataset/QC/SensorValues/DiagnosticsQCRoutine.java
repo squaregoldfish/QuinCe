@@ -9,6 +9,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.InvalidFlagException;
 import uk.ac.exeter.QuinCe.data.Instrument.DiagnosticQCConfig;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**
@@ -21,8 +22,8 @@ import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 public class DiagnosticsQCRoutine {
 
   public void run(Instrument instrument, DatasetSensorValues sensorValues,
-    RunTypePeriods runTypePeriods)
-    throws InvalidFlagException, RecordNotFoundException {
+    RunTypePeriods runTypePeriods) throws InvalidFlagException,
+    RecordNotFoundException, VariablePropertiesException {
 
     DiagnosticQCConfig diagnosticConfig = instrument.getDiagnosticQCConfig();
 
