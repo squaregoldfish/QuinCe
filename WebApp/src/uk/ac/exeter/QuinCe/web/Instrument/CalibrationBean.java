@@ -1056,54 +1056,19 @@ public abstract class CalibrationBean extends BaseManagedBean {
 
     return COMMIT_NAV;
   }
+==== BASE ====
+}
 
-  /**
-   * Holds details of whether a {@link DataSet} must be recalculated as a result
-   * of the current set of edits in a {@link Calibration}, and whether
-   * recalculation is possible.
-   *
-   * <p>
-   * This class does not hold any details of the {@link DataSet} or
-   * {@link Calibration}s; it holds only status information and is linked to the
-   * relevant items by the {@link CalibrationBean}.
-   * </p>
-   *
-   * <p>
-   * Recalculation of a {@link DataSet} may not be possible for a variety of
-   * reasons. The most common reasons are:
-   * </p>
-   * <ul>
-   * <li>Recalculation requires a full set of {@link Calibration}s to be
-   * available, but one or more have been deleted.</li>
-   * <li>A {@link Calibration} has been created or edited such that it is within
-   * the time period of the {@link DataSet}, and this is not permitted for the
-   * type of the {@link Calibration}s being edited.</li>
-   * </ul>
-   */
-  class RecalculateStatus {
+class RecalculateStatus {
+  private boolean required;
 
-    /**
-     * Indicates whether or not the {@link DataSet} needs to be recalculated.
-     */
-    private boolean required;
+  private boolean canBeRecalculated;
 
-    /**
-     * Indicates whether or not the {@link DataSet} can be recalculated.
-     */
-    private boolean canBeRecalculated;
-
-    /**
-     * Basic constructor.
-     *
-     * <p>
-     * The default status is that the {@link DataSet} does not need to be
-     * recalculated.
-     * </p>
-     */
-    protected RecalculateStatus() {
-      this.required = false;
-      this.canBeRecalculated = false;
-    }
+  protected RecalculateStatus() {
+    this.required = false;
+    this.canBeRecalculated = false;
+  }
+==== BASE ====
 
     /**
      * Indicates whether or not recalculation is required.
