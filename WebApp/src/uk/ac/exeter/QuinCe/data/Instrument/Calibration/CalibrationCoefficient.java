@@ -6,7 +6,7 @@ import java.util.Objects;
 import uk.ac.exeter.QuinCe.web.html.SelectItem;
 
 /**
- * Simple object for a single calibration coefficient
+ * Simple object for a single calibration coefficient.
  */
 public class CalibrationCoefficient implements Cloneable {
 
@@ -35,7 +35,7 @@ public class CalibrationCoefficient implements Cloneable {
   private String name;
 
   /**
-   * The coefficient value
+   * The coefficient value.
    */
   private String value = "0";
 
@@ -69,6 +69,19 @@ public class CalibrationCoefficient implements Cloneable {
   }
 
   /**
+   * Create a coefficient with the specified value.
+   *
+   * @param name
+   *          The coefficient name.
+   * @param value
+   *          The value.
+   */
+  protected CalibrationCoefficient(String name, String value) {
+    this.name = name;
+    this.value = value;
+  }
+
+  /**
    * Copy constructor
    *
    * @param name
@@ -83,18 +96,18 @@ public class CalibrationCoefficient implements Cloneable {
   }
 
   /**
-   * Get the coefficient name
+   * Get the coefficient's name.
    *
-   * @return The coefficient's name
+   * @return The coefficient name.
    */
   public String getName() {
     return name;
   }
 
   /**
-   * Get the coefficient value
+   * Get the coefficient value as a {@link String}.
    *
-   * @return The value
+   * @return The value.
    */
   public String getValue() {
     return value;
@@ -116,15 +129,20 @@ public class CalibrationCoefficient implements Cloneable {
     this.selectItems = selectItems;
   }
 
+  /**
+   * Get the coefficient value as a {@link Double} object.
+   *
+   * @return The value.
+   */
   public Double getDoubleValue() {
     return Double.parseDouble(value);
   }
 
   /**
-   * Set the coefficient value
+   * Set the coefficient value.
    *
    * @param value
-   *          The value
+   *          The value.
    */
   public void setValue(String value) {
     this.value = value;

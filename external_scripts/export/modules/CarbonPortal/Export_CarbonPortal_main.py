@@ -84,7 +84,7 @@ def cp_upload(manifest, dataset, dataset_zip, raw_filenames):
     bypass_upload = False
 
     if len(existing_datasets) > 1:
-        raise CarbonPortalException(f'Dataset would deprecate multiple datasets {existing_datasets["dobj"]}')
+        raise CarbonPortalException(f'Dataset would deprecate multiple datasets: {list(existing_datasets["dobj"])}')
     elif existing_datasets.empty:
         # Just to be explicit: We will upload the dataset and don't need to deprecate anything
         pass
@@ -109,7 +109,7 @@ def cp_upload(manifest, dataset, dataset_zip, raw_filenames):
             else:
                 if deprecated_dataset['fileName'] != os.path.basename(data_filename):
                     raise CarbonPortalException(
-                        f'Cannot deprecate L2 dataset with different filename ({os.path.basename(data_filename)} -> {deprecated_dataset["fileName"]})')
+                        f'Cannot deprecate L2 dataset with different filename ({os.path.basename(data_filename)} -> {deprecated_dataset["fileName"]}; {deprecated_dataset["dobj"]} )')
                 elif 'nextVersion' in deprecated_dataset:
                     raise CarbonPortalException(
                         f'Cannot deprecate L2 dataset because it already has a next version ({deprecated_dataset["dobj"]})')
@@ -139,6 +139,7 @@ def cp_upload(manifest, dataset, dataset_zip, raw_filenames):
 
             upload_l0 = True
             previous_l0 = []
+            
             existing_hashsums = existing_l0.loc[existing_l0['fileName'] == basename]['hashSum'].values
             if hashsum in existing_hashsums:
                 upload_l0 = False

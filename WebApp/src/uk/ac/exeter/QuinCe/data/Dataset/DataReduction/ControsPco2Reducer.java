@@ -30,7 +30,7 @@ public class ControsPco2Reducer extends DataReducer {
 
   private static final String MODE_ZERO_AFTER_SLEEP = "Zero after sleep";
 
-  private static final String ZEROS_PROP = "contros.zeros";
+  protected static final String ZEROS_PROP = "contros.zeros";
 
   private static final BigDecimal T0 = new BigDecimal("273.15");
 
@@ -38,7 +38,7 @@ public class ControsPco2Reducer extends DataReducer {
 
   private static List<CalculationParameter> calculationParameters = null;
 
-  private TreeMap<Double, Double> zeroS2Beams;
+  protected TreeMap<Double, Double> zeroS2Beams;
 
   private BigDecimal F = null;
 
@@ -147,7 +147,7 @@ public class ControsPco2Reducer extends DataReducer {
    *
    * @throws SensorTypeNotFoundException
    */
-  private void calcZeroS2Beams(DataSet dataset,
+  protected void calcZeroS2Beams(DataSet dataset,
     List<Measurement> allMeasurements) throws SensorTypeNotFoundException {
     zeroS2Beams = new TreeMap<Double, Double>();
 
@@ -173,8 +173,7 @@ public class ControsPco2Reducer extends DataReducer {
 
       if (runType.equals(Measurement.INTERNAL_CALIBRATION_RUN_TYPE)) {
 
-        Double rawSignal = measurement
-          .getMeasurementValue("Raw Detector Signal").getCalculatedValue();
+        Double rawSignal = getZeroS2BeamRawSignal(dataset, measurement);
 
         if (!rawSignal.isNaN()) {
           runTimes.add(
@@ -193,123 +192,137 @@ public class ControsPco2Reducer extends DataReducer {
     dataset.setProperty(variable, ZEROS_PROP, new Gson().toJson(zeroS2Beams));
   }
 
+  protected Double getZeroS2BeamRawSignal(DataSet dataset,
+    Measurement measurement) throws SensorTypeNotFoundException {
+    return measurement.getMeasurementValue("Raw Detector Signal")
+      .getCalculatedValue();
+  }
+
   @Override
   public void doCalculation(Instrument instrument, Measurement measurement,
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
     try {
-      // We use BigDecimals to maintain the precision on the k parameters,
-      // which are on the order of 1e-10
-      BigDecimal measurementRuntime = new BigDecimal(
-        measurement.getMeasurementValue("Runtime").getCalculatedValue());
+      Double doubleRuntime = measurement.getMeasurementValue("Runtime")
+        .getCalculatedValue();
 
-      Double measurementS2Beam = calcS2Beam(measurement);
+      // A NaN Runtime is an invalid measurement. Skip it.
+      if (!doubleRuntime.isNaN()) {
 
-      Double zeroS2Beam;
-      Double sProc;
-      Double xco2;
-      Double pCO2SST;
-      Double fCO2;
+        // We use BigDecimals to maintain the precision on the k parameters,
+        // which are on the order of 1e-10
+        BigDecimal measurementRuntime = new BigDecimal(doubleRuntime);
 
-      if (!measurementS2Beam.isNaN()) {
-        BigDecimal bdMeasurementS2Beam = new BigDecimal(measurementS2Beam);
+        Double measurementS2Beam = calcS2Beam(measurement);
 
-        Double interpZeroS2Beam = getInterpZeroS2Beam(
-          measurementRuntime.doubleValue());
+        Double zeroS2Beam;
+        Double sProc;
+        Double xco2;
+        Double pCO2SST;
+        Double fCO2;
 
-        if (null != interpZeroS2Beam) {
+        if (!measurementS2Beam.isNaN()) {
+          BigDecimal bdMeasurementS2Beam = new BigDecimal(measurementS2Beam);
 
-          try {
-            BigDecimal bdZeroS2Beam = new BigDecimal(interpZeroS2Beam);
+          Double interpZeroS2Beam = getInterpZeroS2Beam(
+            measurementRuntime.doubleValue());
 
-            BigDecimal sDC = bdMeasurementS2Beam.divide(bdZeroS2Beam,
-              RoundingMode.HALF_UP);
+          if (null != interpZeroS2Beam) {
 
-            BigDecimal bdSProc = F.multiply(new BigDecimal(1D).subtract(sDC));
+            try {
+              BigDecimal bdZeroS2Beam = new BigDecimal(interpZeroS2Beam);
 
-            BigDecimal runtimeSincePre = measurementRuntime
-              .subtract(runTimePrior.getBigDecimalValue());
+              BigDecimal sDC = bdMeasurementS2Beam.divide(bdZeroS2Beam,
+                RoundingMode.HALF_UP);
 
-            BigDecimal k1Interp = k1Prior.getBigDecimalValue()
-              .add(k1Step.multiply(runtimeSincePre));
-            BigDecimal k2Interp = k2Prior.getBigDecimalValue()
-              .add(k2Step.multiply(runtimeSincePre));
-            BigDecimal k3Interp = k3Prior.getBigDecimalValue()
-              .add(k3Step.multiply(runtimeSincePre));
+              BigDecimal bdSProc = F.multiply(new BigDecimal(1D).subtract(sDC));
 
-            BigDecimal sProcCubed = bdSProc.pow(3);
-            BigDecimal sProcSquared = bdSProc.pow(2);
+              BigDecimal runtimeSincePre = measurementRuntime
+                .subtract(runTimePrior.getBigDecimalValue());
 
-            BigDecimal k3Part = k3Interp.multiply(sProcCubed);
-            BigDecimal k2Part = k2Interp.multiply(sProcSquared);
-            BigDecimal k1Part = k1Interp.multiply(bdSProc);
+              BigDecimal k1Interp = k1Prior.getBigDecimalValue()
+                .add(k1Step.multiply(runtimeSincePre));
+              BigDecimal k2Interp = k2Prior.getBigDecimalValue()
+                .add(k2Step.multiply(runtimeSincePre));
+              BigDecimal k3Interp = k3Prior.getBigDecimalValue()
+                .add(k3Step.multiply(runtimeSincePre));
 
-            BigDecimal xco2ProcPart = k3Part.add(k2Part).add(k1Part);
+              BigDecimal sProcCubed = bdSProc.pow(3);
+              BigDecimal sProcSquared = bdSProc.pow(2);
 
-            // Gas temperature in Kelvin
-            BigDecimal gasTemperature = new BigDecimal(
-              measurement.getMeasurementValue("Gas Stream Temperature")
-                .getCalculatedValue())
-              .add(T0);
+              BigDecimal k3Part = k3Interp.multiply(sProcCubed);
+              BigDecimal k2Part = k2Interp.multiply(sProcSquared);
+              BigDecimal k1Part = k1Interp.multiply(bdSProc);
 
-            BigDecimal gasPressure = new BigDecimal(measurement
-              .getMeasurementValue("Gas Stream Pressure").getCalculatedValue());
+              BigDecimal xco2ProcPart = k3Part.add(k2Part).add(k1Part);
 
-            BigDecimal membranePressure = new BigDecimal(measurement
-              .getMeasurementValue("Membrane Pressure").getCalculatedValue());
+              // Gas temperature in Kelvin
+              BigDecimal gasTemperature = new BigDecimal(
+                measurement.getMeasurementValue("Gas Stream Temperature")
+                  .getCalculatedValue())
+                .add(T0);
 
-            BigDecimal pressureTimesTemp = P0.multiply(gasTemperature);
+              BigDecimal gasPressure = new BigDecimal(
+                measurement.getMeasurementValue("Gas Stream Pressure")
+                  .getCalculatedValue());
 
-            BigDecimal tempTimesPressure = T0.multiply(gasPressure);
+              BigDecimal membranePressure = new BigDecimal(measurement
+                .getMeasurementValue("Membrane Pressure").getCalculatedValue());
 
-            BigDecimal xcoPresTempPart = pressureTimesTemp
-              .divide(tempTimesPressure, 50, RoundingMode.HALF_UP);
+              BigDecimal pressureTimesTemp = P0.multiply(gasTemperature);
 
-            BigDecimal bdXCO2 = xco2ProcPart.multiply(xcoPresTempPart);
+              BigDecimal tempTimesPressure = T0.multiply(gasPressure);
 
-            BigDecimal pco2PressurePart = membranePressure.divide(P0, 50,
-              RoundingMode.HALF_UP);
+              BigDecimal xcoPresTempPart = pressureTimesTemp
+                .divide(tempTimesPressure, 50, RoundingMode.HALF_UP);
 
-            BigDecimal bdPCO2SST = bdXCO2.multiply(pco2PressurePart);
+              BigDecimal bdXCO2 = xco2ProcPart.multiply(xcoPresTempPart);
 
-            Double waterTemp = measurement
-              .getMeasurementValue("Water Temperature").getCalculatedValue();
+              BigDecimal pco2PressurePart = membranePressure.divide(P0, 50,
+                RoundingMode.HALF_UP);
 
-            fCO2 = Calculators.calcfCO2(bdPCO2SST.doubleValue(),
-              bdXCO2.doubleValue(), membranePressure.doubleValue(), waterTemp);
+              BigDecimal bdPCO2SST = bdXCO2.multiply(pco2PressurePart);
 
-            // Make Double values for data reduction record
-            zeroS2Beam = bdZeroS2Beam.doubleValue();
-            sProc = bdSProc.doubleValue();
-            xco2 = bdXCO2.doubleValue();
-            pCO2SST = bdPCO2SST.doubleValue();
-          } catch (NumberFormatException e) {
-            /*
-             * This will happen if any of the found measurement values are NaN.
-             * As long as the CONTROS file isn't messed with, this shouldn't
-             * happen.
-             */
+              Double waterTemp = measurement
+                .getMeasurementValue("Water Temperature").getCalculatedValue();
+
+              fCO2 = Calculators.calcfCO2(bdPCO2SST.doubleValue(),
+                bdXCO2.doubleValue(), membranePressure.doubleValue(),
+                waterTemp);
+
+              // Make Double values for data reduction record
+              zeroS2Beam = bdZeroS2Beam.doubleValue();
+              sProc = bdSProc.doubleValue();
+              xco2 = bdXCO2.doubleValue();
+              pCO2SST = bdPCO2SST.doubleValue();
+            } catch (NumberFormatException e) {
+              /*
+               * This will happen if any of the found measurement values are
+               * NaN. As long as the CONTROS file isn't messed with, this
+               * shouldn't happen.
+               */
+              zeroS2Beam = Double.NaN;
+              sProc = Double.NaN;
+              xco2 = Double.NaN;
+              pCO2SST = Double.NaN;
+              fCO2 = Double.NaN;
+            }
+          } else {
             zeroS2Beam = Double.NaN;
             sProc = Double.NaN;
             xco2 = Double.NaN;
             pCO2SST = Double.NaN;
             fCO2 = Double.NaN;
           }
-        } else {
-          zeroS2Beam = Double.NaN;
-          sProc = Double.NaN;
-          xco2 = Double.NaN;
-          pCO2SST = Double.NaN;
-          fCO2 = Double.NaN;
-        }
 
-        record.put("Zero S₂beam", zeroS2Beam.doubleValue());
-        record.put("S₂beam",
-          zeroS2Beam.isNaN() ? Double.NaN : measurementS2Beam.doubleValue());
-        record.put("Sproc", sProc.doubleValue());
-        record.put("xCO₂", xco2.doubleValue());
-        record.put("pCO₂ SST", pCO2SST.doubleValue());
-        record.put("fCO₂", fCO2);
+          record.put("Zero S₂beam", zeroS2Beam.doubleValue());
+          record.put("S₂beam",
+            zeroS2Beam.isNaN() ? Double.NaN : measurementS2Beam.doubleValue());
+          record.put("Sproc", sProc.doubleValue());
+          record.put("xCO₂", xco2.doubleValue());
+          record.put("pCO₂ SST", pCO2SST.doubleValue());
+          record.put("fCO₂", fCO2);
+        }
       }
     } catch (DataReductionException e) {
       throw e;
@@ -347,10 +360,15 @@ public class ControsPco2Reducer extends DataReducer {
 
   private Double calcS2Beam(Measurement measurement)
     throws SensorTypeNotFoundException {
-    return measurement.getMeasurementValue("Raw Detector Signal")
-      .getCalculatedValue()
-      / measurement.getMeasurementValue("Reference Signal")
-        .getCalculatedValue();
+
+    return calcS2Beam(
+      measurement.getMeasurementValue("Raw Detector Signal")
+        .getCalculatedValue(),
+      measurement.getMeasurementValue("Reference Signal").getCalculatedValue());
+  }
+
+  protected Double calcS2Beam(Double rawSignal, Double refSignal) {
+    return rawSignal / refSignal;
   }
 
   private Double getInterpZeroS2Beam(Double runTime)
