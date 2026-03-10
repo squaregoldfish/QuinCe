@@ -1056,7 +1056,6 @@ public abstract class CalibrationBean extends BaseManagedBean {
 
     return COMMIT_NAV;
   }
-==== BASE ====
 }
 
 class RecalculateStatus {
@@ -1068,59 +1067,57 @@ class RecalculateStatus {
     this.required = false;
     this.canBeRecalculated = false;
   }
-==== BASE ====
 
-    /**
-     * Indicates whether or not recalculation is required.
-     *
-     * @return {@code true} if the {@link DataSet} needs to be recalculated;
-     *         {@code false} if it does not.
-     */
-    protected boolean getRequired() {
-      return required;
+  /**
+   * Indicates whether or not recalculation is required.
+   *
+   * @return {@code true} if the {@link DataSet} needs to be recalculated;
+   *         {@code false} if it does not.
+   */
+  protected boolean getRequired() {
+    return required;
+  }
+
+  /**
+   * Indicates whether or not recalculation is possible.
+   *
+   * @return {@code true} if the {@link DataSet} can be recalculated;
+   *         {@code false} if it does not.
+   */
+  protected boolean getCanBeRecalculated() {
+    return canBeRecalculated;
+  }
+
+  /**
+   * Set the values of the object.
+   *
+   * @param required
+   *          Whether recalculation is required.
+   * @param canBeRecalculated
+   *          Whether recalculation is possible.
+   */
+  protected void set(boolean required, boolean canBeRecalculated) {
+    this.required = required;
+    this.canBeRecalculated = !required ? true : canBeRecalculated;
+  }
+
+  /**
+   * Get the name of the CSS class to be used for displaying the dataset's
+   * status to the user.
+   *
+   * @return The CSS display class.
+   */
+  protected String getDisplayClass() {
+    String result;
+
+    if (!required) {
+      result = "recalculationNotRequired";
+    } else if (canBeRecalculated) {
+      result = "recalculationRequired";
+    } else {
+      result = "cannotRecalculate";
     }
 
-    /**
-     * Indicates whether or not recalculation is possible.
-     *
-     * @return {@code true} if the {@link DataSet} can be recalculated;
-     *         {@code false} if it does not.
-     */
-    protected boolean getCanBeRecalculated() {
-      return canBeRecalculated;
-    }
-
-    /**
-     * Set the values of the object.
-     *
-     * @param required
-     *          Whether recalculation is required.
-     * @param canBeRecalculated
-     *          Whether recalculation is possible.
-     */
-    protected void set(boolean required, boolean canBeRecalculated) {
-      this.required = required;
-      this.canBeRecalculated = !required ? true : canBeRecalculated;
-    }
-
-    /**
-     * Get the name of the CSS class to be used for displaying the dataset's
-     * status to the user.
-     *
-     * @return The CSS display class.
-     */
-    protected String getDisplayClass() {
-      String result;
-
-      if (!required) {
-        result = "recalculationNotRequired";
-      } else if (canBeRecalculated) {
-        result = "recalculationRequired";
-      } else {
-        result = "cannotRecalculate";
-      }
-
-      return result;
-    }
+    return result;
   }
 }
