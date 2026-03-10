@@ -10,6 +10,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignmentNameComparator;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignments;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
@@ -53,8 +54,13 @@ public class UncertaintyDB extends CalibrationDB {
     TreeSet<SensorAssignment> targets = new TreeSet<SensorAssignment>(
       new SensorAssignmentNameComparator());
 
-    // Get all the sensor names for the non-diagnostic sensor types
-    assignments.keySet().stream().filter(st -> !st.isDiagnostic())
+    /*
+     * Get all the sensor names for the non-diagnostic sensor types. Also
+     * exclude the Run Type.
+     */
+    assignments.keySet().stream()
+      .filter(
+        st -> !st.isDiagnostic() && !st.equals(SensorType.RUN_TYPE_SENSOR_TYPE))
       .forEach(st -> {
         assignments.get(st).stream().forEach(a -> targets.add(a));
       });

@@ -459,7 +459,7 @@ public abstract class Calibration implements Comparable<Calibration> {
   }
 
   /**
-   * Get the value of a named coefficient.
+   * Get the value of a named coefficient as a {@link Double}.
    *
    * @param name
    *          The coefficient name.
@@ -471,6 +471,46 @@ public abstract class Calibration implements Comparable<Calibration> {
     for (CalibrationCoefficient coefficient : getCoefficients()) {
       if (coefficient.getName().equals(name)) {
         result = Double.parseDouble(coefficient.getValue());
+        break;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Get the value of a named coefficient as a {@link Float}.
+   *
+   * @param name
+   *          The coefficient name.
+   * @return The coefficient value.
+   */
+  public Float getFloatCoefficient(String name) {
+    Float result = null;
+
+    for (CalibrationCoefficient coefficient : getCoefficients()) {
+      if (coefficient.getName().equals(name)) {
+        result = Float.parseFloat(coefficient.getValue());
+        break;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Get the value of a named coefficient.
+   *
+   * @param name
+   *          The coefficient name.
+   * @return The coefficient value.
+   */
+  public String getCoefficient(String name) {
+    String result = null;
+
+    for (CalibrationCoefficient coefficient : getCoefficients()) {
+      if (coefficient.getName().equals(name)) {
+        result = coefficient.getValue();
         break;
       }
     }

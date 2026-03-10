@@ -36,7 +36,7 @@ public class SensorValueQCTest extends BaseTest {
   private SensorValue makeSensorValue(long id, long columnId, String value,
     Flag flag) {
     return new SensorValue(id, DATASET_ID, columnId,
-      LocalDateTime.now(ZoneId.of("Z")), value, null, flag, null);
+      LocalDateTime.now(ZoneId.of("Z")), value, null, null, flag, null);
   }
 
   private RoutineFlag makeAutoQCFlag(Flag flag) {

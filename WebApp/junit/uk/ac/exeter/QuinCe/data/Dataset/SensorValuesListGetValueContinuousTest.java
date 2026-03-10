@@ -52,7 +52,7 @@ public class SensorValuesListGetValueContinuousTest extends TestSetTest {
   protected SensorValue makeSensorValue(int minute, char flagChar)
     throws InvalidFlagException {
     return new SensorValue((long) minute, 1L, 1L, makeTime(minute),
-      String.valueOf(minute), new AutoQCResult(), new Flag(flagChar),
+      String.valueOf(minute), null, new AutoQCResult(), new Flag(flagChar),
       String.valueOf(flagChar));
   }
 

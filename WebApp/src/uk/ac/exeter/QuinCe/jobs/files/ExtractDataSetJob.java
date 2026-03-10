@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import uk.ac.exeter.QuinCe.User.User;
@@ -29,6 +30,8 @@ import uk.ac.exeter.QuinCe.data.Instrument.MissingRunTypeException;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Calibration;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.SensorCalibrationDB;
+import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Uncertainty;
+import uk.ac.exeter.QuinCe.data.Instrument.Calibration.UncertaintyDB;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.PositionException;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
@@ -45,6 +48,7 @@ import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.ExceptionUtils;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
+import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.utils.TimeRange;
 import uk.ac.exeter.QuinCe.utils.TimeRangeBuilder;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -124,6 +128,12 @@ public class ExtractDataSetJob extends DataSetJob {
       CalibrationSet sensorCalibrations = SensorCalibrationDB.getInstance()
         .getCalibrationSet(conn, dataSet);
 
+      CalibrationSet uncertaintiesSet = UncertaintyDB.getInstance()
+        .getCalibrationSet(conn, dataSet);
+
+      TreeMap<String, Calibration> uncertainties = uncertaintiesSet
+        .getCalibrations(dataSet.getStart());
+
       // Adjust the DataSet bounds to the latest start date and earliest end
       // date of each file definition, if the dataset range is beyond them
       Map<FileDefinition, TimeRangeBuilder> fileDefinitionRanges = new HashMap<FileDefinition, TimeRangeBuilder>();
@@ -157,7 +167,6 @@ public class ExtractDataSetJob extends DataSetJob {
         while (currentLine < file.getContentLineCount()) {
 
           try {
-
             List<String> line = file.getLine(currentLine);
 
             // Check the number of columns on the line
@@ -211,7 +220,7 @@ public class ExtractDataSetJob extends DataSetJob {
 
                 if (null != longitude) {
                   sensorValues.add(new SensorValue(dataSet.getId(),
-                    FileDefinition.LONGITUDE_COLUMN_ID, time, longitude));
+                    FileDefinition.LONGITUDE_COLUMN_ID, time, longitude, null));
 
                   // Update the dataset bounds
                   try {
@@ -237,7 +246,7 @@ public class ExtractDataSetJob extends DataSetJob {
 
                 if (null != latitude) {
                   sensorValues.add(new SensorValue(dataSet.getId(),
-                    FileDefinition.LATITUDE_COLUMN_ID, time, latitude));
+                    FileDefinition.LATITUDE_COLUMN_ID, time, latitude, null));
 
                   // Update the dataset bounds
                   try {
@@ -274,12 +283,11 @@ public class ExtractDataSetJob extends DataSetJob {
                         String runType = runTypeValue.getRunName();
 
                         sensorValues.add(new SensorValue(dataSet.getId(),
-                          assignment.getDatabaseId(), time, runType));
+                          assignment.getDatabaseId(), time, runType, null));
 
                         runTypePeriods.add(runType, time);
                       }
                     } else {
-
                       // Create the SensorValue object
                       String fieldValue = null;
 
@@ -287,9 +295,34 @@ public class ExtractDataSetJob extends DataSetJob {
                         currentLine, line, assignment.getColumn(),
                         assignment.getMissingValue());
 
+                      Float uncertainty = null;
+
+                      if (StringUtils.isNumeric(fieldValue)) {
+                        Double fieldValueNumeric = Double
+                          .parseDouble(fieldValue);
+
+                        if (!fieldValueNumeric.isNaN()) {
+                          Calibration uncertaintyDefinition = uncertainties
+                            .get(String.valueOf(assignment.getDatabaseId()));
+
+                          if (uncertaintyDefinition.getCoefficient("Type")
+                            .equals(Uncertainty.TYPE_ABSOLUTE)) {
+                            uncertainty = uncertaintyDefinition
+                              .getFloatCoefficient("Value");
+                          } else {
+                            uncertainty = Double
+                              .valueOf(fieldValueNumeric.doubleValue()
+                                * (uncertaintyDefinition
+                                  .getFloatCoefficient("Value") * 0.01))
+                              .floatValue();
+                          }
+                        }
+                      }
+
                       if (null != fieldValue) {
                         SensorValue value = new SensorValue(dataSet.getId(),
-                          assignment.getDatabaseId(), time, fieldValue);
+                          assignment.getDatabaseId(), time, fieldValue,
+                          uncertainty);
 
                         // Apply calibration if required
                         Calibration sensorCalibration = sensorCalibrations

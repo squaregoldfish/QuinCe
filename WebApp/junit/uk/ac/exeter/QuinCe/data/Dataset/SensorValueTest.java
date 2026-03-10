@@ -31,8 +31,8 @@ public class SensorValueTest extends BaseTest {
 
   private SensorValue makeDBSensorValue() {
     SensorValue sensorValue = new SensorValue(1L, 1L, 1L,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", null, Flag.ASSUMED_GOOD,
-      null);
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", null, null,
+      Flag.ASSUMED_GOOD, null);
     return sensorValue;
   }
 
@@ -44,7 +44,7 @@ public class SensorValueTest extends BaseTest {
   @Test
   public void cannotUpdateAutoQCOnNonStoredValueTest() {
     SensorValue sensorValue = new SensorValue(1L, 1L,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", 0.2F);
 
     assertThrows(RecordNotFoundException.class, () -> {
       sensorValue.addAutoQCFlag(

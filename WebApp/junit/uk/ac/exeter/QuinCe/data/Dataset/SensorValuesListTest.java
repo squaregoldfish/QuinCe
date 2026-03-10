@@ -78,7 +78,7 @@ public class SensorValuesListTest extends BaseTest {
    */
   private SensorValue makeSensorValue(long column, int hour, int minute) {
     return new SensorValue(1L, column,
-      LocalDateTime.of(2023, 1, 1, hour, minute, 0), "12");
+      LocalDateTime.of(2023, 1, 1, hour, minute, 0), "12", null);
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
@@ -261,7 +261,7 @@ public class SensorValuesListTest extends BaseTest {
     while ((line = in.readLine()) != null) {
       LocalDateTime timestamp = LocalDateTime.parse(line,
         DateTimeFormatsBean.DT_ISO_MS_F);
-      list.add(new SensorValue(1L, 1L, timestamp, "1"));
+      list.add(new SensorValue(1L, 1L, timestamp, "1", null));
     }
     in.close();
 
@@ -285,7 +285,7 @@ public class SensorValuesListTest extends BaseTest {
       LocalDateTime timestamp = LocalDateTime.parse(fields[0],
         DateTimeFormatsBean.DT_ISO_MS_F);
       SensorValue sensorValue = new SensorValue(getSensorValueId(), 1L,
-        columnId, timestamp, fields[1], new AutoQCResult(), flag, "");
+        columnId, timestamp, fields[1], null, new AutoQCResult(), flag, "");
       result.add(sensorValue);
     }
     in.close();

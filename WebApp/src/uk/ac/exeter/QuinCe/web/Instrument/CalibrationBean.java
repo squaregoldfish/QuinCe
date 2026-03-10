@@ -874,7 +874,7 @@ public abstract class CalibrationBean extends BaseManagedBean {
    * are different, then the {@link DataSet} is marked as being affected by the
    * edits.
    * </p>
-   * 
+   *
    * @throws CalibrationException
    *
    * @see #originalCalibrations

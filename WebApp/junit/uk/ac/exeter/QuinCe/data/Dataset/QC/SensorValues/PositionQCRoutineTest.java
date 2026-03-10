@@ -133,15 +133,15 @@ public class PositionQCRoutineTest extends BaseTest {
 
     SensorValue longitudeSensorValue = new SensorValue(1L, 1L,
       SensorType.LONGITUDE_ID, time,
-      null == longitude ? null : String.valueOf(longitude), new AutoQCResult(),
-      Flag.ASSUMED_GOOD, null);
+      null == longitude ? null : String.valueOf(longitude), null,
+      new AutoQCResult(), Flag.ASSUMED_GOOD, null);
 
     sensorValues.add(longitudeSensorValue);
 
     SensorValue latitudeSensorValue = new SensorValue(2L, 1L,
       SensorType.LATITUDE_ID, time,
-      null == latitude ? null : String.valueOf(latitude), new AutoQCResult(),
-      Flag.ASSUMED_GOOD, null);
+      null == latitude ? null : String.valueOf(latitude), null,
+      new AutoQCResult(), Flag.ASSUMED_GOOD, null);
 
     sensorValues.add(latitudeSensorValue);
 
@@ -169,8 +169,8 @@ public class PositionQCRoutineTest extends BaseTest {
     LocalDateTime time = LocalDateTime.of(2025, 1, 1, 0, 0, 0);
 
     SensorValue latitudeSensorValue = new SensorValue(2L, 1L,
-      SensorType.LATITUDE_ID, time, "0", new AutoQCResult(), Flag.ASSUMED_GOOD,
-      null);
+      SensorType.LATITUDE_ID, time, "0", null, new AutoQCResult(),
+      Flag.ASSUMED_GOOD, null);
 
     sensorValues.add(latitudeSensorValue);
 
@@ -198,8 +198,8 @@ public class PositionQCRoutineTest extends BaseTest {
     LocalDateTime time = LocalDateTime.of(2025, 1, 1, 0, 0, 0);
 
     SensorValue longitudeSensorValue = new SensorValue(2L, 1L,
-      SensorType.LONGITUDE_ID, time, "0", new AutoQCResult(), Flag.ASSUMED_GOOD,
-      null);
+      SensorType.LONGITUDE_ID, time, "0", null, new AutoQCResult(),
+      Flag.ASSUMED_GOOD, null);
 
     sensorValues.add(longitudeSensorValue);
 
@@ -231,13 +231,13 @@ public class PositionQCRoutineTest extends BaseTest {
       mockInstrument());
 
     SensorValue longitudeSensorValue = new SensorValue(2L, 1L,
-      SensorType.LONGITUDE_ID, LocalDateTime.of(2025, 1, 1, 0, 0, 0), "0",
+      SensorType.LONGITUDE_ID, LocalDateTime.of(2025, 1, 1, 0, 0, 0), "0", null,
       new AutoQCResult(), Flag.ASSUMED_GOOD, null);
 
     sensorValues.add(longitudeSensorValue);
 
     SensorValue latitudeSensorValue = new SensorValue(2L, 1L,
-      SensorType.LATITUDE_ID, LocalDateTime.of(2025, 1, 1, 0, 1, 0), "0",
+      SensorType.LATITUDE_ID, LocalDateTime.of(2025, 1, 1, 0, 1, 0), "0", null,
       new AutoQCResult(), Flag.ASSUMED_GOOD, null);
 
     sensorValues.add(latitudeSensorValue);

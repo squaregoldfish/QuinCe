@@ -80,9 +80,14 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
   private String userQCMessage = null;
 
   /**
-   * The value (can be null)
+   * The value (can be null).
    */
   private String value;
+
+  /**
+   * The uncertainty of the value. Optional.
+   */
+  private Float uncertainty;
 
   /**
    * Cache of the value as a {@link Double}.
@@ -108,13 +113,14 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
    * @param value
    */
   public SensorValue(long datasetId, long columnId, LocalDateTime time,
-    String value) {
+    String value, Float uncertainty) {
 
     this.id = DatabaseUtils.NO_DATABASE_RECORD;
     this.datasetId = datasetId;
     this.columnId = columnId;
     this.time = time;
     this.value = value;
+    this.uncertainty = uncertainty;
     this.autoQC = new AutoQCResult();
     this.dirty = true;
 
@@ -133,14 +139,15 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
    * @param value
    */
   public SensorValue(long databaseId, long datasetId, long columnId,
-    LocalDateTime time, String value, AutoQCResult autoQc, Flag userQcFlag,
-    String userQcMessage) {
+    LocalDateTime time, String value, Float uncertainty, AutoQCResult autoQc,
+    Flag userQcFlag, String userQcMessage) {
 
     this.id = databaseId;
     this.datasetId = datasetId;
     this.columnId = columnId;
     this.time = time;
     this.value = value;
+    this.uncertainty = uncertainty;
 
     if (null == autoQc) {
       this.autoQC = new AutoQCResult();
@@ -662,7 +669,7 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
   @Override
   public Object clone() {
     SensorValue clone = new SensorValue(id, datasetId, columnId, time, value,
-      autoQC, userQCFlag, userQCMessage);
+      uncertainty, autoQC, userQCFlag, userQCMessage);
     clone.dirty = this.dirty;
     return clone;
   }
@@ -982,6 +989,10 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
 
   public boolean isPosition() {
     return SensorType.isPosition(columnId);
+  }
+
+  public Float getUncertainty() {
+    return uncertainty;
   }
 
   /**

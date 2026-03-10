@@ -23,7 +23,7 @@ public class SVTestUtils extends BaseTest {
     for (int i = 0; i < minutes.length; i++) {
       result.add(new SensorValue(minutes[i], 1L, 1L,
         LocalDateTime.of(2024, 1, 1, 0, minutes[i], 0),
-        String.valueOf(values[i]), new AutoQCResult(), Flag.ASSUMED_GOOD,
+        String.valueOf(values[i]), null, new AutoQCResult(), Flag.ASSUMED_GOOD,
         null));
     }
 
@@ -69,7 +69,7 @@ public class SVTestUtils extends BaseTest {
     int minute, String value, Flag flag) throws InvalidFlagException {
 
     LocalDateTime valueTime = LocalDateTime.of(2024, 1, 1, 0, minute, 0);
-    return new SensorValue(id, 1L, fileColumn, valueTime, value,
+    return new SensorValue(id, 1L, fileColumn, valueTime, value, null,
       new AutoQCResult(), flag, "");
   }
 }

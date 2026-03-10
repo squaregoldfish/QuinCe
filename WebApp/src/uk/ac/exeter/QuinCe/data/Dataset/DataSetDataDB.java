@@ -75,9 +75,9 @@ public class DataSetDataDB {
    * Statement to store a sensor value
    */
   private static final String STORE_NEW_SENSOR_VALUE_STATEMENT = "INSERT INTO "
-    + "sensor_values (dataset_id, file_column, date, value, "
+    + "sensor_values (dataset_id, file_column, date, value, uncertainty,"
     + "auto_qc, user_qc_flag, user_qc_message) "
-    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
   private static final String UPDATE_SENSOR_VALUE_STATEMENT = "UPDATE sensor_values "
     + "SET auto_qc=?, user_qc_flag=?, user_qc_message=? WHERE id = ?";
@@ -89,19 +89,19 @@ public class DataSetDataDB {
     + "sensor_values WHERE dataset_id = ?";
 
   private static final String GET_SENSOR_VALUES_FOR_DATASET_QUERY = "SELECT "
-    + "id, file_column, date, value, auto_qc, " // 5
-    + "user_qc_flag, user_qc_message " // 7
+    + "id, file_column, date, value, uncertainty, auto_qc, "
+    + "user_qc_flag, user_qc_message "
     + "FROM sensor_values WHERE dataset_id = ? ORDER BY id";
 
   private static final String GET_SENSOR_VALUES_FOR_DATASET_NO_FLUSHING_QUERY = "SELECT "
-    + "id, file_column, date, value, auto_qc, " // 5
-    + "user_qc_flag, user_qc_message " // 7
+    + "id, file_column, date, value, uncertainty, auto_qc, "
+    + "user_qc_flag, user_qc_message "
     + "FROM sensor_values WHERE dataset_id = ? AND user_qc_flag != "
     + Flag.VALUE_FLUSHING;
 
   private static final String GET_POSITION_SENSOR_VALUES_QUERY = "SELECT "
-    + "id, file_column, date, value, auto_qc, " // 5
-    + "user_qc_flag, user_qc_message " // 7
+    + "id, file_column, date, value, uncertainty, auto_qc, "
+    + "user_qc_flag, user_qc_message "
     + "FROM sensor_values WHERE dataset_id = ? AND file_column IN ("
     + SensorType.LONGITUDE_ID + ", " + SensorType.LATITUDE_ID + ")";
 
@@ -172,7 +172,7 @@ public class DataSetDataDB {
     + "SET measurement_values = ? WHERE id = ?";
 
   private static final String GET_INTERNAL_CALIBRATION_SENSOR_VALUES_QUERY = "SELECT "
-    + "sv.id, sv.file_column, sv.date, sv.value, sv.auto_qc, "
+    + "sv.id, sv.file_column, sv.date, sv.value, sv.uncertainty, sv.auto_qc, "
     + "sv.user_qc_flag, sv.user_qc_message, mrt.run_type "
     + "FROM sensor_values sv "
     + "INNER JOIN measurements m ON m.date = sv.date "
@@ -397,9 +397,15 @@ public class DataSetDataDB {
               addStmt.setString(4, value.getValue());
             }
 
-            addStmt.setString(5, value.getAutoQcResult().toJson());
-            addStmt.setInt(6, value.getUserQCFlag().getFlagValue());
-            addStmt.setString(7, value.getUserQCMessage());
+            if (null == value.getUncertainty()) {
+              addStmt.setNull(5, Types.FLOAT);
+            } else {
+              addStmt.setFloat(5, value.getUncertainty());
+            }
+
+            addStmt.setString(6, value.getAutoQcResult().toJson());
+            addStmt.setInt(7, value.getUserQCFlag().getFlagValue());
+            addStmt.setString(8, value.getUserQCMessage());
 
             addStmt.execute();
 
@@ -638,12 +644,16 @@ public class DataSetDataDB {
     long fileColumnId = record.getLong(2);
     LocalDateTime time = DateTimeUtils.longToDate(record.getLong(3));
     String value = record.getString(4);
-    AutoQCResult autoQC = AutoQCResult.buildFromJson(record.getString(5));
-    Flag userQCFlag = new Flag(record.getInt(6));
-    String userQCMessage = record.getString(7);
+    Float uncertainty = record.getFloat(5);
+    if (record.wasNull()) {
+      uncertainty = null;
+    }
+    AutoQCResult autoQC = AutoQCResult.buildFromJson(record.getString(6));
+    Flag userQCFlag = new Flag(record.getInt(7));
+    String userQCMessage = record.getString(8);
 
     return new SensorValue(valueId, datasetId, fileColumnId, time, value,
-      autoQC, userQCFlag, userQCMessage);
+      uncertainty, autoQC, userQCFlag, userQCMessage);
   }
 
   /**

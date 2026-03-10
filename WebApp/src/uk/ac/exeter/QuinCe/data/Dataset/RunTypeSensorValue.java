@@ -17,8 +17,8 @@ public class RunTypeSensorValue extends SensorValue {
     LocalDateTime time, String value, AutoQCResult autoQc, Flag userQcFlag,
     String userQcMessage, String runType) {
 
-    super(databaseId, datasetId, columnId, time, value, autoQc, userQcFlag,
-      userQcMessage);
+    super(databaseId, datasetId, columnId, time, value, null, autoQc,
+      userQcFlag, userQcMessage);
     this.runType = runType;
   }
 
@@ -34,8 +34,8 @@ public class RunTypeSensorValue extends SensorValue {
   public RunTypeSensorValue(SensorValue sensorValue, String runType) {
     super(sensorValue.getId(), sensorValue.getDatasetId(),
       sensorValue.getColumnId(), sensorValue.getTime(), sensorValue.getValue(),
-      sensorValue.getAutoQcResult(), sensorValue.getUserQCFlag(),
-      sensorValue.getUserQCMessage());
+      sensorValue.getUncertainty(), sensorValue.getAutoQcResult(),
+      sensorValue.getUserQCFlag(), sensorValue.getUserQCMessage());
 
     this.runType = runType;
   }

@@ -77,8 +77,9 @@ public class DataSetDataDBTest extends BaseTest {
 
     LocalDateTime valueTime = LocalDateTime.of(2021, 1, 1, 0, 0, 0);
     String value = "20";
+    Float uncertainty = 0.2F;
     SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, valueTime,
-      value);
+      value, uncertainty);
 
     DataSetDataDB.storeSensorValues(getConnection(),
       Arrays.asList(sensorValue));
@@ -96,6 +97,8 @@ public class DataSetDataDBTest extends BaseTest {
     assertEquals(COLUMN_ID, storedValue.getColumnId(), "Incorrect column ID");
     assertEquals(valueTime, storedValue.getTime(), "Incorrect time");
     assertEquals(value, storedValue.getValue(), "Incorrect value");
+    assertEquals(uncertainty, storedValue.getUncertainty(),
+      "Incorrect uncertainty");
     assertEquals(new AutoQCResult(), storedValue.getAutoQcResult(),
       "Auto QC result not stored correctly");
     assertEquals(Flag.ASSUMED_GOOD, storedValue.getUserQCFlag(),
@@ -111,13 +114,14 @@ public class DataSetDataDBTest extends BaseTest {
   public void storeSensorValuesNullValueTest() throws Exception {
     LocalDateTime valueTime = LocalDateTime.of(2021, 1, 1, 0, 0, 0);
     SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, valueTime,
-      null);
+      null, null);
 
     DataSetDataDB.storeSensorValues(getConnection(),
       Arrays.asList(sensorValue));
     SensorValue storedValue = retrieveSingleStoredValue(valueTime);
 
     assertNull(storedValue.getValue(), "Stored value not null");
+    assertNull(storedValue.getUncertainty(), "Stored uncertainty not null");
   }
 
   @FlywayTest(locationsForMigrate = { "resources/sql/testbase/user",
@@ -128,7 +132,7 @@ public class DataSetDataDBTest extends BaseTest {
     LocalDateTime valueTime = LocalDateTime.of(2021, 1, 1, 0, 0, 0);
 
     SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, valueTime,
-      "20");
+      "20", 0.2F);
 
     Flag qcFlag = Flag.QUESTIONABLE;
     String qcMessage = "I question this value";
@@ -150,7 +154,7 @@ public class DataSetDataDBTest extends BaseTest {
   public void updateSensorValueTest() throws Exception {
     LocalDateTime valueTime = LocalDateTime.of(2021, 1, 1, 0, 0, 0);
     SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID, valueTime,
-      "20");
+      "20", 0.2F);
 
     DataSetDataDB.storeSensorValues(getConnection(),
       Arrays.asList(sensorValue));
@@ -186,7 +190,7 @@ public class DataSetDataDBTest extends BaseTest {
   @Test
   public void storeSensorValuesNoConnTest() throws Exception {
     SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", 0.2F);
 
     assertThrows(MissingParamException.class, () -> {
       DataSetDataDB.storeSensorValues(null, Arrays.asList(sensorValue));
@@ -218,7 +222,7 @@ public class DataSetDataDBTest extends BaseTest {
   @Test
   public void storeSensorValuesInvalidDatasetTest() throws Exception {
     SensorValue sensorValue = new SensorValue(7000L, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", 0.2F);
 
     assertThrows(InvalidSensorValueException.class, () -> {
       DataSetDataDB.storeSensorValues(getConnection(),
@@ -232,7 +236,7 @@ public class DataSetDataDBTest extends BaseTest {
   @Test
   public void storeSensorValuesInvalidColumnTest() throws Exception {
     SensorValue sensorValue = new SensorValue(DATASET_ID, 7000L,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", 0.2F);
 
     assertThrows(InvalidSensorValueException.class, () -> {
       DataSetDataDB.storeSensorValues(getConnection(),
@@ -251,9 +255,9 @@ public class DataSetDataDBTest extends BaseTest {
   @Test
   public void storeValuesMultipleValuesOneInvalid() throws Exception {
     SensorValue sensorValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", 0.2F);
     SensorValue badValue = new SensorValue(7000L, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", 0.2F);
 
     assertThrows(InvalidSensorValueException.class, () -> {
       DataSetDataDB.storeSensorValues(getConnection(),
@@ -274,10 +278,10 @@ public class DataSetDataDBTest extends BaseTest {
   public void getSensorValuesFlushingNotIgnoredTest() throws Exception {
 
     SensorValue normalValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", 0.2F);
 
     SensorValue flushingValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 1, 0), "21");
+      LocalDateTime.of(2021, 1, 1, 0, 1, 0), "21", 0.2F);
     flushingValue.setUserQC(Flag.FLUSHING, "Flushing");
 
     DataSetDataDB.storeSensorValues(getConnection(),
@@ -297,10 +301,10 @@ public class DataSetDataDBTest extends BaseTest {
   public void getSensorValuesFlushingIgnoredTest() throws Exception {
 
     SensorValue normalValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", 0.2F);
 
     SensorValue flushingValue = new SensorValue(DATASET_ID, COLUMN_ID,
-      LocalDateTime.of(2021, 1, 1, 0, 1, 0), "21");
+      LocalDateTime.of(2021, 1, 1, 0, 1, 0), "21", 0.2F);
     flushingValue.setUserQC(Flag.FLUSHING, "Flushing");
 
     DataSetDataDB.storeSensorValues(getConnection(),
@@ -319,10 +323,10 @@ public class DataSetDataDBTest extends BaseTest {
   @Test
   public void deleteSensorValuesTest() throws Exception {
     SensorValue value1 = new SensorValue(DATASET_ID, 1L,
-      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20");
+      LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", 0.2F);
 
     SensorValue value2 = new SensorValue(DATASET_ID, 2L,
-      LocalDateTime.of(2021, 1, 1, 0, 1, 0), "21");
+      LocalDateTime.of(2021, 1, 1, 0, 1, 0), "21", 0.2F);
 
     DataSetDataDB.storeSensorValues(getConnection(),
       Arrays.asList(value1, value2));
