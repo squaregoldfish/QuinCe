@@ -1,13 +1,11 @@
 package uk.ac.exeter.QuinCe.web.files;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Properties;
+import java.util.TreeSet;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.application.FacesMessage.Severity;
@@ -20,8 +18,9 @@ import com.google.gson.JsonObject;
 import uk.ac.exeter.QuinCe.data.Files.DataFile;
 import uk.ac.exeter.QuinCe.data.Files.DataFileDB;
 import uk.ac.exeter.QuinCe.data.Files.DataFileException;
-import uk.ac.exeter.QuinCe.data.Files.DataFileFromUpload;
 import uk.ac.exeter.QuinCe.data.Files.DataFileMessage;
+import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
+import uk.ac.exeter.QuinCe.data.Files.UploadedFileContents;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentFileSet;
@@ -35,7 +34,7 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
    * HTTP Status Code to use for files that can't be processed due to data
    * issues (not defined in the {#Status} class).
    */
-  private static final int UNPROCESSABLE_STATUS = 422;
+  public static final int UNPROCESSABLE_STATUS = 422;
 
   /**
    * The contents of the file split into lines
@@ -121,33 +120,31 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
   }
 
   /**
-   * @return the startDate
+   * Get the file's start date as a {@link Date} object.
+   *
+   * <p>
+   * Required for compatibility with PrimeFaces.
+   * </p>
+   *
+   * @return The start date.
+   * @see DataFile#getRawStartTime
    */
-  public Date getStartDate() {
-    Date date = null;
-    if (null != dataFile) {
-      LocalDateTime localDate = dataFile.getRawStartTime();
-      if (null != localDate) {
-        date = Date.from(localDate.atZone(ZoneId.of("UTC")).toInstant());
-      }
-    }
-    return date;
+  public String getStart() throws DataFileException {
+    return null == dataFile ? null : dataFile.getStartDisplayString();
   }
 
   /**
    * Get the last date in the file.
    *
-   * @return The last date.
+   * <p>
+   * Required for PrimeFaces compatibility.
+   * </p>
+   *
+   * @return The end date.
+   * @see DataFile#getRawEndTime()
    */
-  public Date getEndDate() {
-    Date date = null;
-    if (null != dataFile) {
-      LocalDateTime localDate = dataFile.getRawEndTime();
-      if (null != localDate) {
-        date = Date.from(localDate.atZone(ZoneId.of("UTC")).toInstant());
-      }
-    }
-    return date;
+  public String getEnd() throws DataFileException {
+    return null == dataFile ? null : dataFile.getEndDisplayString();
   }
 
   /**
@@ -254,12 +251,20 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
    *         {@code false} otherwise
    */
   public boolean getHasUnrecognisedRunTypes() {
-    return null != dataFile && dataFile.getMissingRunTypes().size() > 0;
+
+    if (null != dataFile && dataFile instanceof TimeDataFile) {
+      return ((TimeDataFile) dataFile).getMissingRunTypes().size() > 0;
+    } else {
+      return false;
+    }
   }
 
   public List<RunTypeAssignment> getMissingRunTypes() {
-    return null == dataFile ? new ArrayList<RunTypeAssignment>()
-      : dataFile.getMissingRunTypes();
+    if (null != dataFile && dataFile instanceof TimeDataFile) {
+      return ((TimeDataFile) dataFile).getMissingRunTypes();
+    } else {
+      return new ArrayList<RunTypeAssignment>();
+    }
   }
 
   /**
@@ -304,8 +309,8 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
    * @param allowEmpty
    *          Indicates whether or not empty files are accepted.
    */
-  public void extractFile(Instrument instrument, Properties appConfig,
-    boolean allowExactDuplicate, boolean allowEmpty) {
+  public void extractFile(Instrument instrument, boolean allowExactDuplicate,
+    boolean allowEmpty) {
     boolean fileEmpty = false;
 
     try {
@@ -340,8 +345,9 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
           throw new NoSuchElementException();
         }
 
-        dataFile = new DataFileFromUpload(instrument, matchedDefinition,
-          getName(), this);
+        dataFile = matchedDefinition.makeDataFile(instrument, getName(),
+          new UploadedFileContents(this));
+
         if (getDataFile().getFirstDataLine() >= getDataFile()
           .getContentLineCount()) {
           if (allowEmpty) {
@@ -358,20 +364,19 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
             getName() + " is empty. File accepted but not processed",
             FacesMessage.SEVERITY_INFO);
         } else {
-          if (null == getDataFile().getRawStartTime()
-            || null == getDataFile().getRawEndTime()) {
-            putMessage(UNPROCESSABLE_STATUS, getName()
-              + " has date issues, see messages below. Please fix these problems and upload the file again.",
+          if (dataFile.hasFundametalProcessingIssue()) {
+            putMessage(UNPROCESSABLE_STATUS, getName() + " has "
+              + dataFile.getFundamentalProcessingIssueItem()
+              + " issues, see messages below. Please fix these problems and upload the file again.",
               FacesMessage.SEVERITY_ERROR);
           } else if (getDataFile().getMessageCount() > 0) {
             putMessage(UNPROCESSABLE_STATUS, getName()
               + " could not be processed (see messages below). Please fix these problems and upload the file again.",
               FacesMessage.SEVERITY_ERROR);
           } else {
-            List<DataFile> overlappingFiles = DataFileDB.getFilesWithinDates(
-              dataSource, instrument, matchedDefinition,
-              getDataFile().getRawStartTime(), getDataFile().getRawEndTime(),
-              false);
+            TreeSet<DataFile> overlappingFiles = getDataFile()
+              .getOverlappingFiles(DataFileDB.getFiles(dataSource, instrument,
+                getDataFile().getFileDefinition()));
 
             boolean fileOK = true;
             String fileMessage = null;
@@ -379,35 +384,43 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
 
             if (overlappingFiles.size() > 0 && overlappingFiles.size() > 1) {
               fileOK = false;
-              fileMessage = "This file overlaps one or more existing files";
+              fileMessage = "This file overlaps the following file(s): ";
+              fileMessage += overlappingFiles.stream()
+                .map(f -> f.getFilename() + " ");
+
               fileStatus = Status.CONFLICT.getStatusCode();
             } else if (overlappingFiles.size() == 1) {
-              DataFile existingFile = overlappingFiles.get(0);
+              DataFile existingFile = overlappingFiles.stream().findAny().get();
               DataFile newFile = getDataFile();
 
               if (!existingFile.getFilename().equals(newFile.getFilename())) {
                 fileOK = false;
-                fileMessage = "This file overlaps an existing file with a different name";
+                fileMessage = "This file overlaps existing file "
+                  + existingFile.getFilename();
                 fileStatus = Status.CONFLICT.getStatusCode();
               } else {
-                String oldContents = existingFile.getContents();
-                String newContents = newFile.getContents();
+                String oldContents = existingFile.getContentsAsString();
+                String newContents = newFile.getContentsAsString();
 
                 if (newContents.length() < oldContents.length()) {
                   fileOK = false;
-                  fileMessage = "This file would replace an existing file with fewer records";
+                  fileMessage = "This file would replace existing file "
+                    + existingFile.getFilename() + " with fewer records";
                   fileStatus = Status.CONFLICT.getStatusCode();
                 } else if (!allowExactDuplicate
                   && newContents.length() == oldContents.length()) {
                   fileOK = false;
-                  fileMessage = "This is an exact copy of an existing file";
+                  fileMessage = "This is an exact copy of existing file "
+                    + existingFile.getFilename();
                   fileStatus = Status.CONFLICT.getStatusCode();
                 } else {
                   String oldPartOfNewContents = newContents.substring(0,
                     oldContents.length());
                   if (!oldPartOfNewContents.equals(oldContents)) {
                     fileOK = false;
-                    fileMessage = "This file would update an existing file but change existing data";
+                    fileMessage = "This file would update existing file "
+                      + existingFile.getFilename()
+                      + " but change existing data";
                     fileStatus = Status.CONFLICT.getStatusCode();
                   } else {
                     setReplacementFile(existingFile.getDatabaseId());
@@ -419,7 +432,7 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
 
               // We don't allow duplicate filenames
               fileOK = false;
-              fileMessage = "A file with that name already exists";
+              fileMessage = "A file with this name already exists";
               fileStatus = Status.CONFLICT.getStatusCode();
             }
 
@@ -460,11 +473,20 @@ public abstract class UploadedDataFile implements Comparable<UploadedDataFile> {
   }
 
   /**
-   * Get the contents of the file
+   * Get the contents of the file as a String.
    *
-   * @return The file contents
+   * @return The file contents.
    */
-  protected abstract String getFileContents();
+  protected String getFileContents() {
+    return new String(getFileBytes(), StandardCharsets.UTF_8);
+  }
+
+  /**
+   * Get the raw bytes of the file.
+   *
+   * @return
+   */
+  public abstract byte[] getFileBytes();
 
   @Override
   public int compareTo(UploadedDataFile o) {
