@@ -593,12 +593,12 @@ public class Instrument {
 
     /*
      * There are three places that Run Type Categories can be defined:
-     * 
+     *
      * 1. A Variable can have preset run types defined in its database
      * configuration.
-     * 
+     *
      * 2. Fixed run types can be defined in the code.
-     * 
+     *
      * 3. The run types can be specified by the user during instrument setup.
      */
 
@@ -1018,7 +1018,7 @@ public class Instrument {
   /**
    * Determine whether a Run Type indicates that the instrument is taking a
    * measurement for the specified {@link Variable} in the instrument.
-   * 
+   *
    * <p>
    * The method checks the preset Run Types defined for the Variable first. If
    * there are no preset Run Types, or the Run Type is not one of the presets,

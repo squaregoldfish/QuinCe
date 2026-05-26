@@ -334,7 +334,7 @@ public class Variable implements Comparable<Variable> {
 
   /**
    * Get the default Run Type for this Variable.
-   * 
+   *
    * @return The default Run Type.
    */
   public String getDefaultRunType() {
@@ -343,7 +343,7 @@ public class Variable implements Comparable<Variable> {
 
   /**
    * Get all the Run Types associated with this Variable.
-   * 
+   *
    * @return The Variable's Run Types.
    */
   public List<String> getAllRunTypes() {

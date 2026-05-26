@@ -55,12 +55,12 @@ public class VariableProperties {
   /**
    * Get the Run Type strings that represent a measurement for the
    * {@link Variable} with the specified ID.
-   * 
+   *
    * <p>
    * In most cases there will only be one Run Type defined. Where there are
    * multiple entries, the default Run Type will be first in the list.
    * </p>
-   * 
+   *
    * @param variableId
    *          The Variable's ID
    * @return The run types

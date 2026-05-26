@@ -68,11 +68,11 @@ public class PresetRunType implements Comparable<PresetRunType> {
   /**
    * Get the Run Type Category for a specified Run Type from a collection of
    * {@code PresetRunType}s.
-   * 
+   *
    * <p>
    * Returns {@code null} if the Run Type is not present.
    * </p>
-   * 
+   *
    * @param presetRunTypes
    *          The preset run types.
    * @param runType

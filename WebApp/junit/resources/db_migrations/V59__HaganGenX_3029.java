@@ -9,7 +9,7 @@ import java.sql.Statement;
 import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;
 
-public class V55__HaganGenX_3029 extends BaseJavaMigration {
+public class V59__HaganGenX_3029 extends BaseJavaMigration {
 
   private PreparedStatement sensorTypeStmt = null;
 
@@ -25,13 +25,14 @@ public class V55__HaganGenX_3029 extends BaseJavaMigration {
       + "(name, vargroup, display_order, column_code, column_heading, source_columns) "
       + "VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 
-    variableSensorStmt = conn.prepareStatement("INSERT INTO variable_sensors "
-      + "(variable_id, sensor_type, core, questionable_cascade, bad_cascade) "
-      + "VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+    variableSensorStmt = conn.prepareStatement(
+      "INSERT INTO variable_sensors "
+        + "(variable_id, sensor_type, core, cascades) " + "VALUES (?, ?, ?, ?)",
+      Statement.RETURN_GENERATED_KEYS);
 
     // Add the base Variable
     PreparedStatement addVariableStmt = conn.prepareStatement(
-      "INSERT INTO variables (name) VALUES ('Hagan GenX')",
+      "INSERT INTO variables (name, allowed_basis) VALUES ('Hagan GenX', 1)",
       Statement.RETURN_GENERATED_KEYS);
 
     addVariableStmt.execute();
@@ -43,8 +44,12 @@ public class V55__HaganGenX_3029 extends BaseJavaMigration {
     generatedKeys.close();
     addVariableStmt.close();
 
-    // Store the preset run types
-    String presetRunTypes = "{\"presetRunTypes\": [{\"runType\": [\"zero\", \"span\", \"equ\", \"air\"], \"category\": "
+    /*
+     * Store the preset run types. These are detected internally by the
+     * specialised classes to handle the Hagan GenX. Therefore we also specify
+     * that the user cannot select the Run Types.
+     */
+    String presetRunTypes = "{\"presetRunTypes\": [{\"runType\": [\"equ\", \"air\", \"zero\", \"span\"], \"category\": "
       + variableID + "}], \"userSelectableRunType\": false}";
 
     PreparedStatement runTypesStmt = conn
@@ -61,7 +66,7 @@ public class V55__HaganGenX_3029 extends BaseJavaMigration {
     makeSensorType(variableID, "GenX Zero CO₂ Raw 2", 15002, "GENXZEROCO2RAW2",
       "Zero CO₂ Raw 2", "ZERO_CO2Raw2_AV", 0, 3, 4);
 
-    makeSensorType(variableID, "GenX EQ CO₂ Raw 1", 100000, "GENXEQCO2RAW1",
+    makeSensorType(variableID, "GenX EQ CO₂ Raw 1", 15003, "GENXEQCO2RAW1",
       "EQ CO₂ Raw 1", "EQ_CO2Raw1_AV", 1, 3, 4);
 
     sensorTypeStmt.close();
@@ -90,8 +95,8 @@ public class V55__HaganGenX_3029 extends BaseJavaMigration {
     variableSensorStmt.setLong(1, variableID);
     variableSensorStmt.setLong(2, sensorTypeID);
     variableSensorStmt.setInt(3, core);
-    variableSensorStmt.setInt(4, questionableCascade);
-    variableSensorStmt.setInt(5, badCascade);
+    variableSensorStmt.setString(4,
+      "{\"Time\":[[3," + questionableCascade + "],[4," + badCascade + "]]}");
 
     variableSensorStmt.execute();
   }

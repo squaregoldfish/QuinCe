@@ -1,10 +1,10 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
 import java.sql.Connection;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import uk.ac.exeter.QuinCe.data.Dataset.QC.IcosFlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
@@ -14,7 +14,7 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
  * Custom {@link MeasurementValueCollector} for the Hagan GenX sensor.
- * 
+ *
  * <p>
  * The timestamp of each {@link Measurement} does not align with its underlying
  * {@link SensorValue}s, due to the fact that multiple {@link Measurement}s are
@@ -27,7 +27,7 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
  * locating those which are immediately after the {@link Measurement}'s
  * timestamp.
  * </p>
- * 
+ *
  * @see HaganGenXMeasurementLocator
  */
 public class HaganGenXMeasurementValueCollector
@@ -63,7 +63,7 @@ public class HaganGenXMeasurementValueCollector
 
   /**
    * Collect the {@link SensorValue}s required for a Zero measurement.
-   * 
+   *
    * @param measurement
    *          The Zero measurement.
    * @param allSensorValues
@@ -78,7 +78,7 @@ public class HaganGenXMeasurementValueCollector
     ArrayList<MeasurementValue> measurementValues = new ArrayList<MeasurementValue>(
       2);
 
-    LocalDateTime sensorValueTime = getSensorValueTime(measurement,
+    TimeCoordinate sensorValueTime = getSensorValueTime(measurement,
       allSensorValues);
 
     SensorType zeroCO2Raw1 = ResourceManager.getInstance()
@@ -96,8 +96,10 @@ public class HaganGenXMeasurementValueCollector
     SensorValuesListOutput raw2 = allSensorValues.getColumnValues(raw2Col)
       .getValue(sensorValueTime, false);
 
-    measurementValues.add(new MeasurementValue(zeroCO2Raw1, raw1));
-    measurementValues.add(new MeasurementValue(zeroCO2Raw2, raw2));
+    measurementValues.add(
+      new MeasurementValue(IcosFlagScheme.getInstance(), zeroCO2Raw1, raw1));
+    measurementValues.add(
+      new MeasurementValue(IcosFlagScheme.getInstance(), zeroCO2Raw2, raw2));
 
     return measurementValues;
   }
@@ -105,25 +107,26 @@ public class HaganGenXMeasurementValueCollector
   /**
    * Get the timestamp for {@link SensorValue}s related to a specified
    * {@link Measurement}.
-   * 
+   *
    * <p>
    * Since {@link Measurement}s are offset from the timestamps in the original
    * file (which represents the end of the measurement cycle, the timestamp for
    * a {@link Measurement}'s {@link SensorValue}s is the one equal to or
    * immediately after the {@link Measurement}'s timestamp.
    * </p>
-   * 
+   *
    * @param measurement
    *          The {@link Measurement}.
    * @param allSensorValues
    *          The Sensor Values.
    * @return The timestamp for the {@link Measurement}'s {@link SensorValue}s.
    */
-  private LocalDateTime getSensorValueTime(Measurement measurement,
+  private TimeCoordinate getSensorValueTime(Measurement measurement,
     DatasetSensorValues allSensorValues) {
 
-    return allSensorValues.getTimes().stream()
-      .filter(t -> DateTimeUtils.isEqualOrAfter(t, measurement.getTime()))
+    return (TimeCoordinate) allSensorValues
+      .getCoordinates().stream().filter(t -> DateTimeUtils
+        .isEqualOrAfter(t.getTime(), measurement.getCoordinate().getTime()))
       .findFirst().orElse(null);
   }
 }

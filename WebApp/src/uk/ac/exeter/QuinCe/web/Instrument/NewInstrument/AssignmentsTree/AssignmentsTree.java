@@ -227,7 +227,7 @@ public abstract class AssignmentsTree {
         assignments.isVariableComplete(var) ? VAR_FINISHED : VAR_UNFINISHED);
 
       for (SensorType sensorType : sensorConfig.getSensorTypes(var.getId(),
-        true, true, true)) {
+        true, true, var.requiresRunType())) {
 
         makeSensorTypeNode(sensorType, varNode);
       }

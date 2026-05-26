@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import uk.ac.exeter.QuinCe.data.Dataset.QC.IcosFlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
@@ -15,7 +16,7 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
  * Custom {@link MeasurementLocator} for the Hagan GenX sensor.
- * 
+ *
  * <p>
  * Each row in the input file contains Water and Air measurements, and sometimes
  * Zero and Span measurements. There is only one 'real' timestamp on each line,
@@ -25,13 +26,13 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
  * {@link Measurement} object with the correct timestamp for the
  * sub-measurement, and a corresponding Run Type.
  * </p>
- * 
+ *
  * <p>
  * The {@link HaganGenXMeasurementValueCollector} will take account of the fact
  * that the {@link Measurement} timestamps do not line up with the 'real'
  * timestamp, which is assigned to all the {@link SensorValue}s.
  * </p>
- * 
+ *
  * @see HaganGenXMeasurementValueCollector
  */
 public class HaganGenXMeasurementLocator extends MeasurementLocator {
@@ -93,9 +94,9 @@ public class HaganGenXMeasurementLocator extends MeasurementLocator {
       zeroCO2Raw1Col = instrument.getSensorAssignments()
         .getColumnIds("GenX Zero CO₂ Raw 1").get(0);
 
-      // Loop through all times
-      for (LocalDateTime time : allSensorValues.getTimes()) {
-        Map<Long, SensorValue> sensorValues = allSensorValues.get(time);
+      // Loop through all coordinates
+      for (Coordinate coordinate : allSensorValues.getCoordinates()) {
+        Map<Long, SensorValue> sensorValues = allSensorValues.get(coordinate);
 
         // See if there was a Zero measurement
         if (sensorValues.containsKey(zeroCO2Raw1Col)) {
@@ -111,12 +112,12 @@ public class HaganGenXMeasurementLocator extends MeasurementLocator {
 
   /**
    * Create a Zero measurement.
-   * 
+   *
    * <p>
    * This method assumes that the caller has already verified the existence of
    * the required columns for a Zero measurement.
    * </p>
-   * 
+   *
    * @param dataset
    *          The DataSet.
    * @param sensorValues
@@ -129,7 +130,8 @@ public class HaganGenXMeasurementLocator extends MeasurementLocator {
     LocalDateTime time = DateTimeUtils
       .longToDate(sensorValues.get(zeroTimeCol).getValue());
 
-    return new Measurement(dataset.getId(), time, zeroRunTypes);
+    return new Measurement(dataset.getId(), IcosFlagScheme.getInstance(),
+      new TimeCoordinate(time), zeroRunTypes);
   }
 
   protected String getVariableName() {
