@@ -57,6 +57,10 @@ public class HaganGenXMeasurementLocator extends MeasurementLocator {
 
   private long zeroCO2Raw1Col = -1L;
 
+  private long spanTimeCol = -1L;
+
+  private long airTimeCol = -1L;
+
   static {
 
   }
@@ -94,14 +98,34 @@ public class HaganGenXMeasurementLocator extends MeasurementLocator {
       zeroCO2Raw1Col = instrument.getSensorAssignments()
         .getColumnIds("GenX Zero CO₂ Raw 1").get(0);
 
+      spanTimeCol = instrument.getSensorAssignments()
+        .getColumnIds("GenX Span Timestamp").get(0);
+
+      airTimeCol = instrument.getSensorAssignments()
+        .getColumnIds("GenX Air Timestamp").get(0);
+
       // Loop through all coordinates
       for (Coordinate coordinate : allSensorValues.getCoordinates()) {
         Map<Long, SensorValue> sensorValues = allSensorValues.get(coordinate);
 
-        // See if there was a Zero measurement
+        /*
+         * See if there was a Zero measurement. If so, make Zero and Span
+         * Measurements.
+         */
         if (sensorValues.containsKey(zeroCO2Raw1Col)) {
-          measurements.add(makeZeroMeasurement(dataset, sensorValues));
+          measurements.add(makeMeasurement(dataset.getId(), sensorValues,
+            zeroTimeCol, zeroRunTypes));
+          measurements.add(makeMeasurement(dataset.getId(), sensorValues,
+            spanTimeCol, spanRunTypes));
         }
+
+        /*
+         * Add air and equ measurements
+         */
+        measurements.add(makeMeasurement(dataset.getId(), sensorValues,
+          airTimeCol, airRunTypes));
+        measurements
+          .add(makeMeasurement(dataset.getId(), coordinate, equRunTypes));
 
       }
       return measurements;
@@ -110,28 +134,29 @@ public class HaganGenXMeasurementLocator extends MeasurementLocator {
     }
   }
 
-  /**
-   * Create a Zero measurement.
-   *
-   * <p>
-   * This method assumes that the caller has already verified the existence of
-   * the required columns for a Zero measurement.
-   * </p>
-   *
-   * @param dataset
-   *          The DataSet.
-   * @param sensorValues
-   *          The Sensor Values being processed.
-   * @return The Zero measurement.
+  private Measurement makeMeasurement(long datasetId, LocalDateTime time,
+    HashMap<Long, String> runTypes) {
+    return new Measurement(datasetId, IcosFlagScheme.getInstance(),
+      new TimeCoordinate(datasetId, time), runTypes);
+  }
+
+  private Measurement makeMeasurement(long datasetId, Coordinate coordinate,
+    HashMap<Long, String> runTypes) {
+    return new Measurement(datasetId, IcosFlagScheme.getInstance(), coordinate,
+      runTypes);
+  }
+
+  /*
+   * Use this if we want to get the exact timestamps for the non-water
+   * measurements.
    */
-  private Measurement makeZeroMeasurement(DataSet dataset,
-    Map<Long, SensorValue> sensorValues) {
-
+  private Measurement makeMeasurement(long datasetId,
+    Map<Long, SensorValue> sensorValues, long timeCol,
+    HashMap<Long, String> runTypes) {
     LocalDateTime time = DateTimeUtils
-      .longToDate(sensorValues.get(zeroTimeCol).getValue());
+      .longToDate(sensorValues.get(timeCol).getValue());
 
-    return new Measurement(dataset.getId(), IcosFlagScheme.getInstance(),
-      new TimeCoordinate(dataset.getId(), time), zeroRunTypes);
+    return makeMeasurement(datasetId, time, runTypes);
   }
 
   protected String getVariableName() {

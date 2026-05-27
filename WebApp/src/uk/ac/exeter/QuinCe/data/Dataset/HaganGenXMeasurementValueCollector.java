@@ -7,6 +7,7 @@ import java.util.Collection;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.IcosFlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
@@ -33,6 +34,24 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 public class HaganGenXMeasurementValueCollector
   implements MeasurementValueCollector {
 
+  private static final String[] ZERO_SENSOR_VALUES = new String[] {
+    "GenX Zero CO₂ Raw 1", "GenX Zero CO₂ Raw 2" };
+
+  private static final String[] SPAN_SENSOR_VALUES = new String[] {
+    "GenX Span Temperature", "GenX Span Pressure", "GenX Span CO₂ Raw 1",
+    "GenX Span CO₂ Raw 2", "GenX Span Relative Humidity",
+    "GenX Span Relative Humidity Temperature" };
+
+  private static final String[] EQU_SENSOR_VALUES = new String[] {
+    "GenX Water Temperature", "GenX Water Pressure", "GenX Water CO₂ Raw 1",
+    "GenX Water CO₂ Raw 2", "GenX Water Relative Humidity",
+    "GenX Water Relative Humidity Temperature" };
+
+  private static final String[] AIR_SENSOR_VALUES = new String[] {
+    "GenX Air Timestamp", "GenX Air Temperature", "GenX Air Pressure",
+    "GenX Air CO₂ Raw 1", "GenX Air CO₂ Raw 2", "GenX Air Relative Humidity",
+    "GenX Air Relative Humidity Temperature" };
+
   @Override
   public Collection<MeasurementValue> collectMeasurementValues(
     Instrument instrument, DataSet dataSet, Variable variable,
@@ -45,8 +64,23 @@ public class HaganGenXMeasurementValueCollector
     try {
       switch (measurement.getRunType(variable)) {
       case HaganGenXMeasurementLocator.ZERO_RUN_TYPE: {
-        result = collectZeroMeasurementValues(instrument, measurement,
-          allSensorValues);
+        result = collectMeasurementValues(instrument, measurement,
+          allSensorValues, ZERO_SENSOR_VALUES);
+        break;
+      }
+      case HaganGenXMeasurementLocator.SPAN_RUN_TYPE: {
+        result = collectMeasurementValues(instrument, measurement,
+          allSensorValues, SPAN_SENSOR_VALUES);
+        break;
+      }
+      case HaganGenXMeasurementLocator.WATER_RUN_TYPE: {
+        result = collectMeasurementValues(instrument, measurement,
+          allSensorValues, EQU_SENSOR_VALUES);
+        break;
+      }
+      case HaganGenXMeasurementLocator.AIR_RUN_TYPE: {
+        result = collectMeasurementValues(instrument, measurement,
+          allSensorValues, AIR_SENSOR_VALUES);
         break;
       }
       default: {
@@ -61,45 +95,31 @@ public class HaganGenXMeasurementValueCollector
     return result;
   }
 
-  /**
-   * Collect the {@link SensorValue}s required for a Zero measurement.
-   *
-   * @param measurement
-   *          The Zero measurement.
-   * @param allSensorValues
-   *          The Sensor Values.
-   * @return The collected {@link SensorValue}s.
-   * @throws RecordNotFoundException
-   */
-  private Collection<MeasurementValue> collectZeroMeasurementValues(
+  private Collection<MeasurementValue> collectMeasurementValues(
     Instrument instrument, Measurement measurement,
-    DatasetSensorValues allSensorValues) throws Exception {
+    DatasetSensorValues allSensorValues, String[] sensorTypeNames)
+    throws SensorValuesListException, RecordNotFoundException,
+    SensorTypeNotFoundException {
 
     ArrayList<MeasurementValue> measurementValues = new ArrayList<MeasurementValue>(
-      2);
+      sensorTypeNames.length);
 
-    TimeCoordinate sensorValueTime = getSensorValueTime(measurement,
+    TimeCoordinate sensorValueCord = getSensorValueTime(measurement,
       allSensorValues);
 
-    SensorType zeroCO2Raw1 = ResourceManager.getInstance()
-      .getSensorsConfiguration().getSensorType("GenX Zero CO₂ Raw 1");
-    SensorType zeroCO2Raw2 = ResourceManager.getInstance()
-      .getSensorsConfiguration().getSensorType("GenX Zero CO₂ Raw 2");
+    for (String sensorTypeName : sensorTypeNames) {
+      SensorType sensorType = ResourceManager.getInstance()
+        .getSensorsConfiguration().getSensorType(sensorTypeName);
 
-    long raw1Col = instrument.getSensorAssignments().getColumnIds(zeroCO2Raw1)
-      .get(0);
-    long raw2Col = instrument.getSensorAssignments().getColumnIds(zeroCO2Raw2)
-      .get(0);
+      long columnId = instrument.getSensorAssignments().getColumnIds(sensorType)
+        .get(0);
 
-    SensorValuesListOutput raw1 = allSensorValues.getColumnValues(raw1Col)
-      .getValue(sensorValueTime, false);
-    SensorValuesListOutput raw2 = allSensorValues.getColumnValues(raw2Col)
-      .getValue(sensorValueTime, false);
+      SensorValuesListOutput sensorValue = allSensorValues
+        .getColumnValues(columnId).getValue(sensorValueCord, false);
 
-    measurementValues.add(
-      new MeasurementValue(IcosFlagScheme.getInstance(), zeroCO2Raw1, raw1));
-    measurementValues.add(
-      new MeasurementValue(IcosFlagScheme.getInstance(), zeroCO2Raw2, raw2));
+      measurementValues.add(new MeasurementValue(IcosFlagScheme.getInstance(),
+        sensorType, sensorValue));
+    }
 
     return measurementValues;
   }
