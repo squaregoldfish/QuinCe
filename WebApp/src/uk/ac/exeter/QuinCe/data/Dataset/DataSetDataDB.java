@@ -791,7 +791,7 @@ public class DataSetDataDB {
    *           If any required parameters are missing
    */
   public static void storeMeasurements(Connection conn,
-    Collection<Measurement> measurements)
+    DatasetSensorValues allSensorValues, Collection<Measurement> measurements)
     throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
@@ -804,8 +804,30 @@ public class DataSetDataDB {
       PreparedStatement runTypeStmt = conn
         .prepareStatement(STORE_RUN_TYPE_STATEMENT);) {
 
+      HashMap<Integer, Coordinate> existingCoordinates = Coordinate
+        .toHashMap(allSensorValues.getCoordinates());
+
       // Batch up all the measurements
       for (Measurement measurement : measurements) {
+        /*
+         * See if the coordinate is already in the database. If not, either
+         * retrieve the corresponding Coordinate object from the SensorValues or
+         * store this new coordinate in the database.
+         */
+        Coordinate coord = measurement.getCoordinate();
+        if (!coord.isInDatabase()) {
+          Coordinate existingCoord = existingCoordinates.get(coord.hashCode());
+          if (null != existingCoord) {
+            measurement.setCoordinate(existingCoord);
+          } else {
+            /*
+             * Store the coordinate in the database. Its database ID will be
+             * updated directly.
+             */
+            CoordinateDB.saveCoordinate(conn, coord);
+          }
+        }
+
         measurementStmt.setLong(1, measurement.getCoordinate().getId());
         measurementStmt.execute();
 

@@ -131,7 +131,7 @@ public class HaganGenXMeasurementLocator extends MeasurementLocator {
       .longToDate(sensorValues.get(zeroTimeCol).getValue());
 
     return new Measurement(dataset.getId(), IcosFlagScheme.getInstance(),
-      new TimeCoordinate(time), zeroRunTypes);
+      new TimeCoordinate(dataset.getId(), time), zeroRunTypes);
   }
 
   protected String getVariableName() {

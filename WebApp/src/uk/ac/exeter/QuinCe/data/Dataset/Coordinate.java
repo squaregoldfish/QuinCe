@@ -1,6 +1,8 @@
 package uk.ac.exeter.QuinCe.data.Dataset;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Objects;
 
 import javax.sound.midi.Instrument;
@@ -247,4 +249,20 @@ public abstract class Coordinate implements Comparable<Coordinate> {
    */
   public abstract String getValue(SensorType sensorType)
     throws SensorTypeNotFoundException;
+
+  /**
+   * Generate a {@link HashMap} of the specified {@link Coordinate} objects
+   * keyed with the {@link Object#hashCode} of the objects.
+   *
+   * @param coordinates
+   *          The coordinates.
+   * @return The map.
+   */
+  public static HashMap<Integer, Coordinate> toHashMap(
+    Collection<Coordinate> coordinates) {
+
+    HashMap<Integer, Coordinate> result = new HashMap<Integer, Coordinate>();
+    coordinates.stream().forEach(c -> result.put(c.hashCode(), c));
+    return result;
+  }
 }

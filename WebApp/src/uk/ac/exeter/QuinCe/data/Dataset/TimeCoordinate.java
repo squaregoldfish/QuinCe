@@ -210,4 +210,8 @@ public class TimeCoordinate extends Coordinate {
     throw new SensorTypeNotFoundException(sensorType);
   }
 
+  @Override
+  public int hashCode() {
+    return getTime().hashCode();
+  }
 }

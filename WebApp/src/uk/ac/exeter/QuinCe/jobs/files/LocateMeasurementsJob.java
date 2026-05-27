@@ -118,7 +118,8 @@ public class LocateMeasurementsJob extends DataSetJob {
           locator.locateMeasurements(conn, instrument, dataSet, sensorValues));
       }
 
-      DataSetDataDB.storeMeasurements(conn, measurements.values());
+      DataSetDataDB.storeMeasurements(conn, sensorValues,
+        measurements.values());
 
       // Trigger the Build Measurements job
       dataSet.setStatus(DataSet.STATUS_DATA_REDUCTION);

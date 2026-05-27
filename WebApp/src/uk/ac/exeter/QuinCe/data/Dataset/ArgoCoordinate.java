@@ -289,4 +289,8 @@ public class ArgoCoordinate extends Coordinate {
 
     return result;
   }
+
+  public int hashCode() {
+    return cycleNumber + nProf + direction + nLevel;
+  }
 }
