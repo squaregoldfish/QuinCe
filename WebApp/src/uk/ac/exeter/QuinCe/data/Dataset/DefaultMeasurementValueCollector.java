@@ -9,6 +9,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**
@@ -94,11 +95,12 @@ public class DefaultMeasurementValueCollector
    *           If an error occurs while accessing the {@link SensorValue}s.
    * @throws RecordNotFoundException
    * @throws InstrumentException
+   * @throws VariablePropertiesException
    */
   private SensorValuesListValue getReferenceValue(Instrument instrument,
     Variable variable, Measurement measurement,
     DatasetSensorValues allSensorValues) throws SensorValuesListException,
-    RecordNotFoundException, InstrumentException {
+    RecordNotFoundException, InstrumentException, VariablePropertiesException {
 
     /*
      * Get the Run Type for this variable if it has one

@@ -14,6 +14,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
+import uk.ac.exeter.QuinCe.data.Dataset.TimestampSensorValuesList;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
 
 public class VariablePropertiesDeserializer
@@ -101,8 +102,28 @@ public class VariablePropertiesDeserializer
         .getAsBoolean();
     }
 
-    return new VariableProperties(coefficients, dependsQuestionAnswers,
-      presetRunTypes, userSelectableRunType);
-  }
+    int forceMeasurementMode = TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE;
 
+    if (jsonObj.has("forceMeasurementMode")) {
+      String mode = jsonObj.get("forceMeasurementMode").getAsString();
+
+      switch (mode.toLowerCase()) {
+      case "continuous": {
+        forceMeasurementMode = TimestampSensorValuesList.MODE_CONTINUOUS;
+        break;
+      }
+      case "periodic": {
+        forceMeasurementMode = TimestampSensorValuesList.MODE_PERIODIC;
+        break;
+      }
+      default: {
+        throw new JsonParseException(
+          "forceMeasurementMode must be either continuous or periodic");
+      }
+      }
+    }
+
+    return new VariableProperties(coefficients, dependsQuestionAnswers,
+      presetRunTypes, userSelectableRunType, forceMeasurementMode);
+  }
 }

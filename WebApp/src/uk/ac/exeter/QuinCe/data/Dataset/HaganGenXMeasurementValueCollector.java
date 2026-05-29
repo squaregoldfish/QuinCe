@@ -9,6 +9,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -99,7 +100,7 @@ public class HaganGenXMeasurementValueCollector
     Instrument instrument, Measurement measurement,
     DatasetSensorValues allSensorValues, String[] sensorTypeNames)
     throws SensorValuesListException, RecordNotFoundException,
-    SensorTypeNotFoundException {
+    SensorTypeNotFoundException, VariablePropertiesException {
 
     ArrayList<MeasurementValue> measurementValues = new ArrayList<MeasurementValue>(
       sensorTypeNames.length);

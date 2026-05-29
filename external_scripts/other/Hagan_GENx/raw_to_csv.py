@@ -1,3 +1,10 @@
+"""
+Parse Hagan GenX sensor files into a CSV file that QuinCe can read.
+This is similar to the output of the GenX processing software,
+except that each stage of an acquisition (measurement sequence)
+goes on its own line because it's easier for QuinCe to process.
+"""
+
 import argparse
 from datetime import datetime, timedelta, timezone
 import logging
@@ -30,45 +37,6 @@ SENSOR_MULTIPLIERS = {
     'EnclRH': 0.01,
     'EnclPCBTemp': 0.01
 }
-
-# While column order is not strictly meaningful, it's useful if our columns are
-# in the same order as the reference software for easier comparison.
-# Any columns encountered that are not in this list will be added to the right end
-# of the file in an undefined order.
-OUTPUT_COLUMN_ORDER = ['ZEROPUMPON_CO2CALC_AV', 'ZEROPUMPON_CO2CALC_SD', 'ZEROPUMPON_CO2TEMP_AV',
-  'ZEROPUMPON_CO2TEMP_SD', 'ZEROPUMPON_CO2PRES_AV', 'ZEROPUMPON_CO2PRES_SD', 'ZEROPUMPON_CO2RAW1_AV',
-  'ZEROPUMPON_CO2RAW1_SD', 'ZEROPUMPON_CO2RAW2_AV', 'ZEROPUMPON_CO2RAW2_SD', 'ZEROPUMPON_RHCALC_AV',
-  'ZEROPUMPON_RHCALC_SD', 'ZEROPUMPON_RHTEMP_AV', 'ZEROPUMPON_RHTEMP_SD', 'ZERO_CO2CALC_AV',
-  'ZERO_CO2CALC_SD', 'ZERO_CO2TEMP_AV', 'ZERO_CO2TEMP_SD', 'ZERO_CO2PRES_AV', 'ZERO_CO2PRES_SD',
-  'ZERO_CO2RAW1_AV', 'ZERO_CO2RAW1_SD', 'ZERO_CO2RAW2_AV', 'ZERO_CO2RAW2_SD', 'ZERO_RHCALC_AV',
-  'ZERO_RHCALC_SD', 'ZERO_RHTEMP_AV', 'ZERO_RHTEMP_SD', 'ZEROPOST_CO2CALC_AV', 'ZEROPOST_CO2CALC_SD',
-  'ZEROPOST_CO2TEMP_AV', 'ZEROPOST_CO2TEMP_SD', 'ZEROPOST_CO2PRES_AV', 'ZEROPOST_CO2PRES_SD',
-  'ZEROPOST_CO2RAW1_AV', 'ZEROPOST_CO2RAW1_SD', 'ZEROPOST_CO2RAW2_AV', 'ZEROPOST_CO2RAW2_SD',
-  'ZEROPOST_RHCALC_AV', 'ZEROPOST_RHCALC_SD', 'ZEROPOST_RHTEMP_AV', 'ZEROPOST_RHTEMP_SD',
-  'SPANPUMPON_CO2CALC_AV', 'SPANPUMPON_CO2CALC_SD', 'SPANPUMPON_CO2TEMP_AV', 'SPANPUMPON_CO2TEMP_SD',
-  'SPANPUMPON_CO2PRES_AV', 'SPANPUMPON_CO2PRES_SD', 'SPANPUMPON_CO2RAW1_AV', 'SPANPUMPON_CO2RAW1_SD',
-  'SPANPUMPON_CO2RAW2_AV', 'SPANPUMPON_CO2RAW2_SD', 'SPANPUMPON_RHCALC_AV', 'SPANPUMPON_RHCALC_SD',
-  'SPANPUMPON_RHTEMP_AV', 'SPANPUMPON_RHTEMP_SD', 'SPAN_CO2CALC_AV', 'SPAN_CO2CALC_SD', 'SPAN_CO2TEMP_AV',
-  'SPAN_CO2TEMP_SD', 'SPAN_CO2PRES_AV', 'SPAN_CO2PRES_SD', 'SPAN_CO2RAW1_AV', 'SPAN_CO2RAW1_SD',
-  'SPAN_CO2RAW2_AV', 'SPAN_CO2RAW2_SD', 'SPAN_RHCALC_AV', 'SPAN_RHCALC_SD', 'SPAN_RHTEMP_AV',
-  'SPAN_RHTEMP_SD', 'SPANPOST_CO2CALC_AV', 'SPANPOST_CO2CALC_SD', 'SPANPOST_CO2TEMP_AV',
-  'SPANPOST_CO2TEMP_SD', 'SPANPOST_CO2PRES_AV', 'SPANPOST_CO2PRES_SD', 'SPANPOST_CO2RAW1_AV',
-  'SPANPOST_CO2RAW1_SD', 'SPANPOST_CO2RAW2_AV', 'SPANPOST_CO2RAW2_SD', 'SPANPOST_RHCALC_AV',
-  'SPANPOST_RHCALC_SD', 'SPANPOST_RHTEMP_AV', 'SPANPOST_RHTEMP_SD', 'ZEROCALK', 'SPANCALK',
-  'AIRPUMPON_CO2CALC_AV', 'AIRPUMPON_CO2CALC_SD', 'AIRPUMPON_CO2TEMP_AV', 'AIRPUMPON_CO2TEMP_SD',
-  'AIRPUMPON_CO2PRES_AV', 'AIRPUMPON_CO2PRES_SD', 'AIRPUMPON_CO2RAW1_AV', 'AIRPUMPON_CO2RAW1_SD',
-  'AIRPUMPON_CO2RAW2_AV', 'AIRPUMPON_CO2RAW2_SD', 'AIRPUMPON_RHCALC_AV', 'AIRPUMPON_RHCALC_SD',
-  'AIRPUMPON_RHTEMP_AV', 'AIRPUMPON_RHTEMP_SD', 'AIR_CO2CALC_AV', 'AIR_CO2CALC_SD', 'AIR_CO2TEMP_AV',
-  'AIR_CO2TEMP_SD', 'AIR_CO2PRES_AV', 'AIR_CO2PRES_SD', 'AIR_CO2RAW1_AV', 'AIR_CO2RAW1_SD', 'AIR_CO2RAW2_AV',
-  'AIR_CO2RAW2_SD', 'AIR_RHCALC_AV', 'AIR_RHCALC_SD', 'AIR_RHTEMP_AV', 'AIR_RHTEMP_SD', 'EQWATERLEVEL', 'EQPUMPON_CO2CALC_AV',
-  'EQPUMPON_CO2CALC_SD', 'EQPUMPON_CO2TEMP_AV', 'EQPUMPON_CO2TEMP_SD', 'EQPUMPON_CO2PRES_AV', 'EQPUMPON_CO2PRES_SD',
-  'EQPUMPON_CO2RAW1_AV', 'EQPUMPON_CO2RAW1_SD', 'EQPUMPON_CO2RAW2_AV', 'EQPUMPON_CO2RAW2_SD', 'EQPUMPON_RHCALC_AV',
-  'EQPUMPON_RHCALC_SD', 'EQPUMPON_RHTEMP_AV', 'EQPUMPON_RHTEMP_SD', 'EQ_CO2CALC_AV', 'EQ_CO2CALC_SD', 'EQ_CO2TEMP_AV',
-  'EQ_CO2TEMP_SD', 'EQ_CO2PRES_AV', 'EQ_CO2PRES_SD', 'EQ_CO2RAW1_AV', 'EQ_CO2RAW1_SD', 'EQ_CO2RAW2_AV', 'EQ_CO2RAW2_SD',
-  'EQ_RHCALC_AV', 'EQ_RHCALC_SD', 'EQ_RHTEMP_AV', 'EQ_RHTEMP_SD', 'ENCLOSURE_ENCLPRES_AV', 'ENCLOSURE_ENCLPRES_SD',
-  'ENCLOSURE_ENCLAIRTEMP_AV', 'ENCLOSURE_ENCLAIRTEMP_SD', 'ENCLOSURE_ENCLRH_AV', 'ENCLOSURE_ENCLRH_SD',
-  'ENCLOSURE_ENCLPCBTEMP_AV', 'ENCLOSURE_ENCLPCBTEMP_SD', 'ENG_STATUS', 'DATA_STATUS', 'BAD_SAMPLE']
-
 
 # Holds details of an acquisition as it is extracted from the file.
 class Acquisition:
@@ -110,7 +78,10 @@ class Acquisition:
         # Write the current values
         if len(values) > 0:
             column_name = mode
-            if sensor is not None:
+
+            if column_name in ['ZEROCALK', 'SPANCALK']:
+                column_name = 'CALK'
+            elif sensor is not None:
                 column_name += f'_{sensor}'
 
             calc_values = np.array(values, dtype=np.float64)
@@ -119,8 +90,7 @@ class Acquisition:
 
             mean = np.mean(calc_values)
             stdev = -1 if sensor is None else np.std(calc_values, ddof=1)
-
-            self.data[column_name.upper()] = [mean, stdev]
+            self.data[column_name] = [mean, stdev]
 
     @staticmethod
     def _get_time_offset(line, line_pos):
@@ -188,41 +158,87 @@ class Acquisition:
         # The various offsets from the signature are from the
         # start of the acquisition to the centre of the thing being measured.
         # We convert these to true timestamps, stored as milliseconds since the epoch.
-        return int((self.start_timestamp + timedelta(seconds=offset_from_start)).timestamp() * 1000)
+        return (self.start_timestamp + timedelta(seconds=offset_from_start)).replace(tzinfo=None)
+
+
+    def write_row(self, df, run_type, timestamp):
+        row = df.shape[0] + 1
+        df.at[row, 'Time'] = timestamp
+        df.at[row, 'RunType'] = run_type
+        df.at[row, 'StatusCode'] = self.status
+        df.at[row, 'Serial Number'] = self.serial_number
+        df.at[row, 'Span Concentration'] = self.span_concentration
+        df.at[row, 'Span Slope'] = self.span_slope
+
+        if self.longitude is not None:
+            df.at[row, 'Longitude'] = self.longitude
+            df.at[row, 'Latitude'] = self.latitude
+
+        df.at[row, 'PUMPON_CO2Calc_AV'] = self.data[f'{run_type}PUMPON_CO2Calc'][0]
+        df.at[row, 'PUMPON_CO2Calc_SD'] = self.data[f'{run_type}PUMPON_CO2Calc'][1]
+        df.at[row, 'PUMPON_CO2Temp_AV'] = self.data[f'{run_type}PUMPON_CO2Temp'][0]
+        df.at[row, 'PUMPON_CO2Temp_SD'] = self.data[f'{run_type}PUMPON_CO2Temp'][1]
+        df.at[row, 'PUMPON_CO2Pres_AV'] = self.data[f'{run_type}PUMPON_CO2Pres'][0]
+        df.at[row, 'PUMPON_CO2Pres_SD'] = self.data[f'{run_type}PUMPON_CO2Pres'][1]
+        df.at[row, 'PUMPON_CO2Raw1_AV'] = self.data[f'{run_type}PUMPON_CO2Raw1'][0]
+        df.at[row, 'PUMPON_CO2Raw1_SD'] = self.data[f'{run_type}PUMPON_CO2Raw1'][1]
+        df.at[row, 'PUMPON_CO2Raw2_AV'] = self.data[f'{run_type}PUMPON_CO2Raw2'][0]
+        df.at[row, 'PUMPON_CO2Raw2_SD'] = self.data[f'{run_type}PUMPON_CO2Raw2'][1]
+        df.at[row, 'PUMPON_RhCalc_AV'] = self.data[f'{run_type}PUMPON_RhCalc'][0]
+        df.at[row, 'PUMPON_RhCalc_SD'] = self.data[f'{run_type}PUMPON_RhCalc'][1]
+        df.at[row, 'PUMPON_RhTemp_AV'] = self.data[f'{run_type}PUMPON_RhTemp'][0]
+        df.at[row, 'PUMPON_RhTemp_SD'] = self.data[f'{run_type}PUMPON_RhTemp'][1]
+
+        df.at[row, 'CO2Calc_AV'] = self.data[f'{run_type}_CO2Calc'][0]
+        df.at[row, 'CO2Calc_SD'] = self.data[f'{run_type}_CO2Calc'][1]
+        df.at[row, 'CO2Temp_AV'] = self.data[f'{run_type}_CO2Temp'][0]
+        df.at[row, 'CO2Temp_SD'] = self.data[f'{run_type}_CO2Temp'][1]
+        df.at[row, 'CO2Pres_AV'] = self.data[f'{run_type}_CO2Pres'][0]
+        df.at[row, 'CO2Pres_SD'] = self.data[f'{run_type}_CO2Pres'][1]
+        df.at[row, 'CO2Raw1_AV'] = self.data[f'{run_type}_CO2Raw1'][0]
+        df.at[row, 'CO2Raw1_SD'] = self.data[f'{run_type}_CO2Raw1'][1]
+        df.at[row, 'CO2Raw2_AV'] = self.data[f'{run_type}_CO2Raw2'][0]
+        df.at[row, 'CO2Raw2_SD'] = self.data[f'{run_type}_CO2Raw2'][1]
+        df.at[row, 'RhCalc_AV'] = self.data[f'{run_type}_RhCalc'][0]
+        df.at[row, 'RhCalc_SD'] = self.data[f'{run_type}_RhCalc'][1]
+        df.at[row, 'RhTemp_AV'] = self.data[f'{run_type}_RhTemp'][0]
+        df.at[row, 'RhTemp_SD'] = self.data[f'{run_type}_RhTemp'][1]
+
+        if 'CALK' in self.data.keys():
+            df.at[row, 'CALK'] = self.data['CALK'][0]
         
+        if f'{run_type}POST_CO2Calc' in self.data.keys():
+            df.at[row, 'POST_CO2Calc_AV'] = self.data[f'{run_type}POST_CO2Calc'][0]
+            df.at[row, 'POST_CO2Calc_SD'] = self.data[f'{run_type}POST_CO2Calc'][1]
+            df.at[row, 'POST_CO2Temp_AV'] = self.data[f'{run_type}POST_CO2Temp'][0]
+            df.at[row, 'POST_CO2Temp_SD'] = self.data[f'{run_type}POST_CO2Temp'][1]
+            df.at[row, 'POST_CO2Pres_AV'] = self.data[f'{run_type}POST_CO2Pres'][0]
+            df.at[row, 'POST_CO2Pres_SD'] = self.data[f'{run_type}POST_CO2Pres'][1]
+            df.at[row, 'POST_CO2Raw1_AV'] = self.data[f'{run_type}POST_CO2Raw1'][0]
+            df.at[row, 'POST_CO2Raw1_SD'] = self.data[f'{run_type}POST_CO2Raw1'][1]
+            df.at[row, 'POST_CO2Raw2_AV'] = self.data[f'{run_type}POST_CO2Raw2'][0]
+            df.at[row, 'POST_CO2Raw2_SD'] = self.data[f'{run_type}POST_CO2Raw2'][1]
+            df.at[row, 'POST_RhCalc_AV'] = self.data[f'{run_type}POST_RhCalc'][0]
+            df.at[row, 'POST_RhCalc_SD'] = self.data[f'{run_type}POST_RhCalc'][1]
+            df.at[row, 'POST_RhTemp_AV'] = self.data[f'{run_type}POST_RhTemp'][0]
+            df.at[row, 'POST_RhTemp_SD'] = self.data[f'{run_type}POST_RhTemp'][1]
+
     
-    def write(self, df, sequence):
+    def write(self, df):
         # If this acquisition is not complete, do nothing.
         if self.is_complete():
-            df.at[sequence, 'Time'] = self.end_timestamp.replace(tzinfo=None)
-            df.at[sequence, 'StatusCode'] = self.status
+            if 'ZERO_CO2Calc' in self.data.keys():
+                self.write_row(df, 'ZERO', self._calc_offset_timestamp(self.zero_post_offset))
 
-            # Signature details
-            df.at[sequence, 'Serial Number'] = self.serial_number
-            df.at[sequence, 'Span Concentration'] = self.span_concentration
-            df.at[sequence, 'Span Slope'] = self.span_slope
-            df.at[sequence, 'Zero Pre Time'] = self._calc_offset_timestamp(self.zero_pre_offset)
-            df.at[sequence, 'Zero Post Time'] = self._calc_offset_timestamp(self.zero_post_offset)
-            df.at[sequence, 'Span Pre Time'] = self._calc_offset_timestamp(self.span_pre_offset)
-            df.at[sequence, 'Span Post Time'] = self._calc_offset_timestamp(self.span_post_offset)
-            df.at[sequence, 'Air Time'] = self._calc_offset_timestamp(self.air_offset)
-            df.at[sequence, 'Eq CAL Time'] = self._calc_offset_timestamp(self.eq_cal_offset)
-            df.at[sequence, 'Eq Between CAL Time'] = self._calc_offset_timestamp(self.eq_between_cal_offset)
-            df.at[sequence, 'Eq Before Sample'] = self.eq_before_sample
+            if 'SPAN_CO2Calc' in self.data.keys():
+                self.write_row(df, 'SPAN', self._calc_offset_timestamp(self.span_post_offset))
 
-            if self.longitude is not None:
-                df.at[sequence, 'Longitude'] = self.longitude
-                df.at[sequence, 'Latitude'] = self.latitude
+            if ('AIR_CO2Calc' in self.data.keys()) :
+                self.write_row(df, 'AIR', self._calc_offset_timestamp(self.air_offset))
 
-            for column, values in self.data.items():
-                # If we have only one value, just store that
-                # This is indicated by a stdev of -1
-                if values[1] == -1:
-                    df.at[sequence, column] = values[0]
-                else:
-                    df.at[sequence, f'{column}_AV'] = values[0]
-                    df.at[sequence, f'{column}_SD'] = values[1]
-            
+            if ('EQ_CO2Calc' in self.data.keys()) :
+                self.write_row(df, 'EQ', self.end_timestamp.replace(tzinfo=None))
+
 
 def write_file_header(outfile, lines):
     # Write the dataset ID as the file header.
@@ -331,27 +347,15 @@ def make_data_columns(sensor_headers):
                 file_columns.append(f'{mode}_{sensor}_AV')
                 file_columns.append(f'{mode}_{sensor}_SD')
 
-    file_columns_upper = [c.upper() for c in file_columns]
 
     # Reorder the columns
     output_columns = list()
 
     for col in OUTPUT_COLUMN_ORDER:
-        try:
-            # Find the index of the output column in the file columns (case insensitive)
-            # If it's not there, we'll get a ValueError which we can ignore
-            file_col_index = file_columns_upper.index(col.upper())
-
-            # Add the matched column to the main output columns
+        if col in file_columns:
             output_columns.append(col)
-            
-            # Remove the column from the file columns list
-            file_columns.pop(file_col_index)
-            file_columns_upper.pop(file_col_index)
-        except ValueError:
-            pass
+            file_columns.remove(col)
 
-    # Add the leftover file columns to the end of the matched output columns
     output_columns = output_columns + file_columns
 
     return output_columns
@@ -377,7 +381,6 @@ def parse_position_line(line, use_ddmm_pos):
         lat = parse_position_field(fields[0], fields[1], 'S')
         lon = parse_position_field(fields[2], fields[3], 'W')
     else:
-        print(fields)
         lon = fields[0]
         lat = fields[1]
 
@@ -444,31 +447,21 @@ with open(args.in_file, 'r') as infile:
 # Get the sensor/data names from the file
 sensor_headers = get_sensor_headers(lines)
 
-# Make the data columns and add the fixed record columns.
-columns = make_data_columns(sensor_headers)
+# Create the destination DataFrame with columns
+columns = ['Time', 'RunType', 'StatusCode', 'Serial Number', 'Span Concentration',
+    'Span Slope', 'Longitude', 'Latitude', 
+    'PUMPON_CO2Calc_AV', 'PUMPON_CO2Calc_SD', 'PUMPON_CO2Temp_AV', 'PUMPON_CO2Temp_SD',
+    'PUMPON_CO2Pres_AV', 'PUMPON_CO2Pres_SD', 'PUMPON_CO2Raw1_AV', 'PUMPON_CO2Raw1_SD',
+    'PUMPON_CO2Raw2_AV', 'PUMPON_CO2Raw2_SD', 'PUMPON_RhCalc_AV', 'PUMPON_RhCalc_SD',
+    'PUMPON_RhTemp_AV', 'PUMPON_RhTemp_SD',
+    'CO2Calc_AV', 'CO2Calc_SD', 'CO2Temp_AV', 'CO2Temp_SD', 'CO2Pres_AV', 'CO2Pres_SD',
+    'CO2Raw1_AV', 'CO2Raw1_SD', 'CO2Raw2_AV', 'CO2Raw2_SD', 'RhCalc_AV', 'RhCalc_SD', 'RhTemp_AV', 'RhTemp_SD',
+    'POST_CO2Calc_AV', 'POST_CO2Calc_SD', 'POST_CO2Temp_AV', 'POST_CO2Temp_SD',
+    'POST_CO2Pres_AV', 'POST_CO2Pres_SD', 'POST_CO2Raw1_AV', 'POST_CO2Raw1_SD', 'POST_CO2Raw2_AV',
+    'POST_CO2Raw2_SD', 'POST_RhCalc_AV', 'POST_RhCalc_SD', 'RhTemp_AV', 'RhTemp_SD']
 
-# Different generations have different preamble columns
-if args.generation == '2':
-    columns = ['Time', 'StatusCode', 'Serial Number', 'Span Concentration',
-        'Span Slope', 'Zero Pre Time', 'Zero Post Time', 'Span Pre Time', 'Span Post Time',
-        'Air Time', 'Eq CAL Time', 'Eq Between CAL Time',
-        'Longitude', 'Latitude'] + columns
-
-    df = pd.DataFrame(columns=columns, dtype=float)
-    df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
-        'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
-        'Span Post Time': int, 'Air Time': int, 'Eq Between CAL Time': int, 'Eq CAL Time': int})
-else:
-    columns = ['Time', 'StatusCode', 'Serial Number', 'Span Concentration',
-        'Span Slope', 'Zero Pre Time', 'Zero Post Time', 'Span Pre Time', 'Span Post Time',
-        'Air Time', 'Eq CAL Time', 'Eq Between CAL Time', 'Eq Before Sample',
-        'Longitude', 'Latitude'] + columns
-
-    df = pd.DataFrame(columns=columns, dtype=float)
-    df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
-        'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
-        'Span Post Time': int, 'Air Time': int, 'Eq Between CAL Time': int, 'Eq CAL Time': int,
-        'Eq Before Sample': int})
+df = pd.DataFrame(columns=columns, dtype=float)
+df = df.astype({'Time': 'datetime64[ns]', 'RunType': str, 'StatusCode': str, 'Serial Number': str})
 
 
 # Now for the main data extraction.
@@ -576,7 +569,7 @@ while current_line < len(lines):
                     # We have finished the current measurement sequence.
                     # Go back to looking for the next one.
                     state = SEARCH_FOR_SEQUENCE
-                    current_acquisition.write(df, current_sequence)
+                    current_acquisition.write(df)
                     current_mode = None
                     current_sensor = None
                     values = list()
@@ -625,18 +618,6 @@ while current_line < len(lines):
 
 # Write the data out as CSV
 if data_valid:
-
-    # Coerce columns
-    if args.generation == '2':
-        df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
-            'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
-            'Span Post Time': int, 'Air Time': int, 'Eq Between CAL Time': int, 'Eq CAL Time': int})
-    else:
-        df = df.astype({'Time': 'datetime64[ns]', 'StatusCode': str, 'Serial Number': str,
-            'Zero Pre Time': int, 'Zero Post Time': int, 'Span Pre Time': int,
-            'Span Post Time': int, 'Air Time': int, 'Eq Between CAL Time': int, 'Eq CAL Time': int,
-            'Eq Before Sample': int})
-
     # Write the main data
     df.to_csv(f'{args.out_file_root}.csv', index=False, date_format='%Y-%m-%dT%H:%M:%SZ', na_rep='NaN')
 

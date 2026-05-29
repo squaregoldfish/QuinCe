@@ -9,8 +9,10 @@ import java.util.TreeSet;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
+import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignments;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**
@@ -197,16 +199,18 @@ public abstract class SensorValuesList {
    * @throws RecordNotFoundException
    *           If the {@link SensorType}s for any of the values cannot be
    *           established.
+   * @throws VariablePropertiesException
    */
   public static SensorValuesList newFromSensorValueCollection(
-    Collection<SensorValue> values, DatasetSensorValues allSensorValues,
-    boolean forceString) throws RecordNotFoundException {
+    Collection<SensorValue> values, Instrument instrument,
+    DatasetSensorValues allSensorValues, boolean forceString)
+    throws RecordNotFoundException, VariablePropertiesException {
 
     TreeSet<Long> columnIds = values.stream().map(SensorValue::getColumnId)
       .collect(Collectors.toCollection(TreeSet::new));
 
-    SensorValuesList list = SensorValuesListFactory
-      .makeSensorValuesList(columnIds, allSensorValues, forceString);
+    SensorValuesList list = SensorValuesListFactory.makeSensorValuesList(
+      columnIds, instrument, allSensorValues, forceString);
     list.addAll(values);
 
     return list;

@@ -186,7 +186,7 @@ public class AutoQCJob extends DataSetJob {
           }
 
           runTypeValues = SensorValuesList.newFromSensorValueCollection(
-            runTypeValuesTemp, sensorValues, false);
+            runTypeValuesTemp, instrument, sensorValues, false);
 
           // Get the Run Type Periods for the dataset
           runTypePeriods = DataSetDataDB.getRunTypePeriods(conn, dataSet);
@@ -239,7 +239,7 @@ public class AutoQCJob extends DataSetJob {
               if (!valuesForQC.containsKey(runType.getStringValue())) {
                 valuesForQC.put(runType.getStringValue(),
                   SensorValuesListFactory.makeSensorValuesList(columnId,
-                    sensorValues, false));
+                    instrument, sensorValues, false));
               }
 
               valuesForQC.get(runType.getStringValue()).add(value);

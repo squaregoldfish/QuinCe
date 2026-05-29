@@ -21,6 +21,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.InvalidFlagException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -66,7 +67,8 @@ public class TimestampSensorValuesListGetValueContinuousTest
 
   protected void makeSensorValues(DatasetSensorValues allSensorValues,
     TestSetLine line, int column, int firstMinute)
-    throws RecordNotFoundException, InvalidFlagException, CoordinateException {
+    throws RecordNotFoundException, InvalidFlagException, CoordinateException,
+    VariablePropertiesException {
     char[] flags = line.getStringField(column, false).toCharArray();
 
     int minute = firstMinute;
@@ -196,8 +198,8 @@ public class TimestampSensorValuesListGetValueContinuousTest
   }
 
   protected void buildSensorValues(DatasetSensorValues allSensorValues,
-    TestSetLine line)
-    throws RecordNotFoundException, InvalidFlagException, CoordinateException {
+    TestSetLine line) throws RecordNotFoundException, InvalidFlagException,
+    CoordinateException, VariablePropertiesException {
 
     makeSensorValues(allSensorValues, line, 0, 11);
   }

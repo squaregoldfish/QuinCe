@@ -33,7 +33,8 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
   @Test
   public void nullAddTest() throws Exception {
     TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
-      getDatasetSensorValues(), false);
+      getDatasetSensorValues(),
+      TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE, false);
     assertThrows(IllegalArgumentException.class, () -> {
       list.add(null);
     });
@@ -44,7 +45,8 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
   @Test
   public void singleColumnValidAddTest() throws Exception {
     TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
-      getDatasetSensorValues(), false);
+      getDatasetSensorValues(),
+      TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE, false);
     list.add(makeSensorValue(1L, 1, 1));
     assertEquals(1, list.rawSize());
   }
@@ -54,7 +56,8 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
   @Test
   public void singleColumnInvalidColumnTest() throws Exception {
     TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
-      getDatasetSensorValues(), false);
+      getDatasetSensorValues(),
+      TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE, false);
     assertThrows(IllegalArgumentException.class, () -> {
       list.add(makeSensorValue(2L, 1, 1));
     });
@@ -65,7 +68,8 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
   @Test
   public void onlyValueDuplicateTimestampTest() throws Exception {
     TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
-      getDatasetSensorValues(), false);
+      getDatasetSensorValues(),
+      TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE, false);
     list.add(makeSensorValue(1L, 1, 1));
     assertThrows(IllegalArgumentException.class, () -> {
       list.add(makeSensorValue(1L, 1, 1));
@@ -77,7 +81,8 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
   @Test
   public void multipleValuesDuplicateTimestampTest() throws Exception {
     TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
-      getDatasetSensorValues(), false);
+      getDatasetSensorValues(),
+      TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE, false);
 
     // First value
     list.add(makeSensorValue(1L, 1, 5));
@@ -102,7 +107,8 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
   public void multipleColumnsDifferentSensorTypesTest() throws Exception {
     assertThrows(IllegalArgumentException.class, () -> {
       new TimestampSensorValuesList(Arrays.asList(1L, 2L),
-        getDatasetSensorValues(), false);
+        getDatasetSensorValues(),
+        TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE, false);
     });
   }
 
@@ -113,7 +119,8 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
   public void multipleColumnsValidAddTest() throws Exception {
 
     TimestampSensorValuesList list = new TimestampSensorValuesList(
-      Arrays.asList(1L, 10L), getDatasetSensorValues(), false);
+      Arrays.asList(1L, 10L), getDatasetSensorValues(),
+      TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE, false);
 
     list.add(makeSensorValue(1L, 1, 2));
     list.add(makeSensorValue(10L, 1, 4));
@@ -126,7 +133,8 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
   public void multipleColumnsInvalidAddTest() throws Exception {
 
     TimestampSensorValuesList list = new TimestampSensorValuesList(
-      Arrays.asList(1L, 10L), getDatasetSensorValues(), false);
+      Arrays.asList(1L, 10L), getDatasetSensorValues(),
+      TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE, false);
 
     assertThrows(IllegalArgumentException.class, () -> {
       list.add(makeSensorValue(2L, 1, 4));
@@ -138,7 +146,8 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
   @Test
   public void emptyIsEmptyTest() throws Exception {
     TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
-      getDatasetSensorValues(), false);
+      getDatasetSensorValues(),
+      TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE, false);
     assertTrue(list.isEmpty());
   }
 
@@ -147,7 +156,8 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
   @Test
   public void notEmptyIsEmptyTest() throws Exception {
     TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
-      getDatasetSensorValues(), false);
+      getDatasetSensorValues(),
+      TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE, false);
     list.add(makeSensorValue(1L, 1, 2));
     assertFalse(list.isEmpty());
   }
@@ -179,7 +189,8 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
       .getFile();
 
     TimestampSensorValuesList list = new TimestampSensorValuesList(1L,
-      getDatasetSensorValues(), false);
+      getDatasetSensorValues(),
+      TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE, false);
 
     BufferedReader in = new BufferedReader(new FileReader(timesFile));
     String line;

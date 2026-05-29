@@ -25,6 +25,8 @@ import uk.ac.exeter.QuinCe.User.User;
 import uk.ac.exeter.QuinCe.data.Dataset.ColumnHeading;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.MeasurementLocator;
+import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesList;
+import uk.ac.exeter.QuinCe.data.Dataset.TimestampSensorValuesList;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.ArgoFlagScheme;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
@@ -43,8 +45,11 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorGroupsSerializ
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariableNotFoundException;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariableProperties;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
+import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
  * Holds all the details of an instrument.
@@ -561,6 +566,20 @@ public class Instrument {
     return variables;
   }
 
+  public List<RunTypeCategory> getRunTypeCategories(
+    Collection<Variable> variables, String runTypeValue)
+    throws InstrumentException {
+
+    List<RunTypeCategory> result = new ArrayList<RunTypeCategory>(
+      variables.size());
+
+    for (Variable variable : variables) {
+      result.add(getRunTypeCategory(variable.getId(), runTypeValue));
+    }
+
+    return result;
+  }
+
   /**
    * Wrapper method to {@link #getRunTypeCategory(long, String)} that takes a
    * {@link Map.Entry}.
@@ -602,14 +621,24 @@ public class Instrument {
      * 3. The run types can be specified by the user during instrument setup.
      */
 
-    Variable variable = getVariable(variableId);
-
-    result = PresetRunType.getRunTypeCategory(variable.getPresetRunTypes(),
-      runTypeValue);
+    /*
+     * Check the preset run types for all the instrument's variables.
+     */
+    for (Variable variable : variables) {
+      /*
+       * We are assuming here that there won't be any run type clashes between
+       * Variables. If there are, we'll have a lot more problems than just this
+       * one.
+       */
+      result = PresetRunType.getRunTypeCategory(variable.getPresetRunTypes(),
+        runTypeValue);
+      if (null != result) {
+        break;
+      }
+    }
 
     if (null == result) {
-
-      // Start by testing the fixed run types
+      // Test the fixed run types
       switch (runTypeValue) {
       case Measurement.IGNORED_RUN_TYPE: {
         result = RunTypeCategory.IGNORED;
@@ -620,13 +649,16 @@ public class Instrument {
         break;
       }
       case Measurement.MEASUREMENT_RUN_TYPE: {
+        Variable variable = ResourceManager.getInstance()
+          .getSensorsConfiguration().getInstrumentVariable(variableId);
         result = new RunTypeCategory(variableId, variable.getName());
         break;
       }
       default: {
-        // We didn't see anything for the fixed run types. See if there are
-        // custom
-        // ones defined.
+        /*
+         * We didn't see anything for the fixed run types. See if there are
+         * custom ones defined.
+         */
         TreeSet<SensorAssignment> runTypeAssignments = getSensorAssignments()
           .get(SensorType.RUN_TYPE_SENSOR_TYPE);
         if (null == runTypeAssignments || runTypeAssignments.size() == 0) {
@@ -1685,6 +1717,34 @@ public class Instrument {
       for (String basisName : basisNames) {
         int basis = basisFromString(basisName);
         result.put(basis, getBasisDescription(basis));
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Get the required measurement mode for this {@code Instrument}.
+   *
+   * <p>
+   * In most cases QuinCe will automatically detect the measurement mode (see
+   * {@link SensorValuesList}), but some {@link Variable}s require the
+   * measurement mode to be fixed. This method will examine the
+   * {@code Instrument}'s {@link Variable}s to determine the measurement mode.
+   * </p>
+   *
+   * @return The measurement mode for the Instrument.
+   * @throws VariablePropertiesException
+   *           If the measurement mode of the {@code Instrument}'s
+   *           {@link Variable}s are incompatible.
+   * @see SensorValuesList
+   * @see VariableProperties
+   */
+  public int getMeasurementMode() throws VariablePropertiesException {
+    int result = TimestampSensorValuesList.AUTO_DETECT_MEASUREMENT_MODE;
+    if (basis == BASIS_TIME) {
+      for (Variable variable : variables) {
+        result = Variable.combineForcedMeasurementMode(result, variable);
       }
     }
 

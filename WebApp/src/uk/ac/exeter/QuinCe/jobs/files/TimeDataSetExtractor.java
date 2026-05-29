@@ -15,7 +15,6 @@ import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
 import uk.ac.exeter.QuinCe.data.Dataset.GeoBounds;
-import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.NewSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriod;
 import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriods;
@@ -263,13 +262,15 @@ public class TimeDataSetExtractor extends DataSetExtractor {
             }
           }
 
-          // If the current period is an IGNORE run type, remove the value.
-          // We can only tell this for "Generic" instruments, ie those with a
-          // Run Type column
+          /*
+           * If the current period is an IGNORE run type for all Variables,
+           * remove the value. We can only tell this for "Generic" instruments,
+           * i.e. those with a Run Type column.
+           */
           if (instrument
-            .getRunTypeCategory(Measurement.RUN_TYPE_DEFINES_VARIABLE,
+            .getRunTypeCategories(instrument.getVariables(),
               currentPeriod.getRunType())
-            .equals(RunTypeCategory.IGNORED)) {
+            .stream().allMatch(c -> c.equals(RunTypeCategory.IGNORED))) {
             valuesIter.remove();
           } else if (inFlushingPeriod(value.getCoordinate(), currentPeriod,
             instrument)) {

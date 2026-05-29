@@ -11,6 +11,10 @@ import org.flywaydb.core.api.migration.Context;
 
 public class V59__HaganGenX_3029 extends BaseJavaMigration {
 
+  private PreparedStatement variableStmt = null;
+
+  private PreparedStatement runTypesStmt = null;
+
   private PreparedStatement sensorTypeStmt = null;
 
   private PreparedStatement variableSensorStmt = null;
@@ -21,9 +25,17 @@ public class V59__HaganGenX_3029 extends BaseJavaMigration {
     // Setup
     Connection conn = context.getConnection();
 
+    variableStmt = conn.prepareStatement(
+      "INSERT INTO variables (name, allowed_basis) VALUES (?, ?)",
+      Statement.RETURN_GENERATED_KEYS);
+
+    runTypesStmt = conn
+      .prepareStatement("UPDATE variables SET properties = ?  WHERE id = ?");
+
     sensorTypeStmt = conn.prepareStatement("INSERT INTO sensor_types "
-      + "(name, vargroup, display_order, column_code, column_heading, source_columns) "
-      + "VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+      + "(name, vargroup, display_order, internal_calibration, run_type_aware, column_code, "
+      + " column_heading, source_columns) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      Statement.RETURN_GENERATED_KEYS);
 
     variableSensorStmt = conn.prepareStatement(
       "INSERT INTO variable_sensors "
@@ -31,107 +43,94 @@ public class V59__HaganGenX_3029 extends BaseJavaMigration {
       Statement.RETURN_GENERATED_KEYS);
 
     // Add the base Variable
-    PreparedStatement addVariableStmt = conn.prepareStatement(
-      "INSERT INTO variables (name, allowed_basis) VALUES ('Hagan GenX', 1)",
-      Statement.RETURN_GENERATED_KEYS);
+    long waterVarId = makeVariable("Hagan GenX Water", "EQ");
+    long airVarId = makeVariable("Hagan GenX Air", "AIR");
 
-    addVariableStmt.execute();
+    long[] varIDs = new long[] { waterVarId, airVarId };
 
-    ResultSet generatedKeys = addVariableStmt.getGeneratedKeys();
-    generatedKeys.next();
-    long variableID = generatedKeys.getLong(1);
+    makeSensorType(varIDs, "Status Code", "Other", 9001, 0, 0, "STATUSCODE",
+      "Status Code", "StatusCode", 0, 3, 4);
 
-    generatedKeys.close();
-    addVariableStmt.close();
+    makeSensorType(varIDs, "Serial Number", "Other", 9002, 0, 0, "SERIALNUMBER",
+      "Serial Number", "Serial Number", 0, 3, 4);
 
-    /*
-     * Store the preset run types. These are detected internally by the
-     * specialised classes to handle the Hagan GenX. Therefore we also specify
-     * that the user cannot select the Run Types.
-     */
-    String presetRunTypes = "{\"presetRunTypes\": [{\"runType\": [\"equ\", \"air\", \"zero\", \"span\"], \"category\": "
-      + variableID + "}], \"userSelectableRunType\": false}";
+    makeSensorType(varIDs, "GenX Span Slope", "GenX", 1400, 0, 0,
+      "GENXSPANSLOPE", "Span Slope", "Span Slope", 0, 3, 4);
 
-    PreparedStatement runTypesStmt = conn
-      .prepareStatement("UPDATE variables SET properties='" + presetRunTypes
-        + "' WHERE id = " + variableID);
+    makeSensorType(varIDs, "GenX Temperature", "GenX", 1401, 0, 0, "GENXTEMP",
+      "GenX Temperature", "CO2Temp_AV", 0, 3, 4);
 
-    runTypesStmt.execute();
-    runTypesStmt.close();
+    makeSensorType(varIDs, "GenX Pressure", "GenX", 1402, 0, 0, "GENXPRES",
+      "GenX Pressure", "CO2Pres_AV", 0, 3, 4);
 
-    // Zero
-    makeSensorType(variableID, "GenX Zero Timestamp", 15000, "GENXZEROTIME",
-      "Zero Timestamp", "Zero Post Time", 0, 3, 4);
-    makeSensorType(variableID, "GenX Zero CO₂ Raw 1", 15001, "GENXZEROCO2RAW1",
-      "Zero CO₂ Raw 1", "ZERO_CO2Raw1_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Zero CO₂ Raw 2", 15002, "GENXZEROCO2RAW2",
-      "Zero CO₂ Raw 2", "ZERO_CO2Raw2_AV", 0, 3, 4);
+    makeSensorType(varIDs, "GenX CO₂ Raw 1", "GenX", 1403, 1, 1, "GENXCO2RAW1",
+      "GenX CO₂ Raw 1", "CO2Raw1_AV", 1, 3, 4);
 
-    // Span
-    makeSensorType(variableID, "GenX Span Timestamp", 15003, "GENXSPANTIME",
-      "Span Timestamp", "Span Post Time", 0, 3, 4);
-    makeSensorType(variableID, "GenX Span Temperature", 15004, "GENXSPANTEMP",
-      "Span Temperature", "SPAN_CO2Temp_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Span Pressure", 15005, "GENXSPANPRES",
-      "Span Pressure", "SPAN_CO2Pres_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Span CO₂ Raw 1", 15006, "GENXSPANCO2RAW1",
-      "Span CO₂ Raw 1", "SPAN_CO2Raw1_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Span CO₂ Raw 2", 15007, "GENXSPANCO2RAW2",
-      "Span CO₂ Raw 2", "SPAN_CO2Raw2_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Span Relative Humidity", 15008,
-      "GENXSPANRH", "Span Relative Humidity", "SPAN_RhCalc_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Span Relative Humidity Temperature", 15009,
-      "GENXSPANRHTEMP", "Span Relative Humidity Temperature", "SPAN_RhTemp_AV",
-      0, 3, 4);
+    makeSensorType(varIDs, "GenX CO₂ Raw 2", "GenX", 1404, 0, 1, "GENXCO2RAW2",
+      "GenX CO₂ Raw 2", "CO2Raw2_AV", 0, 3, 4);
 
-    // EQU (water measurements)
-    // The water timestamp will be the timestamp of the main record
-    makeSensorType(variableID, "GenX Water Temperature", 15010, "GENXWATERTEMP",
-      "Water Temperature", "EQ_CO2Temp_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Water Pressure", 15011, "GENXWATERPRES",
-      "Water Pressure", "EQ_CO2Pres_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Water CO₂ Raw 1", 15012,
-      "GENXWATERCO2RAW1", "Water CO₂ Raw 1", "EQ_CO2Raw1_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Water CO₂ Raw 2", 15013,
-      "GENXWATERCO2RAW2", "Water CO₂ Raw 2", "EQ_CO2Raw2_AV", 1, 3, 4);
-    makeSensorType(variableID, "GenX Water Relative Humidity", 15014,
-      "GENXWATERRH", "Water Relative Humidity", "EQ_RhCalc_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Water Relative Humidity Temperature",
-      15015, "GENXWATERRHTEMP", "Water Relative Humidity Temperature",
-      "EQ_RhTemp_AV", 0, 3, 4);
+    makeSensorType(varIDs, "GenX Relative Humidity", "GenX", 1405, 0, 0,
+      "GENXRH", "GenX Relative Humidity", "RhCalc_AV", 0, 3, 4);
 
-    // EQU (water measurements)
-    makeSensorType(variableID, "GenX Air Timestamp", 15016, "GENXAIRTIME",
-      "Air Timestamp", "Air Time", 0, 3, 4);
-    makeSensorType(variableID, "GenX Air Temperature", 15017, "GENXAIRTEMP",
-      "Air Temperature", "AIR_CO2Temp_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Air Pressure", 15018, "GENXAIRPRES",
-      "Air Pressure", "AIR_CO2Pres_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Air CO₂ Raw 1", 15019, "GENXAIRCO2RAW1",
-      "Air CO₂ Raw 1", "AIR_CO2Raw1_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Air CO₂ Raw 2", 15020, "GENXAIRCO2RAW2",
-      "Air CO₂ Raw 2", "AIR_CO2Raw2_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Air Relative Humidity", 15021, "GENXAIRRH",
-      "Air Relative Humidity", "AIR_RhCalc_AV", 0, 3, 4);
-    makeSensorType(variableID, "GenX Air Relative Humidity Temperature", 15022,
-      "GENXAIRRHTEMP", "Air Relative Humidity Temperature", "AIR_RhTemp_AV", 0,
+    makeSensorType(varIDs, "GenX Relative Humidity Temperature", "GenX", 1406,
+      0, 0, "GENXRHTEMP", "GenX Relative Humidity Temperature", "RhTemp_AV", 0,
       3, 4);
 
-    sensorTypeStmt.close();
-    variableSensorStmt.close();
+    makeSensorType(varIDs, "GenX CALK", "GenX", 1407, 0, 1, "GENXCALK",
+      "GenX CALK", "CALK", 0, 3, 4);
 
+    variableSensorStmt.close();
+    sensorTypeStmt.close();
+    runTypesStmt.close();
+    variableStmt.close();
   }
 
-  private void makeSensorType(long variableID, String name, int displayOrder,
+  private long makeVariable(String varName, String runType)
+    throws SQLException {
+
+    ResultSet generatedKeys = null;
+    long variableID = -1L;
+
+    try {
+      variableStmt.setString(1, varName);
+      variableStmt.setInt(2, 1);
+      variableStmt.execute();
+
+      generatedKeys = variableStmt.getGeneratedKeys();
+      generatedKeys.next();
+      variableID = generatedKeys.getLong(1);
+
+      String properties = "{\"presetRunTypes\": [{\"runType\": [\"zero\"], \"category\": -3}, "
+        + "{\"runType\": [\"span\"], \"category\": -3}, " + "{\"runType\": [\""
+        + runType.toLowerCase() + "\"], \"category\": " + variableID + "}], "
+        + "\"forceMeasurementMode\": \"continuous\"}";
+
+      runTypesStmt.setString(1, properties);
+      runTypesStmt.setLong(2, variableID);
+
+      runTypesStmt.execute();
+    } finally {
+      if (null != generatedKeys) {
+        generatedKeys.close();
+      }
+    }
+
+    return variableID;
+  }
+
+  private void makeSensorType(long[] variableIDs, String name, String varGroup,
+    int displayOrder, int internalCalibration, int runTypeAware,
     String columnCode, String columnHeading, String sourceColumn, int core,
     int questionableCascade, int badCascade) throws SQLException {
 
     sensorTypeStmt.setString(1, name);
-    sensorTypeStmt.setString(2, "GenX");
+    sensorTypeStmt.setString(2, varGroup);
     sensorTypeStmt.setInt(3, displayOrder);
-    sensorTypeStmt.setString(4, columnCode);
-    sensorTypeStmt.setString(5, columnHeading);
-    sensorTypeStmt.setString(6, sourceColumn);
+    sensorTypeStmt.setInt(4, internalCalibration);
+    sensorTypeStmt.setInt(5, runTypeAware);
+    sensorTypeStmt.setString(6, columnCode);
+    sensorTypeStmt.setString(7, columnHeading);
+    sensorTypeStmt.setString(8, sourceColumn);
 
     sensorTypeStmt.execute();
 
@@ -140,12 +139,14 @@ public class V59__HaganGenX_3029 extends BaseJavaMigration {
     long sensorTypeID = keys.getLong(1);
     keys.close();
 
-    variableSensorStmt.setLong(1, variableID);
-    variableSensorStmt.setLong(2, sensorTypeID);
-    variableSensorStmt.setInt(3, core);
-    variableSensorStmt.setString(4,
-      "{\"Time\":[[3," + questionableCascade + "],[4," + badCascade + "]]}");
+    for (long varID : variableIDs) {
+      variableSensorStmt.setLong(1, varID);
+      variableSensorStmt.setLong(2, sensorTypeID);
+      variableSensorStmt.setInt(3, core);
+      variableSensorStmt.setString(4,
+        "{\"Time\":[[3," + questionableCascade + "],[4," + badCascade + "]]}");
 
-    variableSensorStmt.execute();
+      variableSensorStmt.execute();
+    }
   }
 }

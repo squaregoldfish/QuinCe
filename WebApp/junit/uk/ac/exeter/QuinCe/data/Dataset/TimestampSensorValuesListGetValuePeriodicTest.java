@@ -5,6 +5,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 
 import uk.ac.exeter.QuinCe.TestBase.TestSetLine;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.InvalidFlagException;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**
@@ -22,8 +23,8 @@ public class TimestampSensorValuesListGetValuePeriodicTest
 
   @Override
   protected void buildSensorValues(DatasetSensorValues allSensorValues,
-    TestSetLine line)
-    throws RecordNotFoundException, InvalidFlagException, CoordinateException {
+    TestSetLine line) throws RecordNotFoundException, InvalidFlagException,
+    CoordinateException, VariablePropertiesException {
 
     makeSensorValues(allSensorValues, line, 0, 11);
     makeSensorValues(allSensorValues, line, 1, 21);

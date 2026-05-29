@@ -25,6 +25,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineFlag;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorGroupsException;
+import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.VariablePropertiesException;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
@@ -289,7 +290,7 @@ public class SensorValueQCTest extends BaseTest {
   public void oneCascadeTest()
     throws InvalidFlagException, RecordNotFoundException, RoutineException,
     MissingParamException, DatabaseException, InstrumentException,
-    SensorGroupsException, CoordinateException {
+    SensorGroupsException, CoordinateException, VariablePropertiesException {
     SensorValue source = makeSensorValue(1L, 1L);
     source.setUserQC(flagScheme.getBadFlag(), "Source Bad");
 
@@ -311,7 +312,7 @@ public class SensorValueQCTest extends BaseTest {
   public void twoCascadesTest()
     throws InvalidFlagException, RecordNotFoundException, RoutineException,
     MissingParamException, DatabaseException, InstrumentException,
-    SensorGroupsException, CoordinateException {
+    SensorGroupsException, CoordinateException, VariablePropertiesException {
     SensorValue source1 = makeSensorValue(1L, 1L);
     source1.setUserQC(flagScheme.getBadFlag(), "One Bad");
     SensorValue source2 = makeSensorValue(2L, 1L);
@@ -337,7 +338,7 @@ public class SensorValueQCTest extends BaseTest {
   public void removeOneCascadeTest()
     throws InvalidFlagException, RecordNotFoundException, RoutineException,
     MissingParamException, DatabaseException, InstrumentException,
-    SensorGroupsException, CoordinateException {
+    SensorGroupsException, CoordinateException, VariablePropertiesException {
     SensorValue source1 = makeSensorValue(1L, 1L);
     source1.setUserQC(flagScheme.getBadFlag(), "One Bad");
     SensorValue source2 = makeSensorValue(2L, 1L);
@@ -365,7 +366,7 @@ public class SensorValueQCTest extends BaseTest {
   public void removeAllCascadeAutoQCTest()
     throws InvalidFlagException, RecordNotFoundException, RoutineException,
     MissingParamException, DatabaseException, InstrumentException,
-    SensorGroupsException, CoordinateException {
+    SensorGroupsException, CoordinateException, VariablePropertiesException {
 
     SensorValue source = makeSensorValue(1L, 1L);
     source.setUserQC(flagScheme.getBadFlag(), "Source Bad");
@@ -390,7 +391,7 @@ public class SensorValueQCTest extends BaseTest {
   public void removeAllCascadeNoAutoQCTest()
     throws InvalidFlagException, RecordNotFoundException, RoutineException,
     MissingParamException, DatabaseException, InstrumentException,
-    SensorGroupsException, CoordinateException {
+    SensorGroupsException, CoordinateException, VariablePropertiesException {
 
     SensorValue source = makeSensorValue(1L, 1L);
     source.setUserQC(flagScheme.getBadFlag(), "Source Bad");

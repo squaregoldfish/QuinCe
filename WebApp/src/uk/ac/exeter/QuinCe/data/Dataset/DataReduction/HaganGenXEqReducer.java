@@ -12,11 +12,15 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 
-public class HaganGenXReducer extends DataReducer {
+/**
+ * Reducer for Hagan GenX water measurements.
+ */
+public class HaganGenXEqReducer extends DataReducer {
 
   private static List<CalculationParameter> calculationParameters = null;
 
-  public HaganGenXReducer(Variable variable, Map<String, Properties> properties,
+  public HaganGenXEqReducer(Variable variable,
+    Map<String, Properties> properties,
     CalibrationSet calculationCoefficients) {
     super(variable, properties, calculationCoefficients);
   }
