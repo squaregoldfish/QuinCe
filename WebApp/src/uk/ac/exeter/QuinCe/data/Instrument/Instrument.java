@@ -856,7 +856,8 @@ public class Instrument {
     List<Variable> result = new ArrayList<Variable>(variables.size());
 
     for (Variable variable : variables) {
-      List<SensorType> variableSensorTypes = variable.getAllSensorTypes(false);
+      List<SensorType> variableSensorTypes = variable.getAllSensorTypes(false,
+        false);
       for (SensorType type : variableSensorTypes) {
         if (type.equals(sensorType)) {
           result.add(variable);
@@ -1271,14 +1272,23 @@ public class Instrument {
   }
 
   /**
-   * Convenience method to determine whether or not this instrument has a fixed
-   * position.
+   * Determine whether or not this instrument has a fixed position.
    *
    * @return {@code true} if the instrument has a fixed position; {@code false}
    *         otherwise.
    */
   public boolean fixedPosition() {
     return null != getProperty("longitude");
+  }
+
+  /**
+   * Determine whether or not this instrument has a fixed depth.
+   *
+   * @return {@code true} if the instrument has a fixed depth; {@code false}
+   *         otherwise.
+   */
+  public boolean fixedDepth() {
+    return null != getProperty("depth");
   }
 
   /**
@@ -1307,16 +1317,22 @@ public class Instrument {
         if (fixedPosition()) {
           result = false;
         }
-      } else if (null == getSensorAssignments()
-        .getSensorTypeForDBColumn(columnId)) {
-        result = false;
+      } else if (columnId == FileDefinition.DEPTH_COLUMN_ID) {
+        if (fixedDepth()) {
+          result = false;
+        }
       } else {
-        result = ((hasRunTypes()
-          && getSensorAssignments().getSensorTypeForDBColumn(columnId)
-            .equals(SensorType.RUN_TYPE_SENSOR_TYPE))
-          || getSensorAssignments().getSensorColumnIds().contains(columnId)
-          || getSensorAssignments().getDiagnosticColumnIds()
-            .contains(columnId));
+        SensorType sensorType = getSensorAssignments()
+          .getSensorTypeForDBColumn(columnId);
+        if (null == sensorType) {
+          result = false;
+        } else {
+          result = ((hasRunTypes()
+            && sensorType.equals(SensorType.RUN_TYPE_SENSOR_TYPE))
+            || getSensorAssignments().getSensorColumnIds().contains(columnId)
+            || getSensorAssignments().getDiagnosticColumnIds()
+              .contains(columnId));
+        }
       }
     } catch (RecordNotFoundException e) {
       result = false;

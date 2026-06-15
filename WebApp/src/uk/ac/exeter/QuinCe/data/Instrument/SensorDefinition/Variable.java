@@ -191,7 +191,8 @@ public class Variable implements Comparable<Variable> {
    *
    * @return All required SensorTypes
    */
-  public List<SensorType> getAllSensorTypes(boolean includePosition) {
+  public List<SensorType> getAllSensorTypes(boolean includePosition,
+    boolean includeDepth) {
     List<SensorType> result = new ArrayList<SensorType>(requiredSensorTypes);
     result.add(coreSensorType);
 
@@ -199,6 +200,11 @@ public class Variable implements Comparable<Variable> {
       result.add(SensorType.LONGITUDE_SENSOR_TYPE);
       result.add(SensorType.LATITUDE_SENSOR_TYPE);
     }
+
+    if (includeDepth) {
+      result.add(SensorType.DEPTH_SENSOR_TYPE);
+    }
+
     return result;
   }
 
@@ -281,7 +287,7 @@ public class Variable implements Comparable<Variable> {
   public boolean hasInternalCalibrations() {
     boolean result = false;
 
-    for (SensorType sensorType : getAllSensorTypes(false)) {
+    for (SensorType sensorType : getAllSensorTypes(false, false)) {
       if (sensorType.hasInternalCalibration()) {
         result = true;
         break;

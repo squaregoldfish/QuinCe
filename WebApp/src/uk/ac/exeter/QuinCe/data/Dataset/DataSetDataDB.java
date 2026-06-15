@@ -110,7 +110,8 @@ public class DataSetDataDB {
     + "sv.id, sv.coordinate_id, sv.file_column, sv.value, sv.auto_qc, sv.user_qc_flag, sv.user_qc_message "
     + "FROM sensor_values sv INNER JOIN coordinates c ON sv.coordinate_id = c.id "
     + "WHERE c.dataset_id = ? AND sv.file_column IN (" + SensorType.LONGITUDE_ID
-    + ", " + SensorType.LATITUDE_ID + ") ORDER BY sv.id";
+    + ", " + SensorType.LATITUDE_ID + ", " + SensorType.DEPTH_ID
+    + ") ORDER BY sv.id";
 
   /**
    * Statement to store a measurement record
@@ -791,7 +792,7 @@ public class DataSetDataDB {
    *           If any required parameters are missing
    */
   public static void storeMeasurements(Connection conn,
-    DatasetSensorValues allSensorValues, Collection<Measurement> measurements)
+    Collection<Measurement> measurements)
     throws MissingParamException, DatabaseException {
 
     MissingParam.checkMissing(conn, "conn");
@@ -804,30 +805,15 @@ public class DataSetDataDB {
       PreparedStatement runTypeStmt = conn
         .prepareStatement(STORE_RUN_TYPE_STATEMENT);) {
 
-      HashMap<Integer, Coordinate> existingCoordinates = Coordinate
-        .toHashMap(allSensorValues.getCoordinates());
+      /*
+       * Extract the Coordinate objects and ensure they are stored in the
+       * database.
+       */
+      CoordinateDB.saveCoordinates(conn,
+        measurements.stream().map(m -> m.getCoordinate()).toList());
 
       // Batch up all the measurements
       for (Measurement measurement : measurements) {
-        /*
-         * See if the coordinate is already in the database. If not, either
-         * retrieve the corresponding Coordinate object from the SensorValues or
-         * store this new coordinate in the database.
-         */
-        Coordinate coord = measurement.getCoordinate();
-        if (!coord.isInDatabase()) {
-          Coordinate existingCoord = existingCoordinates.get(coord.hashCode());
-          if (null != existingCoord) {
-            measurement.setCoordinate(existingCoord);
-          } else {
-            /*
-             * Store the coordinate in the database. Its database ID will be
-             * updated directly.
-             */
-            CoordinateDB.saveCoordinate(conn, coord);
-          }
-        }
-
         measurementStmt.setLong(1, measurement.getCoordinate().getId());
         measurementStmt.execute();
 
