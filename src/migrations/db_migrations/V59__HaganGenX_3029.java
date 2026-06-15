@@ -51,9 +51,6 @@ public class V59__HaganGenX_3029 extends BaseJavaMigration {
     makeSensorType(varIDs, "Status Code", "Other", 9001, 0, 0, "STATUSCODE",
       "Status Code", "StatusCode", 0, 3, 4);
 
-    makeSensorType(varIDs, "Serial Number", "Other", 9002, 0, 0, "SERIALNUMBER",
-      "Serial Number", "Serial Number", 0, 3, 4);
-
     makeSensorType(varIDs, "GenX Span Slope", "GenX", 1400, 0, 0,
       "GENXSPANSLOPE", "Span Slope", "Span Slope", 0, 3, 4);
 
