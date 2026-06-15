@@ -9,18 +9,22 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 
 public class PlotPageValueMapRecord extends MapRecord {
 
-  private PlotPageTableValue value;
+  private final PlotPageTableValue value;
+
+  private final DatasetSensorValues allSensorValues;
 
   public PlotPageValueMapRecord(LatLng position, Coordinate coordinate,
-    PlotPageTableValue value) {
+    PlotPageTableValue value, DatasetSensorValues allSensorValues) {
     super(position, coordinate.getId());
     this.value = value;
+    this.allSensorValues = allSensorValues;
   }
 
   public PlotPageValueMapRecord(LatLng position, long id,
-    PlotPageTableValue value) {
+    PlotPageTableValue value, DatasetSensorValues allSensorValues) {
     super(position, id);
     this.value = value;
+    this.allSensorValues = allSensorValues;
   }
 
   @Override
@@ -38,8 +42,8 @@ public class PlotPageValueMapRecord extends MapRecord {
   public Double getValue() {
     Double result = Double.NaN;
 
-    if (null != value && null != value.getValue()) {
-      result = Double.parseDouble(value.getValue());
+    if (null != value && null != value.getValue(allSensorValues)) {
+      result = Double.parseDouble(value.getValue(allSensorValues));
     }
 
     return result;

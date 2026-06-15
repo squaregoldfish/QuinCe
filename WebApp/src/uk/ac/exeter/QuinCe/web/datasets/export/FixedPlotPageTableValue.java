@@ -20,13 +20,8 @@ public class FixedPlotPageTableValue implements PlotPageTableValue {
   }
 
   @Override
-  public String getValue() {
+  public String getValue(DatasetSensorValues allSensorValues) {
     return value;
-  }
-
-  @Override
-  public Object getRawValue() {
-    return getValue();
   }
 
   @Override

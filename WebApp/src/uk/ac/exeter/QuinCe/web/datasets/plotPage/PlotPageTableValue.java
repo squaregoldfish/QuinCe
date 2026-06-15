@@ -36,7 +36,7 @@ public interface PlotPageTableValue {
    *
    * @return The value.
    */
-  public String getValue();
+  public String getValue(DatasetSensorValues allSensorValues);
 
   /**
    * Get the raw value.
@@ -49,7 +49,9 @@ public interface PlotPageTableValue {
    *
    * @return The value
    */
-  public Object getRawValue();
+  default Object getRawValue(DatasetSensorValues allSensorValues) {
+    return getValue(allSensorValues);
+  }
 
   /**
    * Get the QC flag.

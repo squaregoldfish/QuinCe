@@ -34,13 +34,25 @@ public class SensorValuePlotPageTableValue implements PlotPageTableValue {
   }
 
   @Override
-  public String getValue() {
-    return null == sensorValue ? ""
-      : StringUtils.formatNumber(sensorValue.getValue());
+  public String getValue(DatasetSensorValues allSensorValues) {
+
+    String result;
+
+    if (null == sensorValue) {
+      result = "";
+    } else {
+      if (sensorValue.isNumeric() && !sensorValue.isHex()) {
+        result = StringUtils.formatNumber(sensorValue.getValue());
+      } else {
+        result = sensorValue.getValue();
+      }
+    }
+
+    return result;
   }
 
   @Override
-  public Object getRawValue() {
+  public Object getRawValue(DatasetSensorValues allSensorValues) {
     return sensorValue;
   }
 

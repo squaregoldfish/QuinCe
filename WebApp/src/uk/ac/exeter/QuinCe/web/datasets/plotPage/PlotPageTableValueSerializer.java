@@ -32,7 +32,7 @@ public class PlotPageTableValueSerializer
       json.add("flagNeeded", JsonNull.INSTANCE);
       json.add("type", JsonNull.INSTANCE);
     } else {
-      json.addProperty("value", src.getValue());
+      json.addProperty("value", src.getValue(allSensorValues));
       json.addProperty("qcFlag", src.getQcFlag(allSensorValues).getValue());
 
       if (null == src.getQcMessage(allSensorValues, false)) {

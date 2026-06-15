@@ -164,15 +164,17 @@ public class PositionQCData extends ManualQCData {
 
           // The lon/lat can be null if the instrument has a fixed position
           if (null != longitude && null != latitude
-            && null != longitude.getValue() && null != latitude.getValue()) {
+            && null != longitude.getValue(sensorValues)
+            && null != latitude.getValue(sensorValues)) {
 
             StringBuilder positionString = new StringBuilder();
-            if (null != longitude.getValue() && null != latitude.getValue()) {
-              positionString
-                .append(StringUtils.formatNumber(longitude.getValue()));
+            if (null != longitude.getValue(sensorValues)
+              && null != latitude.getValue(sensorValues)) {
+              positionString.append(
+                StringUtils.formatNumber(longitude.getValue(sensorValues)));
               positionString.append(" | ");
-              positionString
-                .append(StringUtils.formatNumber(latitude.getValue()));
+              positionString.append(
+                StringUtils.formatNumber(latitude.getValue(sensorValues)));
             }
 
             Collection<Long> sources = new ArrayList<Long>();
@@ -236,7 +238,7 @@ public class PositionQCData extends ManualQCData {
     DataLatLng result = null;
 
     if (null != longitude && null != latitude) {
-      result = new DataLatLng(latitude, longitude);
+      result = new DataLatLng(latitude, longitude, sensorValues);
     }
 
     return result;

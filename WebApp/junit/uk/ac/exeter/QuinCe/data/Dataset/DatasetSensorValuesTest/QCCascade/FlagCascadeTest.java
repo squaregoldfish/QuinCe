@@ -137,8 +137,7 @@ public class FlagCascadeTest extends TestSetTest {
       List<Measurement> locatedMeasurements = measurementLocator
         .locateMeasurements(conn, instrument, dataset, allSensorValues);
 
-      DataSetDataDB.storeMeasurements(conn, allSensorValues,
-        locatedMeasurements);
+      DataSetDataDB.storeMeasurements(conn, locatedMeasurements);
 
       // Get all the measurements grouped by run type
       DatasetMeasurements allMeasurements = DataSetDataDB

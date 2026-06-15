@@ -1,7 +1,6 @@
 package uk.ac.exeter.QuinCe.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,7 +15,6 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
@@ -1746,18 +1744,6 @@ public class StringUtilsTest extends BaseTest {
     StringUtils.removeBlankTailLines(input);
 
     assertTrue(listsEqual(output, input));
-  }
-
-  @ParameterizedTest
-  @MethodSource("createNullEmptyStrings")
-  public void isNumericBlanksTest(String value) {
-    assertFalse(StringUtils.isNumeric(value));
-  }
-
-  @ParameterizedTest
-  @CsvSource("0, 13.4324, -34234, 34e10")
-  public void isNumericTest(String value) {
-    assertTrue(StringUtils.isNumeric(value));
   }
 
   private static Stream<Arguments> combineTestData() {

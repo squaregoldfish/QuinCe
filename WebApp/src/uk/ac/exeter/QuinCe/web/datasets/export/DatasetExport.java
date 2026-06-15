@@ -78,31 +78,35 @@ public class DatasetExport {
   protected void registerValue(long columnId, PlotPageTableValue value,
     DatasetSensorValues allSensorValues) {
 
-    if (null != value && null != value.getValue()
-      && !value.getQcFlag(allSensorValues).equals(FlagScheme.FLUSHING_FLAG)) {
-      if (columnId == FileDefinition.TIME_COLUMN_ID) {
+    if (null != value) {
+      String valueString = value.getValue(allSensorValues);
 
-        // The first date we receive is the start date
-        if (null == startDate) {
-          startDate = (TimeCoordinate) value.getRawValue();
-        }
+      if (null != valueString
+        && !value.getQcFlag(allSensorValues).equals(FlagScheme.FLUSHING_FLAG)) {
+        if (columnId == FileDefinition.TIME_COLUMN_ID) {
 
-        // Assume monotonic time, so the latest time received is also the last
-        // time
-        endDate = (TimeCoordinate) value.getRawValue();
-      } else if (columnId == FileDefinition.LONGITUDE_COLUMN_ID) {
-        try {
-          double doubleValue = Double.parseDouble(value.getValue());
-          addLon(doubleValue);
-        } catch (NumberFormatException e) {
-          // Ignore
-        }
-      } else if (columnId == FileDefinition.LATITUDE_COLUMN_ID) {
-        try {
-          double doubleValue = Double.parseDouble(value.getValue());
-          addLat(doubleValue);
-        } catch (NumberFormatException e) {
-          // Ignore
+          // The first date we receive is the start date
+          if (null == startDate) {
+            startDate = (TimeCoordinate) value.getRawValue(allSensorValues);
+          }
+
+          // Assume monotonic time, so the latest time received is also the last
+          // time
+          endDate = (TimeCoordinate) value.getRawValue(allSensorValues);
+        } else if (columnId == FileDefinition.LONGITUDE_COLUMN_ID) {
+          try {
+            double doubleValue = Double.parseDouble(valueString);
+            addLon(doubleValue);
+          } catch (NumberFormatException e) {
+            // Ignore
+          }
+        } else if (columnId == FileDefinition.LATITUDE_COLUMN_ID) {
+          try {
+            double doubleValue = Double.parseDouble(valueString);
+            addLat(doubleValue);
+          } catch (NumberFormatException e) {
+            // Ignore
+          }
         }
       }
     }

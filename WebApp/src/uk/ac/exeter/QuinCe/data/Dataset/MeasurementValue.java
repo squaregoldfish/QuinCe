@@ -617,13 +617,38 @@ public class MeasurementValue implements PlotPageTableValue {
   }
 
   @Override
-  public String getValue() {
-    return calculatedValue.isNaN() ? null
-      : StringUtils.formatNumber(calculatedValue);
+  public String getValue(DatasetSensorValues allSensorValues) {
+
+    /*
+     * For most values we get the formatted calculated value.
+     *
+     * The exception is if there is a single source SensorValue, and it's a hex
+     * value. In this case we return the hex value.
+     */
+    String result;
+
+    SensorValue sourceSensorValue = null;
+    boolean useSourceValue = false;
+
+    if (sensorValueIds.size() == 1) {
+      sourceSensorValue = allSensorValues.getById(sensorValueIds.get(0));
+      if (sourceSensorValue.isHex()) {
+        useSourceValue = true;
+      }
+    }
+
+    if (useSourceValue) {
+      result = sourceSensorValue.getValue();
+    } else {
+      result = calculatedValue.isNaN() ? null
+        : StringUtils.formatNumber(calculatedValue);
+    }
+
+    return result;
   }
 
   @Override
-  public Object getRawValue() {
+  public Object getRawValue(DatasetSensorValues allSensorValues) {
     return calculatedValue;
   }
 

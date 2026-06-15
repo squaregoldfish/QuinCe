@@ -18,12 +18,7 @@ public class NullPlotPageTableValue implements PlotPageTableValue {
   }
 
   @Override
-  public String getValue() {
-    return null;
-  }
-
-  @Override
-  public Object getRawValue() {
+  public String getValue(DatasetSensorValues allSensorValues) {
     return null;
   }
 

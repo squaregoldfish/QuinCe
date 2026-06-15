@@ -1059,7 +1059,7 @@ public abstract class PlotPageData {
         LatLng position = getMapPosition(entry.getKey());
         if (null != position) {
           records.add(new PlotPageValueMapRecord(position, entry.getKey(),
-            entry.getValue()));
+            entry.getValue(), getAllSensorValues()));
         }
       }
     }

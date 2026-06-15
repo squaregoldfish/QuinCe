@@ -568,8 +568,9 @@ public abstract class DataFile implements Comparable<DataFile> {
       } else {
 
         // Strip leading zeros from integers - otherwise we get octal number
-        // nonsense. (Unless it's a zero to begin with.)
-        if (!result.equals("0") && !StringUtils.contains(result, '.')) {
+        // nonsense. (Unless it's a zero to begin with, or it's a hex value.)
+        if (!result.equals("0") && !result.startsWith("0x")
+          && !StringUtils.contains(result, '.')) {
 
           result = StringUtils.stripStart(result, '0');
         }

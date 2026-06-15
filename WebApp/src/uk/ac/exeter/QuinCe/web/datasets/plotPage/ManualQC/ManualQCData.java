@@ -462,9 +462,8 @@ public class ManualQCData extends PlotPageData {
             positionString
               .append(StringUtils.formatNumber(position.getLatitude()));
 
-            record.addColumn(positionString.toString(),
-              position.getFlag(getAllSensorValues()),
-              position.getQcMessage(sensorValues), position.getFlagNeeded(),
+            record.addColumn(positionString.toString(), position.getFlag(),
+              position.getQcMessage(), position.getFlagNeeded(),
               position.getType(), position.getSourceIds());
           } else {
             // Empty position column
@@ -1305,7 +1304,7 @@ public class ManualQCData extends PlotPageData {
 
     if (null != longitude && !longitude.isNull() && null != latitude
       && !latitude.isNull()) {
-      result = new DataLatLng(latitude, longitude);
+      result = new DataLatLng(latitude, longitude, getAllSensorValues());
     }
 
     return result;

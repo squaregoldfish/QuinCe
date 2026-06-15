@@ -7,6 +7,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.math.NumberUtils;
+
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.InvalidFlagException;
@@ -919,7 +921,11 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
   }
 
   public boolean isNumeric() {
-    return StringUtils.isNumeric(value);
+    return NumberUtils.isCreatable(value);
+  }
+
+  public boolean isHex() {
+    return value.startsWith("0x") && isNumeric();
   }
 
   public boolean isPosition() {

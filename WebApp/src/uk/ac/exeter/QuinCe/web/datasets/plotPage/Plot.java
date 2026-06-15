@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.math.NumberUtils;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -218,8 +220,10 @@ public class Plot {
         PlotPageTableValue y = yValues.get(coordinate);
         PlotPageTableValue y2 = y2Values.get(coordinate);
 
-        boolean hasYValue = null != y && null != y.getValue();
-        boolean hasY2Value = null != y2 && null != y2.getValue();
+        boolean hasYValue = null != y
+          && null != y.getValue(data.getAllSensorValues());
+        boolean hasY2Value = null != y2
+          && null != y2.getValue(data.getAllSensorValues());
 
         PlotValue plotValue = null;
 
@@ -228,8 +232,10 @@ public class Plot {
           Double yValue = null;
           boolean yGhost = false;
           Flag yFlag = null;
-          if (null != y) {
-            yValue = scaleYValue(MathUtils.nullableParseDouble(y.getValue()));
+          if (null != y
+            && NumberUtils.isCreatable(y.getValue(data.getAllSensorValues()))) {
+            yValue = scaleYValue(MathUtils
+              .nullableParseDouble(y.getValue(data.getAllSensorValues())));
             yGhost = y.getQcFlag(data.getAllSensorValues())
               .equals(FlagScheme.FLUSHING_FLAG);
             yFlag = y.getQcFlag(data.getAllSensorValues());
@@ -241,8 +247,10 @@ public class Plot {
           Double y2Value = null;
           boolean y2Ghost = false;
           Flag y2Flag = null;
-          if (null != y2) {
-            y2Value = scaleYValue(MathUtils.nullableParseDouble(y2.getValue()));
+          if (null != y2
+            && NumberUtils.isCreatable(y.getValue(data.getAllSensorValues()))) {
+            y2Value = scaleYValue(MathUtils
+              .nullableParseDouble(y2.getValue(data.getAllSensorValues())));
             y2Ghost = y2.getQcFlag(data.getAllSensorValues())
               .equals(FlagScheme.FLUSHING_FLAG);
             y2Flag = y2.getQcFlag(data.getAllSensorValues());
@@ -253,10 +261,13 @@ public class Plot {
             plotValue = new PlotValue(coordinate.getId(),
               (TimeCoordinate) coordinate, yValue, yGhost, yFlag, y2Value,
               y2Ghost, y2Flag, data.getFlagScheme());
-          } else if (null != x && null != x.getValue() && null != y) {
+          } else if (null != x && null != x.getValue(data.getAllSensorValues())
+            && null != y) {
             plotValue = new PlotValue(coordinate.getId(),
-              MathUtils.nullableParseDouble(x.getValue()), yValue, yGhost,
-              yFlag, y2Value, y2Ghost, y2Flag, data.getFlagScheme());
+              MathUtils.nullableParseDouble(
+                x.getValue(data.getAllSensorValues())),
+              yValue, yGhost, yFlag, y2Value, y2Ghost, y2Flag,
+              data.getFlagScheme());
           }
         }
 

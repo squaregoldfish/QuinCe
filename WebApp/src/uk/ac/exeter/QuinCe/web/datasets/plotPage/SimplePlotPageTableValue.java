@@ -131,12 +131,12 @@ public class SimplePlotPageTableValue implements PlotPageTableValue {
    * @return The value.
    */
   @Override
-  public String getValue() {
+  public String getValue(DatasetSensorValues allSensorValues) {
     return value;
   }
 
   @Override
-  public Object getRawValue() {
+  public Object getRawValue(DatasetSensorValues allSensorValues) {
     return rawValue;
   }
 

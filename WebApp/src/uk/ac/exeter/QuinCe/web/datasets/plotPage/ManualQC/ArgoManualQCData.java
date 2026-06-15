@@ -297,7 +297,8 @@ public class ArgoManualQCData extends ManualQCData {
           records.add(new PlotPageValueMapRecord(profile.getPosition(), i,
             new SimplePlotPageTableValue(
               String.valueOf(profile.getCycleNumber()),
-              sensorValues.getFlagScheme())));
+              sensorValues.getFlagScheme()),
+            getAllSensorValues()));
           usedCycleNumbers.add(profile.getCycleNumber());
         }
       }

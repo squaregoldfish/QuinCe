@@ -34,8 +34,8 @@ public class MathUtils {
   }
 
   /**
-   * An extended version of {@link Double#parseDouble(String)} that handles
-   * {@code null} and empty input strings.
+   * An extended version of {@link Double#parseDouble(String)} that handles hex
+   * values (starting with {@code 0x}), {@code null} and empty input strings.
    *
    * <p>
    * If the input is {@code null}, or a trimmed version of the input is an empty
@@ -51,7 +51,12 @@ public class MathUtils {
     Double result = null;
 
     if (null != value && value.trim().length() > 0) {
-      result = Double.parseDouble(value);
+      if (value.startsWith("0x")) {
+        result = Double
+          .longBitsToDouble(Long.parseLong(value.substring(2), 16));
+      } else {
+        result = Double.parseDouble(value);
+      }
     }
 
     return result;

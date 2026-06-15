@@ -37,13 +37,13 @@ public class DataReductionRecordPlotPageTableValue
   }
 
   @Override
-  public String getValue() {
+  public String getValue(DatasetSensorValues allSensorValues) {
     Double result = record.getCalculationValue(parameterName);
     return null == result ? null : String.valueOf(result);
   }
 
   @Override
-  public Object getRawValue() {
+  public Object getRawValue(DatasetSensorValues allSensorValues) {
     return record.getCalculationValue(parameterName);
   }
 

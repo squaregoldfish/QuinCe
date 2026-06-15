@@ -425,7 +425,8 @@ public class ExportOption {
 
     if (null == fieldValue) {
       result = fieldValue;
-    } else if (NumberUtils.isCreatable(fieldValue)) {
+    } else if (NumberUtils.isCreatable(fieldValue)
+      && !fieldValue.startsWith("0x")) {
       result = StringUtils.formatNumber(fieldValue);
     } else {
       String newlinesRemoved = fieldValue.replaceAll("[\\r\\n]", " ");

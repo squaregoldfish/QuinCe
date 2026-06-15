@@ -16,19 +16,22 @@ public class DataLatLng extends LatLng {
 
   private final PlotPageTableValue latitude;
 
-  public DataLatLng(PlotPageTableValue latitude, PlotPageTableValue longitude) {
-    super(Double.parseDouble(latitude.getValue()),
-      Double.parseDouble(longitude.getValue()));
+  private final DatasetSensorValues allSensorValues;
+
+  public DataLatLng(PlotPageTableValue latitude, PlotPageTableValue longitude,
+    DatasetSensorValues allSensorValues) {
+    super(Double.parseDouble(latitude.getValue(allSensorValues)),
+      Double.parseDouble(longitude.getValue(allSensorValues)));
     this.longitude = longitude;
     this.latitude = latitude;
+    this.allSensorValues = allSensorValues;
   }
 
-  public Flag getFlag(DatasetSensorValues allSensorValues) {
+  public Flag getFlag() {
     return longitude.getQcFlag(allSensorValues);
   }
 
-  public String getQcMessage(DatasetSensorValues allSensorValues)
-    throws RoutineException {
+  public String getQcMessage() throws RoutineException {
     return longitude.getQcMessage(allSensorValues, true);
   }
 

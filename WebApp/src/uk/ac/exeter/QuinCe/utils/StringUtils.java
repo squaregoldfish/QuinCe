@@ -514,9 +514,16 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
    */
   public static Double doubleFromString(String value) {
     Double result = Double.NaN;
+
     if (null != value && value.trim().length() > 0) {
-      result = Double
-        .parseDouble(trimString(removeFromString(value, ','), false));
+      // Stupid hexy Flanders
+      if (value.startsWith("0x")) {
+        result = Double
+          .longBitsToDouble(Long.parseLong(value.substring(2), 16));
+      } else {
+        result = Double
+          .parseDouble(trimString(removeFromString(value, ','), false));
+      }
     }
 
     return result;
@@ -777,35 +784,6 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
         blankLine = false;
       }
     }
-  }
-
-  /**
-   * Determine whether or not a {@link String} contains a numeric value.
-   *
-   * <p>
-   * This simply calls {@link Double#parseDouble(String)} and determines whether
-   * or not it succeeds. If a {@code null} value is passed, {@code false} is
-   * returned so it is treated as a non-numeric value.
-   * </p>
-   *
-   * @param value
-   *          The value to be checked.
-   * @return {@code true} if the value is numeric; {@code false} if it is not.
-   * @see Double#parseDouble(String)
-   */
-  public static boolean isNumeric(String value) {
-    boolean result = true;
-    if (null == value) {
-      result = false;
-    } else {
-      try {
-        Double.parseDouble(value);
-      } catch (NumberFormatException e) {
-        result = false;
-      }
-    }
-
-    return result;
   }
 
   /**

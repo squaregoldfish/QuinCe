@@ -590,11 +590,13 @@ public class ExportBean extends BaseManagedBean {
         }
       } else {
 
+        String valueString = value.getValue(allSensorValues);
+
         // Value
-        if (null == value.getValue()) {
+        if (null == valueString) {
           export.append(exportOption.getMissingValue());
         } else {
-          export.append(exportOption.format(value.getValue()));
+          export.append(exportOption.format(valueString));
         }
 
         // QC Flag
@@ -603,7 +605,7 @@ public class ExportBean extends BaseManagedBean {
 
           // If the value is NULL, the QC flag is empty. So only put in the flag
           // if it's not null.
-          if (null != value.getValue()) {
+          if (null != valueString) {
             export.append(value.getQcFlag(allSensorValues).getExportValue());
           }
 
@@ -612,7 +614,7 @@ public class ExportBean extends BaseManagedBean {
             export.append(exportOption.getSeparator());
             // If the value is NULL, the QC flag is empty. So only put in the
             // flag if it's not null.
-            if (null != value.getValue()) {
+            if (null != valueString) {
               export.append('"'
                 + exportOption.format(value.getQcMessage(allSensorValues, true))
                 + '"');

@@ -127,7 +127,8 @@ public class ArgoPlot extends Plot {
       boolean yGhost = false;
       Flag yFlag = null;
       if (null != y) {
-        yValue = scaleYValue(MathUtils.nullableParseDouble(y.getValue()));
+        yValue = scaleYValue(
+          MathUtils.nullableParseDouble(y.getValue(data.getAllSensorValues())));
         yGhost = y.getQcFlag(data.getAllSensorValues())
           .equals(FlagScheme.FLUSHING_FLAG);
 
@@ -162,10 +163,12 @@ public class ArgoPlot extends Plot {
         plotValue = new PlotValue(coordinate.getId(),
           (TimeCoordinate) coordinate, yValue, yGhost, yFlag, y2Value, y2Ghost,
           y2Flag, data.getFlagScheme());
-      } else if (null != x && null != x.getValue() && null != y) {
+      } else if (null != x && null != x.getValue(data.getAllSensorValues())
+        && null != y) {
         plotValue = new PlotValue(coordinate.getId(),
-          MathUtils.nullableParseDouble(x.getValue()), yValue, yGhost, yFlag,
-          y2Value, y2Ghost, y2Flag, data.getFlagScheme());
+          MathUtils.nullableParseDouble(x.getValue(data.getAllSensorValues())),
+          yValue, yGhost, yFlag, y2Value, y2Ghost, y2Flag,
+          data.getFlagScheme());
 
       }
 
@@ -179,8 +182,8 @@ public class ArgoPlot extends Plot {
     Map<Coordinate, PlotPageTableValue> source) {
 
     return source.entrySet().stream()
-      .sorted(
-        Map.Entry.comparingByValue(new PlotPageTableValueNumericComparator()))
+      .sorted(Map.Entry.comparingByValue(
+        new PlotPageTableValueNumericComparator(data.getAllSensorValues())))
       .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
         (e1, e2) -> e1, LinkedHashMap::new));
   }
