@@ -215,8 +215,8 @@ public class DatasetSensorValues {
       rawPositionCoordinatesCache = null;
     } else if (sensorValue.getColumnId() == SensorType.DEPTH_ID) {
       if (null == depths) {
-        depths = SensorValuesListFactory
-          .makeSensorValuesList(SensorType.DEPTH_ID, this, false);
+        depths = SensorValuesListFactory.makeSensorValuesList(
+          SensorType.DEPTH_ID, getInstrument(), this, false);
       }
       depths.add(sensorValue);
       addById(sensorValue);
@@ -367,7 +367,7 @@ public class DatasetSensorValues {
       values = valuesByColumn.get(trueColumnId);
       if (null == values) {
         values = SensorValuesListFactory.makeSensorValuesList(trueColumnId,
-          this, false);
+          getInstrument(), this, false);
       }
     }
 
