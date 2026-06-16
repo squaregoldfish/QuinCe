@@ -34,35 +34,6 @@ public class MathUtils {
   }
 
   /**
-   * An extended version of {@link Double#parseDouble(String)} that handles hex
-   * values (starting with {@code 0x}), {@code null} and empty input strings.
-   *
-   * <p>
-   * If the input is {@code null}, or a trimmed version of the input is an empty
-   * string, the method returns {@code null}. Any unparseable value will throw a
-   * {@link NumberFormatException} as {@link Double#parseDouble(String)} would.
-   * </p>
-   *
-   * @param value
-   *          The string value.
-   * @return The parsed Double value.
-   */
-  public static Double nullableParseDouble(String value) {
-    Double result = null;
-
-    if (null != value && value.trim().length() > 0) {
-      if (value.startsWith("0x")) {
-        result = Double
-          .longBitsToDouble(Long.parseLong(value.substring(2), 16));
-      } else {
-        result = Double.parseDouble(value);
-      }
-    }
-
-    return result;
-  }
-
-  /**
    * Determine whether a given value is within a specified range (inclusive).
    *
    * @param value

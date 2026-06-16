@@ -6,6 +6,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
+import uk.ac.exeter.QuinCe.utils.StringUtils;
 
 public class PlotPageValueMapRecord extends MapRecord {
 
@@ -40,10 +41,11 @@ public class PlotPageValueMapRecord extends MapRecord {
 
   @Override
   public Double getValue() {
+
     Double result = Double.NaN;
 
-    if (null != value && null != value.getValue(allSensorValues)) {
-      result = Double.parseDouble(value.getValue(allSensorValues));
+    if (null != value) {
+      result = StringUtils.doubleFromString(value.getValue(allSensorValues));
     }
 
     return result;

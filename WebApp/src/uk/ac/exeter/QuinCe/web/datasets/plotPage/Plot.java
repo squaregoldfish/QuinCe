@@ -16,7 +16,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
-import uk.ac.exeter.QuinCe.utils.MathUtils;
+import uk.ac.exeter.QuinCe.utils.StringUtils;
 
 public class Plot {
 
@@ -234,8 +234,8 @@ public class Plot {
           Flag yFlag = null;
           if (null != y
             && NumberUtils.isCreatable(y.getValue(data.getAllSensorValues()))) {
-            yValue = scaleYValue(MathUtils
-              .nullableParseDouble(y.getValue(data.getAllSensorValues())));
+            yValue = scaleYValue(StringUtils
+              .doubleFromString(y.getValue(data.getAllSensorValues())));
             yGhost = y.getQcFlag(data.getAllSensorValues())
               .equals(FlagScheme.FLUSHING_FLAG);
             yFlag = y.getQcFlag(data.getAllSensorValues());
@@ -249,8 +249,8 @@ public class Plot {
           Flag y2Flag = null;
           if (null != y2
             && NumberUtils.isCreatable(y.getValue(data.getAllSensorValues()))) {
-            y2Value = scaleYValue(MathUtils
-              .nullableParseDouble(y2.getValue(data.getAllSensorValues())));
+            y2Value = scaleYValue(StringUtils
+              .doubleFromString(y2.getValue(data.getAllSensorValues())));
             y2Ghost = y2.getQcFlag(data.getAllSensorValues())
               .equals(FlagScheme.FLUSHING_FLAG);
             y2Flag = y2.getQcFlag(data.getAllSensorValues());
@@ -264,7 +264,7 @@ public class Plot {
           } else if (null != x && null != x.getValue(data.getAllSensorValues())
             && null != y) {
             plotValue = new PlotValue(coordinate.getId(),
-              MathUtils.nullableParseDouble(
+              StringUtils.doubleFromString(
                 x.getValue(data.getAllSensorValues())),
               yValue, yGhost, yFlag, y2Value, y2Ghost, y2Flag,
               data.getFlagScheme());

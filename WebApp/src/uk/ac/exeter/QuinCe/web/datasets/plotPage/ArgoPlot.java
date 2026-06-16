@@ -13,7 +13,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
-import uk.ac.exeter.QuinCe.utils.MathUtils;
+import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.ManualQC.ArgoManualQCData;
 
 public class ArgoPlot extends Plot {
@@ -43,7 +43,7 @@ public class ArgoPlot extends Plot {
   @Override
   protected Double scaleYValue(Double yValue) {
     // Depths are displayed as negative in plots.
-    return yValue * -1D;
+    return yValue.isNaN() ? yValue : yValue * -1D;
   }
 
   /**
@@ -128,7 +128,7 @@ public class ArgoPlot extends Plot {
       Flag yFlag = null;
       if (null != y) {
         yValue = scaleYValue(
-          MathUtils.nullableParseDouble(y.getValue(data.getAllSensorValues())));
+          StringUtils.doubleFromString(y.getValue(data.getAllSensorValues())));
         yGhost = y.getQcFlag(data.getAllSensorValues())
           .equals(FlagScheme.FLUSHING_FLAG);
 
@@ -166,7 +166,7 @@ public class ArgoPlot extends Plot {
       } else if (null != x && null != x.getValue(data.getAllSensorValues())
         && null != y) {
         plotValue = new PlotValue(coordinate.getId(),
-          MathUtils.nullableParseDouble(x.getValue(data.getAllSensorValues())),
+          StringUtils.doubleFromString(x.getValue(data.getAllSensorValues())),
           yValue, yGhost, yFlag, y2Value, y2Ghost, y2Flag,
           data.getFlagScheme());
 
