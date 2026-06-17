@@ -590,10 +590,15 @@ public class TimeDataFile extends DataFile implements TimeRange {
 
   @Override
   public String getStartDisplayString() {
-    StringBuilder result = new StringBuilder(
-      DateTimeUtils.toIsoDate(getRawStartTime()));
-    addOffsetInfo(result);
-    return result.toString();
+    String result = null;
+    if (null != getRawStartTime()) {
+      StringBuilder time = new StringBuilder(
+        DateTimeUtils.toIsoDate(getRawStartTime()));
+      addOffsetInfo(time);
+      result = time.toString();
+    }
+
+    return result;
   }
 
   private void addOffsetInfo(StringBuilder string) {
@@ -612,10 +617,15 @@ public class TimeDataFile extends DataFile implements TimeRange {
 
   @Override
   public String getEndDisplayString() {
-    StringBuilder result = new StringBuilder(
-      DateTimeUtils.toIsoDate(getRawEndTime()));
-    addOffsetInfo(result);
-    return result.toString();
+    String result = null;
+    if (null != getRawEndTime()) {
+      StringBuilder time = new StringBuilder(
+        DateTimeUtils.toIsoDate(getRawEndTime()));
+      addOffsetInfo(time);
+      result = time.toString();
+    }
+
+    return result;
   }
 
   @Override
@@ -649,7 +659,15 @@ public class TimeDataFile extends DataFile implements TimeRange {
         "Cannot compare DataFile of different type");
     }
 
-    return getRawStartTime().compareTo(((TimeDataFile) o).getRawStartTime());
+    TimeDataFile other = (TimeDataFile) o;
+    int result = getRawStartTime().compareTo((other).getRawStartTime());
+
+    if (result == 0) {
+      result = this.getFileDefinition().getFileDescription()
+        .compareTo(other.getFileDefinition().getFileDescription());
+    }
+
+    return result;
   }
 
   @Override
