@@ -208,14 +208,14 @@
               <h:graphicImage value="/resources/image/spacer.svg" alt="" title=""
                 styleClass="actionIconLarge"/>
             </ui:fragment>
-            <ui:fragment rendered="#{instrument.hasInternalCalibrations()}">
+            <ui:fragment rendered="#{instrument.hasUserConfiguredInternalCalibrations()}">
               <p:commandLink onclick="goToStandards(#{instrument.id})">
                 <h:graphicImage value="/resources/image/standards.svg"
                   styleClass="actionIconLarge" alt="External Standards"
                   title="External Standards" />
               </p:commandLink>
             </ui:fragment>
-            <ui:fragment rendered="#{not instrument.hasInternalCalibrations()}">
+            <ui:fragment rendered="#{not instrument.hasUserConfiguredInternalCalibrations()}">
               <h:graphicImage value="/resources/image/spacer.svg" alt="" title=""
                 styleClass="actionIconLarge"/>
             </ui:fragment>

@@ -123,7 +123,14 @@ public class VariablePropertiesDeserializer
       }
     }
 
+    boolean internalCalibrationsInData = false;
+    if (jsonObj.has("internalCalibrationsInData")) {
+      internalCalibrationsInData = jsonObj.get("internalCalibrationsInData")
+        .getAsBoolean();
+    }
+
     return new VariableProperties(coefficients, dependsQuestionAnswers,
-      presetRunTypes, userSelectableRunType, forceMeasurementMode);
+      presetRunTypes, userSelectableRunType, forceMeasurementMode,
+      internalCalibrationsInData);
   }
 }

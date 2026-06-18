@@ -27,6 +27,8 @@ public class VariableProperties {
 
   private boolean userSelectableRunType;
 
+  private boolean internalCalibrationsInData;
+
   /**
    * Indicates whether the {@link Variable} requires a fixed measurement mode.
    *
@@ -46,12 +48,13 @@ public class VariableProperties {
     this.presetRunTypes = new ArrayList<PresetRunType>();
     this.dependsQuestionAnswers = new HashMap<Long, Boolean>();
     this.userSelectableRunType = true;
+    this.internalCalibrationsInData = false;
   }
 
   protected VariableProperties(List<String> coefficients,
     Map<Long, Boolean> dependsQuestionAnswers,
     List<PresetRunType> presetRunTypes, boolean userSelectableRunType,
-    int forceMeasurementMode) {
+    int forceMeasurementMode, boolean internalCalibrationsInData) {
 
     this.coefficients = null != coefficients ? coefficients
       : new ArrayList<String>();
@@ -65,6 +68,7 @@ public class VariableProperties {
 
     this.userSelectableRunType = userSelectableRunType;
     this.forceMeasurementMode = forceMeasurementMode;
+    this.internalCalibrationsInData = internalCalibrationsInData;
   }
 
   public List<String> getCoefficients() {
@@ -113,6 +117,10 @@ public class VariableProperties {
 
   public boolean userSelectableRunType() {
     return userSelectableRunType;
+  }
+
+  public boolean internalCalibrationsInData() {
+    return internalCalibrationsInData;
   }
 
   /**

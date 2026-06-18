@@ -103,7 +103,7 @@ public class V59__HaganGenX_3029 extends BaseJavaMigration {
       String properties = "{\"presetRunTypes\": [{\"runType\": [\"zero\"], \"category\": -3}, "
         + "{\"runType\": [\"span\"], \"category\": -3}, " + "{\"runType\": [\""
         + runType.toLowerCase() + "\"], \"category\": " + variableID + "}], "
-        + "\"forceMeasurementMode\": \"continuous\"}";
+        + "\"forceMeasurementMode\": \"continuous\", \"internalCalibrationsInData\": true}";
 
       runTypesStmt.setString(1, properties);
       runTypesStmt.setLong(2, variableID);

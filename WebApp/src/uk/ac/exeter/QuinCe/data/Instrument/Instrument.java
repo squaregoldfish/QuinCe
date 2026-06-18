@@ -1017,6 +1017,34 @@ public class Instrument {
   }
 
   /**
+   * Determines whether or not this {@code Instrument} requires user-defined
+   * external calibrations.
+   *
+   * <p>
+   * The determination of this is:
+   * </p>
+   * <ol>
+   * <li>The Instrument has {@link Variable}s that require external
+   * standards</li>
+   * <li>Any of the {@code Instrument}'s <i>do not</i> have the
+   * {@code Variable#internalCalibrationsInData} set.</li>
+   * </ol>
+   *
+   * @return {@code true} if any {@link Variable} requires user-specified
+   *         external standards; {@code false} otherwise.
+   */
+  public boolean hasUserConfiguredInternalCalibrations() {
+    boolean result = hasInternalCalibrations();
+
+    if (result) {
+      result = getVariables().stream()
+        .allMatch(v -> !v.internalCalibrationsInData());
+    }
+
+    return result;
+  }
+
+  /**
    * Determines whether or not any {@link CalculationCoefficient}s have been
    * defined for any of the {@link Variable}s that are measured by the
    * instrument.

@@ -384,6 +384,10 @@ public class Variable implements Comparable<Variable> {
     return properties.getForceMeasurementMode();
   }
 
+  public boolean internalCalibrationsInData() {
+    return properties.internalCalibrationsInData();
+  }
+
   /**
    * Combine two {@code Variable}'s {@code forceMeasurementMode} properties.
    *

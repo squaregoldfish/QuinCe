@@ -592,7 +592,7 @@ public class DataSetsBean extends BaseManagedBean {
     if (startTime.length() > 0) {
       try {
         // Check for external standards if required.
-        if (getCurrentInstrument().hasInternalCalibrations()) {
+        if (getCurrentInstrument().hasUserConfiguredInternalCalibrations()) {
 
           // Check internal calibration standards
           CalibrationSet standards = ExternalStandardDB.getInstance()
