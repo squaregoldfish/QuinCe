@@ -3,6 +3,7 @@ package uk.ac.exeter.QuinCe.data.Dataset;
 import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,13 +38,13 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
  */
 public class HaganGenXMeasurementLocator extends MeasurementLocator {
 
-  public static final String ZERO_RUN_TYPE = "ZERO";
+  public static final String ZERO_RUN_TYPE = "zero";
 
-  public static final String SPAN_RUN_TYPE = "SPAN";
+  public static final String SPAN_RUN_TYPE = "span";
 
-  public static final String WATER_RUN_TYPE = "EQU";
+  public static final String WATER_RUN_TYPE = "eq";
 
-  public static final String AIR_RUN_TYPE = "AIR";
+  public static final String AIR_RUN_TYPE = "air";
 
   private HashMap<Long, String> zeroRunTypes;
 
@@ -163,4 +164,29 @@ public class HaganGenXMeasurementLocator extends MeasurementLocator {
     return "Hagan GenX";
   }
 
+  public static String getRunType(Measurement measurement)
+    throws MeasurementLocatorException {
+
+    String runType;
+
+    Collection<String> runTypes = measurement.getRunTypes().values();
+    if (runTypes.size() != 1) {
+      throw new MeasurementLocatorException(
+        "Multiple run types for measurement " + measurement.getId());
+    } else {
+      runType = runTypes.iterator().next();
+    }
+
+    if (!validRunType(runType)) {
+      throw new MeasurementLocatorException("Invalid run type " + runType
+        + " in measurement " + measurement.getId());
+    }
+
+    return runType;
+  }
+
+  public static boolean validRunType(String runType) {
+    return runType.equals(ZERO_RUN_TYPE) || runType.equals(SPAN_RUN_TYPE)
+      || runType.equals(WATER_RUN_TYPE) || runType.equals(AIR_RUN_TYPE);
+  }
 }

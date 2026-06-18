@@ -22,7 +22,8 @@ public class MeasurementValueCollectorFactory {
       result = new ControsPco2MeasurementValueCollector();
       break;
     }
-    case "Hagan GenX": {
+    case "Hagan GenX Water":
+    case "Hagan GenX Air": {
       result = new HaganGenXMeasurementValueCollector();
       break;
     }

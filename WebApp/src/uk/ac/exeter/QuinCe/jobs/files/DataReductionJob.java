@@ -215,8 +215,8 @@ public class DataReductionJob extends DataSetJob {
         DataReducer reducer = DataReducerFactory.getReducer(variable,
           dataSet.getAllProperties(), calculationCoefficients);
 
-        reducer.preprocess(conn, instrument, dataSet,
-          allMeasurements.getOrderedMeasurements());
+        reducer.preprocess(conn, instrument, dataSet, allSensorValues,
+          allMeasurements);
 
         for (Measurement measurement : allMeasurements
           .getOrderedMeasurements()) {

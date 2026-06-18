@@ -12,6 +12,8 @@ import java.util.TreeMap;
 import com.google.gson.Gson;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
+import uk.ac.exeter.QuinCe.data.Dataset.DatasetMeasurements;
+import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -73,8 +75,8 @@ public class ControsPco2Reducer extends DataReducer {
 
   @Override
   public void preprocess(Connection conn, Instrument instrument,
-    DataSet dataset, List<Measurement> allMeasurements)
-    throws DataReductionException {
+    DataSet dataset, DatasetSensorValues allSensorValues,
+    DatasetMeasurements allMeasurements) throws DataReductionException {
 
     try {
       TimeDataSet castDataset = (TimeDataSet) dataset;
@@ -83,7 +85,7 @@ public class ControsPco2Reducer extends DataReducer {
         variable, "F", castDataset.getStartTime()).getBigDecimalValue();
 
       calcKSteps(castDataset);
-      calcZeroS2Beams(castDataset, allMeasurements);
+      calcZeroS2Beams(castDataset, allMeasurements.getOrderedMeasurements());
     } catch (Exception e) {
       throw new DataReductionException(e);
     }

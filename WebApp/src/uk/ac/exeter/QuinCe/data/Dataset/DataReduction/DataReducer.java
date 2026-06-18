@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
+import uk.ac.exeter.QuinCe.data.Dataset.DatasetMeasurements;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
@@ -304,8 +305,8 @@ public abstract class DataReducer {
    *           If the pre-processing fails.
    */
   public void preprocess(Connection conn, Instrument instrument,
-    DataSet dataset, List<Measurement> allMeasurements)
-    throws DataReductionException {
+    DataSet dataset, DatasetSensorValues allSensorValues,
+    DatasetMeasurements allMeasurements) throws DataReductionException {
     // The default is to do nothing
   }
 }

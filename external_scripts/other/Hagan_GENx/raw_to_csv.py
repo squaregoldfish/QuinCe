@@ -167,7 +167,7 @@ class Acquisition:
         df.at[row, 'RunType'] = run_type
         df.at[row, 'StatusCode'] = self.status
         df.at[row, 'Serial Number'] = self.serial_number
-        df.at[row, 'Span Concentration'] = self.span_concentration
+        df.at[row, 'Span Ref'] = self.span_concentration
         df.at[row, 'Span Slope'] = self.span_slope
 
         if self.longitude is not None:
@@ -448,7 +448,7 @@ with open(args.in_file, 'r') as infile:
 sensor_headers = get_sensor_headers(lines)
 
 # Create the destination DataFrame with columns
-columns = ['Time', 'RunType', 'StatusCode', 'Serial Number', 'Span Concentration',
+columns = ['Time', 'RunType', 'StatusCode', 'Serial Number', 'Span Ref',
     'Span Slope', 'Longitude', 'Latitude', 
     'PUMPON_CO2Calc_AV', 'PUMPON_CO2Calc_SD', 'PUMPON_CO2Temp_AV', 'PUMPON_CO2Temp_SD',
     'PUMPON_CO2Pres_AV', 'PUMPON_CO2Pres_SD', 'PUMPON_CO2Raw1_AV', 'PUMPON_CO2Raw1_SD',

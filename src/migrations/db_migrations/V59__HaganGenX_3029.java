@@ -54,6 +54,9 @@ public class V59__HaganGenX_3029 extends BaseJavaMigration {
     makeSensorType(varIDs, "GenX Span Slope", "GenX", 1400, 0, 0,
       "GENXSPANSLOPE", "Span Slope", "Span Slope", 0, 3, 4);
 
+    makeSensorType(varIDs, "GenX Span Ref", "GenX", 1400, 0, 0, "GENXSPANREF",
+      "Span Ref", "Span Ref", 0, 3, 4);
+
     makeSensorType(varIDs, "GenX Temperature", "GenX", 1401, 0, 0, "GENXTEMP",
       "GenX Temperature", "CO2Temp_AV", 0, 3, 4);
 

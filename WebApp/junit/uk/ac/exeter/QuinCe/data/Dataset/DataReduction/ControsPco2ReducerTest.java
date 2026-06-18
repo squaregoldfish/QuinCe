@@ -339,8 +339,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -387,8 +387,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -435,8 +435,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -482,8 +482,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -529,8 +529,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -576,8 +576,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -624,8 +624,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -672,8 +672,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -719,8 +719,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -766,8 +766,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -813,8 +813,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -859,8 +859,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -907,8 +907,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -955,8 +955,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -1003,8 +1003,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -1049,8 +1049,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -1096,8 +1096,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,
@@ -1143,8 +1143,8 @@ public class ControsPco2ReducerTest extends DataReducerTest {
     DatasetSensorValues allSensorValues = DataSetDataDB
       .getSensorValues(getConnection(), dataset, true, false);
 
-    reducer.preprocess(getConnection(), instrument, dataset,
-      measurements.getOrderedMeasurements());
+    reducer.preprocess(getConnection(), instrument, dataset, allSensorValues,
+      measurements);
 
     DataReductionRecord dataReductionRecord = reducer.performDataReduction(
       instrument, getTestMeasurement(measurements), allSensorValues,

@@ -1,8 +1,11 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
+import java.sql.Connection;
 import java.util.Map;
 import java.util.Properties;
 
+import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
+import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 
@@ -24,4 +27,11 @@ public class HaganGenXAirReducer extends HaganGenXEqReducer {
     super(variable, properties, calculationCoefficients);
   }
 
+  @Override
+  public void doCalculation(Instrument instrument, Measurement measurement,
+    DataReductionRecord record, Connection conn) throws DataReductionException {
+    // TODO Auto-generated method stub
+
+    record.put("Dummy", 3D);
+  }
 }

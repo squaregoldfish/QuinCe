@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
+import uk.ac.exeter.QuinCe.data.Dataset.DatasetMeasurements;
+import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficient;
@@ -38,8 +40,8 @@ public class AanderaaOxygenReducer extends DataReducer {
 
   @Override
   public void preprocess(Connection conn, Instrument instrument,
-    DataSet dataset, List<Measurement> allMeasurements)
-    throws DataReductionException {
+    DataSet dataset, DatasetSensorValues allSensorValues,
+    DatasetMeasurements allMeasurements) throws DataReductionException {
 
     offset = CalculationCoefficient.getCoefficient(calculationCoefficients,
       variable, "Coef1", dataset.getStartTime()).getValue();

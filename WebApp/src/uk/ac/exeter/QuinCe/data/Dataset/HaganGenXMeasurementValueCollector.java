@@ -36,22 +36,12 @@ public class HaganGenXMeasurementValueCollector
   implements MeasurementValueCollector {
 
   private static final String[] ZERO_SENSOR_VALUES = new String[] {
-    "GenX Zero CO₂ Raw 1", "GenX Zero CO₂ Raw 2" };
+    "GenX CO₂ Raw 1", "GenX CO₂ Raw 2", "Status Code" };
 
-  private static final String[] SPAN_SENSOR_VALUES = new String[] {
-    "GenX Span Temperature", "GenX Span Pressure", "GenX Span CO₂ Raw 1",
-    "GenX Span CO₂ Raw 2", "GenX Span Relative Humidity",
-    "GenX Span Relative Humidity Temperature" };
-
-  private static final String[] EQU_SENSOR_VALUES = new String[] {
-    "GenX Water Temperature", "GenX Water Pressure", "GenX Water CO₂ Raw 1",
-    "GenX Water CO₂ Raw 2", "GenX Water Relative Humidity",
-    "GenX Water Relative Humidity Temperature" };
-
-  private static final String[] AIR_SENSOR_VALUES = new String[] {
-    "GenX Air Timestamp", "GenX Air Temperature", "GenX Air Pressure",
-    "GenX Air CO₂ Raw 1", "GenX Air CO₂ Raw 2", "GenX Air Relative Humidity",
-    "GenX Air Relative Humidity Temperature" };
+  private static final String[] NON_ZERO_SENSOR_VALUES = new String[] {
+    "GenX Temperature", "GenX Pressure", "GenX CO₂ Raw 1", "GenX CO₂ Raw 2",
+    "GenX Relative Humidity", "GenX Relative Humidity Temperature", "GenX CALK",
+    "GenX Span Ref", "GenX Span Slope", "Status Code" };
 
   @Override
   public Collection<MeasurementValue> collectMeasurementValues(
@@ -63,32 +53,14 @@ public class HaganGenXMeasurementValueCollector
     Collection<MeasurementValue> result;
 
     try {
-      switch (measurement.getRunType(variable)) {
-      case HaganGenXMeasurementLocator.ZERO_RUN_TYPE: {
-        result = collectMeasurementValues(instrument, measurement,
-          allSensorValues, ZERO_SENSOR_VALUES);
-        break;
-      }
-      case HaganGenXMeasurementLocator.SPAN_RUN_TYPE: {
-        result = collectMeasurementValues(instrument, measurement,
-          allSensorValues, SPAN_SENSOR_VALUES);
-        break;
-      }
-      case HaganGenXMeasurementLocator.WATER_RUN_TYPE: {
-        result = collectMeasurementValues(instrument, measurement,
-          allSensorValues, EQU_SENSOR_VALUES);
-        break;
-      }
-      case HaganGenXMeasurementLocator.AIR_RUN_TYPE: {
-        result = collectMeasurementValues(instrument, measurement,
-          allSensorValues, AIR_SENSOR_VALUES);
-        break;
-      }
-      default: {
-        throw new MeasurementValueCollectorException(
-          "Unrecognised Run Type '" + measurement.getRunType(variable) + "'");
-      }
-      }
+      String runType = HaganGenXMeasurementLocator.getRunType(measurement);
+
+      String[] sensorValues = runType
+        .equals(HaganGenXMeasurementLocator.ZERO_RUN_TYPE) ? ZERO_SENSOR_VALUES
+          : NON_ZERO_SENSOR_VALUES;
+
+      result = collectMeasurementValues(instrument, measurement,
+        allSensorValues, sensorValues);
     } catch (Exception e) {
       throw new MeasurementValueCollectorException(e);
     }

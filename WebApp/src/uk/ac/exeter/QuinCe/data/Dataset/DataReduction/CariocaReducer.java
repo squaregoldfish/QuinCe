@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
+import uk.ac.exeter.QuinCe.data.Dataset.DatasetMeasurements;
+import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -65,8 +67,8 @@ public class CariocaReducer extends DataReducer {
 
   @Override
   public void preprocess(Connection conn, Instrument instrument,
-    DataSet dataset, List<Measurement> allMeasurements)
-    throws DataReductionException {
+    DataSet dataset, DatasetSensorValues allSensorValues,
+    DatasetMeasurements allMeasurements) throws DataReductionException {
 
     try {
       TimeDataSet castDataset = (TimeDataSet) dataset;
