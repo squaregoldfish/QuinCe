@@ -111,15 +111,6 @@ public abstract class SensorValuesList {
   protected final SensorType sensorType;
 
   /**
-   * Indicate whether or not all values in the list should be forced as String
-   * values.
-   *
-   * If this is set to {@code false}, the list will automatically decide whether
-   * to use String or Double values.
-   */
-  private final boolean forceString;
-
-  /**
    * Create a list for a single file column.
    *
    * @param sensorAssignments
@@ -137,7 +128,6 @@ public abstract class SensorValuesList {
     this.allSensorValues = allSensorValues;
     this.sensorType = allSensorValues.getInstrument().getSensorAssignments()
       .getSensorTypeForDBColumn(columnId);
-    this.forceString = forceString;
   }
 
   /**
@@ -180,7 +170,6 @@ public abstract class SensorValuesList {
     this.columnIds = new TreeSet<Long>(columnIds);
     this.sensorType = testingSensorType;
     this.allSensorValues = allSensorValues;
-    this.forceString = forceString;
   }
 
   /**
