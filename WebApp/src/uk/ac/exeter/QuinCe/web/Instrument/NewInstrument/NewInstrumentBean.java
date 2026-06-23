@@ -885,13 +885,36 @@ public class NewInstrumentBean extends FileUploadBean {
       }
 
       if (!assignmentMade) {
-        for (SensorType sensorType : getAllSensorTypes()) {
-          if (sensorType.getSourceColumns()
-            .contains(column.getName().toLowerCase())) {
-            autoAssignColumn(file, column, sensorType);
-            assignmentMade = true;
-            break;
-          }
+
+        /*
+         * Find all SensorTypes whose source columns contain the column name
+         */
+        List<SensorType> sensorTypesWithSourceColumn = getAllSensorTypes()
+          .stream()
+          .filter(
+            s -> s.getSourceColumns().contains(column.getName().toLowerCase()))
+          .toList();
+
+        /*
+         * Find out which of the new instrument's Variables require any of those
+         * Sensor Types. If there's one matching Sensor Type, then we assign it.
+         * If not, then we don't - zero variables means we aren't interested in
+         * it, and more than one means we can't tell which we should use.
+         * 
+         * Note that one Sensor Type being required for multiple variables it's
+         * fine. It's if multiple different Sensor Types are matched that we
+         * can't tell what to do.
+         */
+        Set<SensorType> sensorTypesForVariables = ResourceManager.getInstance()
+          .getSensorsConfiguration()
+          .getSensorTypes(getInstrumentVariableIDs(), true, true, true);
+
+        sensorTypesForVariables.retainAll(sensorTypesWithSourceColumn);
+
+        if (sensorTypesForVariables.size() == 1) {
+          autoAssignColumn(file, column,
+            sensorTypesForVariables.iterator().next());
+          assignmentMade = true;
         }
       }
     }
