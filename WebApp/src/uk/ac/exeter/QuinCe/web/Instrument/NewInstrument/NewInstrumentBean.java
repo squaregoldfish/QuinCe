@@ -900,7 +900,7 @@ public class NewInstrumentBean extends FileUploadBean {
          * Sensor Types. If there's one matching Sensor Type, then we assign it.
          * If not, then we don't - zero variables means we aren't interested in
          * it, and more than one means we can't tell which we should use.
-         * 
+         *
          * Note that one Sensor Type being required for multiple variables it's
          * fine. It's if multiple different Sensor Types are matched that we
          * can't tell what to do.
