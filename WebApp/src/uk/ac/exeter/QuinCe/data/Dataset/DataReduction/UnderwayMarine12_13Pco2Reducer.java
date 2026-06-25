@@ -1,6 +1,8 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import java.sql.Connection;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -110,5 +112,17 @@ public class UnderwayMarine12_13Pco2Reducer extends UnderwayMarinePco2Reducer {
     record.put("fCO₂ TE Wet", calculator.fCo2TEWet);
     record.put("pCO₂ SST", calculator.pCO2SST);
     record.put("fCO₂", calculator.fCO2);
+  }
+
+  @Override
+  public List<String> getRequiredMeasurementValues() {
+    /*
+     * "x¹²CO₂ + x¹³CO₂ (with standards)" is calculated from x¹²CO₂ (with
+     * standards) and x¹³CO₂ (with standards), so we don't ask for it here.
+     */
+    return Arrays.asList("Water Temperature", "Salinity",
+      "Equilibrator Temperature", "Equilibrator Pressure",
+      "x¹²CO₂ (with standards)", "x¹³CO₂ (with standards)");
+
   }
 }

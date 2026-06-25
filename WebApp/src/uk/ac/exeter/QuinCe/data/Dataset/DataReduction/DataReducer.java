@@ -308,4 +308,19 @@ public abstract class DataReducer {
     throws DataReductionException {
     // The default is to do nothing
   }
+
+  /**
+   * Get the names of the {@link MeasurementValue}s (as retrieved by
+   * {@link Measurement#getMeasurementValue(String)}) that will be used by this
+   * {@code DataReducer}.
+   * 
+   * <p>
+   * This method can be used to ensure a {@link Measurement} contains all the
+   * required {@link MeasurementValue}s before commencing the data reduction
+   * calculations.
+   * </p>
+   * 
+   * @return The required {@link MeasurementValue} names.
+   */
+  public abstract List<String> getRequiredMeasurementValues();
 }

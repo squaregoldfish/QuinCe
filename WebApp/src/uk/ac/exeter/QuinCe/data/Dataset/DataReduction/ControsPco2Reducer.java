@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -389,5 +390,12 @@ public class ControsPco2Reducer extends DataReducer {
     }
 
     return result;
+  }
+
+  @Override
+  public List<String> getRequiredMeasurementValues() {
+    return Arrays.asList("Raw Detector Signal", "Reference Signal", "Runtime",
+      "Gas Stream Temperature", "Gas Stream Pressure", "Membrane Pressure",
+      "Water Temperature");
   }
 }

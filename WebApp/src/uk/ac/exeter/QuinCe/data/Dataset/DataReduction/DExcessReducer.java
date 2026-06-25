@@ -2,6 +2,7 @@ package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -46,5 +47,10 @@ public class DExcessReducer extends DataReducer {
     }
 
     return calculationParameters;
+  }
+
+  @Override
+  public List<String> getRequiredMeasurementValues() {
+    return Arrays.asList("δH₂¹⁸O", "δHD¹⁶O");
   }
 }

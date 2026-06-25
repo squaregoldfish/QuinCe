@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -415,6 +416,38 @@ public class Measurement implements Comparable<Measurement> {
     return runType.equals(MEASUREMENT_RUN_TYPE)
       || runType.equals(INTERNAL_CALIBRATION_RUN_TYPE)
       || runType.equals(IGNORED_RUN_TYPE);
+  }
+
+  /**
+   * Determines whether this {@code Measurement} contains all the named
+   * {@link MeasurementValue}s.
+   * 
+   * <p>
+   * The method calls {@link #getMeasurementValue(String)} for each name and
+   * checks whether or not it is {@code null}.\
+   * </p>
+   * 
+   * @param requiredMeasurementValues
+   *          The {@link MeasurementValue} names.
+   * @return {@code true} if {@link MeasurementValue}s exist for all the
+   *         supplied names; {@code false} if any are missing.
+   * @throws SensorTypeNotFoundException
+   *           If the {@link SensorType} for a named {@link MeasurementValue}
+   *           does not exist.
+   */
+  public boolean containsMeasurementValues(
+    List<String> requiredMeasurementValues) throws SensorTypeNotFoundException {
+
+    boolean result = true;
+
+    for (String measurementValue : requiredMeasurementValues) {
+      if (null == getMeasurementValue(measurementValue)) {
+        result = false;
+        break;
+      }
+    }
+
+    return result;
   }
 }
 

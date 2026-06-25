@@ -2,6 +2,7 @@ package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -55,5 +56,11 @@ public class ProOceanusMarineCO2Reducer extends DataReducer {
       "fCO₂", "fCO₂ In Water", "FCO2XXXX", "μatm", true));
 
     return calculationParameters;
+  }
+
+  @Override
+  public List<String> getRequiredMeasurementValues() {
+    return Arrays.asList("Water Temperature", "Cell Gas Pressure",
+      "xCO₂ (wet, no standards)");
   }
 }

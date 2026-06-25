@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -330,5 +331,10 @@ public class CariocaReducer extends DataReducer {
     }
 
     return calculationParameters;
+  }
+
+  @Override
+  public List<String> getRequiredMeasurementValues() {
+    return Arrays.asList("Th", "Refb", "Refh", "810nm", "596nm", "434nm");
   }
 }

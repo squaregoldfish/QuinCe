@@ -116,4 +116,9 @@ public class JapanCustomReducer extends DataReducer {
 
     return calculationParameters;
   }
+
+  @Override
+  public List<String> getRequiredMeasurementValues() {
+    return new ArrayList<String>();
+  }
 }

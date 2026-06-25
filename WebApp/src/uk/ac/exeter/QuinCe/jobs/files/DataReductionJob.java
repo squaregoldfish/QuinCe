@@ -226,11 +226,14 @@ public class DataReductionJob extends DataSetJob {
             || instrument.isRunTypeForVariable(variable,
               measurement.getRunType(Measurement.RUN_TYPE_DEFINES_VARIABLE))) {
 
-            DataReductionRecord dataReductionRecord = reducer
-              .performDataReduction(instrument, measurement, allSensorValues,
-                conn);
+            if (measurement.containsMeasurementValues(
+              reducer.getRequiredMeasurementValues())) {
 
-            dataReductionRecords.add(dataReductionRecord);
+              DataReductionRecord dataReductionRecord = reducer
+                .performDataReduction(instrument, measurement, allSensorValues,
+                  conn);
+              dataReductionRecords.add(dataReductionRecord);
+            }
           }
         }
       }

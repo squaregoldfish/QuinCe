@@ -2,6 +2,7 @@ package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -94,4 +95,9 @@ public class SubCTechCO2WaterReducer extends UnderwayMarinePco2Reducer {
     return "SubCTech xCO₂";
   }
 
+  @Override
+  public List<String> getRequiredMeasurementValues() {
+    return Arrays.asList("Water Temperature", "Salinity", "Cell Gas Pressure",
+      "Internal Pressure (differential)");
+  }
 }

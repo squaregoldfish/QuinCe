@@ -2,6 +2,7 @@ package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -181,5 +182,11 @@ public class UnderwayAtmosphericPco2Reducer extends DataReducer {
       fCO2 = Calculators.calcfCO2(pCO2, co2InGas, seaLevelPressure,
         waterTemperature);
     }
+  }
+
+  @Override
+  public List<String> getRequiredMeasurementValues() {
+    return Arrays.asList("Water Temperature", "Salinity",
+      "Atmospheric Pressure", getXCO2Parameter());
   }
 }
