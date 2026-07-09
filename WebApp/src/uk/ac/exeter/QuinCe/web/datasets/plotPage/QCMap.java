@@ -48,6 +48,8 @@ public class QCMap {
 
   private boolean hideFlags = false;
 
+  private String filter = PlotPageData.NO_FILTER;
+
   static {
     gson = new Gson();
   }
@@ -136,7 +138,7 @@ public class QCMap {
     try {
       mapScaleLimits = data.getValueRange(dataColumn, hideFlags);
       mapData = data.getMapData(dataColumn, viewBounds, useNeededFlags,
-        hideFlags, includePath(), data.getAllSensorValues());
+        hideFlags, filter, includePath(), data.getAllSensorValues());
       dataBounds = null;
     } catch (Exception e) {
       e.printStackTrace();
@@ -153,5 +155,19 @@ public class QCMap {
 
   protected boolean includePath() {
     return false;
+  }
+
+  public String getFilter() {
+    return filter;
+  }
+
+  public void setFilter(String filter) {
+    if (!StringUtils.isEmpty(filter)) {
+      this.filter = filter;
+    }
+  }
+
+  public void setDataBounds(String bounds) {
+    System.out.println("Why am I here?");
   }
 }

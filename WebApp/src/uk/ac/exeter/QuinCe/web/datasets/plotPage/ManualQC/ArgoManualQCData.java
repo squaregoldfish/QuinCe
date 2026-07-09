@@ -21,6 +21,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.ReadOnlyDataReductionRecord;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.data.Instrument.MissingRunTypeException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration;
@@ -133,11 +134,13 @@ public class ArgoManualQCData extends ManualQCData {
    * @param dataSource
    *          A data source.
    * @throws SQLException
+   * @throws MissingRunTypeException
    * @throws Exception
    *           If the data cannot be loaded.
    */
   protected ArgoManualQCData(DataSource dataSource, Instrument instrument,
-    DataSet dataset) throws SensorTypeNotFoundException, SQLException {
+    DataSet dataset)
+    throws SensorTypeNotFoundException, SQLException, MissingRunTypeException {
     super(dataSource, instrument, dataset);
 
     SensorType cycleNumberSensorType = ResourceManager.getInstance()
@@ -282,7 +285,7 @@ public class ArgoManualQCData extends ManualQCData {
   @Override
   protected void buildMapCache(PlotPageColumnHeading column) throws Exception {
 
-    MapRecords records = new MapRecords(0, getAllSensorValues(),
+    MapRecords records = new MapRecords(0, this,
       StringUtils::formatNumberToInt);
 
     HashSet<Integer> usedCycleNumbers = new HashSet<Integer>();
@@ -294,7 +297,7 @@ public class ArgoManualQCData extends ManualQCData {
       if (!usedCycleNumbers.contains(profile.getCycleNumber())) {
 
         if (null != profile.getPosition()) {
-          records.add(new PlotPageValueMapRecord(profile.getPosition(), i,
+          records.add(new PlotPageValueMapRecord(null, profile.getPosition(), i,
             new SimplePlotPageTableValue(
               String.valueOf(profile.getCycleNumber()),
               sensorValues.getFlagScheme())));

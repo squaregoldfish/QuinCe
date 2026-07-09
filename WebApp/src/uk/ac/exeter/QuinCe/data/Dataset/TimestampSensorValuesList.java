@@ -52,8 +52,8 @@ import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
  *
  *
  * <p>
- * Values mode results are automatically stripped of {@link Flag#FLUSHING}
- * values.
+ * Values mode results are automatically stripped of
+ * {@link FlagScheme#FLUSHING_FLAG} values.
  * </p>
  *
  * <p>
@@ -64,7 +64,7 @@ import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
  * both sets of measurements together. To work around this, you must determine
  * the group boundaries elsewhere (most likely in the {@link SensorValuesList}
  * for the Run Type), and use the
- * {@link #getValue(LocalDateTime, LocalDateTime, LocalDateTime, boolean)}
+ * {@link #getValue(TimeCoordinate, TimeCoordinate, TimeCoordinate, boolean)}
  * method to construct values covering the correct time periods.
  * </p>
  */
@@ -1473,6 +1473,13 @@ public class TimestampSensorValuesList extends SensorValuesList {
    * </p>
    *
    * <p>
+   * The method will search for values on or after the {@code timeReference}
+   * start time, and on or before the end time. If there are no values between
+   * the start and end times, the values immediately before the start time and
+   * after the end time will be used.
+   * </p>
+   *
+   * <p>
    * The returned value will contain only those values from the best available
    * quality flag, in the same manner as for the {@link PERIODIC} mode. For
    * example, if the time period encompasses three value, two of which are Good
@@ -1500,10 +1507,34 @@ public class TimestampSensorValuesList extends SensorValuesList {
 
     SensorValuesListOutput result = null;
 
+    /*
+     * We are looking for times between the start and end time of the
+     * timeReference. Therefore our start time is the time on or after the
+     * timeReference start, and our end time is the time on or before the
+     * timeReference end.
+     *
+     * If our found start time is after the end time, and the end time is before
+     * the start time, this means that there are no times in our list that are
+     * between the timeReference start and end. Therefore we use the time
+     * immediately before the start time as our start, and the time immediately
+     * after the end as our end.
+     */
     LocalDateTime startTime = coordinatesMap
       .ceilingKey(timeReference.getStartTime().getTime());
+
+    if (null == startTime
+      || startTime.isAfter(timeReference.getEndTime().getTime())) {
+      startTime = coordinatesMap
+        .floorKey(timeReference.getStartTime().getTime());
+    }
+
     LocalDateTime endTime = coordinatesMap
       .floorKey(timeReference.getEndTime().getTime());
+
+    if (null == endTime
+      || endTime.isBefore(timeReference.getStartTime().getTime())) {
+      endTime = coordinatesMap.ceilingKey(timeReference.getEndTime().getTime());
+    }
 
     if (null != startTime && null != endTime) {
 

@@ -122,7 +122,7 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
     sourceSensorValues = Collections.singleton(sourceSensorValue);
     this.sensorType = sensorType;
 
-    if (sourceSensorValue.isNumeric() && !forceString) {
+    if (!forceString && sourceSensorValue.isNumeric()) {
       doubleValue = sourceSensorValue.getDoubleValue();
       qcFlag = sourceSensorValue.getDisplayFlag(allSensorValues);
       qcMessage = sourceSensorValue.getDisplayQCMessage(allSensorValues);
