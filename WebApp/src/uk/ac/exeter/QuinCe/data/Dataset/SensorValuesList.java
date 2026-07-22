@@ -137,6 +137,7 @@ public abstract class SensorValuesList {
     this.allSensorValues = allSensorValues;
     this.sensorType = allSensorValues.getInstrument().getSensorAssignments()
       .getSensorTypeForDBColumn(columnId);
+    this.forceString = forceString;
   }
 
   /**
@@ -179,6 +180,7 @@ public abstract class SensorValuesList {
     this.columnIds = new TreeSet<Long>(columnIds);
     this.sensorType = testingSensorType;
     this.allSensorValues = allSensorValues;
+    this.forceString = forceString;
   }
 
   /**
