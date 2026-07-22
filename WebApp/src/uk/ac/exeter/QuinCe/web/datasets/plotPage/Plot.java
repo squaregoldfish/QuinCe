@@ -1,12 +1,14 @@
 package uk.ac.exeter.QuinCe.web.datasets.plotPage;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.math.NumberUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -20,6 +22,9 @@ import uk.ac.exeter.QuinCe.utils.StringUtils;
 
 public class Plot {
 
+  /**
+   * Gson builder for the second Y axis.
+   */
   private static Gson Y2_GSON;
 
   /**
@@ -51,14 +56,26 @@ public class Plot {
 
   /**
    * The plot values.
+   *
+   * <p>
+   * <b>Do not reference this directly unless you know what you're doing!</b>
+   * Different types of Plots order their values differently, so we must always
+   * use {@link #getPlotValues()} to ensure that we get the values from the
+   * correct instance.
+   * </p>
    */
-  protected LinkedHashSet<PlotValue> plotValues = null;
+  private TreeSet<PlotValue> plotValues = null;
 
   /**
    * Indicates whether or not values that have been flagged during QC should be
    * hidden from the plot.
    */
   private boolean hideFlags = false;
+
+  /**
+   * The Run Type filter to apply to the plot.
+   */
+  private String filter = PlotPageData.NO_FILTER;
 
   static {
     Y2_GSON = new GsonBuilder()
@@ -150,11 +167,11 @@ public class Plot {
   public String getMainData() {
     String result = "[]";
 
-    if (null != plotValues) {
+    if (null != getPlotValues()) {
       Gson gson = new GsonBuilder().registerTypeAdapter(PlotValue.class,
         new MainPlotValueSerializer(null != y2Axis)).create();
 
-      result = gson.toJson(plotValues.stream()
+      result = gson.toJson(getPlotValues().stream()
         .filter(f -> !f.xNull() && !hideFlags ? true
           : (null == f.getFlag()
             || data.getFlagScheme().isGood(f.getFlag(), true)
@@ -173,7 +190,7 @@ public class Plot {
        * If there are no Y2 values, return the empty array. This will be dealt
        * with on the front end.
        */
-      List<PlotValue> plotData = plotValues.stream()
+      List<PlotValue> plotData = getPlotValues().stream()
         .filter(f -> !f.xNull() && !hideFlags ? true
           : (null != f && (null == f.getFlag2()
             || data.getFlagScheme().isGood(f.getFlag2(), true)
@@ -198,8 +215,8 @@ public class Plot {
 
     String result = "[]";
 
-    if (null != plotValues) {
-      List<PlotValue> flagValues = plotValues.stream()
+    if (null != getPlotValues()) {
+      List<PlotValue> flagValues = getPlotValues().stream()
         .filter(x -> !hideFlags ? x.inFlagPlot()
           : null != x.getFlag() && x.getFlag().equals(FlagScheme.NEEDED_FLAG))
         .collect(Collectors.toList());
@@ -214,15 +231,35 @@ public class Plot {
   }
 
   protected void makePlotValues() throws Exception {
-
     TreeMap<Coordinate, PlotPageTableValue> xValues = getXValues();
     TreeMap<Coordinate, PlotPageTableValue> yValues = getYValues();
     TreeMap<Coordinate, PlotPageTableValue> y2Values = getY2Values();
 
-    plotValues = new LinkedHashSet<>();
+    plotValues = new TreeSet<PlotValue>();
+
+    Map<LocalDateTime, String> coordinateRunTypes = new HashMap<LocalDateTime, String>();
+
+    if (data.getInstrument().hasRunTypes()) {
+      coordinateRunTypes = data.getRunTypePeriods().getRunTypes(
+        xValues.keySet().stream().map(c -> c.getTime()).sorted().toList(),
+        true);
+    }
 
     for (Coordinate coordinate : xValues.keySet()) {
-      if (yValues.containsKey(coordinate) || y2Values.containsKey(coordinate)) {
+
+      boolean filteredOut = false;
+
+      if (!filter.equals(PlotPageData.NO_FILTER)) {
+        if (data.getInstrument().hasRunTypes()) {
+          String runType = coordinateRunTypes.get(coordinate.getTime());
+          if (null == runType || !runType.equals(filter)) {
+            filteredOut = true;
+          }
+        }
+      }
+
+      if ((yValues.containsKey(coordinate)
+        || y2Values.containsKey(coordinate))) {
 
         PlotPageTableValue x = xValues.get(coordinate);
         PlotPageTableValue y = yValues.get(coordinate);
@@ -240,11 +277,10 @@ public class Plot {
           Double yValue = null;
           boolean yGhost = false;
           Flag yFlag = null;
-          if (null != y
-            && NumberUtils.isCreatable(y.getValue(data.getAllSensorValues()))) {
+          if (null != y) {
             yValue = scaleYValue(StringUtils
               .doubleFromString(y.getValue(data.getAllSensorValues())));
-            yGhost = y.getQcFlag(data.getAllSensorValues())
+            yGhost = filteredOut || y.getQcFlag(data.getAllSensorValues())
               .equals(FlagScheme.FLUSHING_FLAG);
             yFlag = y.getQcFlag(data.getAllSensorValues());
             if (useNeededFlags && y.getFlagNeeded()) {
@@ -255,11 +291,10 @@ public class Plot {
           Double y2Value = null;
           boolean y2Ghost = false;
           Flag y2Flag = null;
-          if (null != y2
-            && NumberUtils.isCreatable(y.getValue(data.getAllSensorValues()))) {
+          if (null != y2) {
             y2Value = scaleYValue(StringUtils
               .doubleFromString(y2.getValue(data.getAllSensorValues())));
-            y2Ghost = y2.getQcFlag(data.getAllSensorValues())
+            y2Ghost = filteredOut || y2.getQcFlag(data.getAllSensorValues())
               .equals(FlagScheme.FLUSHING_FLAG);
             y2Flag = y2.getQcFlag(data.getAllSensorValues());
             // We never show NEEDED flags for Y2 axis
@@ -403,5 +438,20 @@ public class Plot {
 
   protected boolean getHideFlags() {
     return hideFlags;
+  }
+
+  protected Set<PlotValue> getPlotValues() {
+    return plotValues;
+  }
+
+  public String getFilter() {
+    return filter;
+  }
+
+  public void setFilter(String filter) throws Exception {
+    if (!StringUtils.isEmpty(filter)) {
+      this.filter = filter;
+      makePlotValues();
+    }
   }
 }

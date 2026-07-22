@@ -902,7 +902,7 @@ public class DatasetSensorValues {
 
         for (SensorValue value : affectedSensorValues) {
           String valueRunType = runTypePeriods
-            .getRunType(value.getCoordinate().getTime());
+            .getRunType(value.getCoordinate().getTime(), false);
           if (null == valueRunType || affectedSensorAssignments.get(assignment)
             .contains(valueRunType)) {
 
@@ -1165,7 +1165,7 @@ public class DatasetSensorValues {
     throws RecordNotFoundException, VariablePropertiesException {
 
     SensorValuesList result = SensorValuesListFactory
-      .makeSensorValuesList(columnIds, dataset.getInstrument(), this, false);
+      .makeSensorValuesList(columnIds, dataset.getInstrument(), this, forceString);
 
     for (long id : columnIds) {
       result.addAll(valuesByColumn.get(id));

@@ -11,7 +11,8 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
  * Represents a quality control flag placed on a value.
  *
  * <p>
- * A flag has multiple representations: </p?
+ * A flag has multiple representations:
+ * </p>
  *
  * <ul>
  * <li>Numeric (used in exported data)</li>
@@ -80,6 +81,8 @@ public class Flag implements Comparable<Flag> {
    *          Whether or not a user can assign the Flag to a value.
    * @param commentRequired
    *          Whether or not this Flag requires an explanatory comment.
+   * @param exportValue
+   *          The value to use in exports.
    */
   protected Flag(int value, String name, char character, int significance,
     boolean userAssignable, boolean commentRequired, int exportValue) {
@@ -95,7 +98,8 @@ public class Flag implements Comparable<Flag> {
   /**
    * Copy constructor.
    *
-   * @source The source Flag object.
+   * @param source
+   *          The source Flag object.
    */
   protected Flag(Flag source) {
     this.value = source.value;
@@ -234,6 +238,10 @@ public class Flag implements Comparable<Flag> {
   /**
    * Examine a {@link Collection} of {@link Flag}s and return the {@link Flag}
    * with the highest significance score.
+   *
+   * @param flags
+   *          The Flags to check.
+   * @return The most significant Flag.
    */
   public static Flag mostSignificant(Collection<Flag> flags) {
     return flags.stream().filter(f -> null != f).sorted().findFirst()
@@ -243,6 +251,10 @@ public class Flag implements Comparable<Flag> {
   /**
    * Examine a number of {@link Flag}s and return the {@link Flag} with the
    * highest significance score.
+   *
+   * @param flags
+   *          The Flags to check.
+   * @return The most significant Flag.
    */
   public static Flag mostSignificant(Flag... flags) {
     return mostSignificant(Arrays.asList(flags));
@@ -253,6 +265,7 @@ public class Flag implements Comparable<Flag> {
    *
    * @param autoQC
    *          The Auto QC result.
+   * @return The most significant Flag.
    */
   public static Flag mostSignificant(AutoQCResult autoQC) {
     return mostSignificant(
@@ -262,6 +275,10 @@ public class Flag implements Comparable<Flag> {
   /**
    * Examine a number of {@link Flag}s and return the {@link Flag} with the
    * lowest significance score.
+   *
+   * @param flags
+   *          The Flags to check.
+   * @return The least significant Flag.
    */
   public static Flag leastSignificant(Flag... flags) {
     return leastSignificant(Arrays.asList(flags));
@@ -270,6 +287,10 @@ public class Flag implements Comparable<Flag> {
   /**
    * Examine a {@link Collection} of {@link Flag}s and return the {@link Flag}
    * with the lowest significance score.
+   *
+   * @param flags
+   *          The Flags to check.
+   * @return The least significant Flag.
    */
   public static Flag leastSignificant(Collection<Flag> flags) {
 

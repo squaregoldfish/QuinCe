@@ -111,6 +111,15 @@ public abstract class SensorValuesList {
   protected final SensorType sensorType;
 
   /**
+   * Indicate whether or not all values in the list should be forced as String
+   * values.
+   *
+   * If this is set to {@code false}, the list will automatically decide whether
+   * to use String or Double values.
+   */
+  protected final boolean forceString;
+
+  /**
    * Create a list for a single file column.
    *
    * @param sensorAssignments

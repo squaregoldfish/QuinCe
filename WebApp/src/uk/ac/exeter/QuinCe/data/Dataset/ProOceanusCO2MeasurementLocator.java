@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -45,7 +46,6 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
  * <p>
  * <b>NOTE:</b> This class will only work if the underlying {@link Instrument}
  * is operating on {@link Instrument#BASIS_TIME}.
- * </p>
  * </p>
  */
 public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
@@ -113,12 +113,20 @@ public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
 
       Variable variable = sensorConfig.getInstrumentVariable(getVariableName());
 
-      int flushingTime = (int) Math
-        .round(Double.parseDouble(dataset.getAllProperties()
-          .get(variable.getName()).getProperty("flushing_time")));
+      int flushingTime = 0;
+
+      Properties varProps = dataset.getAllProperties()
+        .get(variable.getName());
+
+      if (null != varProps) {
+        String flushingTimeProp = varProps.getProperty("flushing_time");
+        if (null != flushingTimeProp) {
+          flushingTime = (int) Math
+            .round(Double.parseDouble(flushingTimeProp));
+        }
+      }
 
       if (flushingTime > 0) {
-
         String lastZero = "";
         for (SensorValue zero : zeroValues.getRawValues()) {
           String newZero = zero.getValue();
@@ -186,13 +194,15 @@ public class ProOceanusCO2MeasurementLocator extends MeasurementLocator {
 
           // We only make measurements for non-flushing CO2 values
           if (null != co2Value) {
-            if (runType.getStringValue().equals(WATER_MODE)) {
+            if (runType.getStringValue().equals(WATER_MODE) || instrument
+              .isRunTypeForVariable(waterVar, runType.getStringValue())) {
               if (instrument.hasVariable(waterVar)) {
                 measurements
                   .add(new Measurement(dataset.getId(), dataset.getFlagScheme(),
                     runType.getCoordinate(), waterRunTypes));
               }
-            } else if (runType.getStringValue().equals(ATM_MODE)) {
+            } else if (runType.getStringValue().equals(ATM_MODE) || instrument
+              .isRunTypeForVariable(atmVar, runType.getStringValue())) {
               if (instrument.hasVariable(atmVar)) {
                 measurements
                   .add(new Measurement(dataset.getId(), dataset.getFlagScheme(),
