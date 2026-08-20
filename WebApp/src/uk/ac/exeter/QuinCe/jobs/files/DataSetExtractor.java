@@ -106,7 +106,7 @@ public abstract class DataSetExtractor {
 
     if (null != longitude) {
       sensorValues.create(FileDefinition.LONGITUDE_COLUMN_ID, coordinate,
-        longitude);
+        longitude, null);
 
       // Update the dataset bounds
       try {
@@ -131,7 +131,7 @@ public abstract class DataSetExtractor {
 
     if (null != latitude) {
       sensorValues.create(FileDefinition.LATITUDE_COLUMN_ID, coordinate,
-        latitude);
+        latitude, null);
 
       // Update the dataset bounds
       try {

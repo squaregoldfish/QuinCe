@@ -187,7 +187,7 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
       LocalDateTime timestamp = LocalDateTime.parse(line,
         DateTimeFormatsBean.DT_ISO_MS_F);
       list.add(new SensorValue(1L, flagScheme, 1L,
-        new TimeCoordinate(DATASET_ID, timestamp), "1"));
+        new TimeCoordinate(DATASET_ID, timestamp), "1", null));
     }
     in.close();
 
@@ -216,7 +216,7 @@ public class TimestampSensorValuesListTest extends SensorValuesListTest {
         DateTimeFormatsBean.DT_ISO_MS_F);
       SensorValue sensorValue = new SensorValue(getSensorValueId(), 1L,
         flagScheme, columnId, new TimeCoordinate(DATASET_ID, timestamp),
-        fields[1], new AutoQCResult(flagScheme), flag, "");
+        fields[1], null, new AutoQCResult(flagScheme), flag, "");
       result.add(sensorValue);
     }
     in.close();

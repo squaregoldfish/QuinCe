@@ -106,6 +106,7 @@ dependencies {
   gretty 'org.apache.tomcat:tomcat:8.0.1'
 
   // Use JUnit test framework
+  implementation 'org.opentest4j:opentest4j:1.2.0'
   implementation 'org.junit.jupiter:junit-jupiter-api:5.9.3'
   implementation 'org.junit.jupiter:junit-jupiter-engine:5.9.3'
   implementation 'org.junit.jupiter:junit-jupiter-params:5.9.3'

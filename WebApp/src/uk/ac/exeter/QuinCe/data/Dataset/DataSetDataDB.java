@@ -417,11 +417,11 @@ public class DataSetDataDB {
             addStmt.setString(3, value.getValue());
           }
 
-            if (null == value.getUncertainty()) {
-              addStmt.setNull(4, Types.FLOAT);
-            } else {
-              addStmt.setFloat(4, value.getUncertainty());
-            }
+          if (null == value.getUncertainty()) {
+            addStmt.setNull(4, Types.FLOAT);
+          } else {
+            addStmt.setFloat(4, value.getUncertainty());
+          }
 
           addStmt.setString(5, value.getAutoQcResult().toJson());
           addStmt.setInt(6, value.getUserQCFlag().getValue());
@@ -785,7 +785,8 @@ public class DataSetDataDB {
     }
 
     return new SensorValue(valueId, datasetId, flagScheme, fileColumnId,
-      coordinates.get(coordinateId), value, autoQC, userQCFlag, userQCMessage);
+      coordinates.get(coordinateId), value, uncertainty, autoQC, userQCFlag,
+      userQCMessage);
   }
 
   /**

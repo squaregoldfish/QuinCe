@@ -49,11 +49,11 @@ public class NewSensorValues {
     this.dataset = dataset;
   }
 
-  public SensorValue create(long columnId, Coordinate coordinate,
-    String value) {
+  public SensorValue create(long columnId, Coordinate coordinate, String value,
+    Float uncertainty) {
 
     SensorValue sensorValue = new SensorValue(dataset.getId(),
-      dataset.getFlagScheme(), columnId, coordinate, value);
+      dataset.getFlagScheme(), columnId, coordinate, value, uncertainty);
 
     sensorValues.add(sensorValue);
 

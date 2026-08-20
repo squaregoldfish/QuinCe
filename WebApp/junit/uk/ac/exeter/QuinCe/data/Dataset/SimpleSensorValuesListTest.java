@@ -28,5 +28,4 @@ public class SimpleSensorValuesListTest extends SensorValuesListTest {
 
     assertTrue(timeCoordinatesOrdered(list.getRawCoordinates()));
   }
-
 }

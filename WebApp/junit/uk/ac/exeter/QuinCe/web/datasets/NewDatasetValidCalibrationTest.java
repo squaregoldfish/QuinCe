@@ -70,8 +70,8 @@ public abstract class NewDatasetValidCalibrationTest extends BaseTest {
     bean.setCurrentInstrumentId(getInstrumentId());
     bean.startNewDataset();
 
-    bean.getNewDataSet().setStart(LocalDateTime.of(2025, 1, 10, 0, 0, 0));
-    bean.getNewDataSet().setEnd(LocalDateTime.of(2025, 1, 20, 0, 0, 0));
+    bean.getNewDataSet().setStartTime(LocalDateTime.of(2025, 1, 10, 0, 0, 0));
+    bean.getNewDataSet().setEndTime(LocalDateTime.of(2025, 1, 20, 0, 0, 0));
 
     bean.checkValidCalibration();
 

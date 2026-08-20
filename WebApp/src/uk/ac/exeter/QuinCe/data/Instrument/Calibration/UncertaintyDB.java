@@ -6,13 +6,10 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
-import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignmentNameComparator;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignments;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
-import uk.ac.exeter.QuinCe.utils.DatabaseException;
-import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**
  * Implementation of the {@link CalibrationDB} class for handling
@@ -45,8 +42,8 @@ public class UncertaintyDB extends CalibrationDB {
   }
 
   @Override
-  public Map<String, String> getTargets(Connection conn, Instrument instrument)
-    throws DatabaseException, RecordNotFoundException, InstrumentException {
+  public Map<String, String> getTargets(Connection conn,
+    Instrument instrument) {
 
     SensorAssignments assignments = instrument.getSensorAssignments();
 

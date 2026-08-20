@@ -51,7 +51,7 @@ public class DiagnosticFlagInterpolationTest extends SensorValuesListTest {
     SensorValue result = new SensorValue(1L, IcosFlagScheme.getInstance(),
       columnId,
       new TimeCoordinate(1L, LocalDateTime.of(2026, 04, 13, minute, 13, 0)),
-      "1");
+      "1", null);
     result.setId(id);
     return result;
   }

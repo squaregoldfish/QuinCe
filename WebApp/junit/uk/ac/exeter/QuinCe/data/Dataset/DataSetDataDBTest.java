@@ -135,7 +135,7 @@ public class DataSetDataDBTest extends BaseTest {
       "Incorrect time");
     assertEquals(sensorValue.getValue(), storedValue.getValue(),
       "Incorrect value");
-    assertEquals(uncertainty, storedValue.getUncertainty(),
+    assertEquals(sensorValue.getUncertainty(), storedValue.getUncertainty(),
       "Incorrect uncertainty");
     assertEquals(new AutoQCResult(flagScheme), storedValue.getAutoQcResult(),
       "Auto QC result not stored correctly");
@@ -330,7 +330,6 @@ public class DataSetDataDBTest extends BaseTest {
   public void storeValuesMultipleValuesOneInvalid() throws Exception {
     NewSensorValues sensorValues = newSensorValue(DATASET_ID, COLUMN_ID,
       LocalDateTime.of(2021, 1, 1, 0, 0, 0), "20", 0.2F);
-    SensorValue badValue = new SensorValue(7000L, COLUMN_ID,
 
     sensorValues.create(7000L,
       new TimeCoordinate(DATASET_ID, LocalDateTime.of(2021, 1, 1, 0, 0, 0)),

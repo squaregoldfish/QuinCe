@@ -188,8 +188,6 @@ public class DataSetsBean extends BaseManagedBean {
 
   private String[] getFileLimits() throws DatabaseException, DataFileException {
 
-    NaturalOrderComparator comparator = new NaturalOrderComparator();
-
     String lowestStart = null;
     String highestEnd = null;
 
@@ -197,13 +195,13 @@ public class DataSetsBean extends BaseManagedBean {
       getCurrentInstrument());
 
     for (DataFile dataFile : dataFiles) {
-      if (null == lowestStart || comparator
+      if (null == lowestStart || NaturalOrderComparator.getInstance()
         .compare(dataFile.getStartDisplayString(), lowestStart) < 0) {
         lowestStart = dataFile.getStartDisplayString();
       }
 
-      if (null == highestEnd
-        || comparator.compare(dataFile.getEndDisplayString(), highestEnd) > 0) {
+      if (null == highestEnd || NaturalOrderComparator.getInstance()
+        .compare(dataFile.getEndDisplayString(), highestEnd) > 0) {
         highestEnd = dataFile.getEndDisplayString();
       }
     }
@@ -574,7 +572,7 @@ public class DataSetsBean extends BaseManagedBean {
   private void checkValidCalibrationAction(
     DatasetValidCalibrationChecker checker) throws Exception {
     checker.validateCalibrations(getDataSource(), getCurrentInstrument(),
-      newDataSet.getStart(), newDataSet.getEnd());
+      newDataSet.getStartTime(), newDataSet.getEndTime());
 
     if (!checker.isValid()) {
       validCalibration = false;

@@ -78,7 +78,7 @@ INSERT INTO `coordinates` (id, dataset_id, date) VALUES
 (57,2765,1686269473000),
 (58,2765,1686270605000);
 
-INSERT INTO `sensor_values` (id, dataset_id, file_column, date, value, auto_qc, user_qc_flag, user_qc_message) VALUES
+INSERT INTO `sensor_values` (id, coordinate_id, file_column, value, auto_qc, user_qc_flag, user_qc_message) VALUES
 (2075823102,1,1549,'19.4772',NULL,-2,''),
 (2075823103,1,1550,'37.934',NULL,-2,''),
 (2075823184,2,1551,'-39.7',NULL,-2,''),

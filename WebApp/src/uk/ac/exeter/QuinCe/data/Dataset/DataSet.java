@@ -998,7 +998,7 @@ public class DataSet implements Comparable<DataSet> {
   }
 
   protected int compareToWorker(DataSet o) {
-    return new NaturalOrderComparator().compare(this.start, o.start);
+    return NaturalOrderComparator.getInstance().compare(this.start, o.start);
   }
 
   public void addProcessingMessage(String module, String message) {

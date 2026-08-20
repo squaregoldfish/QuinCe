@@ -8,6 +8,7 @@ import java.util.TreeMap;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
+import uk.ac.exeter.QuinCe.utils.NaturalOrderComparator;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**
@@ -80,23 +81,13 @@ public class ExternalStandardDB extends CalibrationDB {
             + instrument.getId());
       }
 
-      Map<String, String> result = new TreeMap<String, String>();
+      Map<String, String> result = new TreeMap<String, String>(
+        NaturalOrderComparator.getInstance());
       for (String name : standardNames) {
         result.put(name, name);
       }
 
       return result;
-    } catch (Exception e) {
-      throw new CalibrationException(e);
-    }
-
-    Map<String, String> result = new TreeMap<String, String>(
-      NaturalOrderComparator.getInstance());
-    for (String name : standardNames) {
-      result.put(name, name);
-    }
-
-    return result;
     } catch (Exception e) {
       throw new CalibrationException(e);
     }

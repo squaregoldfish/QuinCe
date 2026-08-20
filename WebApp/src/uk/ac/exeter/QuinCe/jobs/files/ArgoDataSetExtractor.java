@@ -142,7 +142,7 @@ public class ArgoDataSetExtractor extends DataSetExtractor {
 
               if (null != fieldValue) {
                 sensorValues.create(assignment.getDatabaseId(), coordinate,
-                  fieldValue);
+                  fieldValue, null);
               }
             }
           }

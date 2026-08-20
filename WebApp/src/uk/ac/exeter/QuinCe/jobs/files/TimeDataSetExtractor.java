@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
@@ -33,12 +34,15 @@ import uk.ac.exeter.QuinCe.data.Instrument.MissingRunTypeException;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Calibration;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.SensorCalibrationDB;
+import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Uncertainty;
+import uk.ac.exeter.QuinCe.data.Instrument.Calibration.UncertaintyDB;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategoryException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.utils.TimeRange;
 import uk.ac.exeter.QuinCe.utils.TimeRangeBuilder;
 
@@ -80,13 +84,13 @@ public class TimeDataSetExtractor extends DataSetExtractor {
     RunTypePeriods runTypePeriods = new RunTypePeriods();
 
     CalibrationSet sensorCalibrations = SensorCalibrationDB.getInstance()
-      .getCalibrationSet(conn, castDataSet);
-
-    CalibrationSet sensorCalibrations = SensorCalibrationDB.getInstance()
       .getCalibrationSet(conn, dataSet);
 
     CalibrationSet uncertaintiesSet = UncertaintyDB.getInstance()
       .getCalibrationSet(conn, dataSet);
+
+    TreeMap<String, Calibration> uncertainties = uncertaintiesSet
+      .getCalibrations(dataSet.getStartTime());
 
     // Adjust the DataSet bounds to the latest start date and earliest end
     // date of each file definition, if the dataset range is beyond them
@@ -190,7 +194,7 @@ public class TimeDataSetExtractor extends DataSetExtractor {
                       String runType = runTypeValue.getRunName();
 
                       sensorValues.create(assignment.getDatabaseId(),
-                        coordinate, runType);
+                        coordinate, runType, null);
 
                       runTypePeriods.add(runType, time);
                     }
@@ -203,34 +207,33 @@ public class TimeDataSetExtractor extends DataSetExtractor {
                       currentLine, line, assignment.getColumn(),
                       assignment.getMissingValue());
 
-                      Float uncertainty = null;
+                    Float uncertainty = null;
 
-                      if (StringUtils.isNumeric(fieldValue)) {
-                        Double fieldValueNumeric = Double
-                          .parseDouble(fieldValue);
+                    if (StringUtils.isNumeric(fieldValue)) {
+                      Double fieldValueNumeric = Double.parseDouble(fieldValue);
 
-                        if (!fieldValueNumeric.isNaN()) {
-                          Calibration uncertaintyDefinition = uncertainties
-                            .get(String.valueOf(assignment.getDatabaseId()));
+                      if (!fieldValueNumeric.isNaN()) {
+                        Calibration uncertaintyDefinition = uncertainties
+                          .get(String.valueOf(assignment.getDatabaseId()));
 
-                          if (uncertaintyDefinition.getCoefficient("Type")
-                            .equals(Uncertainty.TYPE_ABSOLUTE)) {
-                            uncertainty = uncertaintyDefinition
-                              .getFloatCoefficient("Value");
-                          } else {
-                            uncertainty = Double
-                              .valueOf(fieldValueNumeric.doubleValue()
-                                * (uncertaintyDefinition
-                                  .getFloatCoefficient("Value") * 0.01))
-                              .floatValue();
-                          }
+                        if (uncertaintyDefinition.getCoefficient("Type")
+                          .equals(Uncertainty.TYPE_ABSOLUTE)) {
+                          uncertainty = uncertaintyDefinition
+                            .getFloatCoefficient("Value");
+                        } else {
+                          uncertainty = Double
+                            .valueOf(fieldValueNumeric.doubleValue()
+                              * (uncertaintyDefinition
+                                .getFloatCoefficient("Value") * 0.01))
+                            .floatValue();
                         }
                       }
-                      
+                    }
 
                     if (null != fieldValue) {
                       SensorValue sensorValue = sensorValues.create(
-                        getStoredColumnId(assignment), coordinate, fieldValue);
+                        getStoredColumnId(assignment), coordinate, fieldValue,
+                        uncertainty);
 
                       // Apply calibration if required
                       Calibration sensorCalibration = sensorCalibrations

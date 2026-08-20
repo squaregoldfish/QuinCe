@@ -35,11 +35,11 @@ public class NewSensorValuesTest extends BaseTest {
 
     TimeCoordinate coord1 = new TimeCoordinate(
       LocalDateTime.of(2026, 5, 15, 16, 39, 00));
-    SensorValue value1 = values.create(1L, coord1, "Value 1");
+    SensorValue value1 = values.create(1L, coord1, "Value 1", null);
 
     TimeCoordinate coord2 = new TimeCoordinate(
       LocalDateTime.of(2026, 5, 15, 16, 39, 00));
-    SensorValue value2 = values.create(2L, coord2, "Value 2");
+    SensorValue value2 = values.create(2L, coord2, "Value 2", null);
 
     /*
      * The two values should have different Coordinate objects.

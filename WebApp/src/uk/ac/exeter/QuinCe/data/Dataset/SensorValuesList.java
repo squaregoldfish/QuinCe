@@ -461,7 +461,7 @@ public abstract class SensorValuesList {
   private SensorValue makeDummySensorValue(Coordinate coordinate,
     long columnId) {
     return new SensorValue(allSensorValues.getDatasetId(),
-      allSensorValues.getFlagScheme(), columnId, coordinate, null);
+      allSensorValues.getFlagScheme(), columnId, coordinate, null, null);
   }
 
   /**
