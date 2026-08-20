@@ -2,7 +2,6 @@ package uk.ac.exeter.QuinCe.jobs.files;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +12,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import uk.ac.exeter.QuinCe.User.User;
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDB;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDataDB;
@@ -92,12 +92,11 @@ public class LocateMeasurementsJob extends DataSetJob {
       Collection<SensorValue> rawSensorValues = (Collection<SensorValue>) getTransferData(
         SENSOR_VALUES);
       if (null == rawSensorValues) {
-        rawSensorValues = DataSetDataDB.getRawSensorValues(conn,
-          dataSet.getId());
+        rawSensorValues = DataSetDataDB.getRawSensorValues(conn, dataSet);
       }
 
-      DatasetSensorValues sensorValues = new DatasetSensorValues(conn,
-        instrument, dataSet.getId(), false, true, rawSensorValues);
+      DatasetSensorValues sensorValues = new DatasetSensorValues(conn, dataSet,
+        false, true, rawSensorValues);
 
       // Work out which measurement locators we need to use
       Set<MeasurementLocator> measurementLocators = new HashSet<MeasurementLocator>();
@@ -112,13 +111,21 @@ public class LocateMeasurementsJob extends DataSetJob {
       }
 
       // Now locate the measurements
-      Map<LocalDateTime, Measurement> measurements = new HashMap<LocalDateTime, Measurement>();
+      Map<Coordinate, Measurement> measurements = new HashMap<Coordinate, Measurement>();
 
       for (MeasurementLocator locator : measurementLocators) {
         addMeasurements(measurements,
           locator.locateMeasurements(conn, instrument, dataSet, sensorValues));
       }
 
+      /*
+       * Note that this will mean the measurements Map<Coordinate, Measurement>
+       * will no longer have the measurements' coordinates matching their keys.
+       *
+       * It doesn't matter at the time of writing, but this note is here just in
+       * case it becomes relevant in the future.
+       */
+      ensureUniqueCoordinates(rawSensorValues, measurements.values());
       DataSetDataDB.storeMeasurements(conn, measurements.values());
 
       // Trigger the Build Measurements job
@@ -164,17 +171,16 @@ public class LocateMeasurementsJob extends DataSetJob {
     }
   }
 
-  private void addMeasurements(Map<LocalDateTime, Measurement> target,
+  private void addMeasurements(Map<Coordinate, Measurement> target,
     List<Measurement> newMeasurements) {
 
     newMeasurements.forEach(m -> {
-      if (target.containsKey(m.getTime())) {
-        target.get(m.getTime()).addRunTypes(m);
+      if (target.containsKey(m.getCoordinate())) {
+        target.get(m.getCoordinate()).addRunTypes(m);
       } else {
-        target.put(m.getTime(), m);
+        target.put(m.getCoordinate(), m);
       }
     });
-
   }
 
   @Override
@@ -205,6 +211,58 @@ public class LocateMeasurementsJob extends DataSetJob {
         DataSet.STATUS_WAITING);
     } catch (Exception e) {
       throw new JobFailedException(id, "Error while resetting dataset", e);
+    }
+  }
+
+  /**
+   * Ensure that the {@link Coordinate} objects created for the
+   * {@link Measurement}s are not duplicating existing {@link Coordinate}s
+   * assigned to {@link SensorValue}s.
+   *
+   * <p>
+   * If a {@link Measurement} {@link Coordinate} clashes with a
+   * {@link SensorValue} {@link Coordinate}, the {@link SensorValue}'s
+   * {@link Coordinate} will be copied to the {@link Measurement}.
+   * </p>
+   *
+   * @param sensorValues
+   *          The {@link SensorValue}s.
+   * @param measurements
+   *          The {@link Measurement}s.
+   */
+  private void ensureUniqueCoordinates(Collection<SensorValue> sensorValues,
+    Collection<Measurement> measurements) {
+
+    /*
+     * These are probably already sorted, but it's best to be sure.
+     */
+    List<Coordinate> sensorValueCoordinates = sensorValues.stream()
+      .map(v -> v.getCoordinate()).sorted().distinct().toList();
+
+    List<Measurement> sortedMeasurements = measurements.stream().sorted()
+      .toList();
+
+    int sensorValueIndex = 0;
+    int measurementIndex = 0;
+
+    while (sensorValueIndex < sensorValueCoordinates.size()
+      && measurementIndex < sortedMeasurements.size()) {
+
+      Coordinate sensorValueCoordinate = sensorValueCoordinates
+        .get(sensorValueIndex);
+
+      Coordinate measurementCoordinate = sortedMeasurements
+        .get(measurementIndex).getCoordinate();
+
+      if (sensorValueCoordinate.equals(measurementCoordinate)) {
+        sortedMeasurements.get(measurementIndex)
+          .setCoordinate(sensorValueCoordinate);
+        measurementIndex++;
+      } else if (sensorValueCoordinate.compareTo(measurementCoordinate) < 0) {
+        sensorValueIndex++;
+      } else {
+        measurementIndex++;
+      }
     }
   }
 }

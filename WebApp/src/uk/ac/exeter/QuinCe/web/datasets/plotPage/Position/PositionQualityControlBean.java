@@ -7,11 +7,12 @@ import javax.faces.bean.SessionScoped;
 import javax.sql.DataSource;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
-import uk.ac.exeter.QuinCe.web.datasets.plotPage.ManualQC.ManualQualityControlBean;
+import uk.ac.exeter.QuinCe.data.Instrument.MissingRunTypeException;
+import uk.ac.exeter.QuinCe.web.datasets.plotPage.ManualQC.TimeManualQualityControlBean;
 
 @ManagedBean
 @SessionScoped
-public class PositionQualityControlBean extends ManualQualityControlBean {
+public class PositionQualityControlBean extends TimeManualQualityControlBean {
 
   DatasetSensorValues positionData;
 
@@ -26,8 +27,14 @@ public class PositionQualityControlBean extends ManualQualityControlBean {
   }
 
   @Override
-  public void initDataObject(DataSource dataSource) throws SQLException {
+  public void initDataObject(DataSource dataSource)
+    throws SQLException, MissingRunTypeException {
     super.data = new PositionQCData(dataSource, getCurrentInstrument(),
       dataset);
+  }
+
+  @Override
+  public boolean getCanFilter() {
+    return false;
   }
 }

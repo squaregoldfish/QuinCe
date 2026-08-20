@@ -1,5 +1,6 @@
 package uk.ac.exeter.QuinCe.data.Instrument;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,6 +10,10 @@ import java.util.Objects;
 import java.util.TreeSet;
 
 import uk.ac.exeter.QuinCe.data.Dataset.ColumnHeading;
+import uk.ac.exeter.QuinCe.data.Files.ArgoDataFile;
+import uk.ac.exeter.QuinCe.data.Files.DataFile;
+import uk.ac.exeter.QuinCe.data.Files.FileContents;
+import uk.ac.exeter.QuinCe.data.Files.TimeDataFile;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.DateTimeSpecification;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.LatitudeSpecification;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.LongitudeSpecification;
@@ -25,6 +30,12 @@ import uk.ac.exeter.QuinCe.utils.StringUtils;
  * new instrument.
  */
 public class FileDefinition implements Comparable<FileDefinition> {
+
+  /**
+   * The package in which implementations of the {@link DataFile} class are
+   * located.
+   */
+  private static final String DATA_FILE_PACKAGE = "uk.ac.exeter.QuinCe.data.Files";
 
   /**
    * Fixed column ID for the time
@@ -75,6 +86,21 @@ public class FileDefinition implements Comparable<FileDefinition> {
    * The application-wide standard longitude column heading
    */
   public static final ColumnHeading LATITUDE_COLUMN_HEADING;
+
+  /**
+   * Special column ID for depth.
+   */
+  public static final long DEPTH_COLUMN_ID = -1002L;
+
+  /**
+   * Fixed name for the Depth column.
+   */
+  public static final String DEPTH_COLUMN_NAME = "Depth";
+
+  /**
+   * The application-wide standard depth column heading.
+   */
+  public static final ColumnHeading DEPTH_COLUMN_HEADING;
 
   /**
    * The name of the Run Type column
@@ -193,6 +219,14 @@ public class FileDefinition implements Comparable<FileDefinition> {
    */
   protected InstrumentFileSet fileSet;
 
+  private static Map<Integer, Class<? extends DataFile>> BASIS_TO_CLASS;
+
+  /**
+   * The {@link DataFile} concrete class that must be used to generate
+   * {@link DataFile} objects for this definition.
+   */
+  private Class<? extends DataFile> fileClass;
+
   static {
     SEPARATOR_LOOKUP = new HashMap<String, String>(4);
     SEPARATOR_LOOKUP.put("TAB", "\t");
@@ -208,6 +242,12 @@ public class FileDefinition implements Comparable<FileDefinition> {
     LATITUDE_COLUMN_HEADING = new ColumnHeading(LATITUDE_COLUMN_ID,
       LATITUDE_COLUMN_NAME, LATITUDE_COLUMN_NAME, "ALATGP01", "degrees_north",
       true, true);
+    DEPTH_COLUMN_HEADING = new ColumnHeading(DEPTH_COLUMN_ID, DEPTH_COLUMN_NAME,
+      DEPTH_COLUMN_NAME, "DEPH", "m", true, true);
+
+    BASIS_TO_CLASS = new HashMap<Integer, Class<? extends DataFile>>();
+    BASIS_TO_CLASS.put(Instrument.BASIS_TIME, TimeDataFile.class);
+    BASIS_TO_CLASS.put(Instrument.BASIS_ARGO, ArgoDataFile.class);
   }
 
   /**
@@ -217,13 +257,36 @@ public class FileDefinition implements Comparable<FileDefinition> {
    *          The file description
    * @param fileSet
    *          The file set of which this definition is a member
+   * @throws InvalidInstrumentBasisException
    */
-  public FileDefinition(String fileDescription, InstrumentFileSet fileSet) {
+  public FileDefinition(String fileDescription, InstrumentFileSet fileSet,
+    int instrumentBasis) throws InvalidInstrumentBasisException {
     this.fileDescription = fileDescription;
     this.longitudeSpecification = new LongitudeSpecification();
     this.latitudeSpecification = new LatitudeSpecification();
     this.dateTimeSpecification = new DateTimeSpecification(false);
     this.fileSet = fileSet;
+    this.fileClass = basisToClass(instrumentBasis);
+  }
+
+  /**
+   * Create a new file with the given description.
+   *
+   * @param fileDescription
+   *          The file description
+   * @param fileSet
+   *          The file set of which this definition is a member
+   * @throws InvalidInstrumentBasisException
+   */
+  public FileDefinition(String fileDescription, InstrumentFileSet fileSet,
+    Class<? extends DataFile> fileClass)
+    throws InvalidInstrumentBasisException {
+    this.fileDescription = fileDescription;
+    this.longitudeSpecification = new LongitudeSpecification();
+    this.latitudeSpecification = new LatitudeSpecification();
+    this.dateTimeSpecification = new DateTimeSpecification(false);
+    this.fileSet = fileSet;
+    this.fileClass = fileClass;
   }
 
   /**
@@ -253,12 +316,13 @@ public class FileDefinition implements Comparable<FileDefinition> {
    *          The date/time specification
    * @param fileSet
    *          The parent file set
+   * @throws ClassNotFoundException
    */
   public FileDefinition(long databaseId, String description, String separator,
     int headerType, int headerLines, String headerEndString,
     int columnHeaderRows, int columnCount, LongitudeSpecification lonSpec,
     LatitudeSpecification latSpec, DateTimeSpecification dateTimeSpec,
-    InstrumentFileSet fileSet) {
+    InstrumentFileSet fileSet, String fileClass) throws ClassNotFoundException {
 
     // TODO checks
 
@@ -275,6 +339,7 @@ public class FileDefinition implements Comparable<FileDefinition> {
     this.dateTimeSpecification = dateTimeSpec;
 
     this.fileSet = fileSet;
+    this.fileClass = makeFileClass(fileClass);
   }
 
   /**
@@ -1122,5 +1187,42 @@ public class FileDefinition implements Comparable<FileDefinition> {
     FileDefinition other = (FileDefinition) obj;
     return databaseId == other.databaseId
       && Objects.equals(fileDescription, other.fileDescription);
+  }
+
+  /**
+   * Get the {@link DataFile} concrete class that must be used to generate
+   * {@link DataFile} objects for this definition.
+   *
+   * @return The {@link DataFile} class.
+   */
+  public Class<? extends DataFile> getFileClass() {
+    return fileClass;
+  }
+
+  @SuppressWarnings("unchecked")
+  private Class<? extends DataFile> makeFileClass(String className)
+    throws ClassNotFoundException {
+    String fullClass = DATA_FILE_PACKAGE + "." + className;
+    return (Class<? extends DataFile>) Class.forName(fullClass);
+  }
+
+  private Class<? extends DataFile> basisToClass(int basis)
+    throws InvalidInstrumentBasisException {
+    if (!BASIS_TO_CLASS.containsKey(basis)) {
+      throw new InvalidInstrumentBasisException(basis);
+    }
+
+    return BASIS_TO_CLASS.get(basis);
+  }
+
+  public DataFile makeDataFile(Instrument instrument, String filename,
+    FileContents contents) throws Exception {
+
+    // TODO A FileDefinition should know what instrument it belongs to
+    // so we shouldn't need to pass it in here.
+
+    Constructor<? extends DataFile> constructor = fileClass.getConstructor(
+      Instrument.class, FileDefinition.class, String.class, FileContents.class);
+    return constructor.newInstance(instrument, this, filename, contents);
   }
 }

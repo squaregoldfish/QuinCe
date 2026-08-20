@@ -2,22 +2,26 @@ package uk.ac.exeter.QuinCe.web.datasets.plotPage;
 
 import com.javadocmd.simplelatlng.LatLng;
 
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
+import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 
 public class SensorValueMapRecord extends MapRecord {
 
   protected final SensorValue value;
 
-  protected SensorValueMapRecord(LatLng position, long id, SensorValue value) {
-    super(position, id);
+  protected SensorValueMapRecord(Coordinate coordinate, LatLng position,
+    long id, SensorValue value) {
+    super(coordinate, position, id);
     this.value = value;
   }
 
   @Override
   public boolean isGood(DatasetSensorValues allSensorValues) {
-    return value.getDisplayFlag(allSensorValues).isGood();
+    return allSensorValues.getFlagScheme()
+      .isGood(value.getDisplayFlag(allSensorValues), true);
   }
 
   @Override
@@ -37,7 +41,7 @@ public class SensorValueMapRecord extends MapRecord {
     Flag result;
 
     if (!ignoreNeeded && value.flagNeeded()) {
-      result = Flag.NEEDED;
+      result = FlagScheme.NEEDED_FLAG;
     } else {
       result = value.getDisplayFlag(allSensorValues);
     }

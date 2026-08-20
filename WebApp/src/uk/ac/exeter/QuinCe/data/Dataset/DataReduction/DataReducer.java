@@ -15,6 +15,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
+import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignments;
@@ -96,7 +97,7 @@ public abstract class DataReducer {
    * @return The data reduction result.
    * @throws DataReductionException
    *           If an error occurs during the calculations.
-   * @see Variable#getCascade(SensorType, Flag, SensorAssignments)
+   * @see Variable#getCascade(SensorType, FlagScheme, Flag, SensorAssignments)
    */
   public DataReductionRecord performDataReduction(Instrument instrument,
     Measurement measurement, DatasetSensorValues allSensorValues,
@@ -104,36 +105,44 @@ public abstract class DataReducer {
 
     try {
       DataReductionRecord record = new DataReductionRecord(measurement,
-        variable, getCalculationParameterNames());
+        variable, instrument.getFlagScheme(), getCalculationParameterNames());
 
       doCalculation(instrument, measurement, record, conn);
 
-      Flag cascadeFlag = Flag.GOOD;
+      Flag cascadeFlag = instrument.getFlagScheme().getGoodFlag();
       LinkedHashMap<SensorType, List<String>> messages = new LinkedHashMap<SensorType, List<String>>();
 
       // Apply QC flags to the data reduction records
-      for (SensorType sensorType : variable.getAllSensorTypes(true)) {
+      for (SensorType sensorType : variable.getAllSensorTypes(true, true)) {
 
         MeasurementValue value = measurement.getMeasurementValue(sensorType);
 
-        if (null != value) {
+        if (null != value && !value.isNull()) {
           // Collect all QC messages together. Do not record the same message
           // from multiple sources.
           Flag valueFlag = variable.getCascade(value.getSensorType(),
-            value.getQcFlag(allSensorValues),
+            instrument.getFlagScheme(), value.getQcFlag(allSensorValues),
             instrument.getSensorAssignments());
 
-          if (!valueFlag.isGood()) {
-            if (valueFlag.moreSignificantThan(cascadeFlag)) {
-              cascadeFlag = valueFlag;
-            }
-
-            for (String qcMessage : value.getQcMessages()) {
-              if (!messages.containsKey(sensorType)) {
-                messages.put(sensorType, new ArrayList<String>());
+          /*
+           * If we got a NULL back, then the value's flag has no effect on the
+           * data reduction result. Otherwise, if the flag is not Good, we
+           * cascade it to the data reduction result (assuming it has more
+           * significance than any flag that's already been set).
+           */
+          if (null != valueFlag) {
+            if (!instrument.getFlagScheme().isGood(valueFlag, true)) {
+              if (valueFlag.moreSignificantThan(cascadeFlag)) {
+                cascadeFlag = valueFlag;
               }
-              if (!messages.get(sensorType).contains(qcMessage)) {
-                messages.get(sensorType).add(qcMessage);
+
+              for (String qcMessage : value.getQcMessages()) {
+                if (!messages.containsKey(sensorType)) {
+                  messages.put(sensorType, new ArrayList<String>());
+                }
+                if (!messages.get(sensorType).contains(qcMessage)) {
+                  messages.get(sensorType).add(qcMessage);
+                }
               }
             }
           }
@@ -146,7 +155,8 @@ public abstract class DataReducer {
         StringBuilder builder = new StringBuilder();
         builder.append(entry.getKey().getShortName());
         builder.append(' ');
-        builder.append(StringUtils.collectionToDelimited(entry.getValue(), ";"));
+        builder
+          .append(StringUtils.collectionToDelimited(entry.getValue(), ";"));
         qcMessages.add(builder.toString());
       }
 

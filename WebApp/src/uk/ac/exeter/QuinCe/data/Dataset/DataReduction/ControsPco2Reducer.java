@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeDataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficient;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
@@ -76,34 +77,36 @@ public class ControsPco2Reducer extends DataReducer {
     throws DataReductionException {
 
     try {
-      F = CalculationCoefficient.getCoefficient(calculationCoefficients,
-        variable, "F", dataset.getStart()).getBigDecimalValue();
+      TimeDataSet castDataset = (TimeDataSet) dataset;
 
-      calcKSteps(dataset);
-      calcZeroS2Beams(dataset, allMeasurements);
+      F = CalculationCoefficient.getCoefficient(calculationCoefficients,
+        variable, "F", castDataset.getStartTime()).getBigDecimalValue();
+
+      calcKSteps(castDataset);
+      calcZeroS2Beams(castDataset, allMeasurements);
     } catch (Exception e) {
       throw new DataReductionException(e);
     }
   }
 
-  private void calcKSteps(DataSet dataset) {
+  private void calcKSteps(TimeDataSet dataset) {
     k1Prior = CalculationCoefficient.getCoefficient(calculationCoefficients,
-      variable, "k1", dataset.getStart());
+      variable, "k1", dataset.getStartTime());
     k2Prior = CalculationCoefficient.getCoefficient(calculationCoefficients,
-      variable, "k2", dataset.getStart());
+      variable, "k2", dataset.getStartTime());
     k3Prior = CalculationCoefficient.getCoefficient(calculationCoefficients,
-      variable, "k3", dataset.getStart());
+      variable, "k3", dataset.getStartTime());
     runTimePrior = CalculationCoefficient.getCoefficient(
-      calculationCoefficients, variable, "Runtime", dataset.getStart());
+      calculationCoefficients, variable, "Runtime", dataset.getStartTime());
 
     k1Post = CalculationCoefficient.getPostCoefficient(calculationCoefficients,
-      variable, "k1", dataset.getEnd());
+      variable, "k1", dataset.getEndTime());
     k2Post = CalculationCoefficient.getPostCoefficient(calculationCoefficients,
-      variable, "k2", dataset.getEnd());
+      variable, "k2", dataset.getEndTime());
     k3Post = CalculationCoefficient.getPostCoefficient(calculationCoefficients,
-      variable, "k3", dataset.getEnd());
+      variable, "k3", dataset.getEndTime());
     runTimePost = CalculationCoefficient.getPostCoefficient(
-      calculationCoefficients, variable, "Runtime", dataset.getEnd());
+      calculationCoefficients, variable, "Runtime", dataset.getEndTime());
 
     if (null != k1Post && null != k2Post && null != k3Post
       && null != runTimePost) {
@@ -173,7 +176,8 @@ public class ControsPco2Reducer extends DataReducer {
 
       if (runType.equals(Measurement.INTERNAL_CALIBRATION_RUN_TYPE)) {
 
-        Double rawSignal = getZeroS2BeamRawSignal(dataset, measurement);
+        Double rawSignal = measurement
+          .getMeasurementValue("Raw Detector Signal").getCalculatedValue();
 
         if (!rawSignal.isNaN()) {
           runTimes.add(
@@ -190,12 +194,6 @@ public class ControsPco2Reducer extends DataReducer {
     }
 
     dataset.setProperty(variable, ZEROS_PROP, new Gson().toJson(zeroS2Beams));
-  }
-
-  protected Double getZeroS2BeamRawSignal(DataSet dataset,
-    Measurement measurement) throws SensorTypeNotFoundException {
-    return measurement.getMeasurementValue("Raw Detector Signal")
-      .getCalculatedValue();
   }
 
   @Override
@@ -360,15 +358,10 @@ public class ControsPco2Reducer extends DataReducer {
 
   private Double calcS2Beam(Measurement measurement)
     throws SensorTypeNotFoundException {
-
-    return calcS2Beam(
-      measurement.getMeasurementValue("Raw Detector Signal")
-        .getCalculatedValue(),
-      measurement.getMeasurementValue("Reference Signal").getCalculatedValue());
-  }
-
-  protected Double calcS2Beam(Double rawSignal, Double refSignal) {
-    return rawSignal / refSignal;
+    return measurement.getMeasurementValue("Raw Detector Signal")
+      .getCalculatedValue()
+      / measurement.getMeasurementValue("Reference Signal")
+        .getCalculatedValue();
   }
 
   private Double getInterpZeroS2Beam(Double runTime)

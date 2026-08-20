@@ -2,7 +2,6 @@ package uk.ac.exeter.QuinCe.web.datasets.plotPage.Position;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -13,14 +12,14 @@ import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDataDB;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
-import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.data.Instrument.MissingRunTypeException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
-import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.Progress;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.DataLatLng;
@@ -35,12 +34,14 @@ public class PositionQCData extends ManualQCData {
 
   private PlotPageColumnHeading timeHeading;
 
-  private PlotPageColumnHeading longitudeHeading;
+  private PlotPageColumnHeading longitudeHeading = null;
 
-  private PlotPageColumnHeading latitudeHeading;
+  private PlotPageColumnHeading latitudeHeading = null;
+
+  private PlotPageColumnHeading depthHeading = null;
 
   protected PositionQCData(DataSource dataSource, Instrument instrument,
-    DataSet dataset) throws SQLException {
+    DataSet dataset) throws SQLException, MissingRunTypeException {
     super(dataSource, instrument, dataset);
   }
 
@@ -52,15 +53,16 @@ public class PositionQCData extends ManualQCData {
 
     progress.setName("Loading position data");
     try (Connection conn = dataSource.getConnection()) {
-      sensorValues = DataSetDataDB.getPositionSensorValues(conn, instrument,
-        dataset.getId());
+      sensorValues = DataSetDataDB.getPositionSensorValues(conn, dataset);
     }
     progress.setValue(50F);
 
     // Build the row IDs
     progress.setName("Analysing data");
-    rowIDs = sensorValues.getRawPositionTimes().stream()
-      .map(t -> DateTimeUtils.dateToLong(t)).collect(Collectors.toList());
+    coordinates = new LinkedHashMap<Long, Coordinate>();
+    sensorValues.getCoordinates().forEach(v -> coordinates.put(v.getId(), v));
+    rowIDs = sensorValues.getRawPositionCoordinates().stream()
+      .map(c -> c.getId()).collect(Collectors.toList());
     progress.setValue(100F);
   }
 
@@ -75,50 +77,60 @@ public class PositionQCData extends ManualQCData {
       1);
 
     timeHeading = new PlotPageColumnHeading(FileDefinition.TIME_COLUMN_HEADING,
-      false, false, false);
+      false, false, true);
 
     rootColumns.add(timeHeading);
 
     columnHeadings.put(ROOT_FIELD_GROUP, rootColumns);
     extendedColumnHeadings.put(ROOT_FIELD_GROUP, rootColumns);
 
-    // Position - combined for view, separated for extended columns
     List<PlotPageColumnHeading> sensorColumns = new ArrayList<PlotPageColumnHeading>(
       1);
     List<PlotPageColumnHeading> extendedSensorColumns = new ArrayList<PlotPageColumnHeading>(
       2);
 
-    sensorColumns
-      .add(new PlotPageColumnHeading(FileDefinition.LONGITUDE_COLUMN_ID,
-        "Position", "Position", "POSITION", null, true, false, true, false));
+    if (!dataset.fixedPosition()) {
+      // Position - combined for view, separated for extended columns
+      sensorColumns
+        .add(new PlotPageColumnHeading(FileDefinition.LONGITUDE_COLUMN_ID,
+          "Position", "Position", "POSITION", null, true, false, true, true));
 
-    longitudeHeading = new PlotPageColumnHeading(
-      FileDefinition.LONGITUDE_COLUMN_HEADING, false, true, false);
+      longitudeHeading = new PlotPageColumnHeading(
+        FileDefinition.LONGITUDE_COLUMN_HEADING, false, true, true);
 
-    extendedSensorColumns.add(longitudeHeading);
+      extendedSensorColumns.add(longitudeHeading);
 
-    latitudeHeading = new PlotPageColumnHeading(
-      FileDefinition.LATITUDE_COLUMN_HEADING, false, true, false,
-      FileDefinition.LONGITUDE_COLUMN_ID);
+      latitudeHeading = new PlotPageColumnHeading(
+        FileDefinition.LATITUDE_COLUMN_HEADING, false, true, true,
+        FileDefinition.LONGITUDE_COLUMN_ID);
 
-    extendedSensorColumns.add(latitudeHeading);
+      extendedSensorColumns.add(latitudeHeading);
+    }
+
+    if (!dataset.fixedDepth()) {
+      depthHeading = new PlotPageColumnHeading(FileDefinition.DEPTH_COLUMN_ID,
+        "Depth", "Depth", "DEPH", "m", true, true, true, true);
+
+      sensorColumns.add(depthHeading);
+      extendedSensorColumns.add(depthHeading);
+    }
 
     columnHeadings.put(SENSORS_FIELD_GROUP, sensorColumns);
     extendedColumnHeadings.put(SENSORS_FIELD_GROUP, extendedSensorColumns);
   }
 
   protected PlotPageColumnHeading getDefaultXAxis1() throws Exception {
-    return longitudeHeading;
+    return !dataset.fixedPosition() ? longitudeHeading : timeHeading;
   }
 
   @Override
   protected PlotPageColumnHeading getDefaultYAxis1() throws Exception {
-    return latitudeHeading;
+    return !dataset.fixedPosition() ? latitudeHeading : depthHeading;
   }
 
   @Override
   protected PlotPageColumnHeading getDefaultYAxis2() throws Exception {
-    return latitudeHeading;
+    return !dataset.fixedPosition() ? latitudeHeading : depthHeading;
   }
 
   @Override
@@ -130,50 +142,64 @@ public class PositionQCData extends ManualQCData {
 
     try {
 
-      List<LocalDateTime> times = sensorValues.getRawPositionTimes();
+      List<Coordinate> coordinates = sensorValues.getRawPositionCoordinates();
 
       // Make sure we don't fall off the end of the dataset
       int lastRecord = start + length;
-      if (lastRecord > times.size()) {
-        lastRecord = times.size();
+      if (lastRecord > coordinates.size()) {
+        lastRecord = coordinates.size();
       }
 
       for (int i = start; i < lastRecord; i++) {
-        PlotPageTableRecord record = new PlotPageTableRecord(times.get(i));
+        PlotPageTableRecord record = new PlotPageTableRecord(coordinates.get(i),
+          dataset.getFlagScheme());
 
         // Timestamp
-        record.addColumn(times.get(i));
+        record.addCoordinate(coordinates.get(i));
 
-        PlotPageTableValue longitude = sensorValues
-          .getRawPositionTableValue(SensorType.LONGITUDE_ID, times.get(i));
-        PlotPageTableValue latitude = sensorValues
-          .getRawPositionTableValue(SensorType.LATITUDE_ID, times.get(i));
+        if (!dataset.fixedPosition()) {
+          PlotPageTableValue longitude = sensorValues.getRawPositionTableValue(
+            SensorType.LONGITUDE_ID, coordinates.get(i));
+          PlotPageTableValue latitude = sensorValues.getRawPositionTableValue(
+            SensorType.LATITUDE_ID, coordinates.get(i));
 
-        // The lon/lat can be null if the instrument has a fixed position
-        if (null != longitude && null != latitude
-          && null != longitude.getValue() && null != latitude.getValue()) {
+          // The lon/lat can be null if the instrument has a fixed position
+          if (null != longitude && null != latitude
+            && null != longitude.getValue() && null != latitude.getValue()) {
 
-          StringBuilder positionString = new StringBuilder();
-          if (null != longitude.getValue() && null != latitude.getValue()) {
-            positionString
-              .append(StringUtils.formatNumber(longitude.getValue()));
-            positionString.append(" | ");
-            positionString
-              .append(StringUtils.formatNumber(latitude.getValue()));
+            StringBuilder positionString = new StringBuilder();
+            if (null != longitude.getValue() && null != latitude.getValue()) {
+              positionString
+                .append(StringUtils.formatNumber(longitude.getValue()));
+              positionString.append(" | ");
+              positionString
+                .append(StringUtils.formatNumber(latitude.getValue()));
+            }
+
+            Collection<Long> sources = new ArrayList<Long>();
+            sources.addAll(longitude.getSources());
+            sources.addAll(latitude.getSources());
+
+            record.addColumn(positionString.toString(),
+              longitude.getQcFlag(getAllSensorValues()),
+              longitude.getQcMessage(sensorValues, false),
+              longitude.getFlagNeeded(), longitude.getType(), sources);
+          } else {
+            // Empty position column
+            record.addColumn("", sensorValues.getFlagScheme().getGoodFlag(),
+              null, false, PlotPageTableValue.NAN_TYPE, null);
           }
+        }
 
-          Collection<Long> sources = new ArrayList<Long>();
-          sources.addAll(longitude.getSources());
-          sources.addAll(latitude.getSources());
+        if (!dataset.fixedDepth()) {
+          SensorValue depthValue = sensorValues
+            .getRawSensorValue(SensorType.DEPTH_ID, coordinates.get(i));
 
-          record.addColumn(positionString.toString(),
-            longitude.getQcFlag(getAllSensorValues()),
-            longitude.getQcMessage(sensorValues, false),
-            longitude.getFlagNeeded(), longitude.getType(), sources);
-        } else {
-          // Empty position column
-          record.addColumn("", Flag.GOOD, null, false,
-            PlotPageTableValue.NAN_TYPE, null);
+          if (null == depthValue) {
+            record.addBlankColumn(PlotPageTableValue.MEASURED_TYPE);
+          } else {
+            record.addColumn(new SensorValuePlotPageTableValue(depthValue));
+          }
         }
 
         records.add(record);
@@ -186,8 +212,8 @@ public class PositionQCData extends ManualQCData {
   }
 
   @Override
-  protected List<LocalDateTime> getDataTimes() {
-    return sensorValues.getRawPositionTimes();
+  protected List<Coordinate> getCoordinates() {
+    return sensorValues.getRawPositionCoordinates();
   }
 
   @Override
@@ -202,11 +228,11 @@ public class PositionQCData extends ManualQCData {
   }
 
   @Override
-  protected DataLatLng getMapPosition(LocalDateTime time) throws Exception {
+  protected DataLatLng getMapPosition(Coordinate coordinate) throws Exception {
     PlotPageTableValue longitude = getAllSensorValues()
-      .getRawPositionTableValue(SensorType.LONGITUDE_ID, time);
+      .getRawPositionTableValue(SensorType.LONGITUDE_ID, coordinate);
     PlotPageTableValue latitude = getAllSensorValues()
-      .getRawPositionTableValue(SensorType.LATITUDE_ID, time);
+      .getRawPositionTableValue(SensorType.LATITUDE_ID, coordinate);
 
     DataLatLng result = null;
 
@@ -224,20 +250,21 @@ public class PositionQCData extends ManualQCData {
   }
 
   @Override
-  protected TreeMap<LocalDateTime, PlotPageTableValue> getColumnValues(
+  public TreeMap<Coordinate, PlotPageTableValue> getColumnValues(
     PlotPageColumnHeading column) throws Exception {
 
-    TreeMap<LocalDateTime, PlotPageTableValue> result = new TreeMap<LocalDateTime, PlotPageTableValue>();
+    TreeMap<Coordinate, PlotPageTableValue> result = new TreeMap<Coordinate, PlotPageTableValue>();
 
     if (column.getId() == FileDefinition.TIME_COLUMN_ID) {
-      for (LocalDateTime time : getDataTimes()) {
-        result.put(time, new SimplePlotPageTableValue(time, null, true));
+      for (Coordinate coordinate : getCoordinates()) {
+        result.put(coordinate,
+          new SimplePlotPageTableValue(coordinate, dataset.getFlagScheme()));
       }
     } else if (SensorType.isPosition(column.getId())) {
       List<SensorValue> values = sensorValues.getColumnValues(column.getId())
         .getRawValues();
-      values.forEach(
-        v -> result.put(v.getTime(), new SensorValuePlotPageTableValue(v)));
+      values.forEach(v -> result.put(v.getCoordinate(),
+        new SensorValuePlotPageTableValue(v)));
     } else {
       throw new IllegalArgumentException(
         "Can only use time or position columns");

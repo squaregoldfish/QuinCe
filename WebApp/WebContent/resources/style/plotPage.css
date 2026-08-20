@@ -111,6 +111,11 @@ td.selected > div {
   background-color: #FFFF00 !important;
 }
 
+table.dataTable tbody tr.selected > * {
+  box-shadow: #FFFF00E6 0px 0px 0px 9999px inset;
+  color: #000000;
+}
+
 .interpolated {
   font-style: italic;
 }
@@ -224,6 +229,15 @@ td.selected > div {
 
 .hideFlagsButton {
   background-image: url("#{resource['image/noflags.svg']}") !important;
+  background-size: cover;
+  margin-left: -13px !important;
+  margin-top: -13px !important;
+  width: 25px !important;
+  height: 25px !important;
+}
+
+.filterRunTypesButton {
+  background-image: url("#{resource['image/filter_button.svg']}") !important;
   background-size: cover;
   margin-left: -13px !important;
   margin-top: -13px !important;
@@ -361,4 +375,18 @@ td.selected > div {
 
 #qcMessage {
   margin-top: 6px;
+}
+
+.noDataMessage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 2em;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.noDataMessage-hidden {
+  display: none;
 }

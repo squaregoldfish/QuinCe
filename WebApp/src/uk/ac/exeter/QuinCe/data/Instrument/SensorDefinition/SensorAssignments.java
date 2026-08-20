@@ -19,8 +19,12 @@ import java.util.stream.Stream;
 import javax.sql.DataSource;
 
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
+import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.PositionSpecification;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.NewInstrumentBean;
+import uk.ac.exeter.QuinCe.web.Instrument.NewInstrument.NewInstrumentFileSet;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
@@ -44,6 +48,14 @@ public class SensorAssignments
   private static final int NOT_ASSIGNED = 0;
 
   /**
+   * We can override whether a {@link SensorType} must be assigned by putting an
+   * entry in this map.
+   *
+   * @see #isAssignmentRequired(SensorType, Map)
+   */
+  protected HashMap<SensorType, Boolean> forcedAssignmentRequired = new HashMap<SensorType, Boolean>();
+
+  /**
    * The database IDs of the variables that this set of assignments is targeting
    */
   private List<Long> variableIDs;
@@ -65,7 +77,7 @@ public class SensorAssignments
    * @throws SensorTypeNotFoundException
    *           If any internally listed SensorTypes don't exist
    */
-  public SensorAssignments(Connection conn, List<Long> variableIDs)
+  protected SensorAssignments(Connection conn, List<Long> variableIDs)
     throws DatabaseException, SensorConfigurationException,
     SensorTypeNotFoundException {
 
@@ -89,7 +101,7 @@ public class SensorAssignments
    * @throws SensorTypeNotFoundException
    *           If any internally listed SensorTypes don't exist
    */
-  public SensorAssignments(DataSource dataSource, List<Long> variableIDs)
+  protected SensorAssignments(DataSource dataSource, List<Long> variableIDs)
     throws SensorTypeNotFoundException, SensorConfigurationException,
     DatabaseException {
     super();
@@ -204,20 +216,26 @@ public class SensorAssignments
 
     boolean result;
 
-    if (sensorType.equals(SensorType.RUN_TYPE_SENSOR_TYPE)) {
-      result = isRunTypeSensorTypeRequired();
+    if (forcedAssignmentRequired.containsKey(sensorType)) {
+      result = forcedAssignmentRequired.get(sensorType)
+        && !isAssigned(sensorType, true, true);
     } else {
-      // Is the sensor required for the variables being measured?
-      boolean required = getSensorConfig().requiredForVariables(sensorType,
-        variableIDs, varAttributes);
 
-      // Do other required sensors depend on this SensorType?
-      if (hasAssignedDependents(sensorType)) {
-        required = true;
+      if (sensorType.equals(SensorType.RUN_TYPE_SENSOR_TYPE)) {
+        result = isRunTypeSensorTypeRequired();
+      } else {
+        // Is the sensor required for the variables being measured?
+        boolean required = getSensorConfig().requiredForVariables(sensorType,
+          variableIDs, varAttributes);
+
+        // Do other required sensors depend on this SensorType?
+        if (hasAssignedDependents(sensorType)) {
+          required = true;
+        }
+
+        // If it's required and primary not assigned, return true
+        result = (required && !isAssigned(sensorType, true, true));
       }
-
-      // If it's required and primary not assigned, return true
-      result = (required && !isAssigned(sensorType, true, true));
     }
 
     return result;
@@ -301,6 +319,21 @@ public class SensorAssignments
    */
   public boolean isAssigned(SensorType sensorType) {
     return isAssigned(sensorType, false, false);
+  }
+
+  public boolean isAssigned(String... sensorTypeNames)
+    throws SensorTypeNotFoundException {
+    boolean assigned = true;
+
+    for (String sensorTypeName : sensorTypeNames) {
+      if (!isAssigned(ResourceManager.getInstance().getSensorsConfiguration()
+        .getSensorType(sensorTypeName))) {
+        assigned = false;
+        break;
+      }
+    }
+
+    return assigned;
   }
 
   /**
@@ -579,10 +612,24 @@ public class SensorAssignments
         + assignment.getSensorName() + " has already been assigned");
     }
 
+    /*
+     * The Depth type is not within any Variables, so we add it to our
+     * assignments without checks.
+     */
+    if (assignment.getSensorType().equals(SensorType.DEPTH_SENSOR_TYPE)) {
+      if (!containsKey(SensorType.DEPTH_SENSOR_TYPE)) {
+        put(SensorType.DEPTH_SENSOR_TYPE, new TreeSet<SensorAssignment>());
+      }
+
+      get(SensorType.DEPTH_SENSOR_TYPE).add(assignment);
+    }
+
     TreeSet<SensorAssignment> assignments = get(assignment.getSensorType());
     if (null == assignments) {
-      // The sensor is not valid for this instrument, so it has not
-      // been added to the assignments list
+      /*
+       * The sensor is not valid for this instrument, so it has not been added
+       * to the assignments list
+       */
       throw new SensorAssignmentException(
         assignment.getSensorType().getShortName()
           + " is not valid for this instrument");
@@ -758,6 +805,8 @@ public class SensorAssignments
       result = SensorType.LONGITUDE_SENSOR_TYPE;
     } else if (columnId == FileDefinition.LATITUDE_COLUMN_ID) {
       result = SensorType.LATITUDE_SENSOR_TYPE;
+    } else if (columnId == FileDefinition.DEPTH_COLUMN_ID) {
+      result = SensorType.DEPTH_SENSOR_TYPE;
     } else {
       // Try to get the SensorType from the cache
       result = dbColumnSensorTypeCache.get(columnId);
@@ -815,6 +864,17 @@ public class SensorAssignments
    */
   public List<Long> getSensorColumnIds() {
     return getColumnIds(SensorType::isSensor);
+  }
+
+  /**
+   * Get the column IDs of all sensor columns in a specified group.
+   *
+   * @param group
+   *          The group.
+   * @return The matching column IDs.
+   */
+  public List<Long> getGroupColumnIds(String group) {
+    return getColumnIds(s -> s.getGroup().equals(group));
   }
 
   /**
@@ -915,6 +975,9 @@ public class SensorAssignments
       } else if (sensorType.equals(SensorType.LATITUDE_SENSOR_TYPE)) {
         result = new ArrayList<Long>(1);
         result.add(FileDefinition.LATITUDE_COLUMN_ID);
+      } else if (sensorType.equals(SensorType.DEPTH_SENSOR_TYPE)) {
+        result = new ArrayList<Long>(1);
+        result.add(FileDefinition.DEPTH_COLUMN_ID);
       } else {
 
         SensorsConfiguration sensorConfig = ResourceManager.getInstance()
@@ -1219,5 +1282,61 @@ public class SensorAssignments
   public static Collection<Long> getColumnIdsForAssignments(
     Collection<SensorAssignment> assignments) {
     return assignments.stream().map(a -> a.getDatabaseId()).toList();
+  }
+
+  public static SensorAssignments create(int basis, DataSource dataSource,
+    List<Long> instrumentVariables) throws SensorTypeNotFoundException,
+    SensorConfigurationException, DatabaseException {
+
+    switch (basis) {
+    case Instrument.BASIS_TIME: {
+      return new SensorAssignments(dataSource, instrumentVariables);
+    }
+    case Instrument.BASIS_ARGO: {
+      return new ArgoSensorAssignments(dataSource, instrumentVariables);
+    }
+    default: {
+      throw new IllegalArgumentException("Unrecognised basis " + basis);
+    }
+    }
+  }
+
+  public int getFixedLongitudeFormat() {
+    return PositionSpecification.NO_FORMAT;
+  }
+
+  public int getFixedLatitudeFormat() {
+    return PositionSpecification.NO_FORMAT;
+  }
+
+  public void forceAssignment(SensorType sensorType) {
+    put(sensorType, new TreeSet<SensorAssignment>());
+    forcedAssignmentRequired.put(sensorType, true);
+  }
+
+  /**
+   * Custom assignment of file columns to sensor types. The default
+   * implementation does nothing.
+   *
+   * <p>
+   * The {@link NewInstrumentBean} will attempt to automatically assign columns
+   * to sensor types. Some instrument types can automatically specify their own
+   * assignments over and above what can be done generically. This can include:
+   * </p>
+   * <ul>
+   * <li>Date/Time and Position assignments, which also need a format assigned.
+   * QuinCe can't guess this, but some applications (e.g. Argo) will have fixed
+   * formats.</li>
+   * <li>QuinCe will refuse to guess some columns (e.g. TEMP) because they are
+   * too generic and may refer to different things in different circumstances.
+   * If we absolutely know what they refer to, we can add them here.</li>
+   * </ul>
+   *
+   * @param files
+   *          The instrument's files.
+   */
+  public void customAssignColumns(NewInstrumentFileSet files)
+    throws SensorAssignmentException {
+    // NOOP
   }
 }

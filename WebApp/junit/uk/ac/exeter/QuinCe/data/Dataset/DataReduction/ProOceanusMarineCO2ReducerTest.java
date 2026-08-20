@@ -44,13 +44,13 @@ public class ProOceanusMarineCO2ReducerTest extends DataReducerTest {
 
     // Make a record to work with
     DataReductionRecord record = new DataReductionRecord(measurement, variable,
-      reducer.getCalculationParameterNames());
+      flagScheme, reducer.getCalculationParameterNames());
 
     reducer.doCalculation(instrument, measurement, record,
       getDataSource().getConnection());
 
     assertEquals(394.32817D, record.getCalculationValue("pCO₂ SST"), 0.0001);
-    assertEquals(394.32669D, record.getCalculationValue("fCO₂"), 0.0001);
+    assertEquals(392.82228D, record.getCalculationValue("fCO₂"), 0.0001);
 
   }
 

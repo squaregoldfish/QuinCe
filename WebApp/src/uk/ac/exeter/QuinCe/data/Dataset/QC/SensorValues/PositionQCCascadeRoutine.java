@@ -4,13 +4,15 @@ import java.time.LocalDateTime;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriods;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
-import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
+import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Routine;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineFlag;
+import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategoryException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
@@ -18,42 +20,49 @@ import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
 
-public class PositionQCCascadeRoutine implements Routine {
+public class PositionQCCascadeRoutine extends Routine {
 
   public static final String ROUTINE_NAME = "Position QC Cascade";
+
+  public PositionQCCascadeRoutine(FlagScheme flagScheme) {
+    super(flagScheme, null);
+  }
 
   public void run(Instrument instrument, DatasetSensorValues allSensorValues,
     RunTypePeriods runTypePeriods) throws RoutineException {
 
-    try {
-      TreeSet<LocalDateTime> allTimes = new TreeSet<LocalDateTime>();
-      allTimes.addAll(allSensorValues.getTimes());
+    stubCheck();
 
-      for (LocalDateTime time : allTimes) {
+    try {
+      TreeSet<Coordinate> allCoordiantes = new TreeSet<Coordinate>();
+      allCoordiantes.addAll(allSensorValues.getCoordinates());
+
+      for (Coordinate coordinate : allCoordiantes) {
         PlotPageTableValue position = allSensorValues
-          .getPositionTableValue(SensorType.LONGITUDE_ID, time);
+          .getPositionTableValue(getSensorValueId(), coordinate);
 
         // If the position is empty, all SensorValues are Bad.
         if (null == position) {
+          RoutineFlag missingPositionFlag = new RoutineFlag(flagScheme, this,
+            flagScheme.getBadFlag(), getExpectedValue(), "null");
 
-          RoutineFlag missingPositionFlag = new RoutineFlag(this, Flag.BAD,
-            "Any Position", "null");
-
-          for (SensorValue value : allSensorValues.get(time).values()) {
-            if (shouldApplyFlag(instrument, runTypePeriods, time, value)) {
+          for (SensorValue value : allSensorValues.get(coordinate).values()) {
+            if (shouldApplyFlag(instrument, runTypePeriods,
+              coordinate.getTime(), value)) {
               value.addAutoQCFlag(missingPositionFlag);
-              value.setUserQC(Flag.BAD, getShortMessage());
+              value.setUserQC(flagScheme.getBadFlag(), getShortMessage());
             }
           }
         } else if (position.getType() != PlotPageTableValue.NAN_TYPE) {
           // Cascade the Position QC to sensor values
-          for (SensorValue value : allSensorValues.get(time).values()) {
+          for (SensorValue value : allSensorValues.get(coordinate).values()) {
             boolean setCascade = shouldApplyFlag(instrument, runTypePeriods,
-              time, value);
+              coordinate.getTime(), value);
 
             removePositionCascadeQC(value, allSensorValues);
 
-            if (setCascade && !position.getQcFlag(allSensorValues).isGood()) {
+            if (setCascade && !flagScheme
+              .isGood(position.getQcFlag(allSensorValues), true)) {
               value.setCascadingQC(position);
             }
           }
@@ -100,8 +109,8 @@ public class PositionQCCascadeRoutine implements Routine {
       .getSensorTypeForDBColumn(value.getColumnId());
 
     if (sensorType.equals(SensorType.RUN_TYPE_SENSOR_TYPE)
-      || (sensorType.hasInternalCalibration()
-        && !instrument.isMeasurementRunType(runTypePeriods.getRunType(time)))) {
+      || (sensorType.hasInternalCalibration() && !instrument
+        .isMeasurementRunType(runTypePeriods.getRunType(time, false)))) {
       result = false;
     }
 
@@ -110,13 +119,13 @@ public class PositionQCCascadeRoutine implements Routine {
 
   private void removePositionCascadeQC(SensorValue value,
     DatasetSensorValues allSensorValues) {
-    if (value.getUserQCFlag().equals(Flag.LOOKUP)) {
+    if (value.getUserQCFlag().equals(FlagScheme.LOOKUP_FLAG)) {
       SortedSet<Long> sources = StringUtils
         .delimitedToLongSet(value.getUserQCMessage());
 
       for (Long sourceID : sources) {
         SensorValue source = allSensorValues.getById(sourceID);
-        if (source.isPosition()) {
+        if (isPosition(source)) {
           value.removeCascadingQC(sourceID);
         }
       }
@@ -136,5 +145,19 @@ public class PositionQCCascadeRoutine implements Routine {
   @Override
   public String getLongMessage(RoutineFlag flag) {
     return "Invalid/missing position";
+  }
+
+  protected long getSensorValueId() {
+    return SensorType.LONGITUDE_ID;
+  }
+
+  protected String getExpectedValue() {
+    return "Any position";
+  }
+
+  protected boolean isPosition(SensorValue value) {
+    long columnId = value.getColumnId();
+    return columnId == FileDefinition.LONGITUDE_COLUMN_ID
+      || columnId == FileDefinition.LATITUDE_COLUMN_ID;
   }
 }

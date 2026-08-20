@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,14 +22,19 @@ import com.google.gson.reflect.TypeToken;
 import com.javadocmd.simplelatlng.LatLng;
 
 import uk.ac.exeter.QuinCe.data.Dataset.ColumnHeading;
+import uk.ac.exeter.QuinCe.data.Dataset.Coordinate;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDataDB;
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.GeoBounds;
 import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriods;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
+import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.data.Instrument.MissingRunTypeException;
+import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignment;
+import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.ExceptionUtils;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
@@ -36,6 +42,11 @@ import uk.ac.exeter.QuinCe.web.Progress;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 public abstract class PlotPageData {
+
+  /**
+   * Entry to indicate that no filtering is being applied to data.
+   */
+  public static final String NO_FILTER = "No Filter";
 
   /**
    * Indicates a select action
@@ -76,7 +87,7 @@ public abstract class PlotPageData {
   /**
    * Gson instance for serializing table data
    */
-  private Gson tableDataGson;
+  protected Gson tableDataGson;
 
   /**
    * Gson instance for serializing column headings
@@ -151,7 +162,12 @@ public abstract class PlotPageData {
   /**
    * Cache of data structured for maps
    */
-  private Map<PlotPageColumnHeading, MapRecords> mapCache = new HashMap<PlotPageColumnHeading, MapRecords>();
+  protected Map<PlotPageColumnHeading, MapRecords> mapCache = new HashMap<PlotPageColumnHeading, MapRecords>();
+
+  /**
+   * The available filter values.
+   */
+  private List<String> filterValues = null;
 
   /**
    * The indicator of the root field group.
@@ -171,10 +187,52 @@ public abstract class PlotPageData {
   public static final String MEASUREMENTVALUES_FIELD_GROUP = "Measurement Values";
 
   protected PlotPageData(DataSource dataSource, Instrument instrument,
-    DataSet dataset) throws SQLException {
+    DataSet dataset) throws SQLException, MissingRunTypeException {
     this.dataSource = dataSource;
     this.instrument = instrument;
     this.dataset = dataset;
+    initFilterValues();
+  }
+
+  /**
+   * Build the list of possible data filter values.
+   *
+   * <p>
+   * These are based on the instrument's Run Types, ordered by:
+   * </p>
+   * <ol>
+   * <li>Measurements</li>
+   * <li>Internal Calibrations</li>
+   * <li>Other run types</li>
+   * </ol>
+   *
+   * @throws MissingRunTypeException
+   */
+  private void initFilterValues() throws MissingRunTypeException {
+    // Build the list of filter options from the instrument's run types
+    filterValues = new ArrayList<String>();
+    filterValues.add(NO_FILTER);
+
+    filterValues.addAll(
+      instrument.getMeasurementRunTypes(false).stream().sorted().toList());
+    filterValues.addAll(instrument.getInternalCalibrationRunTypes(false)
+      .stream().sorted().toList());
+
+    // Extract all other run types in alphabetical order
+    TreeSet<String> otherRunTypes = new TreeSet<String>();
+
+    for (Map.Entry<RunTypeCategory, TreeSet<RunTypeAssignment>> entry : instrument
+      .getAllRunTypes().entrySet()) {
+
+      if (!entry.getKey().isMeasurementType()
+        && !entry.getKey().equals(RunTypeCategory.INTERNAL_CALIBRATION)
+        && !entry.getKey().equals(RunTypeCategory.ALIAS)) {
+        otherRunTypes.addAll(entry.getValue().stream().map(a -> a.getRunName())
+          .filter(n -> !StringUtils.isEmpty(n)).toList());
+      }
+    }
+
+    filterValues.addAll(otherRunTypes);
   }
 
   /**
@@ -196,20 +254,16 @@ public abstract class PlotPageData {
       if (instrument.hasRunTypes()) {
         DataSource dataSource = ResourceManager.getInstance().getDBDataSource();
         try (Connection conn = dataSource.getConnection()) {
-          runTypePeriods = DataSetDataDB.getRunTypePeriods(conn, instrument,
-            dataset.getId());
+          runTypePeriods = DataSetDataDB.getRunTypePeriods(conn, dataset);
         } catch (SQLException e) {
           error("Error loading data", e);
         }
       } else {
         runTypePeriods = new RunTypePeriods();
+        this.filterValues = Arrays.asList(NO_FILTER);
       }
 
-      // Initialise Gson builder
-      tableDataGson = new GsonBuilder()
-        .registerTypeAdapter(PlotPageTableRecord.class,
-          new PlotPageTableRecordSerializer(getAllSensorValues()))
-        .create();
+      initTableDataGson();
 
       columnHeadingsGson = new GsonBuilder()
         .registerTypeAdapter(new TreeMap<LocalDateTime, Double>().getClass(),
@@ -217,17 +271,64 @@ public abstract class PlotPageData {
         .serializeNulls().create();
 
       // Initialise the plots
-      plot1 = new Plot(this, getDefaultXAxis1(), getDefaultYAxis1(),
-        !dataset.isNrt());
-      plot2 = new Plot(this, getDefaultXAxis2(), getDefaultYAxis2(),
-        !dataset.isNrt());
-      map1 = new QCMap(this, getDefaultMap1Column(), !dataset.isNrt());
-      map2 = new QCMap(this, getDefaultMap2Column(), !dataset.isNrt());
+      createPlot1();
+      createPlot2();
+      createMap1();
+      createMap2();
 
       loaded = true;
     } catch (Exception e) {
       error("Error while loading dataset data", e);
     }
+  }
+
+  /**
+   * Create the first plot.
+   *
+   * @throws Exception
+   *           If the plot cannot be created.
+   */
+  protected void createPlot1() throws Exception {
+    plot1 = new Plot(this, getDefaultXAxis1(), getDefaultYAxis1(),
+      !dataset.isNrt());
+  }
+
+  /**
+   * Create the second plot.
+   *
+   * @throws Exception
+   *           If the plot cannot be created.
+   */
+  protected void createPlot2() throws Exception {
+    plot2 = new Plot(this, getDefaultXAxis2(), getDefaultYAxis2(),
+      !dataset.isNrt());
+  }
+
+  /**
+   * Create the first map.
+   *
+   * @throws Exception
+   *           If the map cannot be created.
+   */
+  protected void createMap1() throws Exception {
+    map1 = new QCMap(this, getDefaultMap1Column(), !dataset.isNrt());
+  }
+
+  /**
+   * Create the second map.
+   *
+   * @throws Exception
+   *           If the map cannot be created.
+   */
+  protected void createMap2() throws Exception {
+    map2 = new QCMap(this, getDefaultMap2Column(), !dataset.isNrt());
+  }
+
+  protected void initTableDataGson() {
+    tableDataGson = new GsonBuilder()
+      .registerTypeHierarchyAdapter(PlotPageTableRecord.class,
+        new PlotPageTableRecordSerializer(getAllSensorValues()))
+      .create();
   }
 
   /**
@@ -575,7 +676,6 @@ public abstract class PlotPageData {
    *          The underlying cause.
    */
   protected void error(String message, Throwable cause) {
-
     long millis = DateTimeUtils.dateToLong(LocalDateTime.now());
     this.errorMessage = millis + ": " + message;
     ExceptionUtils.printStackTrace(cause);
@@ -859,8 +959,8 @@ public abstract class PlotPageData {
   }
 
   protected void initPlots() {
-    plot1.init();
-    plot2.init();
+    getPlot1().init();
+    getPlot2().init();
   }
 
   /**
@@ -870,7 +970,7 @@ public abstract class PlotPageData {
    *          The column.
    * @return The column values.
    */
-  protected abstract TreeMap<LocalDateTime, PlotPageTableValue> getColumnValues(
+  protected abstract TreeMap<Coordinate, PlotPageTableValue> getColumnValues(
     PlotPageColumnHeading column) throws Exception;
 
   /**
@@ -962,18 +1062,31 @@ public abstract class PlotPageData {
     return mapCache.get(column).getValueRange(getAllSensorValues(), hideFlags);
   }
 
-  protected abstract List<LocalDateTime> getDataTimes();
+  protected abstract List<Coordinate> getCoordinates();
 
   public String getMapData(PlotPageColumnHeading column, GeoBounds bounds,
-    boolean useNeededFlags, boolean hideNonGoodFlags,
-    DatasetSensorValues allSensorValues) throws Exception {
+    boolean useNeededFlags, boolean hideNonGoodFlags, String filter,
+    boolean includePath, DatasetSensorValues allSensorValues) throws Exception {
 
     if (!mapCache.containsKey(column)) {
       buildMapCache(column);
     }
 
-    return mapCache.get(column).getDisplayJson(bounds, selectedRows,
-      useNeededFlags, hideNonGoodFlags, allSensorValues);
+    return mapCache.get(column).getDisplayJson(bounds, getMapSelection(),
+      useNeededFlags, hideNonGoodFlags, filter, includePath, allSensorValues);
+  }
+
+  /**
+   * Get the row IDs to be highlighted on the map.
+   *
+   * <p>
+   * By default this returns the list of selected records in the main QC table.
+   * </p>
+   *
+   * @return The selection to be displayed on the map.
+   */
+  protected List<Long> getMapSelection() {
+    return selectedRows;
   }
 
   public GeoBounds getMapBounds(PlotPageColumnHeading column,
@@ -986,21 +1099,19 @@ public abstract class PlotPageData {
       hideNonGoodFlags);
   }
 
-  private void buildMapCache(PlotPageColumnHeading column) throws Exception {
+  protected void buildMapCache(PlotPageColumnHeading column) throws Exception {
 
-    MapRecords records = new MapRecords(size(), getAllSensorValues());
+    MapRecords records = new MapRecords(size(), this);
 
     if (column.getId() == FileDefinition.TIME_COLUMN_ID) {
-      List<LocalDateTime> times = getDataTimes();
-      for (LocalDateTime time : times) {
-        LatLng position = getAllSensorValues().getClosestPosition(time);
-        records.add(new TimeMapRecord(position, time));
+      for (Coordinate coordinate : getCoordinates()) {
+        LatLng position = getAllSensorValues().getClosestPosition(coordinate);
+        records.add(new TimeMapRecord(position, coordinate));
       }
     } else {
-      TreeMap<LocalDateTime, PlotPageTableValue> values = getColumnValues(
-        column);
+      TreeMap<Coordinate, PlotPageTableValue> values = getColumnValues(column);
 
-      for (Map.Entry<LocalDateTime, PlotPageTableValue> entry : values
+      for (Map.Entry<Coordinate, PlotPageTableValue> entry : values
         .entrySet()) {
         LatLng position = getMapPosition(entry.getKey());
         if (null != position) {
@@ -1013,24 +1124,118 @@ public abstract class PlotPageData {
     mapCache.put(column, records);
   }
 
-  protected abstract DataLatLng getMapPosition(LocalDateTime time)
+  protected abstract DataLatLng getMapPosition(Coordinate coordinate)
     throws Exception;
 
   public boolean getPlot1HideFlags() {
-    return null == plot1 ? false : plot1.getHideFlags();
+    return null == getPlot1() ? false : getPlot1().getHideFlags();
   }
 
   public void setPlot1HideFlags(boolean hide) {
-    plot1.setHideFlags(hide);
-    map1.setHideFlags(hide);
+    if (null != getPlot1()) {
+      getPlot1().setHideFlags(hide);
+    }
+
+    if (null != getMap1()) {
+      getMap1().setHideFlags(hide);
+    }
   }
 
   public boolean getPlot2HideFlags() {
-    return null == plot2 ? false : plot1.getHideFlags();
+    return null == getPlot2() ? false : getPlot2().getHideFlags();
   }
 
   public void setPlot2HideFlags(boolean hide) {
-    plot2.setHideFlags(hide);
-    map2.setHideFlags(hide);
+    if (null != getPlot2()) {
+      getPlot2().setHideFlags(hide);
+    }
+
+    if (null != getMap2()) {
+      getMap2().setHideFlags(hide);
+    }
+  }
+
+  /**
+   * Get the X Axis for Plot 1.
+   *
+   * <p>
+   * If the plot has not yet been initialised, return the default X axis.
+   * </p>
+   *
+   * @return The X axis for Plot 1.
+   * @throws Exception
+   *           If the axis cannot be accessed.
+   */
+  public long getPlot1XAxis() throws Exception {
+    return null == getPlot1() ? getDefaultXAxis1().getId()
+      : getPlot1().getXaxis();
+  }
+
+  /**
+   * Set Plot 1's X Axis.
+   *
+   * <p>
+   * If the plot has not been initialised, the call is ignored.
+   * </p>
+   *
+   * @param xAxis
+   *          The new X axis.
+   * @throws Exception
+   *           If the axis cannot be set.
+   */
+  public void setPlot1XAxis(long xAxis) throws Exception {
+    if (null != getPlot1()) {
+      getPlot1().setXaxis(xAxis);
+    }
+  }
+
+  /**
+   * Get the X Axis for Plot 2.
+   *
+   * <p>
+   * If the plot has not yet been initialised, return the default X axis.
+   * </p>
+   *
+   * @return The X axis for Plot 2.
+   * @throws Exception
+   *           If the axis cannot be accessed.
+   */
+  public long getPlot2XAxis() throws Exception {
+    return null == getPlot2() ? getDefaultXAxis2().getId()
+      : getPlot2().getXaxis();
+  }
+
+  /**
+   * Set Plot 2's X Axis.
+   *
+   * <p>
+   * If the plot has not been initialised, the call is ignored.
+   * </p>
+   *
+   * @param xAxis
+   *          The new X axis.
+   * @throws Exception
+   *           If the axis cannot be set.
+   */
+  public void setPlot2XAxis(long xAxis) throws Exception {
+    if (null != getPlot2()) {
+      getPlot2().setXaxis(xAxis);
+    }
+  }
+
+  public FlagScheme getFlagScheme() {
+    return dataset.getFlagScheme();
+  }
+
+  public Instrument getInstrument() {
+    return instrument;
+  }
+
+  public List<String> getFilterValues() {
+    return filterValues;
+  }
+
+  public RunTypePeriods getRunTypePeriods() {
+    return runTypePeriods;
   }
 }

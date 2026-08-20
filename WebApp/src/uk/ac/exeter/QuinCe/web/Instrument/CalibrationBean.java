@@ -416,8 +416,10 @@ public abstract class CalibrationBean extends BaseManagedBean {
       datasetJson.put("id", getTimelineId(dataset));
       datasetJson.put("type", "range");
       datasetJson.put("group", "Datasets");
-      datasetJson.put("start", DateTimeUtils.toIsoDate(dataset.getStart()));
-      datasetJson.put("end", DateTimeUtils.toIsoDate(dataset.getEnd()));
+      datasetJson.put("start",
+        DateTimeUtils.formatDateTime(dataset.getStartTime()));
+      datasetJson.put("end",
+        DateTimeUtils.formatDateTime(dataset.getEndTime()));
       datasetJson.put("content", dataset.getName());
       datasetJson.put("title", dataset.getName());
       datasetJson.put("className", entry.getValue().getDisplayClass());
@@ -884,10 +886,11 @@ public abstract class CalibrationBean extends BaseManagedBean {
 
     for (DataSet dataset : datasets.keySet()) {
       CalibrationSet originalSet = new CalibrationSet(calibrationTargets,
-        dataset.getStart(), dataset.getEnd(), dbInstance, originalCalibrations);
+        dataset.getStartTime(), dataset.getEndTime(), dbInstance,
+        originalCalibrations);
 
       CalibrationSet editedSet = new CalibrationSet(calibrationTargets,
-        dataset.getStart(), dataset.getEnd(), dbInstance, calibrations);
+        dataset.getStartTime(), dataset.getEndTime(), dbInstance, calibrations);
 
       boolean recalculationRequired = !editedSet.hasSameEffect(originalSet);
       boolean canBeRecalculated = true;
@@ -961,8 +964,8 @@ public abstract class CalibrationBean extends BaseManagedBean {
    */
   private boolean isInDataset(LocalDateTime time) {
     return datasets.keySet().stream()
-      .anyMatch(d -> !DateTimeUtils.isEqualOrBefore(d.getEnd(), time)
-        && !DateTimeUtils.isEqualOrAfter(d.getStart(), time));
+      .anyMatch(d -> !DateTimeUtils.isEqualOrBefore(d.getEndTime(), time)
+        && !DateTimeUtils.isEqualOrAfter(d.getStartTime(), time));
   }
 
   /**

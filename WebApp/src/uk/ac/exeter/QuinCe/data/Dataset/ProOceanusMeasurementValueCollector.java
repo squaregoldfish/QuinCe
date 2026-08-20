@@ -57,6 +57,11 @@ public class ProOceanusMeasurementValueCollector
     Connection conn, Measurement measurement)
     throws MeasurementValueCollectorException {
 
+    if (instrument.getBasis() != Instrument.BASIS_TIME) {
+      throw new MeasurementValueCollectorException(
+        "Cannot only use this method on instruments with time basis");
+    }
+
     try {
       SensorValuesListValue referenceValue = getReferenceValue(instrument,
         measurement, allSensorValues);
@@ -64,24 +69,27 @@ public class ProOceanusMeasurementValueCollector
       List<MeasurementValue> result = new ArrayList<MeasurementValue>();
 
       for (SensorType sensorType : variable
-        .getAllSensorTypes(!dataSet.fixedPosition())) {
+        .getAllSensorTypes(!dataSet.fixedPosition(), !dataSet.fixedDepth())) {
 
         if (INTERNAL_SENSOR_TYPES.contains(sensorType.getShortName())) {
+          long columnId = instrument.getSensorAssignments()
+            .getColumnIds(sensorType).get(0);
+          TimestampSensorValuesList sensorValuesList = (TimestampSensorValuesList) allSensorValues
+            .getColumnValues(columnId);
 
-          try {
-            long columnId = instrument.getSensorAssignments()
-              .getColumnIds(sensorType).get(0);
-            SensorValuesList sensorValuesList = allSensorValues
-              .getColumnValues(columnId);
+          /*
+           * Pro Oceanus sensors can measure water and atm back to back, which
+           * confuses the SensorValuesList automated grouping of measurements.
+           * Therefore we explicitly collect the value for the range of the
+           * current measurement.
+           *
+           * See also ProOceanusCO2MeasurementLocator.
+           */
+          SensorValuesListOutput value = sensorValuesList
+            .getValueForPeriod((TimestampSensorValuesListValue) referenceValue);
 
-            SensorValuesListOutput value = sensorValuesList
-              .getValue(referenceValue, true);
-
-            result.add(new MeasurementValue(sensorType, value));
-          } catch (SensorValuesListException e) {
-            throw new MeasurementValueCalculatorException(
-              "Error getting Pro Oceanus value");
-          }
+          result.add(new MeasurementValue(instrument.getFlagScheme(),
+            sensorType, value));
         } else {
           result.add(MeasurementValueCalculatorFactory
             .calculateMeasurementValue(instrument, dataSet, referenceValue,
@@ -101,9 +109,9 @@ public class ProOceanusMeasurementValueCollector
 
     long runTypeColumn = instrument.getSensorAssignments()
       .getColumnIds(SensorType.RUN_TYPE_SENSOR_TYPE).get(0);
-    SensorValuesList runTypeValues = allSensorValues
+    TimestampSensorValuesList runTypeValues = (TimestampSensorValuesList) allSensorValues
       .getColumnValues(runTypeColumn);
     runTypeValues.allowStringValuesToDefineGroups(true);
-    return runTypeValues.getValue(measurement.getTime(), false);
+    return runTypeValues.getValue(measurement.getCoordinate(), false);
   }
 }
