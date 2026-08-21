@@ -216,16 +216,18 @@ public class TimeDataSetExtractor extends DataSetExtractor {
                         Calibration uncertaintyDefinition = uncertainties
                           .get(String.valueOf(assignment.getDatabaseId()));
 
-                        if (uncertaintyDefinition.getCoefficient("Type")
-                          .equals(Uncertainty.TYPE_ABSOLUTE)) {
-                          uncertainty = uncertaintyDefinition
-                            .getFloatCoefficient("Value");
-                        } else {
-                          uncertainty = Double
-                            .valueOf(fieldValueNumeric.doubleValue()
-                              * (uncertaintyDefinition
-                                .getFloatCoefficient("Value") * 0.01))
-                            .floatValue();
+                        if (null != uncertaintyDefinition) {
+                          if (uncertaintyDefinition.getCoefficient("Type")
+                            .equals(Uncertainty.TYPE_ABSOLUTE)) {
+                            uncertainty = uncertaintyDefinition
+                              .getFloatCoefficient("Value");
+                          } else {
+                            uncertainty = Double
+                              .valueOf(fieldValueNumeric.doubleValue()
+                                * (uncertaintyDefinition
+                                  .getFloatCoefficient("Value") * 0.01))
+                              .floatValue();
+                          }
                         }
                       }
                     }
