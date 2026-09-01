@@ -12,12 +12,6 @@ buildscript {
   }
   dependencies {
     classpath 'org.gretty:gretty:3.1.4'
-
-    // Flyway migration needs the mysql connector
-    classpath 'mysql:mysql-connector-java:8.0.29'
-
-    // Gson
-    classpath 'com.google.code.gson:gson:2.10.1'
   }
 }
 
@@ -80,9 +74,6 @@ dependencies {
   implementation 'org.apache.myfaces.core:myfaces-impl:2.2.8'
   implementation 'org.apache.myfaces.core:myfaces-bundle:2.2.8'
 
-  // Flyway library for Java-based migrations
-  implementation 'org.flywaydb:flyway-core:7.15.0'
-
   // Google GSON library
   implementation 'com.google.code.gson:gson:2.10.1'
 
@@ -105,24 +96,18 @@ dependencies {
   gretty 'org.apache.tomcat:tomcat-dbcp:8.0.1'
   gretty 'org.apache.tomcat:tomcat:8.0.1'
 
-  // Use JUnit test framework
-  implementation 'org.opentest4j:opentest4j:1.2.0'
-  implementation 'org.junit.jupiter:junit-jupiter-api:5.9.3'
-  implementation 'org.junit.jupiter:junit-jupiter-engine:5.9.3'
-  implementation 'org.junit.jupiter:junit-jupiter-params:5.9.3'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.3'
-  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-  implementation 'com.h2database:h2:1.4.197'
-  implementation 'org.flywaydb.flyway-test-extensions:flyway-test:7.0.0'
-  implementation 'org.flywaydb.flyway-test-extensions:flyway-spring-test:7.0.0'
-  implementation 'org.mockito:mockito-core:5.13.0'
-
   // Flyway library for Java-based migrations
   implementation 'org.flywaydb:flyway-core:7.15.0'
 
   // JUnit resources
-  testImplementation files('WebApp/junit')
-
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
+  testImplementation 'org.mockito:mockito-core:5.8.0'
+  testImplementation 'org.flywaydb.flyway-test-extensions:flyway-test:7.0.0'  
+  testImplementation 'org.flywaydb.flyway-test-extensions:flyway-spring-test:7.0.0'
+  testImplementation 'org.springframework:spring-context:5.2.0.RELEASE'
+  testImplementation 'org.springframework:spring-test:5.2.0.RELEASE'
+  testRuntimeOnly 'com.h2database:h2:1.4.197'    
+  
   // JavaMelody monitoring
   // Can't use v2 until we use Tomcat 10
   implementation 'net.bull.javamelody:javamelody-core:1.95.0'
@@ -138,24 +123,28 @@ sourceSets {
     }
   }
   test {
-    java {
-      srcDirs = ['WebApp/junit']
-    }
+	java {
+	  srcDirs = ['WebApp/junit']
+	}
+	resources {
+	  srcDirs = ['WebApp/junit']
+	  exclude '**/*.java'
+	}
   }
   sensorCalibrationsBeanEditTest {
-    java {
-      srcDirs = ['WebApp/junit']
-    }
+    java.srcDir 'WebApp/junit'
+    compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+    runtimeClasspath += output + compileClasspath
   }
   calculationCoefficientsBeanEditTest {
-    java {
-      srcDirs = ['WebApp/junit']
-    }
+    java.srcDir 'WebApp/junit'
+    compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+    runtimeClasspath += output + compileClasspath
   }
   externalStandardsBeanEditTest {
-    java {
-      srcDirs = ['WebApp/junit']
-    }
+    java.srcDir 'WebApp/junit'
+    compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+    runtimeClasspath += output + compileClasspath
   }
 }
 
@@ -346,7 +335,6 @@ spotless {
 
 tasks.withType(Test).configureEach {
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    //maxParallelForks = 1
 }
 
 tasks.register("migrationCheck") {
