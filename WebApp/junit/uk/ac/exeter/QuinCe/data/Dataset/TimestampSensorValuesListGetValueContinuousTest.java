@@ -2,6 +2,7 @@ package uk.ac.exeter.QuinCe.data.Dataset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 
@@ -122,8 +123,10 @@ public class TimestampSensorValuesListGetValueContinuousTest
         "Nominal time incorrect");
 
       Double expectedValue = line.getDoubleField(getExpectedValueCol());
-      assertEquals(expectedValue, value.getDoubleValue(), 0.004,
+      assertEquals(expectedValue, value.getDoubleValue().value(), 0.004,
         "Value incorrect");
+
+      assertTrue(false, "Compare uncertainty");
 
       Flag expectedFlag = flagScheme
         .getFlag((line.getCharField(getExpectedFlagCol())));

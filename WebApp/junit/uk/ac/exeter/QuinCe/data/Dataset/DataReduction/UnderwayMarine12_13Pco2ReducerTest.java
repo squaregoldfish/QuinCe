@@ -1,6 +1,7 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 public class UnderwayMarine12_13Pco2ReducerTest extends DataReducerTest {
@@ -39,13 +41,13 @@ public class UnderwayMarine12_13Pco2ReducerTest extends DataReducerTest {
     List<MeasurementValue> measurementValues = new ArrayList<MeasurementValue>();
 
     measurementValues.add(makeMeasurementValue("Equilibrator Temperature",
-      largeDeltaT ? 1000D : 7.513D));
+      new DoubleWithUncertainty(largeDeltaT ? 1000D : 7.513D)));
 
-    measurementValues
-      .add(makeMeasurementValue("x¹²CO₂ (with standards)", 395.96D));
+    measurementValues.add(makeMeasurementValue("x¹²CO₂ (with standards)",
+      new DoubleWithUncertainty(395.96D)));
 
-    measurementValues
-      .add(makeMeasurementValue("x¹³CO₂ (with standards)", 3.314D));
+    measurementValues.add(makeMeasurementValue("x¹³CO₂ (with standards)",
+      new DoubleWithUncertainty(3.314D)));
 
     runTest(UnderwayMarine12_13Pco2Reducer.SPLIT_CO2_GAS_CAL_TYPE,
       measurementValues, largeDeltaT);
@@ -58,10 +60,10 @@ public class UnderwayMarine12_13Pco2ReducerTest extends DataReducerTest {
     List<MeasurementValue> measurementValues = new ArrayList<MeasurementValue>();
 
     measurementValues.add(makeMeasurementValue("Equilibrator Temperature",
-      largeDeltaT ? 1000D : 7.513D));
+      new DoubleWithUncertainty(largeDeltaT ? 1000D : 7.513D)));
 
-    measurementValues
-      .add(makeMeasurementValue("x¹²CO₂ + x¹³CO₂ (with standards)", 399.274D));
+    measurementValues.add(makeMeasurementValue(
+      "x¹²CO₂ + x¹³CO₂ (with standards)", new DoubleWithUncertainty(399.274D)));
 
     runTest(UnderwayMarine12_13Pco2Reducer.TOTAL_CO2_GAS_CAL_TYPE,
       measurementValues, largeDeltaT);
@@ -88,10 +90,12 @@ public class UnderwayMarine12_13Pco2ReducerTest extends DataReducerTest {
       variable, props, null);
 
     List<MeasurementValue> allMeasurementValues = new ArrayList<MeasurementValue>();
-    allMeasurementValues.add(makeMeasurementValue("Water Temperature", 6.061D));
-    allMeasurementValues.add(makeMeasurementValue("Salinity", 34.441D));
-    allMeasurementValues
-      .add(makeMeasurementValue("Equilibrator Pressure", 1020.33D));
+    allMeasurementValues.add(makeMeasurementValue("Water Temperature",
+      new DoubleWithUncertainty(6.061D)));
+    allMeasurementValues.add(
+      makeMeasurementValue("Salinity", new DoubleWithUncertainty(34.441D)));
+    allMeasurementValues.add(makeMeasurementValue("Equilibrator Pressure",
+      new DoubleWithUncertainty(1020.33D)));
 
     allMeasurementValues.addAll(co2MeasurementValues);
 
@@ -105,21 +109,26 @@ public class UnderwayMarine12_13Pco2ReducerTest extends DataReducerTest {
       getDataSource().getConnection());
 
     if (largeDeltatT) {
-      assertEquals(993.939D, record.getCalculationValue("ΔT"), 0.0001);
-      assertEquals(Double.NaN, record.getCalculationValue("pH₂O"));
-      assertEquals(Double.NaN, record.getCalculationValue("pCO₂ TE Wet"));
-      assertEquals(Double.NaN, record.getCalculationValue("fCO₂ TE Wet"));
-      assertEquals(Double.NaN, record.getCalculationValue("pCO₂ SST"));
-      assertEquals(Double.NaN, record.getCalculationValue("fCO₂"));
+      assertEquals(993.939D, record.getCalculationValue("ΔT").value(), 0.0001);
+      assertEquals(Double.NaN, record.getCalculationValue("pH₂O").value());
+      assertEquals(Double.NaN,
+        record.getCalculationValue("pCO₂ TE Wet").value());
+      assertEquals(Double.NaN,
+        record.getCalculationValue("fCO₂ TE Wet").value());
+      assertEquals(Double.NaN, record.getCalculationValue("pCO₂ SST").value());
+      assertEquals(Double.NaN, record.getCalculationValue("fCO₂").value());
     } else {
-      assertEquals(1.452D, record.getCalculationValue("ΔT"), 0.0001);
-      assertEquals(0.01D, record.getCalculationValue("pH₂O"), 0.0001);
-      assertEquals(398.0550D, record.getCalculationValue("pCO₂ TE Wet"),
+      assertEquals(1.452D, record.getCalculationValue("ΔT").value(), 0.0001);
+      assertEquals(0.01D, record.getCalculationValue("pH₂O").value(), 0.0001);
+      assertEquals(398.0550D, record.getCalculationValue("pCO₂ TE Wet").value(),
         0.0001);
-      assertEquals(396.4604D, record.getCalculationValue("fCO₂ TE Wet"),
+      assertEquals(396.4604D, record.getCalculationValue("fCO₂ TE Wet").value(),
         0.0001);
-      assertEquals(374.3423D, record.getCalculationValue("pCO₂ SST"), 0.0001);
-      assertEquals(372.8427D, record.getCalculationValue("fCO₂"), 0.0001);
+      assertEquals(374.3423D, record.getCalculationValue("pCO₂ SST").value(),
+        0.0001);
+      assertEquals(372.8427D, record.getCalculationValue("fCO₂").value(),
+        0.0001);
+      assertTrue(false, "Uncertainty");
     }
   }
 }

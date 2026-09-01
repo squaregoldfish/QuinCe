@@ -14,6 +14,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**
@@ -42,7 +43,7 @@ public class NoReductionReducerTest extends DataReducerTest {
       new HashMap<String, Properties>(), null);
 
     MeasurementValue waterTemp = makeMeasurementValue("Water Temperature",
-      9.889D);
+      new DoubleWithUncertainty(9.889D));
 
     Measurement measurement = makeMeasurement(waterTemp);
 

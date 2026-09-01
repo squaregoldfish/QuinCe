@@ -1,6 +1,7 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 public class UnderwayAtmospheric12_13Pco2ReducerTest2 extends DataReducerTest {
@@ -35,11 +37,11 @@ public class UnderwayAtmospheric12_13Pco2ReducerTest2 extends DataReducerTest {
   @Test
   public void testSplitReduction() throws Exception {
     List<MeasurementValue> co2MeasurementValues = new ArrayList<MeasurementValue>();
-    co2MeasurementValues
-      .add(makeMeasurementValue("x¹²CO₂ (with standards)", 395.96D));
+    co2MeasurementValues.add(makeMeasurementValue("x¹²CO₂ (with standards)",
+      new DoubleWithUncertainty(395.96D)));
 
-    co2MeasurementValues
-      .add(makeMeasurementValue("x¹³CO₂ (with standards)", 3.314D));
+    co2MeasurementValues.add(makeMeasurementValue("x¹³CO₂ (with standards)",
+      new DoubleWithUncertainty(3.314D)));
 
     runTest(UnderwayMarine12_13Pco2Reducer.SPLIT_CO2_GAS_CAL_TYPE,
       co2MeasurementValues);
@@ -49,8 +51,8 @@ public class UnderwayAtmospheric12_13Pco2ReducerTest2 extends DataReducerTest {
   @Test
   public void testTotalReduction() throws Exception {
     List<MeasurementValue> co2MeasurementValues = new ArrayList<MeasurementValue>();
-    co2MeasurementValues
-      .add(makeMeasurementValue("x¹²CO₂ + x¹³CO₂ (with standards)", 399.274D));
+    co2MeasurementValues.add(makeMeasurementValue(
+      "x¹²CO₂ + x¹³CO₂ (with standards)", new DoubleWithUncertainty(399.274D)));
 
     runTest(UnderwayMarine12_13Pco2Reducer.TOTAL_CO2_GAS_CAL_TYPE,
       co2MeasurementValues);
@@ -76,10 +78,12 @@ public class UnderwayAtmospheric12_13Pco2ReducerTest2 extends DataReducerTest {
       variable, props, null);
 
     List<MeasurementValue> allMeasurementValues = new ArrayList<MeasurementValue>();
-    allMeasurementValues.add(makeMeasurementValue("Water Temperature", 6.061D));
-    allMeasurementValues.add(makeMeasurementValue("Salinity", 34.441D));
-    allMeasurementValues
-      .add(makeMeasurementValue("Atmospheric Pressure", 1023.58D));
+    allMeasurementValues.add(makeMeasurementValue("Water Temperature",
+      new DoubleWithUncertainty(6.061D)));
+    allMeasurementValues.add(
+      makeMeasurementValue("Salinity", new DoubleWithUncertainty(34.441D)));
+    allMeasurementValues.add(makeMeasurementValue("Atmospheric Pressure",
+      new DoubleWithUncertainty(1023.58D)));
 
     allMeasurementValues.addAll(co2MeasurementValues);
 
@@ -92,8 +96,11 @@ public class UnderwayAtmospheric12_13Pco2ReducerTest2 extends DataReducerTest {
     reducer.doCalculation(instrument, measurement, record,
       getDataSource().getConnection());
 
-    assertEquals(0.00909D, record.getCalculationValue("pH₂O"), 0.0001);
-    assertEquals(399.71652D, record.getCalculationValue("pCO₂"), 0.0001);
-    assertEquals(398.0793D, record.getCalculationValue("fCO₂"), 0.0001);
+    assertEquals(0.00909D, record.getCalculationValue("pH₂O").value(), 0.0001);
+    assertEquals(399.71652D, record.getCalculationValue("pCO₂").value(),
+      0.0001);
+    assertEquals(398.0793D, record.getCalculationValue("fCO₂").value(), 0.0001);
+    assertTrue(false, "Uncertainty");
+
   }
 }

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.IcosFlagScheme;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Tests for the {@link ReadOnlyDataReductionRecord} class.
@@ -30,14 +31,16 @@ public class ReadOnlyDataReductionRecordTest extends BaseTest {
 
   private static final String PARAM = "Param1";
 
-  private static final Double PARAM_VALUE = 21D;
+  private static final DoubleWithUncertainty PARAM_VALUE = new DoubleWithUncertainty(
+    21D);
 
   private static final String BASE_MESSAGE = "Base Message";
 
-  private Map<String, Double> makeCalculationValues() {
-    Map<String, Double> values = new HashMap<String, Double>();
+  private Map<String, DoubleWithUncertainty> makeCalculationValues() {
+    Map<String, DoubleWithUncertainty> values = new HashMap<String, DoubleWithUncertainty>();
     values.put(PARAM, PARAM_VALUE);
-    return values;
+    throw new IllegalArgumentException("Uncertainty");
+    // return values;
   }
 
   private ReadOnlyDataReductionRecord makeRecord(Flag qcFlag) {

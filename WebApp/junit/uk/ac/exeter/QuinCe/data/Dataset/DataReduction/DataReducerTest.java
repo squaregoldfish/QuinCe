@@ -16,6 +16,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
 import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
@@ -42,7 +43,7 @@ public class DataReducerTest extends BaseTest {
   }
 
   protected MeasurementValue makeMeasurementValue(String sensorTypeName,
-    double value) throws SensorTypeNotFoundException {
+    DoubleWithUncertainty value) throws SensorTypeNotFoundException {
 
     SensorType sensorType = ResourceManager.getInstance()
       .getSensorsConfiguration().getSensorType(sensorTypeName);

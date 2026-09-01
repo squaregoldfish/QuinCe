@@ -1,6 +1,7 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Properties;
@@ -13,6 +14,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 public class ProOceanusMarineCO2ReducerTest extends DataReducerTest {
 
@@ -32,13 +34,13 @@ public class ProOceanusMarineCO2ReducerTest extends DataReducerTest {
       variable, new HashMap<String, Properties>(), null);
 
     MeasurementValue waterTemp = makeMeasurementValue("Water Temperature",
-      10.777D);
+      new DoubleWithUncertainty(10.777D));
 
     MeasurementValue cellGasPressure = makeMeasurementValue("Cell Gas Pressure",
-      1014.81D);
+      new DoubleWithUncertainty(1014.81D));
 
     MeasurementValue xco2 = makeMeasurementValue("xCO₂ (wet, no standards)",
-      393.722D);
+      new DoubleWithUncertainty(393.722D));
 
     Measurement measurement = makeMeasurement(waterTemp, cellGasPressure, xco2);
 
@@ -49,8 +51,11 @@ public class ProOceanusMarineCO2ReducerTest extends DataReducerTest {
     reducer.doCalculation(instrument, measurement, record,
       getDataSource().getConnection());
 
-    assertEquals(394.32817D, record.getCalculationValue("pCO₂ SST"), 0.0001);
-    assertEquals(392.82228D, record.getCalculationValue("fCO₂"), 0.0001);
+    assertEquals(394.32817D, record.getCalculationValue("pCO₂ SST").value(),
+      0.0001);
+    assertEquals(392.82228D, record.getCalculationValue("fCO₂").value(),
+      0.0001);
+    assertTrue(false, "Uncertainty");
 
   }
 

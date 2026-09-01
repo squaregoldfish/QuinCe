@@ -1,6 +1,7 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Test for the {@link UnderwayMarinePco2Reducer}.
@@ -44,18 +46,19 @@ public class UnderwayMarinePco2ReducerTest extends DataReducerTest {
       new HashMap<String, Properties>(), null);
 
     MeasurementValue waterTemp = makeMeasurementValue("Water Temperature",
-      11.912D);
+      new DoubleWithUncertainty(11.912D));
 
-    MeasurementValue salinity = makeMeasurementValue("Salinity", 35.224D);
+    MeasurementValue salinity = makeMeasurementValue("Salinity",
+      new DoubleWithUncertainty(35.224D));
 
     MeasurementValue eqTemp = makeMeasurementValue("Equilibrator Temperature",
-      12.37D);
+      new DoubleWithUncertainty(12.37D));
 
     MeasurementValue eqPressure = makeMeasurementValue("Equilibrator Pressure",
-      999.23D);
+      new DoubleWithUncertainty(999.23D));
 
     MeasurementValue xco2 = makeMeasurementValue("xCO₂ (with standards)",
-      374.977D);
+      new DoubleWithUncertainty(374.977D));
 
     Measurement measurement = makeMeasurement(waterTemp, salinity, eqTemp,
       eqPressure, xco2);
@@ -68,14 +71,18 @@ public class UnderwayMarinePco2ReducerTest extends DataReducerTest {
       getDataSource().getConnection());
 
     // Check the calculated values in the record
-    assertEquals(0.458D, record.getCalculationValue("ΔT"), 0.0001);
-    assertEquals(0.01389918297D, record.getCalculationValue("pH₂O"), 0.0001);
-    assertEquals(364.576695236D, record.getCalculationValue("pCO₂ TE Wet"),
+    assertEquals(0.458D, record.getCalculationValue("ΔT").value(), 0.0001);
+    assertEquals(0.01389918297D, record.getCalculationValue("pH₂O").value(),
       0.0001);
-    assertEquals(363.233567921D, record.getCalculationValue("fCO₂ TE Wet"),
+    assertEquals(364.576695236D,
+      record.getCalculationValue("pCO₂ TE Wet").value(), 0.0001);
+    assertEquals(363.233567921D,
+      record.getCalculationValue("fCO₂ TE Wet").value(), 0.0001);
+    assertEquals(357.5815834D, record.getCalculationValue("pCO₂ SST").value(),
       0.0001);
-    assertEquals(357.5815834D, record.getCalculationValue("pCO₂ SST"), 0.0001);
-    assertEquals(356.2642266D, record.getCalculationValue("fCO₂"), 0.0001);
+    assertEquals(356.2642266D, record.getCalculationValue("fCO₂").value(),
+      0.0001);
+    assertTrue(false, "Uncertainty");
   }
 
   @FlywayTest
@@ -94,18 +101,19 @@ public class UnderwayMarinePco2ReducerTest extends DataReducerTest {
       new HashMap<String, Properties>(), null);
 
     MeasurementValue waterTemp = makeMeasurementValue("Water Temperature",
-      11.912D);
+      new DoubleWithUncertainty(11.912D));
 
-    MeasurementValue salinity = makeMeasurementValue("Salinity", 35.224D);
+    MeasurementValue salinity = makeMeasurementValue("Salinity",
+      new DoubleWithUncertainty(35.224D));
 
     MeasurementValue eqTemp = makeMeasurementValue("Equilibrator Temperature",
-      1000D);
+      new DoubleWithUncertainty(1000D));
 
     MeasurementValue eqPressure = makeMeasurementValue("Equilibrator Pressure",
-      999.23D);
+      new DoubleWithUncertainty(999.23D));
 
     MeasurementValue xco2 = makeMeasurementValue("xCO₂ (with standards)",
-      374.977D);
+      new DoubleWithUncertainty(374.977D));
 
     Measurement measurement = makeMeasurement(waterTemp, salinity, eqTemp,
       eqPressure, xco2);
@@ -118,11 +126,12 @@ public class UnderwayMarinePco2ReducerTest extends DataReducerTest {
       getDataSource().getConnection());
 
     // Check the calculated values in the record
-    assertEquals(988.088D, record.getCalculationValue("ΔT"), 0.0001);
-    assertEquals(Double.NaN, record.getCalculationValue("pH₂O"));
-    assertEquals(Double.NaN, record.getCalculationValue("pCO₂ TE Wet"));
-    assertEquals(Double.NaN, record.getCalculationValue("fCO₂ TE Wet"));
-    assertEquals(Double.NaN, record.getCalculationValue("pCO₂ SST"));
-    assertEquals(Double.NaN, record.getCalculationValue("fCO₂"));
+    assertEquals(988.088D, record.getCalculationValue("ΔT").value(), 0.0001);
+    assertEquals(Double.NaN, record.getCalculationValue("pH₂O").value());
+    assertEquals(Double.NaN, record.getCalculationValue("pCO₂ TE Wet").value());
+    assertEquals(Double.NaN, record.getCalculationValue("fCO₂ TE Wet").value());
+    assertEquals(Double.NaN, record.getCalculationValue("pCO₂ SST").value());
+    assertEquals(Double.NaN, record.getCalculationValue("fCO₂").value());
+    assertTrue(false, "Uncertainty");
   }
 }

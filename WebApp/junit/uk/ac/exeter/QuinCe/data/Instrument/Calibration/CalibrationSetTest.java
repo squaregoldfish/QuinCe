@@ -19,6 +19,7 @@ import org.mockito.Mockito;
 
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.ParameterException;
 
 /**
@@ -463,7 +464,7 @@ class TestCalibration extends Calibration {
   }
 
   @Override
-  public Double calibrateValue(Double rawValue) {
+  public DoubleWithUncertainty calibrateValue(DoubleWithUncertainty rawValue) {
     return rawValue;
   }
 

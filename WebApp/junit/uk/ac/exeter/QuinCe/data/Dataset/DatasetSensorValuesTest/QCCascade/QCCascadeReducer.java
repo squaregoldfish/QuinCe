@@ -13,6 +13,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReductionException;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReductionRecord;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 public class QCCascadeReducer extends DataReducer {
 
@@ -28,14 +29,14 @@ public class QCCascadeReducer extends DataReducer {
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
     try {
-      Double waterTemperature = measurement
+      DoubleWithUncertainty waterTemperature = measurement
         .getMeasurementValue("Water Temperature").getCalculatedValue();
-      Double salinity = measurement.getMeasurementValue("Salinity")
-        .getCalculatedValue();
-      Double co2 = measurement.getMeasurementValue("xCO₂ (wet, no standards)")
-        .getCalculatedValue();
+      DoubleWithUncertainty salinity = measurement
+        .getMeasurementValue("Salinity").getCalculatedValue();
+      DoubleWithUncertainty co2 = measurement
+        .getMeasurementValue("xCO₂ (wet, no standards)").getCalculatedValue();
 
-      record.put("Sum", waterTemperature + salinity + co2);
+      record.put("Sum", waterTemperature.add(salinity).add(co2));
     } catch (Exception e) {
       throw new DataReductionException(e);
     }
