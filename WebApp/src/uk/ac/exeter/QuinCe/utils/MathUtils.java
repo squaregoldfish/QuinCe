@@ -19,11 +19,12 @@ public class MathUtils {
    *          The input Map.
    * @return The converted Map.
    */
-  public static Map<String, Double> nanToNull(Map<String, Double> map) {
-    Map<String, Double> out = new HashMap<String, Double>();
-    for (Map.Entry<String, Double> entry : map.entrySet()) {
-      if (null != entry.getValue() && (Double.isNaN(entry.getValue())
-        || Double.isInfinite(entry.getValue()))) {
+  public static Map<String, DoubleWithUncertainty> nanToNull(
+    Map<String, DoubleWithUncertainty> map) {
+    Map<String, DoubleWithUncertainty> out = new HashMap<String, DoubleWithUncertainty>();
+    for (Map.Entry<String, DoubleWithUncertainty> entry : map.entrySet()) {
+      if (null != entry.getValue()
+        && (DoubleWithUncertainty.isNaN(entry.getValue()))) {
         out.put(entry.getKey(), null);
       } else {
         out.put(entry.getKey(), entry.getValue());

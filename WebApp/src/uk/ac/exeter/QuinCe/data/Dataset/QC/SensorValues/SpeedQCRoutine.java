@@ -65,8 +65,8 @@ public class SpeedQCRoutine extends PositionQCRoutine {
           && flagScheme.isGood(latitude.getDisplayFlag(allSensorValues),
             true)) {
 
-          LatLng pos = new LatLng(latitude.getDoubleValue(),
-            longitude.getDoubleValue());
+          LatLng pos = new LatLng(latitude.getDoubleValue().value(),
+            longitude.getDoubleValue().value());
 
           if (null != lastCoordinate) {
             double distance = LatLngTool.distance(lastPos, pos,

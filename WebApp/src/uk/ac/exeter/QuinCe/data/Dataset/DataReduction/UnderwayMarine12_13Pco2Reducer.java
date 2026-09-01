@@ -9,6 +9,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 public class UnderwayMarine12_13Pco2Reducer extends UnderwayMarinePco2Reducer {
 
@@ -29,20 +30,21 @@ public class UnderwayMarine12_13Pco2Reducer extends UnderwayMarinePco2Reducer {
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
     try {
-      Double waterTemperature = measurement
+      DoubleWithUncertainty waterTemperature = measurement
         .getMeasurementValue("Water Temperature").getCalculatedValue();
-      Double salinity = measurement.getMeasurementValue("Salinity")
-        .getCalculatedValue();
-      Double equilibratorTemperature = measurement
+      DoubleWithUncertainty salinity = measurement
+        .getMeasurementValue("Salinity").getCalculatedValue();
+      DoubleWithUncertainty equilibratorTemperature = measurement
         .getMeasurementValue("Equilibrator Temperature").getCalculatedValue();
-      Double equilibratorPressure = measurement
+      DoubleWithUncertainty equilibratorPressure = measurement
         .getMeasurementValue("Equilibrator Pressure").getCalculatedValue();
 
       // Store the calculated values
-      double deltaT = equilibratorTemperature - waterTemperature;
-      record.put("ΔT", equilibratorTemperature - waterTemperature);
+      DoubleWithUncertainty deltaT = equilibratorTemperature
+        .subtract(waterTemperature);
+      record.put("ΔT", deltaT);
 
-      if (Math.abs(deltaT) >= 100D) {
+      if (Math.abs(deltaT.value()) >= 100D) {
         record.put("pH₂O", Double.NaN);
         record.put("pCO₂ TE Wet", Double.NaN);
         record.put("fCO₂ TE Wet", Double.NaN);
@@ -66,15 +68,17 @@ public class UnderwayMarine12_13Pco2Reducer extends UnderwayMarinePco2Reducer {
   }
 
   private void doSplitCalculation(DataReductionRecord record,
-    Measurement measurement, Double waterTemperature, Double salinity,
-    Double equilibratorTemperature, Double equilibratorPressure)
+    Measurement measurement, DoubleWithUncertainty waterTemperature,
+    DoubleWithUncertainty salinity,
+    DoubleWithUncertainty equilibratorTemperature,
+    DoubleWithUncertainty equilibratorPressure)
     throws SensorTypeNotFoundException, DataReductionException {
 
     // xCO2 values are dried as part of sorting out their Calculated Value
-    Double x12CO2 = measurement.getMeasurementValue("x¹²CO₂ (with standards)")
-      .getCalculatedValue();
-    Double x13CO2 = measurement.getMeasurementValue("x¹³CO₂ (with standards)")
-      .getCalculatedValue();
+    DoubleWithUncertainty x12CO2 = measurement
+      .getMeasurementValue("x¹²CO₂ (with standards)").getCalculatedValue();
+    DoubleWithUncertainty x13CO2 = measurement
+      .getMeasurementValue("x¹³CO₂ (with standards)").getCalculatedValue();
 
     Calculator x12CO2Calculator = new Calculator(waterTemperature, salinity,
       equilibratorTemperature, equilibratorPressure, x12CO2);
@@ -85,20 +89,23 @@ public class UnderwayMarine12_13Pco2Reducer extends UnderwayMarinePco2Reducer {
     record.put("pH₂O", x12CO2Calculator.pH2O);
 
     record.put("pCO₂ TE Wet",
-      x12CO2Calculator.pCo2TEWet + x13CO2Calculator.pCo2TEWet);
+      x12CO2Calculator.pCo2TEWet.add(x13CO2Calculator.pCo2TEWet));
     record.put("fCO₂ TE Wet",
-      x12CO2Calculator.fCo2TEWet + x13CO2Calculator.fCo2TEWet);
-    record.put("pCO₂ SST", x12CO2Calculator.pCO2SST + x13CO2Calculator.pCO2SST);
-    record.put("fCO₂", x12CO2Calculator.fCO2 + x13CO2Calculator.fCO2);
+      x12CO2Calculator.fCo2TEWet.add(x13CO2Calculator.fCo2TEWet));
+    record.put("pCO₂ SST",
+      x12CO2Calculator.pCO2SST.add(x13CO2Calculator.pCO2SST));
+    record.put("fCO₂", x12CO2Calculator.fCO2.add(x13CO2Calculator.fCO2));
   }
 
   private void doTotalCalculation(DataReductionRecord record,
-    Measurement measurement, Double waterTemperature, Double salinity,
-    Double equilibratorTemperature, Double equilibratorPressure)
+    Measurement measurement, DoubleWithUncertainty waterTemperature,
+    DoubleWithUncertainty salinity,
+    DoubleWithUncertainty equilibratorTemperature,
+    DoubleWithUncertainty equilibratorPressure)
     throws SensorTypeNotFoundException, DataReductionException {
 
     // xCO2 values are dried as part of sorting out their Calculated Value
-    Double co2 = measurement
+    DoubleWithUncertainty co2 = measurement
       .getMeasurementValue("x¹²CO₂ + x¹³CO₂ (with standards)")
       .getCalculatedValue();
 

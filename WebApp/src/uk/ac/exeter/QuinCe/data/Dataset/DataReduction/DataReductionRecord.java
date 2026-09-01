@@ -13,6 +13,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.MathUtils;
 import uk.ac.exeter.QuinCe.utils.NoEmptyStringSet;
 
@@ -36,7 +37,7 @@ public class DataReductionRecord implements Comparable<DataReductionRecord> {
   /**
    * Holds variables calculated for this record.
    */
-  private Map<String, Double> calculationValues;
+  private Map<String, DoubleWithUncertainty> calculationValues;
 
   /**
    * The {@link FlagScheme} used for this record.
@@ -66,14 +67,14 @@ public class DataReductionRecord implements Comparable<DataReductionRecord> {
     this.flagScheme = flagScheme;
     this.parameterNames = Collections.unmodifiableList(parameterNames);
 
-    this.calculationValues = new HashMap<String, Double>();
+    this.calculationValues = new HashMap<String, DoubleWithUncertainty>();
     this.qcFlag = flagScheme.getAssumedGoodFlag();
     this.qcMessages = new NoEmptyStringSet();
   }
 
   protected DataReductionRecord(long measurementId, long variableId,
     FlagScheme flagScheme, List<String> parameterNames,
-    Map<String, Double> calculationValues, Flag qcFlag,
+    Map<String, DoubleWithUncertainty> calculationValues, Flag qcFlag,
     NoEmptyStringSet qcMessages) {
 
     this.measurementId = measurementId;
@@ -141,13 +142,27 @@ public class DataReductionRecord implements Comparable<DataReductionRecord> {
    *          The value
    * @throws DataReductionException
    */
-  public void put(String parameter, Double value)
+  public void put(String parameter, DoubleWithUncertainty value)
     throws DataReductionException {
     if (!parameterNames.contains(parameter)) {
       throw new DataReductionException(
         "Unrecognised calculation parameter '" + parameter + "'");
     }
     calculationValues.put(parameter, value);
+  }
+
+  /**
+   * Store a calculation value
+   *
+   * @param parameter
+   *          The parameter
+   * @param value
+   *          The value
+   * @throws DataReductionException
+   */
+  public void put(String parameter, Double value)
+    throws DataReductionException {
+    put(parameter, new DoubleWithUncertainty(value));
   }
 
   /**
@@ -191,7 +206,7 @@ public class DataReductionRecord implements Comparable<DataReductionRecord> {
     return gson.toJson(MathUtils.nanToNull(calculationValues));
   }
 
-  public Double getCalculationValue(String param) {
+  public DoubleWithUncertainty getCalculationValue(String param) {
     return calculationValues.get(param);
   }
 

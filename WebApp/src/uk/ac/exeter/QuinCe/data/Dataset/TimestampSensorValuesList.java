@@ -19,6 +19,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.jobs.files.DataReductionJob;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.MeanCalculator;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
@@ -1208,11 +1209,11 @@ public class TimestampSensorValuesList extends SensorValuesList {
         }
       }
 
-      MeanCalculator mean = new MeanCalculator(
-        usedValues.stream().map(SensorValue::getDoubleValue).toList());
+      DoubleWithUncertainty mean = DoubleWithUncertainty
+        .mean(usedValues.stream().map(SensorValue::getDoubleValue).toList());
 
       return new TimestampSensorValuesListOutput(startTime, endTime,
-        nominalTime, usedValues, sensorType, mean.mean(), chosenFlag,
+        nominalTime, usedValues, sensorType, mean, chosenFlag,
         StringUtils.collectionToDelimited(qcMessages, ";"),
         interpolatesAroundFlags);
 
@@ -1292,9 +1293,9 @@ public class TimestampSensorValuesList extends SensorValuesList {
         // We only interpolate good values
         result = null;
       } else {
-        Double interpValue = Calculators.interpolate(first.getTime(),
-          first.getDoubleValue(), second.getTime(), second.getDoubleValue(),
-          targetTime.getTime());
+        DoubleWithUncertainty interpValue = Calculators.interpolate(
+          first.getTime(), first.getDoubleValue(), second.getTime(),
+          second.getDoubleValue(), targetTime.getTime());
 
         TreeSet<SensorValue> combinedSourceValues = new TreeSet<SensorValue>(
           COORDINATE_COMPARATOR);

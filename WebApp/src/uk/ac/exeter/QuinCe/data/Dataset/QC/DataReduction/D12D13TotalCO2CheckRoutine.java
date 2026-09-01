@@ -17,6 +17,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 public class D12D13TotalCO2CheckRoutine extends DataReductionQCRoutine {
@@ -66,13 +67,13 @@ public class D12D13TotalCO2CheckRoutine extends DataReductionQCRoutine {
           MeasurementValue d13CO2 = measurement
             .getMeasurementValue(d13CO2SensorType);
 
-          Double totalCO2 = measurement.getMeasurementValue(totalCO2SensorType)
-            .getCalculatedValue();
+          DoubleWithUncertainty totalCO2 = measurement
+            .getMeasurementValue(totalCO2SensorType).getCalculatedValue();
 
-          Double difference = totalCO2
-            - (d12CO2.getCalculatedValue() + d13CO2.getCalculatedValue());
+          DoubleWithUncertainty difference = totalCO2.subtract(
+            d12CO2.getCalculatedValue().add(d13CO2.getCalculatedValue()));
 
-          if (Math.abs(difference) > 0.001D) {
+          if (Math.abs(difference.value()) > 0.001D) {
             flagSensors(instrument, measurement, record, allSensorValues,
               new RoutineFlag(instrument.getFlagScheme(), this,
                 flagScheme.getBadFlag(), "", ""),

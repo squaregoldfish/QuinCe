@@ -5,7 +5,6 @@ import uk.ac.exeter.QuinCe.data.Dataset.RunTypePeriods;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesList;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesListException;
-import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.InvalidFlagException;
 import uk.ac.exeter.QuinCe.data.Instrument.DiagnosticQCConfig;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
@@ -42,9 +41,10 @@ public class DiagnosticsQCRoutine {
           boolean bad = false;
 
           if (!value.isNaN()) {
-            if (null != rangeMin && value.getDoubleValue() < rangeMin) {
+            if (null != rangeMin && value.getDoubleValue().value() < rangeMin) {
               bad = true;
-            } else if (null != rangeMax && value.getDoubleValue() > rangeMax) {
+            } else if (null != rangeMax
+              && value.getDoubleValue().value() > rangeMax) {
               bad = true;
             }
           }

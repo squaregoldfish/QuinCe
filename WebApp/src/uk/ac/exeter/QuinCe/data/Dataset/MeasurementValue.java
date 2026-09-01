@@ -13,6 +13,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -70,7 +71,7 @@ public class MeasurementValue implements PlotPageTableValue {
   /**
    * The calculated value for the sensor type.
    */
-  private Double calculatedValue = Double.NaN;
+  private DoubleWithUncertainty calculatedValue = DoubleWithUncertainty.NaN;
 
   /**
    * The value type
@@ -131,8 +132,8 @@ public class MeasurementValue implements PlotPageTableValue {
    */
   public MeasurementValue(long sensorTypeId, List<Long> sensorValueIds,
     List<Long> supportingSensorValueIds, int memberCount,
-    boolean interpolatesAroundFlag, Double calculatedValue, Flag flag,
-    HashSet<String> qcComments, char type, Properties properties)
+    boolean interpolatesAroundFlag, DoubleWithUncertainty calculatedValue,
+    Flag flag, HashSet<String> qcComments, char type, Properties properties)
     throws SensorTypeNotFoundException {
 
     this.sensorType = ResourceManager.getInstance().getSensorsConfiguration()
@@ -160,7 +161,7 @@ public class MeasurementValue implements PlotPageTableValue {
    */
   public MeasurementValue(SensorType sensorType, List<SensorValue> sensorValues,
     List<SensorValue> supportingSensorValues, boolean interpolatesAroundFlag,
-    DatasetSensorValues allSensorValues, Double calculatedValue,
+    DatasetSensorValues allSensorValues, DoubleWithUncertainty calculatedValue,
     int memberCount, char type) throws RoutineException {
 
     this.sensorType = sensorType;
@@ -181,7 +182,7 @@ public class MeasurementValue implements PlotPageTableValue {
     SensorValuesListOutput value) {
     if (null == value) {
       this.sensorType = sensorType;
-      this.calculatedValue = Double.NaN;
+      this.calculatedValue = DoubleWithUncertainty.NaN;
       this.type = PlotPageTableValue.NAN_TYPE;
       this.sensorValueIds = new ArrayList<Long>();
       this.supportingSensorValueIds = new ArrayList<Long>();
@@ -402,12 +403,12 @@ public class MeasurementValue implements PlotPageTableValue {
     return supportingSensorValueIds;
   }
 
-  public void setCalculatedValue(Double calculatedValue) {
-    this.calculatedValue = null == calculatedValue ? Double.NaN
+  public void setCalculatedValue(DoubleWithUncertainty calculatedValue) {
+    this.calculatedValue = null == calculatedValue ? DoubleWithUncertainty.NaN
       : calculatedValue;
   }
 
-  public Double getCalculatedValue() {
+  public DoubleWithUncertainty getCalculatedValue() {
     return calculatedValue;
   }
 
@@ -618,8 +619,7 @@ public class MeasurementValue implements PlotPageTableValue {
 
   @Override
   public String getValue() {
-    return calculatedValue.isNaN() ? null
-      : StringUtils.formatNumber(calculatedValue);
+    return calculatedValue.toString();
   }
 
   @Override

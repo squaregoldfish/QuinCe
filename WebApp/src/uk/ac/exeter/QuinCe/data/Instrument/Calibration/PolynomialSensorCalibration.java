@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * A calibration that applies up to a fifth-order polynomial adjustment
@@ -150,17 +151,18 @@ public class PolynomialSensorCalibration extends SensorCalibration {
   }
 
   @Override
-  public Double calibrateValue(Double rawValue) {
+  public DoubleWithUncertainty calibrateValue(DoubleWithUncertainty rawValue) {
 
-    Double calibratedValue = 0d;
+    DoubleWithUncertainty calibratedValue = DoubleWithUncertainty.ZERO;
 
     // The first coefficient is the 5th power. We go down to the intercept
     // (zeroth power)
     int power = 5;
 
     for (CalibrationCoefficient coefficient : coefficients) {
-      calibratedValue += coefficient.getDoubleValue()
-        * Math.pow(rawValue, power);
+      calibratedValue
+        .add(coefficient.getDoubleValue().multiply(rawValue.pow(power)));
+
       power--;
     }
 

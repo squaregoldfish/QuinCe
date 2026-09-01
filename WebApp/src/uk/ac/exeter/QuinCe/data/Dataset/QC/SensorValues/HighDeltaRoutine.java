@@ -43,8 +43,8 @@ public class HighDeltaRoutine extends AutoQCRoutine {
             lastValue.getCoordinate().getTime(),
             sensorValue.getCoordinate().getTime()) / 60.0;
 
-          double valueDelta = Math
-            .abs(sensorValue.getDoubleValue() - lastValue.getDoubleValue());
+          double valueDelta = Math.abs(sensorValue.getDoubleValue().value()
+            - lastValue.getDoubleValue().value());
 
           double deltaPerMinute = valueDelta / minutesDifference;
 

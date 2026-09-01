@@ -40,6 +40,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.MissingParam;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
@@ -420,7 +421,7 @@ public class DataSetDataDB {
           if (null == value.getUncertainty()) {
             addStmt.setNull(4, Types.FLOAT);
           } else {
-            addStmt.setFloat(4, value.getUncertainty());
+            addStmt.setFloat(4, (Float) value.getUncertainty());
           }
 
           addStmt.setString(5, value.getAutoQcResult().toJson());
@@ -1275,7 +1276,7 @@ public class DataSetDataDB {
           String calculationValuesJson = records.getString(3);
           Type mapType = new TypeToken<HashMap<String, Double>>() {
           }.getType();
-          Map<String, Double> calculationValues = new Gson()
+          Map<String, DoubleWithUncertainty> calculationValues = new Gson()
             .fromJson(calculationValuesJson, mapType);
 
           Flag qcFlag = instrument.getFlagScheme().getFlag(records.getInt(4));

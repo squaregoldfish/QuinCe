@@ -14,6 +14,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineFlag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.FlaggedItems;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 public class DeltaTRangeRoutine extends DataReductionQCRoutine {
 
@@ -34,16 +35,16 @@ public class DeltaTRangeRoutine extends DataReductionQCRoutine {
       Measurement measurement = entry.getKey();
       ReadOnlyDataReductionRecord record = entry.getValue();
 
-      Double value = record.getCalculationValue("ΔT");
+      DoubleWithUncertainty value = record.getCalculationValue("ΔT");
       if (null != value) {
         RoutineFlag flag = null;
 
-        if (value < -0.1) {
+        if (value.value() < -0.1) {
           flag = new RoutineFlag(instrument.getFlagScheme(), this,
             instrument.getFlagScheme().getBadFlag(), "-0.1",
             String.valueOf(value));
         } else {
-          flag = getRangeFlag(value);
+          flag = getRangeFlag(value.value());
         }
 
         if (null != flag && !flagScheme.isGood(flag, true)) {

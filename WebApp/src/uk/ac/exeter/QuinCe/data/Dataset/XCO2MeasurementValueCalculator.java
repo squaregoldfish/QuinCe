@@ -12,6 +12,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 public class XCO2MeasurementValueCalculator extends MeasurementValueCalculator {
@@ -123,7 +124,15 @@ public class XCO2MeasurementValueCalculator extends MeasurementValueCalculator {
    *          The moisture value
    * @return The 'dry' CO2 value
    */
-  private double dry(Double co2, Double xH2O) {
-    return co2 / (1.0 - (xH2O / 1000));
+  private DoubleWithUncertainty dry(DoubleWithUncertainty co2,
+    DoubleWithUncertainty xH2O) {
+
+    DoubleWithUncertainty xH2OOverThousand = xH2O
+      .divide(new DoubleWithUncertainty(1000, 0));
+
+    DoubleWithUncertainty divisor = new DoubleWithUncertainty(1, 0)
+      .divide(xH2OOverThousand);
+
+    return co2.divide(divisor);
   }
 }

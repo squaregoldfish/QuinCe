@@ -11,6 +11,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineFlag;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 public class RangeCheckRoutine extends AutoQCRoutine {
 
@@ -26,10 +27,10 @@ public class RangeCheckRoutine extends AutoQCRoutine {
   @Override
   protected void qcAction(List<SensorValue> values) throws RoutineException {
     for (SensorValue sensorValue : values) {
-      Double value = sensorValue.getDoubleValue();
+      DoubleWithUncertainty value = sensorValue.getDoubleValue();
 
       if (!value.isNaN()) {
-        RoutineFlag flag = getRangeFlag(value);
+        RoutineFlag flag = getRangeFlag(value.value());
         if (null != flag) {
           addFlag(sensorValue, flag);
         }

@@ -16,6 +16,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 public class ControsPco2MeasurementLocator extends MeasurementLocator {
@@ -67,7 +68,8 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
         .getCoefficient(calibrationSet, variable, "Response Time",
           castDataset.getStartTime());
 
-      long totalFlushingTime = Math.round(defaultRunTimeCoefficient.getValue());
+      long totalFlushingTime = Math
+        .round(defaultRunTimeCoefficient.getValue().value());
 
       // Loop through all the rows, examining the zero/flush columns to decide
       // what to do
@@ -220,9 +222,9 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
 
     if (!zeroExact || !flushExact) {
       result = NO_STATUS;
-    } else if (record.get(zeroColumn).getDoubleValue() == 1D) {
+    } else if (record.get(zeroColumn).getDoubleValue().value() == 1D) {
       result = ZERO;
-    } else if (record.get(flushingColumn).getDoubleValue() == 1D) {
+    } else if (record.get(flushingColumn).getDoubleValue().value() == 1D) {
       result = FLUSHING;
     } else {
       result = MEASUREMENT;
@@ -231,8 +233,8 @@ public class ControsPco2MeasurementLocator extends MeasurementLocator {
     return result;
   }
 
-  private boolean exactFlag(Double flag) {
-    return flag == 0D || flag == 1D;
+  private boolean exactFlag(DoubleWithUncertainty flag) {
+    return flag.value() == 0D || flag.value() == 1D;
   }
 
   private Measurement makeMeasurement(DataSet dataset,

@@ -10,6 +10,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Data Reduction class for NRT Atmospheric fCO₂ from SailDrones.
@@ -37,22 +38,24 @@ public class SaildroneAtmosphericPco2Reducer extends DataReducer {
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
     try {
-      Double airTemperature = measurement.getMeasurementValue("Air Temperature")
-        .getCalculatedValue();
-      Double salinity = measurement.getMeasurementValue("Salinity")
-        .getCalculatedValue();
-      Double licorPressure = measurement
+      DoubleWithUncertainty airTemperature = measurement
+        .getMeasurementValue("Air Temperature").getCalculatedValue();
+      DoubleWithUncertainty salinity = measurement
+        .getMeasurementValue("Salinity").getCalculatedValue();
+      DoubleWithUncertainty licorPressure = measurement
         .getMeasurementValue("LICOR Pressure (Atmosphere)")
         .getCalculatedValue();
-      Double xCo2 = measurement
+      DoubleWithUncertainty xCO2 = measurement
         .getMeasurementValue("xCO₂ atmosphere (dry, no standards)")
         .getCalculatedValue();
 
-      Double pH2O = Calculators.calcPH2O(salinity, airTemperature);
-
-      Double pCO2 = Calculators.calcpCO2TEWet(xCo2, licorPressure, pH2O);
-      Double fCO2 = Calculators.calcfCO2(pCO2, xCo2, licorPressure,
+      DoubleWithUncertainty pH2O = Calculators.calcPH2O(salinity,
         airTemperature);
+
+      DoubleWithUncertainty pCO2 = Calculators.calcpCO2TEWet(xCO2,
+        licorPressure, pH2O);
+      DoubleWithUncertainty fCO2 = Calculators.calcfCO2(pCO2, xCO2,
+        licorPressure, airTemperature);
 
       record.put("pCO₂", pCO2);
       record.put("fCO₂", fCO2);

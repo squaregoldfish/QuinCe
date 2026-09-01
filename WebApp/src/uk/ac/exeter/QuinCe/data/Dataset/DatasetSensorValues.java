@@ -1146,7 +1146,8 @@ public class DatasetSensorValues {
 
     if (null != lat && null != lon
       && lat.getCoordinate().equals(lon.getCoordinate())) {
-      result = new LatLng(lat.getDoubleValue(), lon.getDoubleValue());
+      result = new LatLng(lat.getDoubleValue().value(),
+        lon.getDoubleValue().value());
     }
 
     return result;

@@ -14,6 +14,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineFlag;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 public class StandardOffsetRoutine extends ExternalStandardsQCRoutine {
 
@@ -50,12 +51,12 @@ public class StandardOffsetRoutine extends ExternalStandardsQCRoutine {
         String runType = runTypeValue.getStringValue();
 
         if (externalStandards.getTargets().contains(runType)) {
-          double standardValue = externalStandards
+          DoubleWithUncertainty standardValue = externalStandards
             .getCalibrations(sensorValue.getCoordinate().getTime()).get(runType)
             .getDoubleCoefficient(sensorType.getShortName());
 
           double offset = Math
-            .abs(sensorValue.getDoubleValue() - standardValue);
+            .abs(sensorValue.getDoubleValue().value() - standardValue.value());
 
           if (!Double.isNaN(offset)) {
             RoutineFlag flag = getRangeFlag(offset, true);

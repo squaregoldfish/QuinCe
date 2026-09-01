@@ -6,6 +6,7 @@ import java.util.Collections;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Represents a value retrieved from a {@link SensorValuesList}.
@@ -102,9 +103,9 @@ public class SingleSensorValuesListValue implements SensorValuesListValue {
    * @see SensorValue#isNumeric()
    */
   @Override
-  public Double getDoubleValue() {
+  public DoubleWithUncertainty getDoubleValue() {
     if (!sensorValue.isNumeric()) {
-      throw new IncorrectValueTypeException(DOUBLE_TYPE);
+      throw new IncorrectValueTypeException(NUMERIC_TYPE);
     }
 
     return sensorValue.getDoubleValue();

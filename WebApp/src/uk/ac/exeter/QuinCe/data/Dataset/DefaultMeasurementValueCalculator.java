@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.Calculators;
@@ -20,6 +19,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 
 /**
@@ -278,9 +278,9 @@ public class DefaultMeasurementValueCalculator
         } else if (prior.isValid() && post.isValid()) {
           // We have valid calibrations either side. Get their offsets, and
           // interpolated to the time of the measured value.
-          double offset = Calculators.interpolate(prior.getTime(),
-            prior.getOffset(), post.getTime(), post.getOffset(),
-            coordinate.getTime());
+          DoubleWithUncertainty offset = Calculators.interpolate(
+            prior.getTime(), prior.getOffset(), post.getTime(),
+            post.getOffset(), coordinate.getTime());
 
           applyOffset(value, offset);
 
@@ -307,12 +307,12 @@ public class DefaultMeasurementValueCalculator
     // Loop through each calibration target
     for (String runType : externalStandards.getTargets()) {
 
-      double standardConcentration = externalStandards
+      DoubleWithUncertainty standardConcentration = externalStandards
         .getCalibrations(measurementTime.getTime()).get(runType)
         .getDoubleCoefficient(sensorType.getShortName());
 
       if (sensorType.includeZeroInCalibration()
-        || standardConcentration > 0.0D) {
+        || standardConcentration.value() > 0.0D) {
 
         // Get the measurements for the closest run
         TreeSet<Measurement> runTypeMeasurements;
@@ -335,20 +335,13 @@ public class DefaultMeasurementValueCalculator
           .filter(v -> flagScheme.isGood(v.getUserQCFlag(), true))
           .collect(Collectors.toList());
 
-        Mean mean = new Mean();
-
-        runSensorValues.stream().map(v -> v.getDoubleValue()).forEach(d -> {
-          mean.increment(d);
-        });
+        DoubleWithUncertainty mean = SensorValue.getMeanValue(runSensorValues);
 
         // If there are values from the run...
-        if (!Double.isNaN(mean.getResult())) {
-
+        if (!mean.isNaN()) {
           result.addUsedSensorValues(runSensorValues);
-
-          double offset = mean.getResult() - standardConcentration;
-
-          regression.addData(standardConcentration, offset);
+          DoubleWithUncertainty offset = mean.subtract(standardConcentration);
+          regression.addData(standardConcentration.value(), offset.value());
         }
       }
     }
@@ -356,15 +349,17 @@ public class DefaultMeasurementValueCalculator
     if (regression.getN() < 2) {
       result.addComment("Not enough gas standards available");
     } else {
-      result.setOffset(regression.predict(value.getCalculatedValue()));
+      result.setOffset(new DoubleWithUncertainty(
+        regression.predict(value.getCalculatedValue().value()), 0F));
     }
 
     return result;
   }
 
-  private void applyOffset(MeasurementValue value, Double offset) {
+  private void applyOffset(MeasurementValue value,
+    DoubleWithUncertainty offset) {
     if (!offset.isNaN()) {
-      value.setCalculatedValue(value.getCalculatedValue() - offset);
+      value.setCalculatedValue(value.getCalculatedValue().subtract(offset));
     }
   }
 
@@ -382,7 +377,7 @@ public class DefaultMeasurementValueCalculator
     /**
      * The calculated offset from the gas standards.
      */
-    private Double offset;
+    private DoubleWithUncertainty offset;
 
     /**
      * Comment for this calibration. Setting a comment implies that the
@@ -395,7 +390,7 @@ public class DefaultMeasurementValueCalculator
      */
     protected CalibrationOffset() {
       this.usedValues = new HashSet<SensorValue>();
-      this.offset = Double.NaN;
+      this.offset = DoubleWithUncertainty.NaN;
       this.comments = new ArrayList<String>();
     }
 
@@ -405,7 +400,7 @@ public class DefaultMeasurementValueCalculator
      * @return The offset of the measured value at the time specified by
      *         {@link #time}.
      */
-    protected Double getOffset() {
+    protected DoubleWithUncertainty getOffset() {
       return offset;
     }
 
@@ -481,7 +476,7 @@ public class DefaultMeasurementValueCalculator
       comments.add(comment);
     }
 
-    protected void setOffset(double offset) {
+    protected void setOffset(DoubleWithUncertainty offset) {
       this.offset = offset;
     }
   }

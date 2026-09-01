@@ -33,7 +33,7 @@ public class OutlierRoutine extends AutoQCRoutine {
     double stdev = 0.0;
 
     for (SensorValue sensorValue : values) {
-      Double value = sensorValue.getDoubleValue();
+      Double value = sensorValue.getDoubleValue().value();
       if (!value.isNaN()) {
         valueCount++;
 
@@ -54,7 +54,8 @@ public class OutlierRoutine extends AutoQCRoutine {
       // Check all values to see if they're outside the limit
       for (SensorValue sensorValue : values) {
         if (!sensorValue.isNaN()) {
-          double diffFromMean = Math.abs(sensorValue.getDoubleValue() - mean);
+          double diffFromMean = Math
+            .abs(sensorValue.getDoubleValue().value() - mean);
 
           if (diffFromMean > (stdev * stdevLimit)) {
             addFlag(sensorValue, flagScheme.getBadFlag(), stdevLimit, stdev);

@@ -50,8 +50,8 @@ public class GradientTestRoutine extends AutoQCRoutine {
 
       // If the change is equal to the smallest possible change
       // we can't do the gradient check
-      double valueDelta = currValue.getDoubleValue()
-        - prevValue.getDoubleValue();
+      double valueDelta = currValue.getDoubleValue().value()
+        - prevValue.getDoubleValue().value();
       if (Math.abs(valueDelta) > minimumChange) {
 
         // time-increment
@@ -66,8 +66,10 @@ public class GradientTestRoutine extends AutoQCRoutine {
           boolean spike = false;
 
           if (null != nextValue) {
-            double deltaPerMinPrevToNext = Math.abs(
-              nextValue.getDoubleValue() - prevValue.getDoubleValue()) / tDiff;
+            double deltaPerMinPrevToNext = Math
+              .abs(nextValue.getDoubleValue().value()
+                - prevValue.getDoubleValue().value())
+              / tDiff;
             if (deltaPerMinPrevToNext < maxDeltaPerMinute) {
               spike = true;
             }

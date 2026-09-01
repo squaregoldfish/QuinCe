@@ -8,6 +8,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.ColumnHeading;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.CalculationParameter;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Holds the properties of a column heading on the plot page.
@@ -23,7 +24,7 @@ public class PlotPageColumnHeading extends ColumnHeading {
    * The reference value for this column - used primarily in gas standards page
    * to show reference gas concentration.
    */
-  private final TreeMap<LocalDateTime, Double> referenceValues;
+  private final TreeMap<LocalDateTime, DoubleWithUncertainty> referenceValues;
 
   /**
    * Indicates whether or not values in this column can be edited.
@@ -85,14 +86,15 @@ public class PlotPageColumnHeading extends ColumnHeading {
    */
   public PlotPageColumnHeading(long id, String shortName, String longName,
     String codeName, String units, boolean includeType, boolean numeric,
-    boolean editable, TreeMap<LocalDateTime, Double> referenceValue,
+    boolean editable,
+    TreeMap<LocalDateTime, DoubleWithUncertainty> referenceValues,
     boolean badFlagOnly) {
 
     super(id, shortName, longName, codeName, units, true, includeType);
     this.numeric = numeric;
     this.editable = editable;
     this.selectionColumn = id;
-    this.referenceValues = referenceValue;
+    this.referenceValues = referenceValues;
     this.badFlagOnly = badFlagOnly;
   }
 
@@ -174,7 +176,7 @@ public class PlotPageColumnHeading extends ColumnHeading {
     return selectionColumn;
   }
 
-  public TreeMap<LocalDateTime, Double> getReferenceValues() {
+  public TreeMap<LocalDateTime, DoubleWithUncertainty> getReferenceValues() {
     return referenceValues;
   }
 

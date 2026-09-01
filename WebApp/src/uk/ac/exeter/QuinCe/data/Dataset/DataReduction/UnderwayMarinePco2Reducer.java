@@ -11,6 +11,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Data Reduction class for underway marine pCO₂ measurements taken by
@@ -44,26 +45,27 @@ public class UnderwayMarinePco2Reducer extends DataReducer {
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
     try {
-      Double waterTemperature = measurement
+      DoubleWithUncertainty waterTemperature = measurement
         .getMeasurementValue("Water Temperature").getCalculatedValue();
-      Double salinity = measurement.getMeasurementValue("Salinity")
-        .getCalculatedValue();
-      Double equilibratorTemperature = measurement
+      DoubleWithUncertainty salinity = measurement
+        .getMeasurementValue("Salinity").getCalculatedValue();
+      DoubleWithUncertainty equilibratorTemperature = measurement
         .getMeasurementValue("Equilibrator Temperature").getCalculatedValue();
-      Double equilibratorPressure = measurement
+      DoubleWithUncertainty equilibratorPressure = measurement
         .getMeasurementValue("Equilibrator Pressure").getCalculatedValue();
-      Double xCO2 = measurement.getMeasurementValue(getXCO2Parameter())
-        .getCalculatedValue();
+      DoubleWithUncertainty xCO2 = measurement
+        .getMeasurementValue(getXCO2Parameter()).getCalculatedValue();
 
       Calculator calculator = new Calculator(waterTemperature, salinity,
         equilibratorTemperature, equilibratorPressure, xCO2);
 
       // Store the calculated values
-      double deltaT = equilibratorTemperature - waterTemperature;
+      DoubleWithUncertainty deltaT = equilibratorTemperature
+        .subtract(waterTemperature);
       record.put("ΔT", deltaT);
 
       // If the ΔT is really large, we don't store any other values.
-      if (Math.abs(deltaT) < 100D) {
+      if (Math.abs(deltaT.value()) < 100D) {
         record.put("pH₂O", calculator.pH2O);
         record.put("pCO₂ TE Wet", calculator.pCo2TEWet);
         record.put("fCO₂ TE Wet", calculator.fCo2TEWet);
@@ -130,52 +132,52 @@ public class UnderwayMarinePco2Reducer extends DataReducer {
     /**
      * Measured water temperature.
      */
-    private final Double waterTemperature;
+    private final DoubleWithUncertainty waterTemperature;
 
     /**
      * Measured salinity.
      */
-    private final Double salinity;
+    private final DoubleWithUncertainty salinity;
 
     /**
      * Measured temperature inside the equilibrator.
      */
-    private final Double equilibratorTemperature;
+    private final DoubleWithUncertainty equilibratorTemperature;
 
     /**
      * Measured pressure inside the equilibrator.
      */
-    private final Double equilibratorPressure;
+    private final DoubleWithUncertainty equilibratorPressure;
 
     /**
      * The CO₂ value measured by the gas analyser.
      */
-    private final Double co2InGas;
+    private final DoubleWithUncertainty co2InGas;
 
     /**
      * Calculated water vapour pressure.
      */
-    protected Double pH2O = null;
+    protected DoubleWithUncertainty pH2O = null;
 
     /**
      * Calculated pCO₂ at 100% humidity at equilibrator temperature.
      */
-    protected Double pCo2TEWet = null;
+    protected DoubleWithUncertainty pCo2TEWet = null;
 
     /**
      * Calculated fCO₂ at 100% humidity at equilibrator temperature.
      */
-    protected Double fCo2TEWet = null;
+    protected DoubleWithUncertainty fCo2TEWet = null;
 
     /**
      * Calculated pCO₂ at 100% humidity at water temperature.
      */
-    protected Double pCO2SST = null;
+    protected DoubleWithUncertainty pCO2SST = null;
 
     /**
      * Calculated fCO₂ at 100% humidity at water temperature.
      */
-    protected Double fCO2 = null;
+    protected DoubleWithUncertainty fCO2 = null;
 
     /**
      * Initialise the calculator with the required measured values.
@@ -191,9 +193,11 @@ public class UnderwayMarinePco2Reducer extends DataReducer {
      * @param co2InGas
      *          Measure CO₂.
      */
-    protected Calculator(Double waterTemperature, Double salinity,
-      Double equilibratorTemperature, Double equilibratorPressure,
-      Double co2InGas) {
+    protected Calculator(DoubleWithUncertainty waterTemperature,
+      DoubleWithUncertainty salinity,
+      DoubleWithUncertainty equilibratorTemperature,
+      DoubleWithUncertainty equilibratorPressure,
+      DoubleWithUncertainty co2InGas) {
 
       this.waterTemperature = waterTemperature;
       this.salinity = salinity;

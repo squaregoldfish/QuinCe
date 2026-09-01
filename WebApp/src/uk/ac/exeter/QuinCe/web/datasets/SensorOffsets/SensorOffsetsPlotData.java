@@ -15,6 +15,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.SensorValue;
 import uk.ac.exeter.QuinCe.data.Dataset.SensorValuesList;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorGroupPair;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Data structure for building main time series plot data for the Sensor Offsets
@@ -110,19 +111,19 @@ public class SensorOffsetsPlotData {
       if (entry.getValue().getFirst().isNaN()) {
         entryArray.add(JsonNull.INSTANCE);
       } else {
-        entryArray.add(entry.getValue().getFirst());
+        entryArray.add(entry.getValue().getFirst().value());
       }
 
       if (entry.getValue().getSecond().isNaN()) {
         entryArray.add(JsonNull.INSTANCE);
       } else {
-        entryArray.add(entry.getValue().getSecond());
+        entryArray.add(entry.getValue().getSecond().value());
       }
 
       if (entry.getValue().getOffsetSecond().isNaN()) {
         entryArray.add(JsonNull.INSTANCE);
       } else {
-        entryArray.add(entry.getValue().getOffsetSecond());
+        entryArray.add(entry.getValue().getOffsetSecond().value());
       }
 
       json.add(entryArray);
@@ -133,12 +134,12 @@ public class SensorOffsetsPlotData {
 
   protected Double getFirstSeriesValue(LocalDateTime time) {
     Tuple tuple = data.get(time);
-    return null == tuple ? Double.NaN : tuple.getFirst();
+    return null == tuple ? Double.NaN : tuple.getFirst().value();
   }
 
   protected Double getSecondSeriesValue(LocalDateTime time) {
     Tuple tuple = data.get(time);
-    return null == tuple ? Double.NaN : tuple.getSecond();
+    return null == tuple ? Double.NaN : tuple.getSecond().value();
   }
 
   /**
@@ -146,11 +147,11 @@ public class SensorOffsetsPlotData {
    */
   private class Tuple {
 
-    private Double first = Double.NaN;
+    private DoubleWithUncertainty first = DoubleWithUncertainty.NaN;
 
-    private Double second = Double.NaN;
+    private DoubleWithUncertainty second = DoubleWithUncertainty.NaN;
 
-    private Double offsetSecond = Double.NaN;
+    private DoubleWithUncertainty offsetSecond = DoubleWithUncertainty.NaN;
 
     protected Tuple() {
       // Blank constructor
@@ -162,27 +163,27 @@ public class SensorOffsetsPlotData {
       this.offsetSecond = source.offsetSecond;
     }
 
-    protected void setFirst(Double first) {
+    protected void setFirst(DoubleWithUncertainty first) {
       this.first = first;
     }
 
-    protected void setSecond(Double second) {
+    protected void setSecond(DoubleWithUncertainty second) {
       this.second = second;
     }
 
-    protected void setOffsetSecond(Double offsetSecond) {
+    protected void setOffsetSecond(DoubleWithUncertainty offsetSecond) {
       this.offsetSecond = offsetSecond;
     }
 
-    private Double getFirst() {
+    private DoubleWithUncertainty getFirst() {
       return first;
     }
 
-    private Double getSecond() {
+    private DoubleWithUncertainty getSecond() {
       return second;
     }
 
-    private Double getOffsetSecond() {
+    private DoubleWithUncertainty getOffsetSecond() {
       return offsetSecond;
     }
   }

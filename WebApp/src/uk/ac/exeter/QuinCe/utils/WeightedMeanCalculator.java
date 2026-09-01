@@ -1,34 +1,52 @@
 package uk.ac.exeter.QuinCe.utils;
 
-import org.apache.commons.lang3.mutable.MutableDouble;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WeightedMeanCalculator {
 
-  private MutableDouble weightedSum;
+  private List<DoubleWithUncertainty> values;
 
-  private MutableDouble sumOfWeights;
+  private List<Double> weights;
 
   public WeightedMeanCalculator() {
-    weightedSum = new MutableDouble(0D);
-    sumOfWeights = new MutableDouble(0D);
+    values = new ArrayList<DoubleWithUncertainty>();
+    weights = new ArrayList<Double>();
   }
 
-  public void add(Double value, Double weight) {
-    weightedSum.add(value * weight);
-    sumOfWeights.add(weight);
+  public void add(DoubleWithUncertainty value, Double weight) {
+    values.add(value);
+    weights.add(weight);
   }
 
-  public Double getWeightedMean() {
+  public DoubleWithUncertainty getWeightedMean() {
 
-    Double result = Double.NaN;
-    if (sumOfWeights.doubleValue() > 0D) {
-      result = weightedSum.doubleValue() / sumOfWeights.doubleValue();
+    double weightedSum = 0D;
+    double sumOfWeights = 0D;
+    double weightedUncertaintySum = 0D;
+
+    for (int i = 0; i < values.size(); i++) {
+
+      if (!DoubleWithUncertainty.isNaN(values.get(i))) {
+        weightedSum += values.get(i).value() * weights.get(i);
+        sumOfWeights += weights.get(i);
+        weightedUncertaintySum = Math.pow(weights.get(i), 2)
+          * Math.pow(values.get(i).uncertainty(), 2);
+      }
     }
 
-    return result;
+    if (sumOfWeights == 0) {
+      throw new IllegalArgumentException("Sum of weights is zero");
+    }
+
+    double mean = weightedSum / sumOfWeights;
+    float uncertainty = (float) (Math.sqrt(weightedUncertaintySum)
+      / sumOfWeights);
+
+    return new DoubleWithUncertainty(mean, uncertainty);
   }
 
   public Double getSumOfWeights() {
-    return sumOfWeights.getValue();
+    return weights.stream().mapToDouble(w -> w).sum();
   }
 }

@@ -10,6 +10,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 public class ProOceanusMarineCO2Reducer extends DataReducer {
 
@@ -26,17 +27,17 @@ public class ProOceanusMarineCO2Reducer extends DataReducer {
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
     try {
-      Double waterTemperature = measurement
+      DoubleWithUncertainty waterTemperature = measurement
         .getMeasurementValue("Water Temperature").getCalculatedValue();
-      Double cellGasPressure = measurement
+      DoubleWithUncertainty cellGasPressure = measurement
         .getMeasurementValue("Cell Gas Pressure").getCalculatedValue();
-      Double xCO2 = measurement.getMeasurementValue("xCO₂ (wet, no standards)")
-        .getCalculatedValue();
+      DoubleWithUncertainty xCO2 = measurement
+        .getMeasurementValue("xCO₂ (wet, no standards)").getCalculatedValue();
 
-      Double p = Calculators.hPaToAtmospheres(cellGasPressure);
-      Double pCO2WetSST = xCO2 * p;
-      Double fCO2 = Calculators.calcfCO2(pCO2WetSST, xCO2, cellGasPressure,
-        waterTemperature);
+      DoubleWithUncertainty p = Calculators.hPaToAtmospheres(cellGasPressure);
+      DoubleWithUncertainty pCO2WetSST = xCO2.multiply(p);
+      DoubleWithUncertainty fCO2 = Calculators.calcfCO2(pCO2WetSST, xCO2,
+        cellGasPressure, waterTemperature);
 
       record.put("pCO₂ SST", pCO2WetSST);
       record.put("fCO₂", fCO2);

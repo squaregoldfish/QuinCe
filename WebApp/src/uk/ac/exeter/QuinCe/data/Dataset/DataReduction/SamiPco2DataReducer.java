@@ -10,6 +10,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Data reducer for SAMI pCO₂ sensor.
@@ -34,18 +35,18 @@ public class SamiPco2DataReducer extends DataReducer {
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
     try {
-      Double waterTemperature = measurement
+      DoubleWithUncertainty waterTemperature = measurement
         .getMeasurementValue("Water Temperature").getCalculatedValue();
-      Double pCO2TEWet = measurement
+      DoubleWithUncertainty pCO2TEWet = measurement
         .getMeasurementValue("pCO₂ (wet at equilibration)")
         .getCalculatedValue();
-      Double pressure = measurement
+      DoubleWithUncertainty pressure = measurement
         .getMeasurementValue("Pressure at instrument").getCalculatedValue();
 
-      Double pCO2SST = Calculators.calcCO2AtSST(pCO2TEWet, waterTemperature,
-        waterTemperature);
-      Double fCO2 = Calculators.calcfCO2(pCO2SST, pCO2SST, pressure,
-        waterTemperature);
+      DoubleWithUncertainty pCO2SST = Calculators.calcCO2AtSST(pCO2TEWet,
+        waterTemperature, waterTemperature);
+      DoubleWithUncertainty fCO2 = Calculators.calcfCO2(pCO2SST, pCO2SST,
+        pressure, waterTemperature);
 
       record.put("pCO₂ SST", pCO2SST);
       record.put("fCO₂", fCO2);

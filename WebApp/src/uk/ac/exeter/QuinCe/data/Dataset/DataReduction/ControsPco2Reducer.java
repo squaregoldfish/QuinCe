@@ -19,7 +19,8 @@ import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficient;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
-import uk.ac.exeter.QuinCe.utils.MeanCalculator;
+import uk.ac.exeter.QuinCe.utils.BigDecimalWithUncertainty;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 public class ControsPco2Reducer extends DataReducer {
 
@@ -39,9 +40,9 @@ public class ControsPco2Reducer extends DataReducer {
 
   private static List<CalculationParameter> calculationParameters = null;
 
-  protected TreeMap<Double, Double> zeroS2Beams;
+  protected TreeMap<DoubleWithUncertainty, DoubleWithUncertainty> zeroS2Beams;
 
-  private BigDecimal F = null;
+  private BigDecimalWithUncertainty F = null;
 
   private CalculationCoefficient k1Prior = null;
 
@@ -59,11 +60,11 @@ public class ControsPco2Reducer extends DataReducer {
 
   private CalculationCoefficient runTimePost = null;
 
-  private BigDecimal k1Step = null;
+  private BigDecimalWithUncertainty k1Step = null;
 
-  private BigDecimal k2Step = null;
+  private BigDecimalWithUncertainty k2Step = null;
 
-  private BigDecimal k3Step = null;
+  private BigDecimalWithUncertainty k3Step = null;
 
   public ControsPco2Reducer(Variable variable,
     Map<String, Properties> properties, CalibrationSet calculationCoefficients)
@@ -111,37 +112,37 @@ public class ControsPco2Reducer extends DataReducer {
     if (null != k1Post && null != k2Post && null != k3Post
       && null != runTimePost) {
 
-      BigDecimal runtimePeriod = runTimePost.getBigDecimalValue()
+      BigDecimalWithUncertainty runtimePeriod = runTimePost.getBigDecimalValue()
         .subtract(runTimePrior.getBigDecimalValue());
 
       if (k1Post.getBigDecimalValue().equals(k1Prior.getBigDecimalValue())) {
-        k1Step = BigDecimal.ZERO;
+        k1Step = BigDecimalWithUncertainty.ZERO;
       } else {
-        BigDecimal k1Diff = k1Post.getBigDecimalValue()
+        BigDecimalWithUncertainty k1Diff = k1Post.getBigDecimalValue()
           .subtract(k1Prior.getBigDecimalValue())
           .setScale(50, RoundingMode.HALF_UP);
         k1Step = k1Diff.divide(runtimePeriod, 50, RoundingMode.HALF_UP);
       }
 
       if (k2Post.getBigDecimalValue().equals(k2Prior.getBigDecimalValue())) {
-        k2Step = BigDecimal.ZERO;
+        k2Step = BigDecimalWithUncertainty.ZERO;
       } else {
-        BigDecimal k2Diff = k2Post.getBigDecimalValue()
+        BigDecimalWithUncertainty k2Diff = k2Post.getBigDecimalValue()
           .subtract(k2Prior.getBigDecimalValue());
         k2Step = k2Diff.divide(runtimePeriod, 50, RoundingMode.HALF_UP);
       }
 
       if (k3Post.getBigDecimalValue().equals(k3Prior.getBigDecimalValue())) {
-        k3Step = BigDecimal.ZERO;
+        k3Step = BigDecimalWithUncertainty.ZERO;
       } else {
-        BigDecimal k3Diff = k3Post.getBigDecimalValue()
+        BigDecimalWithUncertainty k3Diff = k3Post.getBigDecimalValue()
           .subtract(k3Prior.getBigDecimalValue());
         k3Step = k3Diff.divide(runtimePeriod, 50, RoundingMode.HALF_UP);
       }
     } else {
-      k1Step = BigDecimal.ZERO;
-      k2Step = BigDecimal.ZERO;
-      k3Step = BigDecimal.ZERO;
+      k1Step = BigDecimalWithUncertainty.ZERO;
+      k2Step = BigDecimalWithUncertainty.ZERO;
+      k3Step = BigDecimalWithUncertainty.ZERO;
     }
   }
 
@@ -152,12 +153,12 @@ public class ControsPco2Reducer extends DataReducer {
    */
   protected void calcZeroS2Beams(DataSet dataset,
     List<Measurement> allMeasurements) throws SensorTypeNotFoundException {
-    zeroS2Beams = new TreeMap<Double, Double>();
+    zeroS2Beams = new TreeMap<DoubleWithUncertainty, DoubleWithUncertainty>();
 
     // We calculate zero beams as averages within their run
     String currentRunType = "";
-    MeanCalculator runTimes = new MeanCalculator();
-    MeanCalculator s2Beams = new MeanCalculator();
+    ArrayList<DoubleWithUncertainty> runTimes = new ArrayList<DoubleWithUncertainty>();
+    ArrayList<DoubleWithUncertainty> s2Beams = new ArrayList<DoubleWithUncertainty>();
 
     for (Measurement measurement : allMeasurements) {
 
@@ -165,10 +166,11 @@ public class ControsPco2Reducer extends DataReducer {
 
       if (!runType.equals(currentRunType)) {
         if (currentRunType.equals(Measurement.INTERNAL_CALIBRATION_RUN_TYPE)) {
-          if (runTimes.getCount() > 0) {
-            zeroS2Beams.put(runTimes.mean(), s2Beams.mean());
-            runTimes = new MeanCalculator();
-            s2Beams = new MeanCalculator();
+          if (runTimes.size() > 0) {
+            zeroS2Beams.put(DoubleWithUncertainty.mean(runTimes),
+              DoubleWithUncertainty.mean(s2Beams));
+            runTimes = new ArrayList<DoubleWithUncertainty>();
+            s2Beams = new ArrayList<DoubleWithUncertainty>();
           }
         }
         currentRunType = runType;
@@ -176,7 +178,7 @@ public class ControsPco2Reducer extends DataReducer {
 
       if (runType.equals(Measurement.INTERNAL_CALIBRATION_RUN_TYPE)) {
 
-        Double rawSignal = measurement
+        DoubleWithUncertainty rawSignal = measurement
           .getMeasurementValue("Raw Detector Signal").getCalculatedValue();
 
         if (!rawSignal.isNaN()) {
@@ -187,10 +189,11 @@ public class ControsPco2Reducer extends DataReducer {
       }
     }
 
-    if (runTimes.getCount() > 0) {
-      zeroS2Beams.put(runTimes.mean(), s2Beams.mean());
-      runTimes = new MeanCalculator();
-      s2Beams = new MeanCalculator();
+    if (runTimes.size() > 0) {
+      zeroS2Beams.put(DoubleWithUncertainty.mean(runTimes),
+        DoubleWithUncertainty.mean(s2Beams));
+      runTimes = new ArrayList<DoubleWithUncertainty>();
+      s2Beams = new ArrayList<DoubleWithUncertainty>();
     }
 
     dataset.setProperty(variable, ZEROS_PROP, new Gson().toJson(zeroS2Beams));
@@ -201,124 +204,135 @@ public class ControsPco2Reducer extends DataReducer {
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
     try {
-      Double doubleRuntime = measurement.getMeasurementValue("Runtime")
-        .getCalculatedValue();
+      DoubleWithUncertainty doubleRuntime = measurement
+        .getMeasurementValue("Runtime").getCalculatedValue();
 
       // A NaN Runtime is an invalid measurement. Skip it.
       if (!doubleRuntime.isNaN()) {
 
         // We use BigDecimals to maintain the precision on the k parameters,
         // which are on the order of 1e-10
-        BigDecimal measurementRuntime = new BigDecimal(doubleRuntime);
+        BigDecimalWithUncertainty measurementRuntime = new BigDecimalWithUncertainty(
+          doubleRuntime);
 
-        Double measurementS2Beam = calcS2Beam(measurement);
+        DoubleWithUncertainty measurementS2Beam = calcS2Beam(measurement);
 
-        Double zeroS2Beam;
-        Double sProc;
-        Double xco2;
-        Double pCO2SST;
-        Double fCO2;
+        DoubleWithUncertainty zeroS2Beam;
+        DoubleWithUncertainty sProc;
+        DoubleWithUncertainty xco2;
+        DoubleWithUncertainty pCO2SST;
+        DoubleWithUncertainty fCO2;
 
         if (!measurementS2Beam.isNaN()) {
-          BigDecimal bdMeasurementS2Beam = new BigDecimal(measurementS2Beam);
+          BigDecimalWithUncertainty bdMeasurementS2Beam = new BigDecimalWithUncertainty(
+            measurementS2Beam);
 
-          Double interpZeroS2Beam = getInterpZeroS2Beam(
-            measurementRuntime.doubleValue());
+          DoubleWithUncertainty interpZeroS2Beam = getInterpZeroS2Beam(
+            measurementRuntime);
 
           if (null != interpZeroS2Beam) {
 
             try {
-              BigDecimal bdZeroS2Beam = new BigDecimal(interpZeroS2Beam);
+              BigDecimalWithUncertainty bdZeroS2Beam = new BigDecimalWithUncertainty(
+                interpZeroS2Beam);
 
-              BigDecimal sDC = bdMeasurementS2Beam.divide(bdZeroS2Beam,
-                RoundingMode.HALF_UP);
+              BigDecimalWithUncertainty sDC = bdMeasurementS2Beam
+                .divide(bdZeroS2Beam, RoundingMode.HALF_UP);
 
-              BigDecimal bdSProc = F.multiply(new BigDecimal(1D).subtract(sDC));
+              BigDecimalWithUncertainty bdSProc = F
+                .multiply(BigDecimalWithUncertainty.ONE.subtract(sDC));
 
-              BigDecimal runtimeSincePre = measurementRuntime
+              BigDecimalWithUncertainty runtimeSincePre = measurementRuntime
                 .subtract(runTimePrior.getBigDecimalValue());
 
-              BigDecimal k1Interp = k1Prior.getBigDecimalValue()
+              BigDecimalWithUncertainty k1Interp = k1Prior.getBigDecimalValue()
                 .add(k1Step.multiply(runtimeSincePre));
-              BigDecimal k2Interp = k2Prior.getBigDecimalValue()
+              BigDecimalWithUncertainty k2Interp = k2Prior.getBigDecimalValue()
                 .add(k2Step.multiply(runtimeSincePre));
-              BigDecimal k3Interp = k3Prior.getBigDecimalValue()
+              BigDecimalWithUncertainty k3Interp = k3Prior.getBigDecimalValue()
                 .add(k3Step.multiply(runtimeSincePre));
 
-              BigDecimal sProcCubed = bdSProc.pow(3);
-              BigDecimal sProcSquared = bdSProc.pow(2);
+              BigDecimalWithUncertainty sProcCubed = bdSProc.pow(3);
+              BigDecimalWithUncertainty sProcSquared = bdSProc.pow(2);
 
-              BigDecimal k3Part = k3Interp.multiply(sProcCubed);
-              BigDecimal k2Part = k2Interp.multiply(sProcSquared);
-              BigDecimal k1Part = k1Interp.multiply(bdSProc);
+              BigDecimalWithUncertainty k3Part = k3Interp.multiply(sProcCubed);
+              BigDecimalWithUncertainty k2Part = k2Interp
+                .multiply(sProcSquared);
+              BigDecimalWithUncertainty k1Part = k1Interp.multiply(bdSProc);
 
-              BigDecimal xco2ProcPart = k3Part.add(k2Part).add(k1Part);
+              BigDecimalWithUncertainty xco2ProcPart = k3Part.add(k2Part)
+                .add(k1Part);
 
               // Gas temperature in Kelvin
-              BigDecimal gasTemperature = new BigDecimal(
+              BigDecimalWithUncertainty gasTemperature = new BigDecimalWithUncertainty(
                 measurement.getMeasurementValue("Gas Stream Temperature")
                   .getCalculatedValue())
                 .add(T0);
 
-              BigDecimal gasPressure = new BigDecimal(
+              BigDecimalWithUncertainty gasPressure = new BigDecimalWithUncertainty(
                 measurement.getMeasurementValue("Gas Stream Pressure")
                   .getCalculatedValue());
 
-              BigDecimal membranePressure = new BigDecimal(measurement
-                .getMeasurementValue("Membrane Pressure").getCalculatedValue());
+              BigDecimalWithUncertainty membranePressure = new BigDecimalWithUncertainty(
+                measurement.getMeasurementValue("Membrane Pressure")
+                  .getCalculatedValue());
 
-              BigDecimal pressureTimesTemp = P0.multiply(gasTemperature);
+              BigDecimalWithUncertainty pressureTimesTemp = gasTemperature
+                .multiply(P0);
 
-              BigDecimal tempTimesPressure = T0.multiply(gasPressure);
+              BigDecimalWithUncertainty tempTimesPressure = gasPressure
+                .multiply(T0);
 
-              BigDecimal xcoPresTempPart = pressureTimesTemp
+              BigDecimalWithUncertainty xcoPresTempPart = pressureTimesTemp
                 .divide(tempTimesPressure, 50, RoundingMode.HALF_UP);
 
-              BigDecimal bdXCO2 = xco2ProcPart.multiply(xcoPresTempPart);
+              BigDecimalWithUncertainty bdXCO2 = xco2ProcPart
+                .multiply(xcoPresTempPart);
 
-              BigDecimal pco2PressurePart = membranePressure.divide(P0, 50,
-                RoundingMode.HALF_UP);
+              BigDecimalWithUncertainty pco2PressurePart = membranePressure
+                .divide(P0, 50, RoundingMode.HALF_UP);
 
-              BigDecimal bdPCO2SST = bdXCO2.multiply(pco2PressurePart);
+              BigDecimalWithUncertainty bdPCO2SST = bdXCO2
+                .multiply(pco2PressurePart);
 
-              Double waterTemp = measurement
+              DoubleWithUncertainty waterTemp = measurement
                 .getMeasurementValue("Water Temperature").getCalculatedValue();
 
-              fCO2 = Calculators.calcfCO2(bdPCO2SST.doubleValue(),
-                bdXCO2.doubleValue(), membranePressure.doubleValue(),
-                waterTemp);
+              fCO2 = Calculators.calcfCO2(bdPCO2SST.toDoubleWithUncertainty(),
+                bdXCO2.toDoubleWithUncertainty(),
+                membranePressure.toDoubleWithUncertainty(), waterTemp);
 
               // Make Double values for data reduction record
-              zeroS2Beam = bdZeroS2Beam.doubleValue();
-              sProc = bdSProc.doubleValue();
-              xco2 = bdXCO2.doubleValue();
-              pCO2SST = bdPCO2SST.doubleValue();
+              zeroS2Beam = bdZeroS2Beam.toDoubleWithUncertainty();
+              sProc = bdSProc.toDoubleWithUncertainty();
+              xco2 = bdXCO2.toDoubleWithUncertainty();
+              pCO2SST = bdPCO2SST.toDoubleWithUncertainty();
             } catch (NumberFormatException e) {
               /*
                * This will happen if any of the found measurement values are
                * NaN. As long as the CONTROS file isn't messed with, this
                * shouldn't happen.
                */
-              zeroS2Beam = Double.NaN;
-              sProc = Double.NaN;
-              xco2 = Double.NaN;
-              pCO2SST = Double.NaN;
-              fCO2 = Double.NaN;
+              zeroS2Beam = DoubleWithUncertainty.NaN;
+              sProc = DoubleWithUncertainty.NaN;
+              xco2 = DoubleWithUncertainty.NaN;
+              pCO2SST = DoubleWithUncertainty.NaN;
+              fCO2 = DoubleWithUncertainty.NaN;
             }
           } else {
-            zeroS2Beam = Double.NaN;
-            sProc = Double.NaN;
-            xco2 = Double.NaN;
-            pCO2SST = Double.NaN;
-            fCO2 = Double.NaN;
+            zeroS2Beam = DoubleWithUncertainty.NaN;
+            sProc = DoubleWithUncertainty.NaN;
+            xco2 = DoubleWithUncertainty.NaN;
+            pCO2SST = DoubleWithUncertainty.NaN;
+            fCO2 = DoubleWithUncertainty.NaN;
           }
 
-          record.put("Zero S₂beam", zeroS2Beam.doubleValue());
+          record.put("Zero S₂beam", zeroS2Beam);
           record.put("S₂beam",
-            zeroS2Beam.isNaN() ? Double.NaN : measurementS2Beam.doubleValue());
-          record.put("Sproc", sProc.doubleValue());
-          record.put("xCO₂", xco2.doubleValue());
-          record.put("pCO₂ SST", pCO2SST.doubleValue());
+            zeroS2Beam.isNaN() ? DoubleWithUncertainty.NaN : measurementS2Beam);
+          record.put("Sproc", sProc);
+          record.put("xCO₂", xco2);
+          record.put("pCO₂ SST", pCO2SST);
           record.put("fCO₂", fCO2);
         }
       }
@@ -356,24 +370,34 @@ public class ControsPco2Reducer extends DataReducer {
     return calculationParameters;
   }
 
-  private Double calcS2Beam(Measurement measurement)
+  private DoubleWithUncertainty calcS2Beam(Measurement measurement)
     throws SensorTypeNotFoundException {
     return measurement.getMeasurementValue("Raw Detector Signal")
-      .getCalculatedValue()
-      / measurement.getMeasurementValue("Reference Signal")
-        .getCalculatedValue();
+      .getCalculatedValue().divide(measurement
+        .getMeasurementValue("Reference Signal").getCalculatedValue());
   }
 
-  private Double getInterpZeroS2Beam(Double runTime)
-    throws DataReductionException {
-    Map.Entry<Double, Double> prior = zeroS2Beams.floorEntry(runTime);
-    Map.Entry<Double, Double> post = zeroS2Beams.ceilingEntry(runTime);
+  private DoubleWithUncertainty getInterpZeroS2Beam(
+    BigDecimalWithUncertainty runTime) throws DataReductionException {
 
-    Double result;
+    Map.Entry<DoubleWithUncertainty, DoubleWithUncertainty> prior = zeroS2Beams
+      .floorEntry(runTime.toDoubleWithUncertainty());
+    Map.Entry<DoubleWithUncertainty, DoubleWithUncertainty> post = zeroS2Beams
+      .ceilingEntry(runTime.toDoubleWithUncertainty());
+
+    DoubleWithUncertainty result;
 
     switch (getStringProperty(MODE_PROPERTY)) {
     case MODE_CONTINUOUS: {
-      result = Calculators.interpolate(prior, post, runTime);
+
+      // The Runtime has no uncertainty so we can extract it here.
+      Double priorX = prior.getKey().value();
+      DoubleWithUncertainty priorY = prior.getValue();
+      Double postX = post.getKey().value();
+      DoubleWithUncertainty postY = post.getValue();
+
+      result = Calculators.interpolate(priorX, priorY, postX, postY,
+        runTime.toDoubleWithUncertainty().value());
       break;
     }
     case MODE_ZERO_AFTER_SLEEP: {

@@ -10,6 +10,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 public class DExcessReducer extends DataReducer {
 
@@ -25,12 +26,14 @@ public class DExcessReducer extends DataReducer {
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
     try {
-      Double dH218O = measurement.getMeasurementValue("δH₂¹⁸O")
+      DoubleWithUncertainty dH218O = measurement.getMeasurementValue("δH₂¹⁸O")
         .getCalculatedValue();
-      Double dHD16O = measurement.getMeasurementValue("δHD¹⁶O")
+      DoubleWithUncertainty dHD16O = measurement.getMeasurementValue("δHD¹⁶O")
         .getCalculatedValue();
 
-      record.put("D-Excess", dHD16O - 8 * dH218O);
+      DoubleWithUncertainty dExcess = dHD16O.subtract(dH218O.multiply(8));
+
+      record.put("D-Excess", dExcess);
     } catch (Exception e) {
       throw new DataReductionException(e);
     }

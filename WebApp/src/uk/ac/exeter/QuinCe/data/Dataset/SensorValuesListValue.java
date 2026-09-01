@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Represents a value retrieved from a {@link SensorValuesList}.
@@ -16,9 +17,9 @@ public interface SensorValuesListValue {
   public static final int STRING_TYPE = 0;
 
   /**
-   * Indicates that this value holds a {@link Double}.
+   * Indicates that this value holds a numeric value.
    */
-  public static final int DOUBLE_TYPE = 1;
+  public static final int NUMERIC_TYPE = 1;
 
   /**
    * Get the {@link SensorType} for the value.
@@ -52,7 +53,7 @@ public interface SensorValuesListValue {
    * @return The {@link Double) value.
    *
    */
-  public Double getDoubleValue();
+  public DoubleWithUncertainty getDoubleValue();
 
   /**
    * Get the {@link String} value.

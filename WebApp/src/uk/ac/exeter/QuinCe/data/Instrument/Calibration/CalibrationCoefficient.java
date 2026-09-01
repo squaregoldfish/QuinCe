@@ -3,6 +3,7 @@ package uk.ac.exeter.QuinCe.data.Instrument.Calibration;
 import java.util.List;
 import java.util.Objects;
 
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.web.html.SelectItem;
 
 /**
@@ -134,8 +135,8 @@ public class CalibrationCoefficient implements Cloneable {
    *
    * @return The value.
    */
-  public Double getDoubleValue() {
-    return Double.parseDouble(value);
+  public DoubleWithUncertainty getDoubleValue() {
+    return new DoubleWithUncertainty(Double.parseDouble(value));
   }
 
   /**

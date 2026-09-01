@@ -26,6 +26,8 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagSerializer;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineFlag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineFlagSerializer;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertaintySerializer;
 
 public class MeasurementValuesSerializer
   implements JsonSerializer<HashMap<Long, MeasurementValue>>,
@@ -49,8 +51,6 @@ public class MeasurementValuesSerializer
 
   private static final String PROPERTIES_KEY = "props";
 
-  private static final Double NAN_VALUE = -999999999.9D;
-
   private final Gson gson;
 
   private final FlagScheme flagScheme;
@@ -59,6 +59,8 @@ public class MeasurementValuesSerializer
     this.gson = new GsonBuilder()
       .registerTypeAdapter(Flag.class, new FlagSerializer(flagScheme))
       .registerTypeAdapter(RoutineFlag.class, new RoutineFlagSerializer())
+      .registerTypeAdapter(DoubleWithUncertainty.class,
+        new DoubleWithUncertaintySerializer())
       .create();
     this.flagScheme = flagScheme;
   }
@@ -95,14 +97,7 @@ public class MeasurementValuesSerializer
         new JsonPrimitive(value.interpolatesAroundFlag()));
 
       // Calculated value
-      JsonPrimitive valuePrimitive;
-      if (value.getCalculatedValue().isNaN()) {
-        valuePrimitive = new JsonPrimitive(NAN_VALUE);
-      } else {
-        valuePrimitive = new JsonPrimitive(value.getCalculatedValue());
-      }
-
-      valueJson.add(VALUE_KEY, valuePrimitive);
+      valueJson.add(VALUE_KEY, gson.toJsonTree(value.getCalculatedValue()));
 
       // Flag
       // We know that this implementation doesn't utilise the
@@ -178,10 +173,8 @@ public class MeasurementValuesSerializer
           .getAsBoolean();
       }
 
-      Double value = json.get(VALUE_KEY).getAsDouble();
-      if (Math.abs(value - NAN_VALUE) < 1) {
-        value = Double.NaN;
-      }
+      DoubleWithUncertainty value = gson.fromJson(json.get(VALUE_KEY),
+        DoubleWithUncertainty.class);
 
       Flag flag = gson.fromJson(json.get(FLAG_KEY), Flag.class);
 

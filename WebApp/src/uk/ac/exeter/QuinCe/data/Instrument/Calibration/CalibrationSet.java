@@ -19,6 +19,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.MissingParam;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 
@@ -763,9 +764,9 @@ public class CalibrationSet {
    *          The {@link SensorType} whose value we are interested in.
    * @return The calibrations
    */
-  public TreeMap<LocalDateTime, Double> getTargetCalibrations(String target,
-    SensorType sensorType) {
-    TreeMap<LocalDateTime, Double> result = new TreeMap<LocalDateTime, Double>();
+  public TreeMap<LocalDateTime, DoubleWithUncertainty> getTargetCalibrations(
+    String target, SensorType sensorType) {
+    TreeMap<LocalDateTime, DoubleWithUncertainty> result = new TreeMap<LocalDateTime, DoubleWithUncertainty>();
 
     for (Map.Entry<LocalDateTime, TreeMap<String, Calibration>> entry : priors
       .entrySet()) {

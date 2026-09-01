@@ -9,6 +9,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.RoutineException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Represents a time-based value retrieved from a {@link SensorValuesList}.
@@ -87,9 +88,9 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
   private final String stringValue;
 
   /**
-   * The {@link Double} value.
+   * The Double value (with uncertainty).
    */
-  private final Double doubleValue;
+  private final DoubleWithUncertainty doubleValue;
 
   /**
    * The {@link SensorValue}s used to calculate the value.
@@ -218,7 +219,7 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
   protected TimestampSensorValuesListValue(TimeCoordinate startTime,
     TimeCoordinate endTime, TimeCoordinate nominalTime,
     Collection<SensorValue> sourceSensorValues, SensorType sensorType,
-    Double value, Flag qcFlag, String qcMessage) {
+    DoubleWithUncertainty value, Flag qcFlag, String qcMessage) {
     this.startTime = startTime;
     this.endTime = endTime;
     this.nominalTime = nominalTime;
@@ -311,9 +312,9 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
    *
    * @return The {@link Double) value.
    */
-  public Double getDoubleValue() {
+  public DoubleWithUncertainty getDoubleValue() {
     if (null == doubleValue) {
-      throw new IncorrectValueTypeException(DOUBLE_TYPE);
+      throw new IncorrectValueTypeException(NUMERIC_TYPE);
     }
 
     return doubleValue;
@@ -356,7 +357,7 @@ public class TimestampSensorValuesListValue implements SensorValuesListValue {
    * @see #DOUBLE_TYPE
    */
   public int getType() {
-    return null == doubleValue ? STRING_TYPE : DOUBLE_TYPE;
+    return null == doubleValue ? STRING_TYPE : NUMERIC_TYPE;
   }
 
   @Override

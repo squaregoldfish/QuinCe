@@ -34,6 +34,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.ValueCounter;
@@ -168,7 +169,7 @@ public class InternalCalibrationData extends PlotPageData {
           for (SensorAssignment assignment : assignments) {
             for (String runType : runTypes) {
 
-              TreeMap<LocalDateTime, Double> calibrationValues = calibrations
+              TreeMap<LocalDateTime, DoubleWithUncertainty> calibrationValues = calibrations
                 .getTargetCalibrations(runType, sensorType);
 
               long columnId = makeColumnId(runType, assignment);

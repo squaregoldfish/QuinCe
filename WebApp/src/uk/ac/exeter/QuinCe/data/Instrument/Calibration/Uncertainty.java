@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.web.html.SelectItem;
 
 /**
@@ -99,7 +100,7 @@ public class Uncertainty extends Calibration {
   }
 
   @Override
-  public Double calibrateValue(Double rawValue) {
+  public DoubleWithUncertainty calibrateValue(DoubleWithUncertainty rawValue) {
     return rawValue;
   }
 

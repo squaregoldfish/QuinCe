@@ -9,6 +9,8 @@ import java.util.TreeMap;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.BigDecimalWithUncertainty;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * A version of the {@link Calibration} class to hold coefficients used in data
@@ -155,7 +157,7 @@ public class CalculationCoefficient extends Calibration {
   }
 
   @Override
-  public Double calibrateValue(Double rawValue) {
+  public DoubleWithUncertainty calibrateValue(DoubleWithUncertainty rawValue) {
     return rawValue;
   }
 
@@ -270,7 +272,7 @@ public class CalculationCoefficient extends Calibration {
    *
    * @return The CalculationCoefficient value.
    */
-  public Double getValue() {
+  public DoubleWithUncertainty getValue() {
     return getDoubleCoefficient("Value");
   }
 
@@ -280,7 +282,7 @@ public class CalculationCoefficient extends Calibration {
    *
    * @return The CalculationCoefficient value.
    */
-  public BigDecimal getBigDecimalValue() {
+  public BigDecimalWithUncertainty getBigDecimalValue() {
     return getBigDecimalCoefficient("Value");
   }
 

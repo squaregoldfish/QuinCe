@@ -18,7 +18,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
+import uk.ac.exeter.QuinCe.utils.BigDecimalWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 
 /**
@@ -465,12 +467,13 @@ public abstract class Calibration implements Comparable<Calibration> {
    *          The coefficient name.
    * @return The coefficient value.
    */
-  public Double getDoubleCoefficient(String name) {
-    Double result = null;
+  public DoubleWithUncertainty getDoubleCoefficient(String name) {
+    DoubleWithUncertainty result = null;
 
     for (CalibrationCoefficient coefficient : getCoefficients()) {
       if (coefficient.getName().equals(name)) {
-        result = Double.parseDouble(coefficient.getValue());
+        result = new DoubleWithUncertainty(
+          Double.parseDouble(coefficient.getValue()), 0F);
         break;
       }
     }
@@ -525,7 +528,7 @@ public abstract class Calibration implements Comparable<Calibration> {
    *          The coefficient name.
    * @return The coefficient value.
    */
-  public BigDecimal getBigDecimalCoefficient(String name) {
+  public BigDecimalWithUncertainty getBigDecimalCoefficient(String name) {
     BigDecimal result = null;
 
     for (CalibrationCoefficient coefficient : getCoefficients()) {
@@ -535,7 +538,7 @@ public abstract class Calibration implements Comparable<Calibration> {
       }
     }
 
-    return result;
+    return new BigDecimalWithUncertainty(result);
   }
 
   /**
@@ -545,7 +548,8 @@ public abstract class Calibration implements Comparable<Calibration> {
    *          The value to be calibrated.
    * @return The calibrated value.
    */
-  public abstract Double calibrateValue(Double rawValue);
+  public abstract DoubleWithUncertainty calibrateValue(
+    DoubleWithUncertainty rawValue);
 
   /**
    * Check that this calibration is valid.

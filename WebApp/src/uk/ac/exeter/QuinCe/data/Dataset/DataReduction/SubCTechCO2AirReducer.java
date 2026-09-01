@@ -10,6 +10,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Data Reducer for water measurements from a SubCTech CO₂ sensor.
@@ -34,19 +35,21 @@ public class SubCTechCO2AirReducer extends UnderwayMarinePco2Reducer {
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
     try {
-      Double airTemperature = measurement.getMeasurementValue("Air Temperature")
-        .getCalculatedValue();
-      Double cellGasPressure = measurement
+      DoubleWithUncertainty airTemperature = measurement
+        .getMeasurementValue("Air Temperature").getCalculatedValue();
+      DoubleWithUncertainty cellGasPressure = measurement
         .getMeasurementValue("Cell Gas Pressure").getCalculatedValue();
-      Double xCO2wet = measurement
+      DoubleWithUncertainty xCO2wet = measurement
         .getMeasurementValue("xCO₂ (wet, no standards)").getCalculatedValue();
 
       // TODO Unit conversion?
-      Double xCO2dry = xCO2wet / (1 - (cellGasPressure));
+      DoubleWithUncertainty xCO2dry = xCO2wet
+        .divide(DoubleWithUncertainty.ONE.subtract(cellGasPressure));
 
-      Double p = Calculators.hPaToAtmospheres(cellGasPressure);
-      Double pCO2 = xCO2wet * p;
-      Double fCO2 = Calculators.calcfCO2(pCO2, xCO2wet, p, airTemperature);
+      DoubleWithUncertainty p = Calculators.hPaToAtmospheres(cellGasPressure);
+      DoubleWithUncertainty pCO2 = xCO2wet.multiply(p);
+      DoubleWithUncertainty fCO2 = Calculators.calcfCO2(pCO2, xCO2wet, p,
+        airTemperature);
 
       record.put("xCO₂", xCO2dry);
       record.put("pCO₂", pCO2);

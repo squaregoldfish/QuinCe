@@ -17,6 +17,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Calibration;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
@@ -90,7 +91,7 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
   /**
    * Cache of the value as a {@link Double}.
    */
-  private Double doubleValue = null;
+  private DoubleWithUncertainty doubleValue = null;
 
   /**
    * Indicates whether the value needs to be saved to the database
@@ -141,8 +142,8 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
    * @param value
    */
   public SensorValue(long databaseId, long datasetId, FlagScheme flagScheme,
-    long columnId, Coordinate coordinate, String value, Float uncertainty, AutoQCResult autoQc,
-    Flag userQcFlag, String userQcMessage) {
+    long columnId, Coordinate coordinate, String value, Float uncertainty,
+    AutoQCResult autoQc, Flag userQcFlag, String userQcMessage) {
 
     this.id = databaseId;
     this.flagScheme = flagScheme;
@@ -233,9 +234,10 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
    *
    * @return The value as a Double
    */
-  public Double getDoubleValue() {
+  public DoubleWithUncertainty getDoubleValue() {
     if (null == doubleValue) {
-      doubleValue = StringUtils.doubleFromString(value);
+      doubleValue = new DoubleWithUncertainty(
+        StringUtils.doubleFromString(value), uncertainty);
     }
 
     return doubleValue;
@@ -665,13 +667,10 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
     doubleValue = null;
   }
 
-  public void setValue(Double value) {
+  public void setValue(DoubleWithUncertainty value) {
     this.doubleValue = value;
-    this.value = String.valueOf(value);
-  }
-
-  public boolean noValue() {
-    return null == value || value.equals(NO_VALUE);
+    this.uncertainty = value.uncertainty();
+    this.value = value.stringValue();
   }
 
   @Override
@@ -691,20 +690,10 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
    *
    * @return The mean value.
    */
-  public static Double getMeanValue(Collection<SensorValue> values) {
-
-    Double total = 0D;
-    int count = 0;
-
-    for (SensorValue value : values) {
-      if (!value.isNaN()) {
-        total = total + value.getDoubleValue();
-        count++;
-      }
-    }
-
-    return total / count;
-
+  public static DoubleWithUncertainty getMeanValue(
+    Collection<SensorValue> values) {
+    return DoubleWithUncertainty
+      .mean(values.stream().map(v -> v.getDoubleValue()).toList());
   }
 
   public static Flag getCombinedDisplayFlag(
@@ -791,7 +780,8 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
    * consecutive {@link SensorValue}s in a {@link List}.
    *
    * <p>
-   * The list is assumed to be in chronological order.
+   * The list is assumed to be in chronological order. The delta is assessed
+   * using the basic values without considering uncertainties.
    * </p>
    *
    * @param values
@@ -809,8 +799,8 @@ public class SensorValue implements Comparable<SensorValue>, Cloneable {
 
         if (!first.isNaN() && !second.isNaN()) {
 
-          double valueDelta = Math
-            .abs(second.getDoubleValue() - first.getDoubleValue());
+          double valueDelta = Math.abs(
+            second.getDoubleValue().value() - first.getDoubleValue().value());
 
           if (valueDelta > 0 && valueDelta < minDelta) {
             minDelta = valueDelta;

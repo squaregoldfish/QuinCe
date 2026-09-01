@@ -31,7 +31,7 @@ public class SensorValueMapRecord extends MapRecord {
 
   @Override
   public Double getValue() {
-    return value.getDoubleValue();
+    return value.getDoubleValue().value();
   }
 
   @Override

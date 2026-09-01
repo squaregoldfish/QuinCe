@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.ParameterException;
 
 /**
@@ -93,7 +94,7 @@ public abstract class ExternalStandard extends Calibration {
    *
    * @return The concentration
    */
-  public Double getConcentration(SensorType sensorType) {
+  public DoubleWithUncertainty getConcentration(SensorType sensorType) {
     return getDoubleCoefficient(sensorType.getShortName());
   }
 
@@ -114,7 +115,7 @@ public abstract class ExternalStandard extends Calibration {
   }
 
   @Override
-  public Double calibrateValue(Double rawValue) {
+  public DoubleWithUncertainty calibrateValue(DoubleWithUncertainty rawValue) {
     return rawValue;
   }
 

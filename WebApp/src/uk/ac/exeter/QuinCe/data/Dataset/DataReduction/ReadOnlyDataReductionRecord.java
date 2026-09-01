@@ -11,6 +11,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSetDataDB;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.NoEmptyStringSet;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 
@@ -72,7 +73,8 @@ public class ReadOnlyDataReductionRecord extends DataReductionRecord {
    */
   public static ReadOnlyDataReductionRecord makeRecord(long measurementId,
     long variableId, FlagScheme flagScheme,
-    Map<String, Double> calculationValues, Flag qcFlag, String qcMessage) {
+    Map<String, DoubleWithUncertainty> calculationValues, Flag qcFlag,
+    String qcMessage) {
 
     List<String> parameterNames = new ArrayList<String>();
     calculationValues.keySet().forEach(parameterNames::add);
@@ -105,7 +107,7 @@ public class ReadOnlyDataReductionRecord extends DataReductionRecord {
    */
   private ReadOnlyDataReductionRecord(long measurementId, long variableId,
     FlagScheme flagScheme, List<String> parameterNames,
-    Map<String, Double> calculationValues, Flag qcFlag,
+    Map<String, DoubleWithUncertainty> calculationValues, Flag qcFlag,
     NoEmptyStringSet qcMessages) {
     super(measurementId, variableId, flagScheme, parameterNames,
       calculationValues, qcFlag, qcMessages);

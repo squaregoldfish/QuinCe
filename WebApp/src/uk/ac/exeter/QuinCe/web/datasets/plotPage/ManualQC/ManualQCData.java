@@ -50,6 +50,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
@@ -561,7 +562,7 @@ public class ManualQCData extends PlotPageData {
           .getCalculationParameters(variable, true);
 
         for (CalculationParameter param : params) {
-          Double value = variableDataReduction
+          DoubleWithUncertainty value = variableDataReduction
             .getCalculationValue(param.getShortName());
           String stringValue = null == value ? "" : String.valueOf(value);
 

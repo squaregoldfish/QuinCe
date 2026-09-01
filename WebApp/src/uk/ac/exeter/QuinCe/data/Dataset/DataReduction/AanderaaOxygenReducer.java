@@ -12,6 +12,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalculationCoefficient;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Data Reducer for Aanderaa Oxygen optodes.
@@ -23,7 +24,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
  */
 public class AanderaaOxygenReducer extends DataReducer {
 
-  private double offset = 0D;
+  private DoubleWithUncertainty offset = new DoubleWithUncertainty(0, 0);
 
   /**
    * The reducer's calculation parameters.
@@ -51,10 +52,10 @@ public class AanderaaOxygenReducer extends DataReducer {
 
     try {
 
-      Double oxygen = measurement.getMeasurementValue("DOXY")
+      DoubleWithUncertainty oxygen = measurement.getMeasurementValue("DOXY")
         .getCalculatedValue();
 
-      record.put("Adjusted Oxygen Fake", oxygen + offset);
+      record.put("Adjusted Oxygen Fake", oxygen.add(offset));
 
     } catch (Exception e) {
       throw new DataReductionException(e);

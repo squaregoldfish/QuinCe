@@ -11,6 +11,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Data Reduction class for underway atmospheric pCO₂ measurements taken by
@@ -47,16 +48,16 @@ public class UnderwayAtmosphericPco2Reducer extends DataReducer {
     try {
       // We use water temperature as the presumed most realistic gas
       // temperature
-      Double waterTemperature = measurement
+      DoubleWithUncertainty waterTemperature = measurement
         .getMeasurementValue("Water Temperature").getCalculatedValue();
-      Double salinity = measurement.getMeasurementValue("Salinity")
-        .getCalculatedValue();
-      Double atmosphericPressure = measurement
+      DoubleWithUncertainty salinity = measurement
+        .getMeasurementValue("Salinity").getCalculatedValue();
+      DoubleWithUncertainty atmosphericPressure = measurement
         .getMeasurementValue("Atmospheric Pressure").getCalculatedValue();
-      Double co2InGas = measurement.getMeasurementValue(getXCO2Parameter())
-        .getCalculatedValue();
+      DoubleWithUncertainty co2InGas = measurement
+        .getMeasurementValue(getXCO2Parameter()).getCalculatedValue();
 
-      Double seaLevelPressure = Calculators.calcSeaLevelPressure(
+      DoubleWithUncertainty seaLevelPressure = Calculators.calcSeaLevelPressure(
         atmosphericPressure, waterTemperature,
         getFloatProperty("atm_pres_sensor_height"));
 
@@ -111,12 +112,12 @@ public class UnderwayAtmosphericPco2Reducer extends DataReducer {
     /**
      * Measured water temperature.
      */
-    private final Double waterTemperature;
+    private final DoubleWithUncertainty waterTemperature;
 
     /**
      * Measured salinity.
      */
-    private final Double salinity;
+    private final DoubleWithUncertainty salinity;
 
     /**
      * Atmospheric pressure at sea level.
@@ -126,27 +127,27 @@ public class UnderwayAtmosphericPco2Reducer extends DataReducer {
      * {@link Calculators#calcSeaLevelPressure(Double, Double, Float)}.
      * </p>
      */
-    private final Double seaLevelPressure;
+    private final DoubleWithUncertainty seaLevelPressure;
 
     /**
      * The CO₂ value measured by the gas analyser.
      */
-    private final Double co2InGas;
+    private final DoubleWithUncertainty co2InGas;
 
     /**
      * The calculated water vapour pressure.
      */
-    protected Double pH2O = null;
+    protected DoubleWithUncertainty pH2O = null;
 
     /**
      * The calculated pCO₂.
      */
-    protected Double pCO2 = null;
+    protected DoubleWithUncertainty pCO2 = null;
 
     /**
      * The calculated fCO₂.
      */
-    protected Double fCO2 = null;
+    protected DoubleWithUncertainty fCO2 = null;
 
     /**
      * Initialise the calculator with the required measured values.
@@ -161,8 +162,9 @@ public class UnderwayAtmosphericPco2Reducer extends DataReducer {
      * @param co2InGas
      *          The CO₂ value measured by the gas analyser.
      */
-    protected Calculator(Double waterTemperature, Double salinity,
-      Double seaLevelPressure, Double co2InGas) {
+    protected Calculator(DoubleWithUncertainty waterTemperature,
+      DoubleWithUncertainty salinity, DoubleWithUncertainty seaLevelPressure,
+      DoubleWithUncertainty co2InGas) {
 
       this.waterTemperature = waterTemperature;
       this.salinity = salinity;

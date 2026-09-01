@@ -9,6 +9,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorTypeNotFoundException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorsConfiguration;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 public class DiffEqPresMeasurementValueCalculator
@@ -35,8 +36,8 @@ public class DiffEqPresMeasurementValueCalculator
         .calculate(instrument, dataSet, timeReference, variable,
           pressAtInstrumentSensorType, allMeasurements, allSensorValues, conn);
 
-      Double finalPressure = pressAtInstrument.getCalculatedValue()
-        + diffEqPress.getCalculatedValue();
+      DoubleWithUncertainty finalPressure = pressAtInstrument
+        .getCalculatedValue().add(diffEqPress.getCalculatedValue());
 
       List<SensorValue> usedSensorValues = getSensorValues(allSensorValues,
         diffEqPress);

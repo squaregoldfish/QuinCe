@@ -100,15 +100,15 @@ public class PositionQCRoutine extends AutoQCRoutine {
 
         if (null == longitude || longitude.isNaN()) {
           flag(longitude, latitude);
-        } else if (longitude.getDoubleValue() < -180D
-          || longitude.getDoubleValue() > 180D) {
+        } else if (longitude.getDoubleValue().value() < -180D
+          || longitude.getDoubleValue().value() > 180D) {
           flag(longitude, latitude);
         }
 
         if (null == latitude || latitude.isNaN()) {
           flag(longitude, latitude);
-        } else if (latitude.getDoubleValue() < -90D
-          || latitude.getDoubleValue() > 90D) {
+        } else if (latitude.getDoubleValue().value() < -90D
+          || latitude.getDoubleValue().value() > 90D) {
           flag(longitude, latitude);
         }
       }

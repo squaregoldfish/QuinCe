@@ -10,6 +10,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Data Reducer for water measurements from a SubCTech CO₂ sensor.
@@ -34,20 +35,21 @@ public class SubCTechCO2WaterReducer extends UnderwayMarinePco2Reducer {
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
     try {
-      Double waterTemperature = measurement
+      DoubleWithUncertainty waterTemperature = measurement
         .getMeasurementValue("Water Temperature").getCalculatedValue();
-      Double salinity = measurement.getMeasurementValue("Salinity")
-        .getCalculatedValue();
-      Double cellGasPressure = measurement
+      DoubleWithUncertainty salinity = measurement
+        .getMeasurementValue("Salinity").getCalculatedValue();
+      DoubleWithUncertainty cellGasPressure = measurement
         .getMeasurementValue("Cell Gas Pressure").getCalculatedValue();
-      Double internalPressure = measurement
+      DoubleWithUncertainty internalPressure = measurement
         .getMeasurementValue("Internal Pressure (differential)")
         .getCalculatedValue();
 
-      Double equilibrationPressure = cellGasPressure - internalPressure;
+      DoubleWithUncertainty equilibrationPressure = cellGasPressure
+        .subtract(internalPressure);
 
-      Double xCO2 = measurement.getMeasurementValue(getXCO2Parameter())
-        .getCalculatedValue();
+      DoubleWithUncertainty xCO2 = measurement
+        .getMeasurementValue(getXCO2Parameter()).getCalculatedValue();
 
       /**
        * The calculator will calculate pCO₂ and fCO₂ at equilibrator temperature

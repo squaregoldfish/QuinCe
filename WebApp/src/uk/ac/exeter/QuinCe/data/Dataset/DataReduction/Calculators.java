@@ -1,11 +1,11 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Map;
 
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Provides static methods for common calculations in data reduction.
@@ -15,12 +15,20 @@ public class Calculators {
   /**
    * The conversion factor from Pascals to Atmospheres.
    */
-  private static final double PASCALS_TO_ATMOSPHERES = 0.00000986923266716013;
+  private static final DoubleWithUncertainty PASCALS_TO_ATMOSPHERES = new DoubleWithUncertainty(
+    0.00000986923266716013, 0F);
 
   /**
    * The molar mass of air.
    */
-  private static final double MOLAR_MASS_AIR = 28.97e-3;
+  private static final DoubleWithUncertainty MOLAR_MASS_AIR = new DoubleWithUncertainty(
+    28.97e-3);
+
+  /**
+   * Kelvin offset.
+   */
+  public static final DoubleWithUncertainty KELVIN_OFFSET = new DoubleWithUncertainty(
+    273.15);
 
   /**
    * Convert a temperature in °C to °K.
@@ -29,8 +37,8 @@ public class Calculators {
    *          Celsius temperature.
    * @return Kelvin temperature.
    */
-  public static Double kelvin(Double celsius) {
-    return celsius + 273.15;
+  public static DoubleWithUncertainty kelvin(DoubleWithUncertainty celsius) {
+    return celsius.add(KELVIN_OFFSET);
   }
 
   /**
@@ -40,8 +48,8 @@ public class Calculators {
    *          Kelvin temperature.
    * @return Celsius temperature.
    */
-  public static Double celsius(Double kelvin) {
-    return kelvin - 273.15;
+  public static DoubleWithUncertainty celsius(DoubleWithUncertainty kelvin) {
+    return kelvin.subtract(KELVIN_OFFSET);
   }
 
   /**
@@ -51,8 +59,10 @@ public class Calculators {
    *          Pressure in hPa.
    * @return Pressure in atmospheres.
    */
-  public static Double hPaToAtmospheres(Double hPa) {
-    return hPa * 100 * PASCALS_TO_ATMOSPHERES;
+  public static DoubleWithUncertainty hPaToAtmospheres(
+    DoubleWithUncertainty hPa) {
+    return hPa.multiply(DoubleWithUncertainty.HUNDRED)
+      .multiply(PASCALS_TO_ATMOSPHERES);
   }
 
   /**
@@ -68,16 +78,44 @@ public class Calculators {
    *          The temperature in °C
    * @return The fCO<sub>2</sub> value.
    */
-  public static Double calcfCO2(Double pco2, Double xCO2InGas, Double pressure,
-    Double temperature) {
+  public static DoubleWithUncertainty calcfCO2(DoubleWithUncertainty pco2,
+    DoubleWithUncertainty xCO2InGas, DoubleWithUncertainty pressure,
+    DoubleWithUncertainty temperature) {
 
-    Double kelvin = Calculators.kelvin(temperature);
-    Double B = -1636.75 + 12.0408 * kelvin - 0.0327957 * Math.pow(kelvin, 2)
-      + (3.16528 * 1e-5) * Math.pow(kelvin, 3);
-    Double delta = 57.7 - 0.118 * kelvin;
+    DoubleWithUncertainty kelvin = Calculators.kelvin(temperature);
 
-    return pco2 * Math.exp(((B + 2 * Math.pow(1 - xCO2InGas * 1e-6, 2) * delta)
-      * hPaToAtmospheres(pressure)) / (82.0575 * kelvin));
+    // B_a = -1636.75
+    // B_b = 12.0408 * kelvin
+    // B_c = 0.0327957 * kelvin²
+    // B_d = (2.16528e-5) * kelvin³
+    // B = B_a + B_b - B_c + B_d
+
+    DoubleWithUncertainty B_a = new DoubleWithUncertainty(-1646.75);
+    DoubleWithUncertainty B_b = kelvin.multiply(12.0408);
+    DoubleWithUncertainty B_c = kelvin.pow(2).multiply(0.0327957);
+    DoubleWithUncertainty B_d = kelvin.pow(3).multiply(2.16528 * 1e-5);
+
+    DoubleWithUncertainty B = B_a.add(B_b).subtract(B_c).add(B_d);
+
+    DoubleWithUncertainty delta = new DoubleWithUncertainty(57.7)
+      .subtract(kelvin.multiply(0.118));
+
+    // fCO2_a = (1 - xCO2 * 1e-6)²
+    // fCO2_b = 2 * fCO2_a * delta
+    // fCO2_c = B + fCO2_b
+    // fCO2_d = fCO2_c * hPaToAtm(pressure)
+    // fCO2_e = 82.0575 * kelvin
+    // fCO2_f = fCO2_d / fCO2_d
+    // fCO2 = exp(fCO2_f)
+
+    DoubleWithUncertainty fCO2_a = DoubleWithUncertainty.ONE
+      .subtract(xCO2InGas.multiply(1e-6)).pow(2);
+    DoubleWithUncertainty fCO2_b = fCO2_a.multiply(delta).multiply(2);
+    DoubleWithUncertainty fCO2_c = B.add(fCO2_b);
+    DoubleWithUncertainty fCO2_d = fCO2_c.multiply(hPaToAtmospheres(pressure));
+    DoubleWithUncertainty fCO2_e = kelvin.multiply(82.0575);
+    DoubleWithUncertainty fCO2_f = fCO2_d.divide(fCO2_e);
+    return fCO2_f.exp();
   }
 
   /**
@@ -92,9 +130,9 @@ public class Calculators {
    *          The water vapour pressure.
    * @return pCO<sub>2</sub> in water.
    */
-  public static Double calcpCO2TEWet(Double xCO2, Double pressure,
-    Double pH2O) {
-    return xCO2 * (hPaToAtmospheres(pressure) - pH2O);
+  public static DoubleWithUncertainty calcpCO2TEWet(DoubleWithUncertainty xCO2,
+    DoubleWithUncertainty pressure, DoubleWithUncertainty pH2O) {
+    return xCO2.multiply(hPaToAtmospheres(pressure).subtract(pH2O));
   }
 
   /**
@@ -109,10 +147,25 @@ public class Calculators {
    *          Temperature in °C.
    * @return The calculated pH<sub>2</sub>O value.
    */
-  public static Double calcPH2O(Double salinity, Double temperature) {
-    double kelvin = Calculators.kelvin(temperature);
-    return Math.exp(24.4543 - 67.4509 * (100 / kelvin)
-      - 4.8489 * Math.log(kelvin / 100) - 0.000544 * salinity);
+  public static DoubleWithUncertainty calcPH2O(DoubleWithUncertainty salinity,
+    DoubleWithUncertainty temperature) {
+
+    DoubleWithUncertainty kelvin = Calculators.kelvin(temperature);
+
+    // pH2O_a = 24.4543
+    // pH2O_b = 67.4509 * (100 / kelvin)
+    // pH2O_c = 4.8489 * ln(kelvin/100)
+    // pH2O_d = 0.000544 * salinity
+    // pH2O = exp(pH2O_a - pH2O_b - pH2O_c - pH2O_d)
+
+    DoubleWithUncertainty pH2O_a = new DoubleWithUncertainty(24.4543);
+    DoubleWithUncertainty pH2O_b = DoubleWithUncertainty.HUNDRED.divide(kelvin)
+      .multiply(67.4509);
+    DoubleWithUncertainty pH2O_c = kelvin.divide(DoubleWithUncertainty.HUNDRED)
+      .log().multiply(4.8489);
+    DoubleWithUncertainty pH2O_d = salinity.multiply(0.000544);
+
+    return pH2O_a.subtract(pH2O_b).subtract(pH2O_c).subtract(pH2O_d).exp();
   }
 
   /**
@@ -131,15 +184,19 @@ public class Calculators {
    *          The height of the sensor.
    * @return The adjusted pressure.
    */
-  public static Double calcSeaLevelPressure(Double measuredPressure,
-    Double temperature, Float sensorHeight) {
+  public static DoubleWithUncertainty calcSeaLevelPressure(
+    DoubleWithUncertainty measuredPressure, DoubleWithUncertainty temperature,
+    Float sensorHeight) {
 
-    Double result = measuredPressure;
+    DoubleWithUncertainty result = measuredPressure;
 
     if (null != sensorHeight) {
-      Double correction = (measuredPressure * MOLAR_MASS_AIR)
-        / (Calculators.kelvin(temperature) * 8.314) * 9.8 * sensorHeight;
-      result = measuredPressure + correction;
+
+      DoubleWithUncertainty top = measuredPressure.multiply(MOLAR_MASS_AIR);
+      DoubleWithUncertainty bottom = kelvin(temperature).multiply(8.314)
+        .multiply(9.8).multiply(sensorHeight);
+
+      result = measuredPressure.add(top.divide(bottom));
     }
 
     return result;
@@ -171,15 +228,23 @@ public class Calculators {
    *          The target timestamp for which a value must be calculated.
    * @return The interpolated y value at the target timestamp.
    */
-  public static Double interpolate(LocalDateTime time0, Double y0,
-    LocalDateTime time1, Double y1, LocalDateTime targetTime) {
-    Double result = null;
+  public static DoubleWithUncertainty interpolate(LocalDateTime time0,
+    DoubleWithUncertainty y0, LocalDateTime time1, DoubleWithUncertainty y1,
+    LocalDateTime targetTime) {
+
+    DoubleWithUncertainty result = null;
 
     if (null != y0 && null != y1) {
       double x0 = DateTimeUtils.dateToLong(time0);
       double x1 = DateTimeUtils.dateToLong(time1);
-      result = interpolate(x0, y0, x1, y1,
-        DateTimeUtils.dateToLong(targetTime));
+      double target = DateTimeUtils.dateToLong(targetTime);
+
+      double interpolatedValue = interpolate(x0, y0.value(), x1, y1.value(),
+        target);
+      float interpolatedUncertainty = interpolateUncertainty(x0,
+        y0.uncertainty(), x1, y1.uncertainty(), target);
+      result = new DoubleWithUncertainty(interpolatedValue,
+        interpolatedUncertainty);
     } else if (null != y0) {
       result = y0;
     } else if (null != y1) {
@@ -215,12 +280,19 @@ public class Calculators {
    *          The target x value for which a value must be calculated.
    * @return The interpolated y value at the target x value.
    */
-  public static Double interpolate(Double x0, Double y0, Double x1, Double y1,
+  public static DoubleWithUncertainty interpolate(Double x0,
+    DoubleWithUncertainty y0, Double x1, DoubleWithUncertainty y1,
     Double target) {
-    Double result = null;
 
-    if (null != y0 && null != y1) {
-      result = interpolate(x0, y0, x1, y1, target);
+    DoubleWithUncertainty result = null;
+
+    if (!DoubleWithUncertainty.isNaN(y0) && !DoubleWithUncertainty.isNaN(y1)) {
+      double interpolatedValue = interpolate(x0, y0.value(), x1, y1.value(),
+        target);
+      float interpolatedUncertainty = interpolateUncertainty(x0,
+        y0.uncertainty(), x1, y1.uncertainty(), target);
+      result = new DoubleWithUncertainty(interpolatedValue,
+        interpolatedUncertainty);
     } else if (null != y0) {
       result = y0;
     } else if (null != y1) {
@@ -233,6 +305,10 @@ public class Calculators {
   /**
    * Perform a linear interpolation between two points to produce a value at a
    * third target point.
+   * 
+   * <p>
+   * Algorithm from DOI 10.1007/s10765-016-2174-6 eq 14.
+   * </p>
    *
    * @param x0
    *          The first reference x value.
@@ -246,16 +322,49 @@ public class Calculators {
    *          The target x value for which a value must be calculated.
    * @return The interpolated y value at the target x value.
    */
-  public static double interpolate(double x0, double y0, double x1, double y1,
+  private static double interpolate(double x0, double y0, double x1, double y1,
     double target) {
 
-    return (y0 * (x1 - target) + y1 * (target - x0)) / (x1 - x0);
+    return y0 * ((target - x1) / (x0 - x1)) + y1 * ((target - x0) / (x1 - x0));
+  }
+
+  /**
+   * Calculate the uncertainty for a linearly interpolation value (per
+   * {@link #interpolate(double, double, double, double, double)}) based on the
+   * uncertainties of the values being interpolated.
+   * 
+   * <p>
+   * Algorithm from DOI 10.1007/s10765-016-2174-6 eq 15.
+   * </p>
+   *
+   * @param x0
+   *          The first reference x value.
+   * @param u0
+   *          The uncertainty of the first reference y value.
+   * @param x1
+   *          The second reference x value.
+   * @param u1
+   *          The uncertainty of the second reference y value.
+   * @param target
+   *          The target x value.
+   * @return The uncertainty of the interpolated y value.
+   */
+  private static float interpolateUncertainty(double x0, float u0, double x1,
+    double u1, double target) {
+
+    return (float) ((float) Math
+      .sqrt(Math.pow((target - x1) / (x0 - x1), 2) * Math.pow(u0, 2))
+      + (Math.pow((target - x0) / (x1 - x0), 2) * Math.pow(u1, 2)));
   }
 
   /**
    * Perform a linear interpolation between two points to produce a value at a
    * third target point.
    *
+   * <p>
+   * Algorithm from DOI 10.1007/s10765-016-2174-6 eq 14.
+   * </p>
+   * 
    * @param x0
    *          The first reference x value.
    * @param y0
@@ -277,16 +386,18 @@ public class Calculators {
     boolean postNull = null == x1 || null == y1;
 
     if (!priorNull && !postNull) {
-      BigDecimal X1minusX = x1.subtract(target);
-      BigDecimal XminusX0 = target.subtract(x0);
+
+      BigDecimal targetMinusX1 = target.subtract(x1);
+      BigDecimal X0minusX1 = x0.subtract(x1);
+      BigDecimal leftDivision = targetMinusX1.divide(X0minusX1);
+      BigDecimal leftSide = y0.multiply(leftDivision);
+
+      BigDecimal targetMinusX0 = target.subtract(x0);
       BigDecimal X1minusX0 = x1.subtract(x0);
+      BigDecimal rightDivision = targetMinusX0.divide(X1minusX0);
+      BigDecimal rightSide = y1.multiply(rightDivision);
 
-      BigDecimal Y0timesX1minusX = y0.multiply(X1minusX);
-      BigDecimal Y1timesXminusX0 = y1.multiply(XminusX0);
-
-      BigDecimal top = Y0timesX1minusX.add(Y1timesXminusX0);
-
-      result = top.divide(X1minusX0, 50, RoundingMode.HALF_UP);
+      result = leftSide.add(rightSide);
     } else if (!priorNull) {
       result = y0;
     } else if (!postNull) {
@@ -366,9 +477,11 @@ public class Calculators {
    *          The water temperature.
    * @return The pCO<sub>2</sub> at water temperature.
    */
-  public static Double calcCO2AtSST(Double co2AtEquilibrator, Double eqt,
-    Double sst) {
-    return co2AtEquilibrator
-      * Math.exp(0.0423 * (Calculators.kelvin(sst) - Calculators.kelvin(eqt)));
+  public static DoubleWithUncertainty calcCO2AtSST(
+    DoubleWithUncertainty co2AtEquilibrator, DoubleWithUncertainty eqt,
+    DoubleWithUncertainty sst) {
+
+    return kelvin(sst).subtract(kelvin(eqt)).multiply(0.0423).exp()
+      .multiply(co2AtEquilibrator);
   }
 }

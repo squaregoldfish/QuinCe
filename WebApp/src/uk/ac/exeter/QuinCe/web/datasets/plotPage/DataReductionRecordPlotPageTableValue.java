@@ -7,6 +7,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.DataReduction.DataReductionRecord;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 
 public class DataReductionRecordPlotPageTableValue
@@ -38,8 +39,8 @@ public class DataReductionRecordPlotPageTableValue
 
   @Override
   public String getValue() {
-    Double result = record.getCalculationValue(parameterName);
-    return null == result ? null : String.valueOf(result);
+    DoubleWithUncertainty result = record.getCalculationValue(parameterName);
+    return null == result ? null : String.valueOf(result.value());
   }
 
   @Override

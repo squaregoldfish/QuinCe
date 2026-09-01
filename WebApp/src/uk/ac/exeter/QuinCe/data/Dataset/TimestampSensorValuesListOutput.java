@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
  * Contains a value extracted from a {@link SensorValuesList} via one of the
@@ -32,8 +33,8 @@ public class TimestampSensorValuesListOutput
 
   public TimestampSensorValuesListOutput(TimeCoordinate startTime,
     TimeCoordinate endTime, TimeCoordinate nominalTime,
-    Collection<SensorValue> usedValues, SensorType sensorType, Double mean,
-    Flag chosenFlag, String qcMessage,
+    Collection<SensorValue> usedValues, SensorType sensorType,
+    DoubleWithUncertainty mean, Flag chosenFlag, String qcMessage,
     boolean interpolatesAroundFlags) {
 
     super(startTime, endTime, nominalTime, usedValues, sensorType, mean,
