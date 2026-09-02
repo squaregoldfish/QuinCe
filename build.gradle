@@ -30,13 +30,14 @@ plugins {
 apply plugin: 'java'
 apply plugin: 'war'
 apply plugin: 'org.gretty'
+apply plugin: 'eclipse'
 apply plugin: 'eclipse-wtp'
 apply plugin: 'jacoco'
 
 eclipse {
   wtp {
     facet {
-      facet name: "jst.web", version: "2.5"       // Dynamic Web Application
+      facet name: "jst.web", version: "3.0"       // Dynamic Web Application
       facet name: "java", version: "17"          // Java version
       facet name: "wst.jsdt.web", version: "1.0"  // JavaScript
       facet name: "jst.jsf", version: "2.2"       // Java Server Faces
@@ -120,8 +121,14 @@ dependencies {
   implementation 'org.flywaydb:flyway-core:7.15.0'
 
   // JUnit resources
-  testImplementation files('WebApp/junit')
-
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.14.4'
+  testImplementation 'org.mockito:mockito-core:5.8.0'
+  testImplementation 'org.flywaydb.flyway-test-extensions:flyway-test:7.0.0'  
+  testImplementation 'org.flywaydb.flyway-test-extensions:flyway-spring-test:7.0.0'
+  testImplementation 'org.springframework:spring-context:5.2.0.RELEASE'
+  testImplementation 'org.springframework:spring-test:5.2.0.RELEASE'
+  testRuntimeOnly 'com.h2database:h2:1.4.197'    
+  
   // JavaMelody monitoring
   // Can't use v2 until we use Tomcat 10
   implementation 'net.bull.javamelody:javamelody-core:1.95.0'
@@ -141,21 +148,6 @@ sourceSets {
       srcDirs = ['WebApp/junit']
     }
   }
-  sensorCalibrationsBeanEditTest {
-    java {
-      srcDirs = ['WebApp/junit']
-    }
-  }
-  calculationCoefficientsBeanEditTest {
-    java {
-      srcDirs = ['WebApp/junit']
-    }
-  }
-  externalStandardsBeanEditTest {
-    java {
-      srcDirs = ['WebApp/junit']
-    }
-  }
 }
 
 compileJava {
@@ -168,90 +160,6 @@ tasks.withType(JavaCompile) {
 
 test {
   useJUnitPlatform()
-}
-
-task testSmall(type: Test) {
-  useJUnitPlatform()
-  filter {
-    excludeTestsMatching "uk.ac.exeter.QuinCe.web.Instrument.*BeanMultipleEditTest"
-  }
-}
-
-task testSmallReport(type: JacocoReport) {
-  dependsOn testSmall
-
-  reports {
-    xml.required = true
-    xml.destination = file("${buildDir}/reports/jacoco/report.xml")
-    csv.required = false
-    html.required = false
-  }
-
-  sourceSets sourceSets.main
-  executionData testSmall
-}
-
-task sensorCalibrationsBeanEditTest(type: Test) {
-  useJUnitPlatform()
-  filter {
-    includeTestsMatching "uk.ac.exeter.QuinCe.web.Instrument.SensorCalibrationsBeanMultipleEditTest"
-  }
-}
-
-task sensorCalibrationsBeanEditTestReport(type: JacocoReport) {
-  dependsOn sensorCalibrationsBeanEditTest
-
-  reports {
-    xml.required = true
-    xml.destination = file("${buildDir}/reports/jacoco/report.xml")
-    csv.required = false
-    html.required = false
-  }
-
-  sourceSets sourceSets.main
-  executionData sensorCalibrationsBeanEditTest
-}
-
-task calculationCoefficientsBeanEditTest(type: Test) {
-  useJUnitPlatform()
-  filter {
-    includeTestsMatching "uk.ac.exeter.QuinCe.web.Instrument.CalculationCoefficientsBeanMultipleEditTest"
-  }
-}
-
-task calculationCoefficientsBeanEditTestReport(type: JacocoReport) {
-  dependsOn calculationCoefficientsBeanEditTest
-
-  reports {
-    xml.required = true
-    xml.destination = file("${buildDir}/reports/jacoco/report.xml")
-    csv.required = false
-    html.required = false
-  }
-
-  sourceSets sourceSets.main
-  executionData calculationCoefficientsBeanEditTest
-}
-
-task externalStandardsBeanEditTest(type: Test) {
-  useJUnitPlatform()
-  filter {
-    includeTestsMatching "uk.ac.exeter.QuinCe.web.Instrument.ExternalStandardsBeanMultipleEditTest"
-  }
-}
-
-task externalStandardsBeanEditTestReport(type: JacocoReport) {
-  dependsOn externalStandardsBeanEditTest
-
-  reports {
-    xml.required = true
-    xml.destination = file("${buildDir}/reports/jacoco/report.xml")
-    csv.required = false
-    html.required = false
-  }
-
-  sourceSets sourceSets.main
-  executionData externalStandardsBeanEditTest
 }
 
 def rootPath = file('.').absolutePath
