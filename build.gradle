@@ -18,7 +18,7 @@ buildscript {
 // Flyway database migration plugin:
 plugins {
   id "org.flywaydb.flyway" version "7.15.0"
-  id "com.diffplug.gradle.spotless" version "4.5.1"
+  id "com.diffplug.spotless" version "6.25.0"
 }
 
 apply plugin: 'java'
@@ -102,6 +102,7 @@ dependencies {
 
   // JUnit resources
   testImplementation 'org.junit.jupiter:junit-jupiter:5.14.4'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.14.4'
   testImplementation 'org.mockito:mockito-core:5.8.0'
   testImplementation 'org.flywaydb.flyway-test-extensions:flyway-test:7.0.0'  
   testImplementation 'org.flywaydb.flyway-test-extensions:flyway-spring-test:7.0.0'
