@@ -108,6 +108,8 @@ dependencies {
   testImplementation 'org.flywaydb.flyway-test-extensions:flyway-spring-test:7.0.0'
   testImplementation 'org.springframework:spring-context:5.2.0.RELEASE'
   testImplementation 'org.springframework:spring-test:5.2.0.RELEASE'
+  testImplementation 'org.springframework:spring-test:5.2.0.RELEASE'
+  testImplementation 'org.assertj:assertj-core:3.27.7'
   testRuntimeOnly 'com.h2database:h2:1.4.197'    
   
   // JavaMelody monitoring

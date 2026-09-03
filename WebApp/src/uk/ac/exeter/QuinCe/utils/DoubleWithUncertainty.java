@@ -193,19 +193,19 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
       Double meanValue = filtered.stream().mapToDouble(v -> v.value()).sum()
         / filtered.size();
 
-      Float uncertaintySqSum = 0F;
+      Double uncertaintySqSum = 0D;
 
       for (DoubleWithUncertainty value : filtered) {
         if (!value.hasUncertainty()) {
-          uncertaintySqSum = Float.NaN;
+          uncertaintySqSum = Double.NaN;
           break;
         } else {
-          uncertaintySqSum += value.uncertainty();
+          uncertaintySqSum += Math.pow(value.uncertainty(), 2);
         }
       }
 
       Float meanUncertainty = uncertaintySqSum.isNaN() ? Float.NaN
-        : uncertaintySqSum / filtered.size();
+        : (float) Math.sqrt(uncertaintySqSum) / filtered.size();
 
       result = new DoubleWithUncertainty(meanValue, meanUncertainty);
     }
@@ -227,7 +227,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
   }
 
   /**
-   * Subtract a constant (with no uncertainty) from this value.
+   * Subtract a constant (with assumed zero uncertainty) from this value.
    * 
    * @param subtrahend
    *          The value to be subtracted.
@@ -251,7 +251,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
   }
 
   /**
-   * Add a constant (with no uncertainty) to this value.
+   * Add a constant (with assumed zero uncertainty) to this value.
    * 
    * @param augend
    *          The value to be add.
@@ -276,7 +276,8 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
   }
 
   /**
-   * Multiply this value with the specified constant (with no uncertainty.
+   * Multiply this value with the specified constant (with assumed zero
+   * uncertainty).
    * 
    * @param multiplier
    *          The multiplier.
@@ -284,7 +285,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
    *         result.
    */
   public DoubleWithUncertainty multiply(double multiplier) {
-    return multiply(new DoubleWithUncertainty(value));
+    return multiply(new DoubleWithUncertainty(multiplier, 0F));
   }
 
   /**
@@ -296,19 +297,20 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
    */
   public DoubleWithUncertainty divide(DoubleWithUncertainty divisor) {
     Double result = value / divisor.value;
-    double uncertainty = relativeUncertainty(this, divisor);
+    double uncertainty = result * relativeUncertainty(this, divisor);
     return new DoubleWithUncertainty(result, (float) uncertainty);
   }
 
   /**
-   * Divide this value by the specified constant (with no uncertainty.
+   * Divide this value by the specified constant (with assumed zero
+   * uncertainty).
    * 
    * @param divisor
    *          The divisor.
    * @return A new {@link DoubleWithUncertainty} containing the division result.
    */
   public DoubleWithUncertainty divide(double divisor) {
-    return divide(new DoubleWithUncertainty(value));
+    return divide(new DoubleWithUncertainty(divisor, 0F));
   }
 
   /**
@@ -327,9 +329,14 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
      * 
      * The SQRT part is termed the relative uncertainty
      */
-    Double aPart = Math.pow(a.uncertainty / a.value, 2);
-    Double bPart = Math.pow(b.uncertainty / b.value, 2);
-    return Math.sqrt(aPart + bPart);
+
+    if (a.uncertainty == 0F && b.uncertainty == 0F) {
+      return 0D;
+    } else {
+      Double aPart = Math.pow(a.uncertainty / a.value, 2);
+      Double bPart = Math.pow(b.uncertainty / b.value, 2);
+      return Math.sqrt(aPart + bPart);
+    }
   }
 
   /**
@@ -346,17 +353,24 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
    *         value; {@code false} if it does contain a value.
    */
   public static boolean isNaN(DoubleWithUncertainty value) {
-    return null != value && !value.isNaN();
+    return value.isNaN();
   }
 
   /**
    * Calculate the natural log of this value.
    * 
+   * <p>
+   * If the passed in value is {@code 0}, the result will be {@code NaN}.
+   * 
    * @return The natural log.
    */
   public DoubleWithUncertainty log() {
-    return new DoubleWithUncertainty(Math.log(value),
-      (float) (uncertainty / value));
+    if (value.equals(0D)) {
+      return new DoubleWithUncertainty(Double.NaN);
+    } else {
+      return new DoubleWithUncertainty(Math.log(value),
+        (float) (uncertainty / value));
+    }
   }
 
   /**
@@ -395,9 +409,13 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
    * @return The log<sub>10</sub> of this value.
    */
   public DoubleWithUncertainty log10() {
-    Double result = Math.log10(value);
-    double resultUncertainty = (uncertainty / value) * 0.4343;
-    return new DoubleWithUncertainty(result, (float) resultUncertainty);
+    if (value.equals(0D)) {
+      return new DoubleWithUncertainty(Double.NaN);
+    } else {
+      Double result = Math.log10(value);
+      double resultUncertainty = (uncertainty / value) * 0.4343;
+      return new DoubleWithUncertainty(result, (float) resultUncertainty);
+    }
   }
 
   @Override
