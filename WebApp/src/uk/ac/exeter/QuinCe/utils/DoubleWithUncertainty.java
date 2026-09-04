@@ -4,25 +4,25 @@ import java.util.Collection;
 
 /**
  * Represents a value with an associated uncertainty.
- * 
+ *
  * <p>
  * A {@link Double.NaN} value is allowed, in which case the uncertainty will
  * also be forced to be {@link Float.NaN}. Any arithmetical operation on a
  * {@link Double.NaN} value will always give a {@link Double.NaN} result.
  * </p>
- * 
+ *
  * <p>
  * The uncertainty is optional; if there is no uncertainty, it will be set to
  * {@link Float#NaN}. Mathematical operations performed on values where at least
  * one of the uncertainties is {@link Float#NaN} will always result in the
  * output's uncertainty being {@link Float#NaN}.
  * </p>
- * 
+ *
  * <p>
  * All calculations using {@link DoubleWithUncertainty} objects assume that the
  * uncertainties are independent.
  * </p>
- * 
+ *
  * <p>
  * <b>REMEMBER:</b> Chaining operations on these objects will execute them in
  * left-to-right order because they are separate function calls. Normal
@@ -58,12 +58,12 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Base constructor.
-   * 
+   *
    * <p>
    * A {@code null} {@code value} will result in a {@link NullPointerException}.
    * A {@code null} {@code uncertainty} will be converted to {@link Float#NaN}.
    * </p?
-   * 
+   *
    * @param value
    *          The value.
    * @param uncertainty
@@ -83,7 +83,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Create a value with no specified uncertainty.
-   * 
+   *
    * @param value
    *          The value.
    */
@@ -93,7 +93,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Create a value from a simple {@link Long} with no uncertainty.
-   * 
+   *
    * @param value
    *          The value.
    */
@@ -103,7 +103,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Create a value from a simple {@link Integer} with no uncertainty.
-   * 
+   *
    * @param value
    *          The value.
    */
@@ -113,7 +113,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Constructor for {@code int} values.
-   * 
+   *
    * @param value
    *          The value.
    * @param uncertainty
@@ -125,7 +125,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Determine whether or not this value has an uncertainty.
-   * 
+   *
    * @return {@code true} if the value has an uncertainty; {@code false} if it
    *         does not.
    */
@@ -135,7 +135,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Determine whether or not this value is {@link Double#NaN}.
-   * 
+   *
    * @return {@code true} if the value is {@link Double#NaN}; {@code false} if
    *         it is not.
    */
@@ -145,7 +145,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Get the value (without uncertainty) as a {@link String}.
-   * 
+   *
    * @return The String representation of the value.
    */
   public String stringValue() {
@@ -166,13 +166,13 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
   /**
    * Calculate the equal-weight arithmetic mean of a {@link Collection} of
    * {@link DoubleWithUncertainty} objects.
-   * 
+   *
    * <p>
    * {@code NaN} or {@code null} objects are ignored. If any of the values have
    * a {@code NaN} uncertainty, the returned mean value will have {@code NaN}
    * uncertainty.
    * </p>
-   * 
+   *
    * @param values
    *          The values.
    * @return The mean.
@@ -215,7 +215,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Subtract the specified value from this value.
-   * 
+   *
    * @param subtrahend
    *          The value to be subtracted from this value.
    * @return A new {@link DoubleWithUncertainty} containing the result of the
@@ -228,7 +228,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Subtract a constant (with assumed zero uncertainty) from this value.
-   * 
+   *
    * @param subtrahend
    *          The value to be subtracted.
    * @return The result of the subtraction.
@@ -239,7 +239,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Add the specified value to this value.
-   * 
+   *
    * @param augend
    *          The value to be added to this value.
    * @return A new {@link DoubleWithUncertainty} containing the result of the
@@ -252,7 +252,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Add a constant (with assumed zero uncertainty) to this value.
-   * 
+   *
    * @param augend
    *          The value to be add.
    * @return The result of the addition.
@@ -263,7 +263,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Multiply this value with the specified value.
-   * 
+   *
    * @param multiplier
    *          The multiplier.
    * @return A new {@link DoubleWithUncertainty} containing the multiplication
@@ -278,7 +278,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
   /**
    * Multiply this value with the specified constant (with assumed zero
    * uncertainty).
-   * 
+   *
    * @param multiplier
    *          The multiplier.
    * @return A new {@link DoubleWithUncertainty} containing the multiplication
@@ -290,7 +290,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Divide this value by the specified value.
-   * 
+   *
    * @param divisor
    *          The divisor.
    * @return A new {@link DoubleWithUncertainty} containing the division result.
@@ -304,7 +304,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
   /**
    * Divide this value by the specified constant (with assumed zero
    * uncertainty).
-   * 
+   *
    * @param divisor
    *          The divisor.
    * @return A new {@link DoubleWithUncertainty} containing the division result.
@@ -315,7 +315,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Calculate the relative uncertainty for multiplication/division operations.
-   * 
+   *
    * @param a
    *          The first value.
    * @param b
@@ -326,7 +326,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
     DoubleWithUncertainty b) {
     /*
      * Uncertainty = result * SQRT( (σA / A)² + (σB / B)² )
-     * 
+     *
      * The SQRT part is termed the relative uncertainty
      */
 
@@ -341,12 +341,12 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Determine whether or not a {@link DoubleWithUncertainty} has a value.
-   * 
+   *
    * <p>
    * If the passed value is {@code null} or {@link #isNaN()} is {@code true},
    * the object is determined not to have a value.
    * </p>
-   * 
+   *
    * @param value
    *          The value to be checked.
    * @return {@code true} if the value is {@code null} or does not contain a
@@ -358,10 +358,10 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Calculate the natural log of this value.
-   * 
+   *
    * <p>
    * If the passed in value is {@code 0}, the result will be {@code NaN}.
-   * 
+   *
    * @return The natural log.
    */
   public DoubleWithUncertainty log() {
@@ -375,7 +375,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Calculate {@code thisⁿ}.
-   * 
+   *
    * @param n
    *          The exponent.
    * @return {@code thisⁿ}.
@@ -390,7 +390,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Calculate {@code e<sup>this</sup>}.
-   * 
+   *
    * @return {@code e<sup>this</sup>}.
    */
   public DoubleWithUncertainty exp() {
@@ -400,12 +400,12 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
 
   /**
    * Calculate the log<sub>10</sub> of this value.
-   * 
+   *
    * <p>
    * The uncertainty is calculated as {@code 0.4343(σ/x)}, derived from
    * {@code logₙ(x) ± σ/x∙ln(x)}
    * </p>
-   * 
+   *
    * @return The log<sub>10</sub> of this value.
    */
   public DoubleWithUncertainty log10() {

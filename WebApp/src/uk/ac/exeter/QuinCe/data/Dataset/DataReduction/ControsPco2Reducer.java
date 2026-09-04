@@ -1,7 +1,6 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
@@ -119,9 +118,8 @@ public class ControsPco2Reducer extends DataReducer {
         k1Step = BigDecimalWithUncertainty.ZERO;
       } else {
         BigDecimalWithUncertainty k1Diff = k1Post.getBigDecimalValue()
-          .subtract(k1Prior.getBigDecimalValue())
-          .setScale(50, RoundingMode.HALF_UP);
-        k1Step = k1Diff.divide(runtimePeriod, 50, RoundingMode.HALF_UP);
+          .subtract(k1Prior.getBigDecimalValue());
+        k1Step = k1Diff.divide(runtimePeriod);
       }
 
       if (k2Post.getBigDecimalValue().equals(k2Prior.getBigDecimalValue())) {
@@ -129,7 +127,7 @@ public class ControsPco2Reducer extends DataReducer {
       } else {
         BigDecimalWithUncertainty k2Diff = k2Post.getBigDecimalValue()
           .subtract(k2Prior.getBigDecimalValue());
-        k2Step = k2Diff.divide(runtimePeriod, 50, RoundingMode.HALF_UP);
+        k2Step = k2Diff.divide(runtimePeriod);
       }
 
       if (k3Post.getBigDecimalValue().equals(k3Prior.getBigDecimalValue())) {
@@ -137,7 +135,7 @@ public class ControsPco2Reducer extends DataReducer {
       } else {
         BigDecimalWithUncertainty k3Diff = k3Post.getBigDecimalValue()
           .subtract(k3Prior.getBigDecimalValue());
-        k3Step = k3Diff.divide(runtimePeriod, 50, RoundingMode.HALF_UP);
+        k3Step = k3Diff.divide(runtimePeriod);
       }
     } else {
       k1Step = BigDecimalWithUncertainty.ZERO;
@@ -237,7 +235,7 @@ public class ControsPco2Reducer extends DataReducer {
                 interpZeroS2Beam);
 
               BigDecimalWithUncertainty sDC = bdMeasurementS2Beam
-                .divide(bdZeroS2Beam, RoundingMode.HALF_UP);
+                .divide(bdZeroS2Beam);
 
               BigDecimalWithUncertainty bdSProc = F
                 .multiply(BigDecimalWithUncertainty.ONE.subtract(sDC));
@@ -284,13 +282,13 @@ public class ControsPco2Reducer extends DataReducer {
                 .multiply(T0);
 
               BigDecimalWithUncertainty xcoPresTempPart = pressureTimesTemp
-                .divide(tempTimesPressure, 50, RoundingMode.HALF_UP);
+                .divide(tempTimesPressure);
 
               BigDecimalWithUncertainty bdXCO2 = xco2ProcPart
                 .multiply(xcoPresTempPart);
 
               BigDecimalWithUncertainty pco2PressurePart = membranePressure
-                .divide(P0, 50, RoundingMode.HALF_UP);
+                .divide(P0);
 
               BigDecimalWithUncertainty bdPCO2SST = bdXCO2
                 .multiply(pco2PressurePart);

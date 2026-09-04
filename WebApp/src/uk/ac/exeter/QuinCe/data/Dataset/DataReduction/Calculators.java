@@ -305,7 +305,7 @@ public class Calculators {
   /**
    * Perform a linear interpolation between two points to produce a value at a
    * third target point.
-   * 
+   *
    * <p>
    * Algorithm from DOI 10.1007/s10765-016-2174-6 eq 14.
    * </p>
@@ -332,7 +332,7 @@ public class Calculators {
    * Calculate the uncertainty for a linearly interpolation value (per
    * {@link #interpolate(double, double, double, double, double)}) based on the
    * uncertainties of the values being interpolated.
-   * 
+   *
    * <p>
    * Algorithm from DOI 10.1007/s10765-016-2174-6 eq 15.
    * </p>
@@ -364,7 +364,7 @@ public class Calculators {
    * <p>
    * Algorithm from DOI 10.1007/s10765-016-2174-6 eq 14.
    * </p>
-   * 
+   *
    * @param x0
    *          The first reference x value.
    * @param y0
