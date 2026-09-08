@@ -4,11 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
+import uk.ac.exeter.QuinCe.utils.BigDecimalWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 /**
@@ -318,6 +320,24 @@ public class CalculatorsTest extends BaseTest {
 
     assertEquals(10.7288D,
       Calculators.interpolate(x0, y0, x1, y1, targetX).value(), 0.0001D);
+
+    assertTrue(false, "Uncertainty");
+  }
+
+  @Test
+  public void interpolateBigDecimalsTest() {
+
+    double x0 = 26.533D;
+    BigDecimalWithUncertainty y0 = new BigDecimalWithUncertainty(
+      new BigDecimal(8.328D));
+    double x1 = 60.952D;
+    BigDecimalWithUncertainty y1 = new BigDecimalWithUncertainty(
+      new BigDecimal(15.685D));
+    double targetX = 37.765D;
+
+    assertEquals(10.7288D,
+      Calculators.interpolate(x0, y0, x1, y1, targetX).value().doubleValue(),
+      0.0001D);
 
     assertTrue(false, "Uncertainty");
   }

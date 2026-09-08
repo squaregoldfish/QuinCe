@@ -1,9 +1,10 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.LocalDateTime;
-import java.util.Map;
 
+import uk.ac.exeter.QuinCe.utils.BigDecimalWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
@@ -90,10 +91,10 @@ public class Calculators {
     // B_d = (2.16528e-5) * kelvin³
     // B = B_a + B_b - B_c + B_d
 
-    DoubleWithUncertainty B_a = new DoubleWithUncertainty(-1646.75);
+    DoubleWithUncertainty B_a = new DoubleWithUncertainty(-1636.75);
     DoubleWithUncertainty B_b = kelvin.multiply(12.0408);
     DoubleWithUncertainty B_c = kelvin.pow(2).multiply(0.0327957);
-    DoubleWithUncertainty B_d = kelvin.pow(3).multiply(2.16528 * 1e-5);
+    DoubleWithUncertainty B_d = kelvin.pow(3).multiply(3.16528 * 1e-5);
 
     DoubleWithUncertainty B = B_a.add(B_b).subtract(B_c).add(B_d);
 
@@ -115,7 +116,7 @@ public class Calculators {
     DoubleWithUncertainty fCO2_d = fCO2_c.multiply(hPaToAtmospheres(pressure));
     DoubleWithUncertainty fCO2_e = kelvin.multiply(82.0575);
     DoubleWithUncertainty fCO2_f = fCO2_d.divide(fCO2_e);
-    return fCO2_f.exp();
+    return fCO2_f.exp().multiply(pco2);
   }
 
   /**
@@ -193,10 +194,10 @@ public class Calculators {
     if (null != sensorHeight) {
 
       DoubleWithUncertainty top = measuredPressure.multiply(MOLAR_MASS_AIR);
-      DoubleWithUncertainty bottom = kelvin(temperature).multiply(8.314)
-        .multiply(9.8).multiply(sensorHeight);
+      DoubleWithUncertainty bottom = kelvin(temperature).multiply(8.314);
 
-      result = measuredPressure.add(top.divide(bottom));
+      result = measuredPressure
+        .add(top.divide(bottom).multiply(9.8).multiply(sensorHeight));
     }
 
     return result;
@@ -255,6 +256,54 @@ public class Calculators {
   }
 
   /**
+   * Perform a linear interpolation between two values taken at different times,
+   * giving a value at the specified target time.
+   *
+   * <p>
+   * If either of the {@code y} values is {@code null}, the other is returned.
+   * If both are {@code null}, {@code null} is returned.
+   * </p>
+   *
+   * <p>
+   * The method will extrapolate the target timestamp if it is beyond the
+   * reference timestamps.
+   * </p>
+   *
+   * @param time0
+   *          The first reference timestamp.
+   * @param y0
+   *          The first reference y value.
+   * @param time1
+   *          The second reference timestamp.
+   * @param y1
+   *          The second reference y value.
+   * @param targetTime
+   *          The target timestamp for which a value must be calculated.
+   * @return The interpolated y value at the target timestamp.
+   */
+  public static BigDecimalWithUncertainty interpolate(LocalDateTime time0,
+    BigDecimalWithUncertainty y0, LocalDateTime time1,
+    BigDecimalWithUncertainty y1, LocalDateTime targetTime) {
+
+    BigDecimalWithUncertainty result = null;
+
+    if (null != y0 && null != y1) {
+      double x0 = DateTimeUtils.dateToLong(time0);
+      double x1 = DateTimeUtils.dateToLong(time1);
+      double target = DateTimeUtils.dateToLong(targetTime);
+
+      BigDecimal interpolatedValue = interpolate(x0, y0.value(), x1, y1.value(),
+        target);
+      float interpolatedUncertainty = interpolateUncertainty(x0,
+        y0.uncertainty(), x1, y1.uncertainty(), target);
+      result = new BigDecimalWithUncertainty(interpolatedValue,
+        interpolatedUncertainty);
+    }
+
+    return result;
+  }
+
+  /**
    * Perform a linear interpolation between two pairs of {@code x}/{@code y}
    * values, giving a value at the specified target {@code x} value.
    *
@@ -303,6 +352,54 @@ public class Calculators {
   }
 
   /**
+   * Perform a linear interpolation between two pairs of {@code x}/{@code y}
+   * values, giving a value at the specified target {@code x} value.
+   *
+   * <p>
+   * If either of the {@code y} values is {@code null}, the other is returned.
+   * If both are {@code null}, {@code null} is returned.
+   * </p>
+   *
+   * <p>
+   * The method will extrapolate the target {@code x} if it is beyond the
+   * reference values.
+   * </p>
+   *
+   * @param x0
+   *          The first reference x value.
+   * @param y0
+   *          The first reference y value.
+   * @param x1
+   *          The second reference x value.
+   * @param y1
+   *          The second reference y value.
+   * @param target
+   *          The target x value for which a value must be calculated.
+   * @return The interpolated y value at the target x value.
+   */
+  public static BigDecimalWithUncertainty interpolate(Double x0,
+    BigDecimalWithUncertainty y0, Double x1, BigDecimalWithUncertainty y1,
+    Double target) {
+
+    BigDecimalWithUncertainty result = null;
+
+    if (null != y0 && null != y1) {
+      BigDecimal interpolatedValue = interpolate(x0, y0.value(), x1, y1.value(),
+        target);
+      float interpolatedUncertainty = interpolateUncertainty(x0,
+        y0.uncertainty(), x1, y1.uncertainty(), target);
+      result = new BigDecimalWithUncertainty(interpolatedValue,
+        interpolatedUncertainty);
+    } else if (null != y0) {
+      result = y0;
+    } else if (null != y1) {
+      result = y1;
+    }
+
+    return result;
+  }
+
+  /**
    * Perform a linear interpolation between two points to produce a value at a
    * third target point.
    *
@@ -326,6 +423,46 @@ public class Calculators {
     double target) {
 
     return y0 * ((target - x1) / (x0 - x1)) + y1 * ((target - x0) / (x1 - x0));
+  }
+
+  /**
+   * Perform a linear interpolation between two points to produce a value at a
+   * third target point.
+   *
+   * <p>
+   * Algorithm from DOI 10.1007/s10765-016-2174-6 eq 14.
+   * </p>
+   *
+   * @param x0
+   *          The first reference x value.
+   * @param y0
+   *          The first reference y value.
+   * @param x1
+   *          The second reference x value.
+   * @param y1
+   *          The second reference y value.
+   * @param target
+   *          The target x value for which a value must be calculated.
+   * @return The interpolated y value at the target x value.
+   */
+  private static BigDecimal interpolate(double x0, BigDecimal y0, double x1,
+    BigDecimal y1, double target) {
+
+    BigDecimal x0BD = new BigDecimal(x0);
+    BigDecimal x1BD = new BigDecimal(x1);
+    BigDecimal targetBD = new BigDecimal(target);
+
+    BigDecimal leftBottom = x0BD.subtract(x1BD);
+    BigDecimal leftTop = targetBD.subtract(x1BD);
+    BigDecimal left = y0
+      .multiply(leftTop.divide(leftBottom, MathContext.DECIMAL128));
+
+    BigDecimal rightBottom = x1BD.subtract(x0BD);
+    BigDecimal rightTop = targetBD.subtract(x0BD);
+    BigDecimal right = y1
+      .multiply(rightTop.divide(rightBottom, MathContext.DECIMAL128));
+
+    return left.add(right);
   }
 
   /**
@@ -355,112 +492,6 @@ public class Calculators {
     return (float) ((float) Math
       .sqrt(Math.pow((target - x1) / (x0 - x1), 2) * Math.pow(u0, 2))
       + (Math.pow((target - x0) / (x1 - x0), 2) * Math.pow(u1, 2)));
-  }
-
-  /**
-   * Perform a linear interpolation between two points to produce a value at a
-   * third target point.
-   *
-   * <p>
-   * Algorithm from DOI 10.1007/s10765-016-2174-6 eq 14.
-   * </p>
-   *
-   * @param x0
-   *          The first reference x value.
-   * @param y0
-   *          The first reference y value.
-   * @param x1
-   *          The second reference x value.
-   * @param y1
-   *          The second reference y value.
-   * @param target
-   *          The target x value for which a value must be calculated.
-   * @return The interpolated y value at the target x value.
-   */
-  public static BigDecimal interpolate(BigDecimal x0, BigDecimal y0,
-    BigDecimal x1, BigDecimal y1, BigDecimal target) {
-
-    BigDecimal result = null;
-
-    boolean priorNull = null == x0 || null == y0;
-    boolean postNull = null == x1 || null == y1;
-
-    if (!priorNull && !postNull) {
-
-      BigDecimal targetMinusX1 = target.subtract(x1);
-      BigDecimal X0minusX1 = x0.subtract(x1);
-      BigDecimal leftDivision = targetMinusX1.divide(X0minusX1);
-      BigDecimal leftSide = y0.multiply(leftDivision);
-
-      BigDecimal targetMinusX0 = target.subtract(x0);
-      BigDecimal X1minusX0 = x1.subtract(x0);
-      BigDecimal rightDivision = targetMinusX0.divide(X1minusX0);
-      BigDecimal rightSide = y1.multiply(rightDivision);
-
-      result = leftSide.add(rightSide);
-    } else if (!priorNull) {
-      result = y0;
-    } else if (!postNull) {
-      result = y1;
-    }
-
-    return result;
-  }
-
-  /**
-   * Perform a linear interpolation between two points to produce a value at a
-   * third target point.
-   *
-   * @param prior
-   *          The first reference x/y value.
-   * @param post
-   *          The second reference x/y value.
-   * @param x
-   *          The target x value for which a value must be calculated.
-   * @return The interpolated y value at the target x value.
-   */
-  public static Double interpolate(Map.Entry<Double, Double> prior,
-    Map.Entry<Double, Double> post, Double x) {
-
-    Double result = null;
-
-    if (!isNull(prior) && !isNull(post)) {
-      double x0 = prior.getKey();
-      double y0 = prior.getValue();
-      double x1 = post.getKey();
-      double y1 = post.getValue();
-      result = Calculators.interpolate(x0, y0, x1, y1, x.doubleValue());
-    } else if (!isNull(prior)) {
-      result = prior.getValue();
-    } else if (!isNull(post)) {
-      result = post.getValue();
-    }
-
-    return result;
-  }
-
-  /**
-   * Determine whether a {@link Map.Entry} of {@link Double} objects is
-   * {@code null}, or if either the key or value is {@code null} or {@code NaN}.
-   *
-   * @param mapEntry
-   *          The entry to check.
-   * @return {@code true} if any aspect of the entry is {@code null};
-   *         {@code false} otherwise.
-   */
-  private static boolean isNull(Map.Entry<Double, Double> mapEntry) {
-
-    boolean result = false;
-
-    if (null == mapEntry) {
-      result = true;
-    } else if (null == mapEntry.getKey() || mapEntry.getKey().isNaN()) {
-      result = true;
-    } else if (null == mapEntry.getValue() || mapEntry.getValue().isNaN()) {
-      result = true;
-    }
-
-    return result;
   }
 
   /**
