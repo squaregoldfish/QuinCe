@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
 import uk.ac.exeter.QuinCe.utils.BigDecimalWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertaintyAssert;
 
 /**
  * Tests for the {@link Calculators} class.
@@ -116,7 +117,6 @@ public class CalculatorsTest extends BaseTest {
 
     assertEquals(Double.NaN,
       Calculators.calcpCO2TEWet(xCO2, pressure, pH2O).value(), 0.00001);
-
     assertTrue(false, "Uncertainty");
   }
 
@@ -125,14 +125,15 @@ public class CalculatorsTest extends BaseTest {
    */
   @Test
   public void calcFCO2Test() {
-    DoubleWithUncertainty pCO2 = new DoubleWithUncertainty(347.26);
-    DoubleWithUncertainty xCO2 = new DoubleWithUncertainty(350.43);
-    DoubleWithUncertainty pressure = new DoubleWithUncertainty(1020.32);
-    DoubleWithUncertainty temperature = new DoubleWithUncertainty(10.82);
+    DoubleWithUncertainty pCO2 = new DoubleWithUncertainty(347.26D, 0.2F);
+    DoubleWithUncertainty xCO2 = new DoubleWithUncertainty(350.43D, 0.1F);
+    DoubleWithUncertainty pressure = new DoubleWithUncertainty(1020.32D, 0.15F);
+    DoubleWithUncertainty temperature = new DoubleWithUncertainty(10.82D,
+      0.05F);
 
-    assertEquals(345.92746,
-      Calculators.calcfCO2(pCO2, xCO2, pressure, temperature).value(), 0.0001);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertainty fCO2 = Calculators.calcfCO2(pCO2, xCO2, pressure,
+      temperature);
+    DoubleWithUncertaintyAssert.assertThat(fCO2).matches(345.9275D, 0F);
   }
 
   /**
@@ -142,13 +143,14 @@ public class CalculatorsTest extends BaseTest {
   @Test
   public void calcFCO2NaNpCO2Test() {
     DoubleWithUncertainty pCO2 = DoubleWithUncertainty.NaN;
-    DoubleWithUncertainty xCO2 = new DoubleWithUncertainty(350.43);
-    DoubleWithUncertainty pressure = new DoubleWithUncertainty(1020.32);
-    DoubleWithUncertainty temperature = new DoubleWithUncertainty(10.82);
+    DoubleWithUncertainty xCO2 = new DoubleWithUncertainty(350.43D, 0.1F);
+    DoubleWithUncertainty pressure = new DoubleWithUncertainty(1020.32D, 0.15F);
+    DoubleWithUncertainty temperature = new DoubleWithUncertainty(10.82D,
+      0.05F);
 
-    assertEquals(Double.NaN,
-      Calculators.calcfCO2(pCO2, xCO2, pressure, temperature).value(), 0.0001);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertainty fCO2 = Calculators.calcfCO2(pCO2, xCO2, pressure,
+      temperature);
+    DoubleWithUncertaintyAssert.assertThat(fCO2).matches(Double.NaN, Float.NaN);
   }
 
   /**
@@ -157,14 +159,15 @@ public class CalculatorsTest extends BaseTest {
    */
   @Test
   public void calcFCO2NaNXCO2Test() {
-    DoubleWithUncertainty pCO2 = new DoubleWithUncertainty(347.26);
+    DoubleWithUncertainty pCO2 = new DoubleWithUncertainty(347.26D, 0.2F);
     DoubleWithUncertainty xCO2 = DoubleWithUncertainty.NaN;
-    DoubleWithUncertainty pressure = new DoubleWithUncertainty(1020.32);
-    DoubleWithUncertainty temperature = new DoubleWithUncertainty(10.82);
+    DoubleWithUncertainty pressure = new DoubleWithUncertainty(1020.32D, 0.15F);
+    DoubleWithUncertainty temperature = new DoubleWithUncertainty(10.82D,
+      0.05F);
 
-    assertEquals(Double.NaN,
-      Calculators.calcfCO2(pCO2, xCO2, pressure, temperature).value(), 0.0001);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertainty fCO2 = Calculators.calcfCO2(pCO2, xCO2, pressure,
+      temperature);
+    DoubleWithUncertaintyAssert.assertThat(fCO2).matches(Double.NaN, Float.NaN);
   }
 
   /**
@@ -173,14 +176,15 @@ public class CalculatorsTest extends BaseTest {
    */
   @Test
   public void calcFCO2NaNPressureTest() {
-    DoubleWithUncertainty pCO2 = new DoubleWithUncertainty(347.26);
-    DoubleWithUncertainty xCO2 = new DoubleWithUncertainty(350.43);
+    DoubleWithUncertainty pCO2 = new DoubleWithUncertainty(347.26D, 0.2F);
+    DoubleWithUncertainty xCO2 = new DoubleWithUncertainty(350.43D, 0.1F);
     DoubleWithUncertainty pressure = DoubleWithUncertainty.NaN;
-    DoubleWithUncertainty temperature = new DoubleWithUncertainty(10.82);
+    DoubleWithUncertainty temperature = new DoubleWithUncertainty(10.82D,
+      0.05F);
 
-    assertEquals(Double.NaN,
-      Calculators.calcfCO2(pCO2, xCO2, pressure, temperature).value(), 0.0001);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertainty fCO2 = Calculators.calcfCO2(pCO2, xCO2, pressure,
+      temperature);
+    DoubleWithUncertaintyAssert.assertThat(fCO2).matches(Double.NaN, Float.NaN);
   }
 
   /**
@@ -189,14 +193,14 @@ public class CalculatorsTest extends BaseTest {
    */
   @Test
   public void calcFCO2NaNTempTest() {
-    DoubleWithUncertainty pCO2 = new DoubleWithUncertainty(347.26);
-    DoubleWithUncertainty xCO2 = new DoubleWithUncertainty(350.43);
-    DoubleWithUncertainty pressure = new DoubleWithUncertainty(1020.32);
+    DoubleWithUncertainty pCO2 = new DoubleWithUncertainty(347.26D, 0.2F);
+    DoubleWithUncertainty xCO2 = new DoubleWithUncertainty(350.43D, 0.1F);
+    DoubleWithUncertainty pressure = new DoubleWithUncertainty(1020.32D, 0.15F);
     DoubleWithUncertainty temperature = DoubleWithUncertainty.NaN;
 
-    assertEquals(Double.NaN,
-      Calculators.calcfCO2(pCO2, xCO2, pressure, temperature).value(), 0.0001);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertainty fCO2 = Calculators.calcfCO2(pCO2, xCO2, pressure,
+      temperature);
+    DoubleWithUncertaintyAssert.assertThat(fCO2).matches(Double.NaN, Float.NaN);
   }
 
   /**
@@ -205,9 +209,9 @@ public class CalculatorsTest extends BaseTest {
    */
   @Test
   public void kelvinPositiveTest() {
-    assertEquals(282.63D,
-      Calculators.kelvin(new DoubleWithUncertainty(9.48)).value(), 0.01);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertainty kelvin = Calculators
+      .kelvin(new DoubleWithUncertainty(9.48, 0.01F));
+    DoubleWithUncertaintyAssert.assertThat(kelvin).matches(282.63D, 0.01F);
   }
 
   /**
@@ -215,9 +219,9 @@ public class CalculatorsTest extends BaseTest {
    */
   @Test
   public void kelvinZeroTest() {
-    assertEquals(273.15D,
-      Calculators.kelvin(new DoubleWithUncertainty(0D)).value(), 0.01);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertainty kelvin = Calculators
+      .kelvin(new DoubleWithUncertainty(0D, 0.1F));
+    DoubleWithUncertaintyAssert.assertThat(kelvin).matches(273.15D, 0.1F);
   }
 
   /**
@@ -226,9 +230,9 @@ public class CalculatorsTest extends BaseTest {
    */
   @Test
   public void kelvinNegativeTest() {
-    assertEquals(263.67D,
-      Calculators.kelvin(new DoubleWithUncertainty(-9.48D)).value(), 0.01);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertainty kelvin = Calculators
+      .kelvin(new DoubleWithUncertainty(-9.48D, 0.01F));
+    DoubleWithUncertaintyAssert.assertThat(kelvin).matches(263.67D, 0.01F);
   }
 
   /**
@@ -237,9 +241,9 @@ public class CalculatorsTest extends BaseTest {
    */
   @Test
   public void celsiusPositiveTest() {
-    assertEquals(9.48D,
-      Calculators.celsius(new DoubleWithUncertainty(282.63D)).value(), 0.01);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertainty celsius = Calculators
+      .celsius(new DoubleWithUncertainty(282.63D, 0.02F));
+    DoubleWithUncertaintyAssert.assertThat(celsius).matches(9.48D, 0.02F);
   }
 
   /**
@@ -247,9 +251,9 @@ public class CalculatorsTest extends BaseTest {
    */
   @Test
   public void celsiusZeroTest() {
-    assertEquals(0D,
-      Calculators.celsius(new DoubleWithUncertainty(273.15D)).value(), 0.01);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertainty celsius = Calculators
+      .celsius(new DoubleWithUncertainty(273.15D, 0.02F));
+    DoubleWithUncertaintyAssert.assertThat(celsius).matches(0D, 0.02F);
   }
 
   /**
@@ -258,9 +262,9 @@ public class CalculatorsTest extends BaseTest {
    */
   @Test
   public void celsiusNegativeTest() {
-    assertEquals(-9.48D,
-      Calculators.celsius(new DoubleWithUncertainty(263.67D)).value(), 0.01);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertainty celsius = Calculators
+      .celsius(new DoubleWithUncertainty(282.63D, 0.02F));
+    DoubleWithUncertaintyAssert.assertThat(celsius).matches(9.48D, 0.02F);
   }
 
   /**

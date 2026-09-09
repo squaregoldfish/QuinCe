@@ -23,13 +23,13 @@ public class Calculators {
    * The molar mass of air.
    */
   private static final DoubleWithUncertainty MOLAR_MASS_AIR = new DoubleWithUncertainty(
-    28.97e-3);
+    28.97e-3, 0F);
 
   /**
    * Kelvin offset.
    */
   public static final DoubleWithUncertainty KELVIN_OFFSET = new DoubleWithUncertainty(
-    273.15);
+    273.15, 0F);
 
   /**
    * Convert a temperature in °C to °K.
