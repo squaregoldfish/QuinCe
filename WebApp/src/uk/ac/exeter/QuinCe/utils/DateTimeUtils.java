@@ -73,8 +73,7 @@ public class DateTimeUtils {
   }
 
   /**
-   * Convert a UTC {@link LocalDateTime} to a {@code long} milliseconds value
-   * for storage in the database
+   * Convert a UTC {@link LocalDateTime} to a {@code long} milliseconds value.
    *
    * @param date
    *          The date
@@ -82,6 +81,18 @@ public class DateTimeUtils {
    */
   public static Long dateToLong(LocalDateTime date) {
     return null == date ? null : date.toInstant(ZoneOffset.UTC).toEpochMilli();
+  }
+
+  /**
+   * Convert a UTC {@link TimeCoordinate} to a {@code long} milliseconds value.
+   *
+   * @param date
+   *          The date
+   * @return The long value
+   */
+  public static Long dateToLong(TimeCoordinate date) {
+    return null == date ? null
+      : date.getTime().toInstant(ZoneOffset.UTC).toEpochMilli();
   }
 
   /**

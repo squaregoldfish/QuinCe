@@ -5,6 +5,8 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
+import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
 
 /**
@@ -328,6 +330,50 @@ public class Calculators {
     return result;
   }
 
+  public static Double interpolateTimeAndDataReductionElement(
+    Map.Entry<TimeCoordinate, DataReductionElement> prior,
+    Map.Entry<TimeCoordinate, DataReductionElement> post, TimeCoordinate x) {
+
+    Double result = null;
+
+    if (!isNull(prior) && !isNull(post)) {
+      long x0 = DateTimeUtils.dateToLong(prior.getKey());
+      double y0 = prior.getValue().getValue();
+      long x1 = DateTimeUtils.dateToLong(post.getKey());
+      double y1 = post.getValue().getValue();
+      result = Calculators.interpolate(x0, y0, x1, y1,
+        DateTimeUtils.dateToLong(x));
+    } else if (!isNull(prior)) {
+      result = prior.getValue().getValue();
+    } else if (!isNull(post)) {
+      result = post.getValue().getValue();
+    }
+
+    return result;
+  }
+
+  public static Double interpolateTimeAndMeasurementValue(
+    Map.Entry<TimeCoordinate, MeasurementValue> prior,
+    Map.Entry<TimeCoordinate, MeasurementValue> post, TimeCoordinate x) {
+
+    Double result = null;
+
+    if (!isNull(prior) && !isNull(post)) {
+      long x0 = DateTimeUtils.dateToLong(prior.getKey());
+      double y0 = prior.getValue().getCalculatedValue();
+      long x1 = DateTimeUtils.dateToLong(post.getKey());
+      double y1 = post.getValue().getCalculatedValue();
+      result = Calculators.interpolate(x0, y0, x1, y1,
+        DateTimeUtils.dateToLong(x));
+    } else if (!isNull(prior)) {
+      result = prior.getValue().getCalculatedValue();
+    } else if (!isNull(post)) {
+      result = post.getValue().getCalculatedValue();
+    }
+
+    return result;
+  }
+
   /**
    * Determine whether a {@link Map.Entry} of {@link Double} objects is
    * {@code null}, or if either the key or value is {@code null} or {@code NaN}.
@@ -337,16 +383,35 @@ public class Calculators {
    * @return {@code true} if any aspect of the entry is {@code null};
    *         {@code false} otherwise.
    */
-  private static boolean isNull(Map.Entry<Double, Double> mapEntry) {
+  private static boolean isNull(Map.Entry<?, ?> mapEntry) {
 
     boolean result = false;
 
     if (null == mapEntry) {
       result = true;
-    } else if (null == mapEntry.getKey() || mapEntry.getKey().isNaN()) {
+    } else if (null == mapEntry.getKey()) {
       result = true;
-    } else if (null == mapEntry.getValue() || mapEntry.getValue().isNaN()) {
+    } else if (null == mapEntry.getValue()) {
       result = true;
+    }
+
+    // Now look at class-specific nullness
+    if (!result) {
+      Object key = mapEntry.getKey();
+      if (key instanceof Double) {
+        if (((Double) key).isNaN()) {
+          result = true;
+        }
+      }
+    }
+
+    if (!result) {
+      Object value = mapEntry.getValue();
+      if (value instanceof Double) {
+        result = ((Double) value).isNaN();
+      } else if (value instanceof DataReductionElement) {
+        result = ((DataReductionElement) value).getValue().isNaN();
+      }
     }
 
     return result;

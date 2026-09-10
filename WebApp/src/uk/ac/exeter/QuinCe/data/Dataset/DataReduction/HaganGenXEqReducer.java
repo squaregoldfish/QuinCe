@@ -31,14 +31,24 @@ import uk.ac.exeter.QuinCe.web.system.ResourceManager;
  *
  * <p>
  * Most of the calculation code is translated from the official processing
- * software.
+ * software, with adjustments to fit how QuinCe processes data files.
  * </p>
  */
 public class HaganGenXEqReducer extends DataReducer {
 
+  protected SensorType tempSensorType;
+  protected SensorType pressureSensorType;
+  protected SensorType co2Raw1SensorType;
+  protected SensorType co2Raw2SensorType;
+  protected SensorType rhSensorType;
+  protected SensorType rhTempSensorType;
+  protected SensorType calKSensorType;
+  protected SensorType spanRefSensorType;
+  protected SensorType spanSlopeSensorType;
+
   private static final double p0 = 99.0;
 
-  // # Pressure correction Coeficients
+  // # Pressure correction Coefficients
   private static final double b1 = 1.101583;
   private static final double b2 = -0.006121779;
   private static final double b3 = -0.2662779;
@@ -68,6 +78,10 @@ public class HaganGenXEqReducer extends DataReducer {
 
   private TreeMap<TimeCoordinate, DataReductionElement> spanCalKs = new TreeMap<TimeCoordinate, DataReductionElement>();
 
+  private TreeMap<TimeCoordinate, MeasurementValue> spanRhs = new TreeMap<TimeCoordinate, MeasurementValue>();
+
+  private TreeMap<TimeCoordinate, MeasurementValue> spanRhTemps = new TreeMap<TimeCoordinate, MeasurementValue>();
+
   public HaganGenXEqReducer(Variable variable,
     Map<String, Properties> properties,
     CalibrationSet calculationCoefficients) {
@@ -79,24 +93,23 @@ public class HaganGenXEqReducer extends DataReducer {
     DatasetMeasurements allMeasurements) throws DataReductionException {
 
     try {
-      SensorType tempSensorType = ResourceManager.getInstance()
-        .getSensorsConfiguration().getSensorType("GenX Temperature");
-      SensorType pressureSensorType = ResourceManager.getInstance()
+      tempSensorType = ResourceManager.getInstance().getSensorsConfiguration()
+        .getSensorType("GenX Temperature");
+      pressureSensorType = ResourceManager.getInstance()
         .getSensorsConfiguration().getSensorType("GenX Pressure");
-      SensorType co2Raw1SensorType = ResourceManager.getInstance()
+      co2Raw1SensorType = ResourceManager.getInstance()
         .getSensorsConfiguration().getSensorType("GenX CO₂ Raw 1");
-      SensorType co2Raw2SensorType = ResourceManager.getInstance()
+      co2Raw2SensorType = ResourceManager.getInstance()
         .getSensorsConfiguration().getSensorType("GenX CO₂ Raw 2");
-      SensorType rhSensorType = ResourceManager.getInstance()
-        .getSensorsConfiguration().getSensorType("GenX Relative Humidity");
-      SensorType rhTempSensorType = ResourceManager.getInstance()
-        .getSensorsConfiguration()
+      rhSensorType = ResourceManager.getInstance().getSensorsConfiguration()
+        .getSensorType("GenX Relative Humidity");
+      rhTempSensorType = ResourceManager.getInstance().getSensorsConfiguration()
         .getSensorType("GenX Relative Humidity Temperature");
-      SensorType calKSensorType = ResourceManager.getInstance()
-        .getSensorsConfiguration().getSensorType("GenX CALK");
-      SensorType spanRefSensorType = ResourceManager.getInstance()
+      calKSensorType = ResourceManager.getInstance().getSensorsConfiguration()
+        .getSensorType("GenX CALK");
+      spanRefSensorType = ResourceManager.getInstance()
         .getSensorsConfiguration().getSensorType("GenX Span Ref");
-      SensorType spanSlopeSensorType = ResourceManager.getInstance()
+      spanSlopeSensorType = ResourceManager.getInstance()
         .getSensorsConfiguration().getSensorType("GenX Span Slope");
 
       MeasurementValueCollector measurementValueCollector = MeasurementValueCollectorFactory
@@ -173,6 +186,12 @@ public class HaganGenXEqReducer extends DataReducer {
           spanCalKElement.addSensorValueIDs(temp, pressure, co2Raw1, co2Raw2,
             rh, rhTemp, measurementCalK, spanRef, spanSlope);
           spanCalKElement.addSensorValueIDs(zeroCalK);
+
+          TimeCoordinate coord = (TimeCoordinate) measurement.getCoordinate();
+
+          spanCalKs.put(coord, spanCalKElement);
+          spanRhs.put(coord, rh);
+          spanRhTemps.put(coord, rhTemp);
         }
       }
 
@@ -186,9 +205,94 @@ public class HaganGenXEqReducer extends DataReducer {
   @Override
   public void doCalculation(Instrument instrument, Measurement measurement,
     DataReductionRecord record, Connection conn) throws DataReductionException {
-    // TODO Auto-generated method stub
 
-    record.put("Dummy", 8D);
+    double zeroCalK = getZeroCalK(measurement);
+    record.put("ZeroCalK", zeroCalK);
+
+    // Get the spanCalK at the measurement time
+    double spanCalK = getSpanCalK(measurement);
+    record.put("SpanCalK", spanCalK);
+
+    Double temp = measurement.getMeasurementValue(tempSensorType)
+      .getCalculatedValue();
+    Double pressure = measurement.getMeasurementValue(pressureSensorType)
+      .getCalculatedValue();
+    Double co2Raw1 = measurement.getMeasurementValue(co2Raw1SensorType)
+      .getCalculatedValue();
+    Double co2Raw2 = measurement.getMeasurementValue(co2Raw2SensorType)
+      .getCalculatedValue();
+    Double rh = measurement.getMeasurementValue(rhSensorType)
+      .getCalculatedValue();
+    Double rhTemp = measurement.getMeasurementValue(rhTempSensorType)
+      .getCalculatedValue();
+    Double spanSlope = measurement.getMeasurementValue(spanSlopeSensorType)
+      .getCalculatedValue();
+
+    // Can these persist across measurements?
+    MutableDouble r_absp = new MutableDouble(Double.NaN);
+    MutableDouble s_absp = new MutableDouble(Double.NaN);
+
+    double xCO2Wet = calculatedCO2(temp, pressure, co2Raw1, co2Raw2, rh, rhTemp,
+      zeroCalK, spanCalK, r_absp, s_absp, spanSlope);
+
+    record.put("xCO2Wet", xCO2Wet);
+
+    double spanRh = getSpanRh(measurement);
+    double spanRhTemp = getSpanRhTemp(measurement);
+
+    double vpSat = 0.61365484
+      * Math.exp(17.502 * spanRhTemp / (240.97 + spanRhTemp));
+
+    double co2VPrh = ((rh - spanRh) * vpSat) / 100;
+    double xCO2Dry = xCO2Wet * pressure / (pressure - co2VPrh);
+
+    record.put("co2VPrh", co2VPrh);
+    record.put("xCO2Dry", xCO2Dry);
+  }
+
+  protected double getZeroCalK(Measurement measurement) {
+    // Get the zeroCalK at the measurement time
+    Map.Entry<TimeCoordinate, DataReductionElement> priorZeroCalK = zeroCalKs
+      .floorEntry((TimeCoordinate) measurement.getCoordinate());
+
+    Map.Entry<TimeCoordinate, DataReductionElement> postZeroCalK = zeroCalKs
+      .ceilingEntry((TimeCoordinate) measurement.getCoordinate());
+
+    return Calculators.interpolateTimeAndDataReductionElement(priorZeroCalK,
+      postZeroCalK, (TimeCoordinate) measurement.getCoordinate());
+  }
+
+  protected double getSpanCalK(Measurement measurement) {
+    Map.Entry<TimeCoordinate, DataReductionElement> priorSpanCalK = spanCalKs
+      .floorEntry((TimeCoordinate) measurement.getCoordinate());
+
+    Map.Entry<TimeCoordinate, DataReductionElement> postSpanCalK = spanCalKs
+      .ceilingEntry((TimeCoordinate) measurement.getCoordinate());
+
+    return Calculators.interpolateTimeAndDataReductionElement(priorSpanCalK,
+      postSpanCalK, (TimeCoordinate) measurement.getCoordinate());
+  }
+
+  protected double getSpanRh(Measurement measurement) {
+    Map.Entry<TimeCoordinate, MeasurementValue> priorRh = spanRhs
+      .floorEntry((TimeCoordinate) measurement.getCoordinate());
+
+    Map.Entry<TimeCoordinate, MeasurementValue> postRh = spanRhs
+      .ceilingEntry((TimeCoordinate) measurement.getCoordinate());
+
+    return Calculators.interpolateTimeAndMeasurementValue(priorRh, postRh,
+      (TimeCoordinate) measurement.getCoordinate());
+  }
+
+  protected double getSpanRhTemp(Measurement measurement) {
+    Map.Entry<TimeCoordinate, MeasurementValue> priorRhTemp = spanRhTemps
+      .floorEntry((TimeCoordinate) measurement.getCoordinate());
+
+    Map.Entry<TimeCoordinate, MeasurementValue> postRhTemp = spanRhTemps
+      .ceilingEntry((TimeCoordinate) measurement.getCoordinate());
+
+    return Calculators.interpolateTimeAndMeasurementValue(priorRhTemp,
+      postRhTemp, (TimeCoordinate) measurement.getCoordinate());
   }
 
   @Override
@@ -197,7 +301,19 @@ public class HaganGenXEqReducer extends DataReducer {
       calculationParameters = new ArrayList<CalculationParameter>(1);
 
       calculationParameters.add(new CalculationParameter(makeParameterId(0),
-        "Dummy", "Dummy", "DUMMY", "dummy", true));
+        "ZeroCalK", "ZeroCalK", "ZeroCalK", "", false));
+
+      calculationParameters.add(new CalculationParameter(makeParameterId(1),
+        "SpanCalK", "SpanCalK", "SpanCalK", "", false));
+
+      calculationParameters.add(new CalculationParameter(makeParameterId(2),
+        "xCO2Wet", "xCO2Wet", "xCO2Wet", "", true));
+
+      calculationParameters.add(new CalculationParameter(makeParameterId(3),
+        "co2VPrh", "co2VPrh", "co2VPrh", "", true));
+
+      calculationParameters.add(new CalculationParameter(makeParameterId(4),
+        "xCO2Dry", "xCO2Dry", "xCO2Dry", "", true));
     }
 
     return calculationParameters;
