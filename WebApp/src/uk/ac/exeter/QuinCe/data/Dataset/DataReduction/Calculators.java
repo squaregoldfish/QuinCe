@@ -91,15 +91,15 @@ public class Calculators {
     // B_d = (2.16528e-5) * kelvin³
     // B = B_a + B_b - B_c + B_d
 
-    DoubleWithUncertainty B_a = new DoubleWithUncertainty(-1636.75);
-    DoubleWithUncertainty B_b = kelvin.multiply(12.0408);
-    DoubleWithUncertainty B_c = kelvin.pow(2).multiply(0.0327957);
-    DoubleWithUncertainty B_d = kelvin.pow(3).multiply(3.16528 * 1e-5);
+    DoubleWithUncertainty B_a = new DoubleWithUncertainty(-1636.75D, 0F);
+    DoubleWithUncertainty B_b = kelvin.multiply(12.0408D);
+    DoubleWithUncertainty B_c = kelvin.pow(2).multiply(0.0327957D);
+    DoubleWithUncertainty B_d = kelvin.pow(3).multiply(3.16528e-5D);
 
     DoubleWithUncertainty B = B_a.add(B_b).subtract(B_c).add(B_d);
 
-    DoubleWithUncertainty delta = new DoubleWithUncertainty(57.7)
-      .subtract(kelvin.multiply(0.118));
+    DoubleWithUncertainty delta = new DoubleWithUncertainty(57.7D, 0F)
+      .subtract(kelvin.multiply(0.118D));
 
     // fCO2_a = (1 - xCO2 * 1e-6)²
     // fCO2_b = 2 * fCO2_a * delta
@@ -110,11 +110,11 @@ public class Calculators {
     // fCO2 = exp(fCO2_f)
 
     DoubleWithUncertainty fCO2_a = DoubleWithUncertainty.ONE
-      .subtract(xCO2InGas.multiply(1e-6)).pow(2);
+      .subtract(xCO2InGas.multiply(1e-6D)).pow(2);
     DoubleWithUncertainty fCO2_b = fCO2_a.multiply(delta).multiply(2);
     DoubleWithUncertainty fCO2_c = B.add(fCO2_b);
     DoubleWithUncertainty fCO2_d = fCO2_c.multiply(hPaToAtmospheres(pressure));
-    DoubleWithUncertainty fCO2_e = kelvin.multiply(82.0575);
+    DoubleWithUncertainty fCO2_e = kelvin.multiply(82.0575D);
     DoubleWithUncertainty fCO2_f = fCO2_d.divide(fCO2_e);
     return fCO2_f.exp().multiply(pco2);
   }
@@ -159,12 +159,12 @@ public class Calculators {
     // pH2O_d = 0.000544 * salinity
     // pH2O = exp(pH2O_a - pH2O_b - pH2O_c - pH2O_d)
 
-    DoubleWithUncertainty pH2O_a = new DoubleWithUncertainty(24.4543);
+    DoubleWithUncertainty pH2O_a = new DoubleWithUncertainty(24.4543D, 0F);
     DoubleWithUncertainty pH2O_b = DoubleWithUncertainty.HUNDRED.divide(kelvin)
-      .multiply(67.4509);
+      .multiply(67.4509D);
     DoubleWithUncertainty pH2O_c = kelvin.divide(DoubleWithUncertainty.HUNDRED)
-      .log().multiply(4.8489);
-    DoubleWithUncertainty pH2O_d = salinity.multiply(0.000544);
+      .log().multiply(4.8489D);
+    DoubleWithUncertainty pH2O_d = salinity.multiply(0.000544D);
 
     return pH2O_a.subtract(pH2O_b).subtract(pH2O_c).subtract(pH2O_d).exp();
   }
@@ -191,7 +191,7 @@ public class Calculators {
 
     DoubleWithUncertainty result = measuredPressure;
 
-    if (null != sensorHeight) {
+    if (null != sensorHeight && !sensorHeight.isNaN()) {
 
       DoubleWithUncertainty top = measuredPressure.multiply(MOLAR_MASS_AIR);
       DoubleWithUncertainty bottom = kelvin(temperature).multiply(8.314);
@@ -335,16 +335,17 @@ public class Calculators {
 
     DoubleWithUncertainty result = null;
 
-    if (!DoubleWithUncertainty.isNaN(y0) && !DoubleWithUncertainty.isNaN(y1)) {
+    if (null != y0 && !DoubleWithUncertainty.isNaN(y0) && null != y1
+      && !DoubleWithUncertainty.isNaN(y1)) {
       double interpolatedValue = interpolate(x0, y0.value(), x1, y1.value(),
         target);
       float interpolatedUncertainty = interpolateUncertainty(x0,
         y0.uncertainty(), x1, y1.uncertainty(), target);
       result = new DoubleWithUncertainty(interpolatedValue,
         interpolatedUncertainty);
-    } else if (null != y0) {
+    } else if (null != y0 && !DoubleWithUncertainty.isNaN(y0)) {
       result = y0;
-    } else if (null != y1) {
+    } else if (null != y1 && !DoubleWithUncertainty.isNaN(y1)) {
       result = y1;
     }
 
@@ -486,12 +487,11 @@ public class Calculators {
    *          The target x value.
    * @return The uncertainty of the interpolated y value.
    */
-  private static float interpolateUncertainty(double x0, float u0, double x1,
-    double u1, double target) {
+  private static float interpolateUncertainty(double x1, float u1, double x2,
+    double u2, double x) {
 
-    return (float) ((float) Math
-      .sqrt(Math.pow((target - x1) / (x0 - x1), 2) * Math.pow(u0, 2))
-      + (Math.pow((target - x0) / (x1 - x0), 2) * Math.pow(u1, 2)));
+    return (float) Math.sqrt(Math.pow((x - x2) / (x1 - x2), 2) * Math.pow(u1, 2)
+      + Math.pow((x - x1) / (x2 - x1), 2) * Math.pow(u2, 2));
   }
 
   /**

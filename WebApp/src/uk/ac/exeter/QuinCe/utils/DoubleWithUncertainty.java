@@ -271,7 +271,8 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
    */
   public DoubleWithUncertainty multiply(DoubleWithUncertainty multiplier) {
     Double result = value * multiplier.value;
-    double uncertainty = result * relativeUncertainty(this, multiplier);
+    double uncertainty = Math
+      .abs(result * relativeUncertainty(this, multiplier));
     return new DoubleWithUncertainty(result, (float) uncertainty);
   }
 
@@ -297,7 +298,7 @@ public record DoubleWithUncertainty(Double value, Float uncertainty)
    */
   public DoubleWithUncertainty divide(DoubleWithUncertainty divisor) {
     Double result = value / divisor.value;
-    double uncertainty = result * relativeUncertainty(this, divisor);
+    double uncertainty = Math.abs(result * relativeUncertainty(this, divisor));
     return new DoubleWithUncertainty(result, (float) uncertainty);
   }
 

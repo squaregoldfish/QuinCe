@@ -243,8 +243,8 @@ public record BigDecimalWithUncertainty(BigDecimal value, Float uncertainty)
     BigDecimalWithUncertainty multiplier) {
     BigDecimal result = value.multiply(multiplier.value);
 
-    Float uncertainty = (float) result.doubleValue()
-      * relativeUncertainty(this, multiplier).floatValue();
+    Float uncertainty = (float) Math.abs(result.doubleValue()
+      * relativeUncertainty(this, multiplier).floatValue());
 
     return new BigDecimalWithUncertainty(result, uncertainty);
   }
@@ -271,8 +271,8 @@ public record BigDecimalWithUncertainty(BigDecimal value, Float uncertainty)
    */
   public BigDecimalWithUncertainty divide(BigDecimalWithUncertainty divisor) {
     BigDecimal result = value.divide(divisor.value, MathContext.DECIMAL128);
-    Float uncertainty = (float) result.doubleValue()
-      * relativeUncertainty(this, divisor).floatValue();
+    Float uncertainty = (float) Math.abs(
+      result.doubleValue() * relativeUncertainty(this, divisor).floatValue());
 
     return new BigDecimalWithUncertainty(result, uncertainty);
   }

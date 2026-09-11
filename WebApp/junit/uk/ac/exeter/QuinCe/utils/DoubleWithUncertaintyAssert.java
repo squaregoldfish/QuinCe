@@ -47,4 +47,15 @@ public class DoubleWithUncertaintyAssert
 
     return this;
   }
+
+  public DoubleWithUncertaintyAssert nan() {
+    if (!actual.value().isNaN()) {
+      failWithMessage("Value is not NaN");
+    }
+    if (!actual.uncertainty().isNaN()) {
+      failWithMessage("Uncertainty is not NaN");
+    }
+
+    return this;
+  }
 }
