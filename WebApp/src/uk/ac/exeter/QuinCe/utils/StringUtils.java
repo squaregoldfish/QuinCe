@@ -42,8 +42,8 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
 
   static {
     threeDecimalPoints = new DecimalFormat();
-    threeDecimalPoints.setMinimumFractionDigits(3);
-    threeDecimalPoints.setMaximumFractionDigits(3);
+    threeDecimalPoints.setMinimumFractionDigits(10);
+    threeDecimalPoints.setMaximumFractionDigits(10);
     threeDecimalPoints.setGroupingUsed(false);
     threeDecimalPoints.setRoundingMode(RoundingMode.HALF_UP);
     threeDecimalPoints.setDecimalFormatSymbols(

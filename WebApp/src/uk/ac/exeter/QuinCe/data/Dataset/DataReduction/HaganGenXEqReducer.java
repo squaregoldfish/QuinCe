@@ -229,8 +229,8 @@ public class HaganGenXEqReducer extends DataReducer {
       .getCalculatedValue();
 
     // Can these persist across measurements?
-    MutableDouble r_absp = new MutableDouble(Double.NaN);
-    MutableDouble s_absp = new MutableDouble(Double.NaN);
+    MutableDouble r_absp = new MutableDouble(0D);
+    MutableDouble s_absp = new MutableDouble(0D);
 
     double xCO2Wet = calculatedCO2(temp, pressure, co2Raw1, co2Raw2, rh, rhTemp,
       zeroCalK, spanCalK, r_absp, s_absp, spanSlope);
@@ -239,6 +239,8 @@ public class HaganGenXEqReducer extends DataReducer {
 
     double spanRh = getSpanRh(measurement);
     double spanRhTemp = getSpanRhTemp(measurement);
+    record.put("spanRh", spanRh);
+    record.put("spanRhTemp", spanRhTemp);
 
     double vpSat = 0.61365484
       * Math.exp(17.502 * spanRhTemp / (240.97 + spanRhTemp));
@@ -310,9 +312,15 @@ public class HaganGenXEqReducer extends DataReducer {
         "xCO2Wet", "xCO2Wet", "xCO2Wet", "", true));
 
       calculationParameters.add(new CalculationParameter(makeParameterId(3),
-        "co2VPrh", "co2VPrh", "co2VPrh", "", true));
+        "spanRh", "spanRh", "spanRh", "", false));
 
       calculationParameters.add(new CalculationParameter(makeParameterId(4),
+        "spanRhTemp", "spanRhTemp", "spanRhTemp", "", false));
+
+      calculationParameters.add(new CalculationParameter(makeParameterId(5),
+        "co2VPrh", "co2VPrh", "co2VPrh", "", false));
+
+      calculationParameters.add(new CalculationParameter(makeParameterId(6),
         "xCO2Dry", "xCO2Dry", "xCO2Dry", "", true));
     }
 
@@ -329,19 +337,19 @@ public class HaganGenXEqReducer extends DataReducer {
 
   }
 
-  private double convergeSpanCalK(double temp, double pressure, double raw1,
-    double raw2, double rh, double rhTemp, double zeroCalK, double spanCalKseed,
-    double spanRef, double spanSlope) {
+  protected static double convergeSpanCalK(double temp, double pressure,
+    double raw1, double raw2, double rh, double rhTemp, double zeroCalK,
+    double spanCalKSeed, double spanRef, double spanSlope) {
 
     double stepDecimal = 0.01;
     double calcCO2, previousCalcCO2;
-    double calcSpanCalK = spanCalKseed;
+    double calcSpanCalK = spanCalKSeed;
 
-    MutableDouble r_absp = new MutableDouble(Double.NaN);
-    MutableDouble s_absp = new MutableDouble(Double.NaN);
+    MutableDouble r_absp = new MutableDouble(0D);
+    MutableDouble s_absp = new MutableDouble(0D);
 
     if (temp == 0 || pressure == 0 || raw1 == 0 || raw2 == 0 || zeroCalK == 0
-      || spanCalKseed == 0 || spanRef == 0)
+      || spanCalKSeed == 0 || spanRef == 0)
       return (0);
 
     calcCO2 = calculatedCO2(temp, pressure, raw1, raw2, rh, rhTemp, zeroCalK,
@@ -362,9 +370,10 @@ public class HaganGenXEqReducer extends DataReducer {
     return (calcSpanCalK);
   }
 
-  private double calculatedCO2(double temp, double pressure, double raw1,
-    double raw2, double rh, double rhTemp, double zeroCalK, double spanCalK,
-    MutableDouble r_absp, MutableDouble s_absp, double spanSlope) {
+  protected static double calculatedCO2(double temp, double pressure,
+    double raw1, double raw2, double rh, double rhTemp, double zeroCalK,
+    double spanCalK, MutableDouble r_absp, MutableDouble s_absp,
+    double spanSlope) {
 
     double p_absp, P, a_1, b_1, x, g, c_1, c_2, c_3, C, wc;
     // A = a2 - a4
