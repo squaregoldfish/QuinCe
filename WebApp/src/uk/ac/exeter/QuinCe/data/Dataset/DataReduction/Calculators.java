@@ -235,7 +235,10 @@ public class Calculators {
 
     DoubleWithUncertainty result = null;
 
-    if (null != y0 && null != y1) {
+    boolean y0Valid = null != y0 && !y0.isNaN();
+    boolean y1Valid = null != y1 && !y1.isNaN();
+
+    if (y0Valid && y1Valid) {
       double x0 = DateTimeUtils.dateToLong(time0);
       double x1 = DateTimeUtils.dateToLong(time1);
       double target = DateTimeUtils.dateToLong(targetTime);
@@ -246,9 +249,9 @@ public class Calculators {
         y0.uncertainty(), x1, y1.uncertainty(), target);
       result = new DoubleWithUncertainty(interpolatedValue,
         interpolatedUncertainty);
-    } else if (null != y0) {
+    } else if (y0Valid) {
       result = y0;
-    } else if (null != y1) {
+    } else if (y1Valid) {
       result = y1;
     }
 
@@ -335,17 +338,19 @@ public class Calculators {
 
     DoubleWithUncertainty result = null;
 
-    if (null != y0 && !DoubleWithUncertainty.isNaN(y0) && null != y1
-      && !DoubleWithUncertainty.isNaN(y1)) {
+    boolean y0Valid = null != y0 && !y0.isNaN();
+    boolean y1Valid = null != y1 && !y1.isNaN();
+
+    if (y0Valid && y1Valid) {
       double interpolatedValue = interpolate(x0, y0.value(), x1, y1.value(),
         target);
       float interpolatedUncertainty = interpolateUncertainty(x0,
         y0.uncertainty(), x1, y1.uncertainty(), target);
       result = new DoubleWithUncertainty(interpolatedValue,
         interpolatedUncertainty);
-    } else if (null != y0 && !DoubleWithUncertainty.isNaN(y0)) {
+    } else if (y0Valid) {
       result = y0;
-    } else if (null != y1 && !DoubleWithUncertainty.isNaN(y1)) {
+    } else if (y1Valid) {
       result = y1;
     }
 
