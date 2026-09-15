@@ -3,7 +3,6 @@ package uk.ac.exeter.QuinCe.utils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,18 +20,20 @@ public class MathUtilsTest extends BaseTest {
 
     Map<String, DoubleWithUncertainty> input = new HashMap<String, DoubleWithUncertainty>();
 
-    input.put("Number", new DoubleWithUncertainty(43D));
+    input.put("Number", new DoubleWithUncertainty(43D, 0.2F));
     input.put("Null", null);
     input.put("NaN", DoubleWithUncertainty.NaN);
 
     Map<String, DoubleWithUncertainty> output = MathUtils.nanToNull(input);
 
     assertEquals(output.size(), input.size());
+
+    DoubleWithUncertaintyAssert.assertThat(output.get("Number")).matches(43D,
+      0.2F);
     assertEquals(43D, output.get("Number").value(), 0.001D);
     assertNull(output.get("Null"));
     assertNull(output.get("NaN"));
     assertNull(output.get("Infinite"));
-    assertTrue(false, "Uncertainty");
   }
 
   @Test
