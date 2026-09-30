@@ -1,5 +1,6 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
@@ -29,16 +30,31 @@ import uk.ac.exeter.QuinCe.data.Dataset.TimeCoordinate;
  * </p>
  *
  * <p>
+ * The value is stored internally, and returned by {@link #getValue()}, as a
+ * {@link BigDecimal}. This ensures that precision is maintained in all
+ * situations, and the class is used rarely enough that any performance impact
+ * for lower precision applications should not be noticeable.
+ * </p>
+ *
+ * <p>
  * The {@link SensorValue}s are stored as a {@link Set} to prevent duplicates.
  * </p>
  */
 public class DataReductionElement implements Cloneable {
 
-  private Double value = Double.NaN;
+  private BigDecimal value = null;
 
   private Set<Long> sensorValueIDs = new HashSet<Long>();
 
   public void setValue(Double value) {
+    if (null == value || value.isNaN()) {
+      this.value = null;
+    } else {
+      this.value = new BigDecimal(value);
+    }
+  }
+
+  public void setValue(BigDecimal value) {
     this.value = value;
   }
 
@@ -50,7 +66,7 @@ public class DataReductionElement implements Cloneable {
     sensorValueIDs.addAll(ids);
   }
 
-  public Double getValue() {
+  public BigDecimal getValue() {
     return value;
   }
 
@@ -116,10 +132,10 @@ public class DataReductionElement implements Cloneable {
       } else {
         LocalDateTime priorTime = prior.getKey().getTime();
         LocalDateTime postTime = post.getKey().getTime();
-        Double priorValue = prior.getValue().getValue();
-        Double postValue = post.getValue().getValue();
+        BigDecimal priorValue = prior.getValue().getValue();
+        BigDecimal postValue = post.getValue().getValue();
 
-        Double interpolatedValue = Calculators.interpolate(priorTime,
+        BigDecimal interpolatedValue = Calculators.interpolate(priorTime,
           priorValue, postTime, postValue, coordinate.getTime());
 
         result = new DataReductionElement();

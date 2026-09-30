@@ -1,7 +1,7 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.math.MathContext;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -14,426 +14,456 @@ import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
  */
 public class Calculators {
 
-  /**
-   * The conversion factor from Pascals to Atmospheres.
-   */
-  private static final double PASCALS_TO_ATMOSPHERES = 0.00000986923266716013;
+	/**
+	 * The conversion factor from Pascals to Atmospheres.
+	 */
+	private static final double PASCALS_TO_ATMOSPHERES = 0.00000986923266716013;
 
-  /**
-   * The molar mass of air.
-   */
-  private static final double MOLAR_MASS_AIR = 28.97e-3;
+	/**
+	 * The molar mass of air.
+	 */
+	private static final double MOLAR_MASS_AIR = 28.97e-3;
 
-  /**
-   * Convert a temperature in °C to °K.
-   *
-   * @param celsius
-   *          Celsius temperature.
-   * @return Kelvin temperature.
-   */
-  public static Double kelvin(Double celsius) {
-    return celsius + 273.15;
-  }
+	/**
+	 * Convert a temperature in °C to °K.
+	 *
+	 * @param celsius Celsius temperature.
+	 * @return Kelvin temperature.
+	 */
+	public static Double kelvin(Double celsius) {
+		return celsius + 273.15;
+	}
 
-  /**
-   * Convert a temperature in °K to °C.
-   *
-   * @param kelvin
-   *          Kelvin temperature.
-   * @return Celsius temperature.
-   */
-  public static Double celsius(Double kelvin) {
-    return kelvin - 273.15;
-  }
+	/**
+	 * Convert a temperature in °C to °K.
+	 *
+	 * @param celsius Celsius temperature.
+	 * @return Kelvin temperature.
+	 */
+	public static BigDecimal kelvin(BigDecimal celsius) {
+		return celsius.add(new BigDecimal(273.15D));
+	}
 
-  /**
-   * Convert a pressure in hPa it atmospheres.
-   *
-   * @param hPa
-   *          Pressure in hPa.
-   * @return Pressure in atmospheres.
-   */
-  public static Double hPaToAtmospheres(Double hPa) {
-    return hPa * 100 * PASCALS_TO_ATMOSPHERES;
-  }
+	/**
+	 * Convert a temperature in °K to °C.
+	 *
+	 * @param kelvin Kelvin temperature.
+	 * @return Celsius temperature.
+	 */
+	public static Double celsius(Double kelvin) {
+		return kelvin - 273.15;
+	}
 
-  /**
-   * Converts pCO<sub>2</sub> to fCO<sub>2</sub>.
-   *
-   * @param pco2
-   *          pCO<sub>2</sub> at target temperature.
-   * @param xCO2InGas
-   *          The calibrated, dried xCO<sub>2</sub> value.
-   * @param pressure
-   *          The pressure in hPa.
-   * @param temperature
-   *          The temperature in °C
-   * @return The fCO<sub>2</sub> value.
-   */
-  public static Double calcfCO2(Double pco2, Double xCO2InGas, Double pressure,
-    Double temperature) {
+	/**
+	 * Convert a pressure in hPa it atmospheres.
+	 *
+	 * @param hPa Pressure in hPa.
+	 * @return Pressure in atmospheres.
+	 */
+	public static Double hPaToAtmospheres(Double hPa) {
+		return hPa * 100 * PASCALS_TO_ATMOSPHERES;
+	}
 
-    Double kelvin = Calculators.kelvin(temperature);
-    Double B = -1636.75 + 12.0408 * kelvin - 0.0327957 * Math.pow(kelvin, 2)
-      + (3.16528 * 1e-5) * Math.pow(kelvin, 3);
-    Double delta = 57.7 - 0.118 * kelvin;
+	/**
+	 * Converts pCO<sub>2</sub> to fCO<sub>2</sub>.
+	 *
+	 * @param pco2        pCO<sub>2</sub> at target temperature.
+	 * @param xCO2InGas   The calibrated, dried xCO<sub>2</sub> value.
+	 * @param pressure    The pressure in hPa.
+	 * @param temperature The temperature in °C
+	 * @return The fCO<sub>2</sub> value.
+	 */
+	public static Double calcfCO2(Double pco2, Double xCO2InGas, Double pressure, Double temperature) {
 
-    return pco2 * Math.exp(((B + 2 * Math.pow(1 - xCO2InGas * 1e-6, 2) * delta)
-      * hPaToAtmospheres(pressure)) / (82.0575 * kelvin));
-  }
+		Double kelvin = Calculators.kelvin(temperature);
+		Double B = -1636.75 + 12.0408 * kelvin - 0.0327957 * Math.pow(kelvin, 2)
+				+ (3.16528 * 1e-5) * Math.pow(kelvin, 3);
+		Double delta = 57.7 - 0.118 * kelvin;
 
-  /**
-   * Calculates pCO<sub>2</sub> in water from xCO<sub>2</sub> measured in a gas
-   * analyser.
-   *
-   * @param xCO2
-   *          The dry, calibrated xCO<sub>2</sub> value.
-   * @param pressure
-   *          The pressure of equilibration.
-   * @param pH2O
-   *          The water vapour pressure.
-   * @return pCO<sub>2</sub> in water.
-   */
-  public static Double calcpCO2TEWet(Double xCO2, Double pressure,
-    Double pH2O) {
-    return xCO2 * (hPaToAtmospheres(pressure) - pH2O);
-  }
+		return pco2 * Math.exp(((B + 2 * Math.pow(1 - xCO2InGas * 1e-6, 2) * delta) * hPaToAtmospheres(pressure))
+				/ (82.0575 * kelvin));
+	}
 
-  /**
-   * Calculates the water vapour pressure (pH<sub>2</sub>O). From Weiss and
-   * Price (1980),
-   * <a href="https://doi.org/10.1016/0304-4203(80)90024-9" target=
-   * "_blank">doi: 10.1016/0304-4203(80)90024-9</a>.
-   *
-   * @param salinity
-   *          Salinity.
-   * @param temperature
-   *          Temperature in °C.
-   * @return The calculated pH<sub>2</sub>O value.
-   */
-  public static Double calcPH2O(Double salinity, Double temperature) {
-    double kelvin = Calculators.kelvin(temperature);
-    return Math.exp(24.4543 - 67.4509 * (100 / kelvin)
-      - 4.8489 * Math.log(kelvin / 100) - 0.000544 * salinity);
-  }
+	/**
+	 * Calculates pCO<sub>2</sub> in water from xCO<sub>2</sub> measured in a gas
+	 * analyser.
+	 *
+	 * @param xCO2     The dry, calibrated xCO<sub>2</sub> value.
+	 * @param pressure The pressure of equilibration.
+	 * @param pH2O     The water vapour pressure.
+	 * @return pCO<sub>2</sub> in water.
+	 */
+	public static Double calcpCO2TEWet(Double xCO2, Double pressure, Double pH2O) {
+		return xCO2 * (hPaToAtmospheres(pressure) - pH2O);
+	}
 
-  /**
-   * Adjust a measured pressure to sea level.
-   *
-   * <p>
-   * If the supplied {@code sensorHeight} is {@code null}, no correction is made
-   * and the original value is returned.
-   * </p>
-   *
-   * @param measuredPressure
-   *          The measured pressure.
-   * @param temperature
-   *          The temperature at which the pressure was measured.
-   * @param sensorHeight
-   *          The height of the sensor.
-   * @return The adjusted pressure.
-   */
-  public static Double calcSeaLevelPressure(Double measuredPressure,
-    Double temperature, Float sensorHeight) {
+	/**
+	 * Calculates the water vapour pressure (pH<sub>2</sub>O). From Weiss and Price
+	 * (1980),
+	 * <a href="https://doi.org/10.1016/0304-4203(80)90024-9" target= "_blank">doi:
+	 * 10.1016/0304-4203(80)90024-9</a>.
+	 *
+	 * @param salinity    Salinity.
+	 * @param temperature Temperature in °C.
+	 * @return The calculated pH<sub>2</sub>O value.
+	 */
+	public static Double calcPH2O(Double salinity, Double temperature) {
+		double kelvin = Calculators.kelvin(temperature);
+		return Math.exp(24.4543 - 67.4509 * (100 / kelvin) - 4.8489 * Math.log(kelvin / 100) - 0.000544 * salinity);
+	}
 
-    Double result = measuredPressure;
+	/**
+	 * Adjust a measured pressure to sea level.
+	 *
+	 * <p>
+	 * If the supplied {@code sensorHeight} is {@code null}, no correction is made
+	 * and the original value is returned.
+	 * </p>
+	 *
+	 * @param measuredPressure The measured pressure.
+	 * @param temperature      The temperature at which the pressure was measured.
+	 * @param sensorHeight     The height of the sensor.
+	 * @return The adjusted pressure.
+	 */
+	public static Double calcSeaLevelPressure(Double measuredPressure, Double temperature, Float sensorHeight) {
 
-    if (null != sensorHeight) {
-      Double correction = (measuredPressure * MOLAR_MASS_AIR)
-        / (Calculators.kelvin(temperature) * 8.314) * 9.8 * sensorHeight;
-      result = measuredPressure + correction;
-    }
+		Double result = measuredPressure;
 
-    return result;
-  }
+		if (null != sensorHeight) {
+			Double correction = (measuredPressure * MOLAR_MASS_AIR) / (Calculators.kelvin(temperature) * 8.314) * 9.8
+					* sensorHeight;
+			result = measuredPressure + correction;
+		}
 
-  /**
-   * Perform a linear interpolation between two values taken at different times,
-   * giving a value at the specified target time.
-   *
-   * <p>
-   * If either of the {@code y} values is {@code null}, the other is returned.
-   * If both are {@code null}, {@code null} is returned.
-   * </p>
-   *
-   * <p>
-   * The method will extrapolate the target timestamp if it is beyond the
-   * reference timestamps.
-   * </p>
-   *
-   * @param time0
-   *          The first reference timestamp.
-   * @param y0
-   *          The first reference y value.
-   * @param time1
-   *          The second reference timestamp.
-   * @param y1
-   *          The second reference y value.
-   * @param targetTime
-   *          The target timestamp for which a value must be calculated.
-   * @return The interpolated y value at the target timestamp.
-   */
-  public static Double interpolate(LocalDateTime time0, Double y0,
-    LocalDateTime time1, Double y1, LocalDateTime targetTime) {
-    Double result = null;
+		return result;
+	}
 
-    if (null != y0 && null != y1) {
-      double x0 = DateTimeUtils.dateToLong(time0);
-      double x1 = DateTimeUtils.dateToLong(time1);
-      result = interpolate(x0, y0, x1, y1,
-        DateTimeUtils.dateToLong(targetTime));
-    } else if (null != y0) {
-      result = y0;
-    } else if (null != y1) {
-      result = y1;
-    }
+	/**
+	 * Perform a linear interpolation between two values taken at different times,
+	 * giving a value at the specified target time.
+	 *
+	 * <p>
+	 * If either of the {@code y} values is {@code null}, the other is returned. If
+	 * both are {@code null}, {@code null} is returned.
+	 * </p>
+	 *
+	 * <p>
+	 * The method will extrapolate the target timestamp if it is beyond the
+	 * reference timestamps.
+	 * </p>
+	 *
+	 * @param time0      The first reference timestamp.
+	 * @param y0         The first reference y value.
+	 * @param time1      The second reference timestamp.
+	 * @param y1         The second reference y value.
+	 * @param targetTime The target timestamp for which a value must be calculated.
+	 * @return The interpolated y value at the target timestamp.
+	 */
+	public static Double interpolate(LocalDateTime time0, Double y0, LocalDateTime time1, Double y1,
+			LocalDateTime targetTime) {
+		Double result = null;
 
-    return result;
-  }
+		if (null != y0 && null != y1) {
+			double x0 = DateTimeUtils.dateToLong(time0);
+			double x1 = DateTimeUtils.dateToLong(time1);
+			result = interpolate(x0, y0, x1, y1, DateTimeUtils.dateToLong(targetTime));
+		} else if (null != y0) {
+			result = y0;
+		} else if (null != y1) {
+			result = y1;
+		}
 
-  /**
-   * Perform a linear interpolation between two pairs of {@code x}/{@code y}
-   * values, giving a value at the specified target {@code x} value.
-   *
-   * <p>
-   * If either of the {@code y} values is {@code null}, the other is returned.
-   * If both are {@code null}, {@code null} is returned.
-   * </p>
-   *
-   * <p>
-   * The method will extrapolate the target {@code x} if it is beyond the
-   * reference values.
-   * </p>
-   *
-   * @param x0
-   *          The first reference x value.
-   * @param y0
-   *          The first reference y value.
-   * @param x1
-   *          The second reference x value.
-   * @param y1
-   *          The second reference y value.
-   * @param target
-   *          The target x value for which a value must be calculated.
-   * @return The interpolated y value at the target x value.
-   */
-  public static Double interpolate(Double x0, Double y0, Double x1, Double y1,
-    Double target) {
-    Double result = null;
+		return result;
+	}
 
-    if (null != y0 && null != y1) {
-      result = interpolate(x0, y0, x1, y1, target);
-    } else if (null != y0) {
-      result = y0;
-    } else if (null != y1) {
-      result = y1;
-    }
+	/**
+	 * Perform a linear interpolation between two values taken at different times,
+	 * giving a value at the specified target time.
+	 *
+	 * <p>
+	 * If either of the {@code y} values is {@code null}, the other is returned. If
+	 * both are {@code null}, {@code null} is returned.
+	 * </p>
+	 *
+	 * <p>
+	 * The method will extrapolate the target timestamp if it is beyond the
+	 * reference timestamps.
+	 * </p>
+	 *
+	 * @param time0      The first reference timestamp.
+	 * @param y0         The first reference y value.
+	 * @param time1      The second reference timestamp.
+	 * @param y1         The second reference y value.
+	 * @param targetTime The target timestamp for which a value must be calculated.
+	 * @return The interpolated y value at the target timestamp.
+	 */
+	public static BigDecimal interpolate(LocalDateTime time0, BigDecimal y0, LocalDateTime time1, BigDecimal y1,
+			LocalDateTime targetTime) {
+		BigDecimal result = null;
 
-    return result;
-  }
+		if (null != y0 && null != y1) {
+			double x0 = DateTimeUtils.dateToLong(time0);
+			double x1 = DateTimeUtils.dateToLong(time1);
+			result = interpolate(x0, y0, x1, y1, (double) DateTimeUtils.dateToLong(targetTime));
+		} else if (null != y0) {
+			result = y0;
+		} else if (null != y1) {
+			result = y1;
+		}
 
-  /**
-   * Perform a linear interpolation between two points to produce a value at a
-   * third target point.
-   *
-   * @param x0
-   *          The first reference x value.
-   * @param y0
-   *          The first reference y value.
-   * @param x1
-   *          The second reference x value.
-   * @param y1
-   *          The second reference y value.
-   * @param target
-   *          The target x value for which a value must be calculated.
-   * @return The interpolated y value at the target x value.
-   */
-  public static double interpolate(double x0, double y0, double x1, double y1,
-    double target) {
+		return result;
+	}
 
-    return (y0 * (x1 - target) + y1 * (target - x0)) / (x1 - x0);
-  }
+	/**
+	 * Perform a linear interpolation between two pairs of {@code x}/{@code y}
+	 * values, giving a value at the specified target {@code x} value.
+	 *
+	 * <p>
+	 * If either of the {@code y} values is {@code null}, the other is returned. If
+	 * both are {@code null}, {@code null} is returned.
+	 * </p>
+	 *
+	 * <p>
+	 * The method will extrapolate the target {@code x} if it is beyond the
+	 * reference values.
+	 * </p>
+	 *
+	 * @param x0     The first reference x value.
+	 * @param y0     The first reference y value.
+	 * @param x1     The second reference x value.
+	 * @param y1     The second reference y value.
+	 * @param target The target x value for which a value must be calculated.
+	 * @return The interpolated y value at the target x value.
+	 */
+	public static Double interpolate(Double x0, Double y0, Double x1, Double y1, Double target) {
+		Double result = null;
 
-  /**
-   * Perform a linear interpolation between two points to produce a value at a
-   * third target point.
-   *
-   * @param x0
-   *          The first reference x value.
-   * @param y0
-   *          The first reference y value.
-   * @param x1
-   *          The second reference x value.
-   * @param y1
-   *          The second reference y value.
-   * @param target
-   *          The target x value for which a value must be calculated.
-   * @return The interpolated y value at the target x value.
-   */
-  public static BigDecimal interpolate(BigDecimal x0, BigDecimal y0,
-    BigDecimal x1, BigDecimal y1, BigDecimal target) {
+		if (null != y0 && null != y1) {
+			result = interpolate(x0, y0, x1, y1, target);
+		} else if (null != y0) {
+			result = y0;
+		} else if (null != y1) {
+			result = y1;
+		}
 
-    BigDecimal result = null;
+		return result;
+	}
 
-    boolean priorNull = null == x0 || null == y0;
-    boolean postNull = null == x1 || null == y1;
+	/**
+	 * Perform a linear interpolation between two pairs of {@code x}/{@code y}
+	 * values, giving a value at the specified target {@code x} value.
+	 *
+	 * <p>
+	 * If either of the {@code y} values is {@code null}, the other is returned. If
+	 * both are {@code null}, {@code null} is returned.
+	 * </p>
+	 *
+	 * <p>
+	 * The method will extrapolate the target {@code x} if it is beyond the
+	 * reference values.
+	 * </p>
+	 *
+	 * @param x0     The first reference x value.
+	 * @param y0     The first reference y value.
+	 * @param x1     The second reference x value.
+	 * @param y1     The second reference y value.
+	 * @param target The target x value for which a value must be calculated.
+	 * @return The interpolated y value at the target x value.
+	 */
+	public static BigDecimal interpolate(double x0, BigDecimal y0, double x1, BigDecimal y1, double target) {
+		BigDecimal result = null;
 
-    if (!priorNull && !postNull) {
-      BigDecimal X1minusX = x1.subtract(target);
-      BigDecimal XminusX0 = target.subtract(x0);
-      BigDecimal X1minusX0 = x1.subtract(x0);
+		if (null != y0 && null != y1) {
+			BigDecimal topLeft = y0.multiply(new BigDecimal(x1 - target));
+			BigDecimal topRight = y1.multiply(new BigDecimal(target - x0));
+			result = topLeft.add(topRight).divide(new BigDecimal(x1 - x0), MathContext.DECIMAL128);
+		} else if (null != y0) {
+			result = y0;
+		} else if (null != y1) {
+			result = y1;
+		}
 
-      BigDecimal Y0timesX1minusX = y0.multiply(X1minusX);
-      BigDecimal Y1timesXminusX0 = y1.multiply(XminusX0);
+		return result;
+	}
 
-      BigDecimal top = Y0timesX1minusX.add(Y1timesXminusX0);
+	/**
+	 * Perform a linear interpolation between two points to produce a value at a
+	 * third target point.
+	 *
+	 * @param x0     The first reference x value.
+	 * @param y0     The first reference y value.
+	 * @param x1     The second reference x value.
+	 * @param y1     The second reference y value.
+	 * @param target The target x value for which a value must be calculated.
+	 * @return The interpolated y value at the target x value.
+	 */
+	public static double interpolate(double x0, double y0, double x1, double y1, double target) {
 
-      result = top.divide(X1minusX0, 50, RoundingMode.HALF_UP);
-    } else if (!priorNull) {
-      result = y0;
-    } else if (!postNull) {
-      result = y1;
-    }
+		return (y0 * (x1 - target) + y1 * (target - x0)) / (x1 - x0);
+	}
 
-    return result;
-  }
+	/**
+	 * Perform a linear interpolation between two points to produce a value at a
+	 * third target point.
+	 *
+	 * @param x0     The first reference x value.
+	 * @param y0     The first reference y value.
+	 * @param x1     The second reference x value.
+	 * @param y1     The second reference y value.
+	 * @param target The target x value for which a value must be calculated.
+	 * @return The interpolated y value at the target x value.
+	 */
+	public static BigDecimal interpolate(BigDecimal x0, BigDecimal y0, BigDecimal x1, BigDecimal y1,
+			BigDecimal target) {
 
-  /**
-   * Perform a linear interpolation between two points to produce a value at a
-   * third target point.
-   *
-   * @param prior
-   *          The first reference x/y value.
-   * @param post
-   *          The second reference x/y value.
-   * @param x
-   *          The target x value for which a value must be calculated.
-   * @return The interpolated y value at the target x value.
-   */
-  public static Double interpolate(Map.Entry<Double, Double> prior,
-    Map.Entry<Double, Double> post, Double x) {
+		BigDecimal result = null;
 
-    Double result = null;
+		boolean priorNull = null == x0 || null == y0;
+		boolean postNull = null == x1 || null == y1;
 
-    if (!isNull(prior) && !isNull(post)) {
-      double x0 = prior.getKey();
-      double y0 = prior.getValue();
-      double x1 = post.getKey();
-      double y1 = post.getValue();
-      result = Calculators.interpolate(x0, y0, x1, y1, x.doubleValue());
-    } else if (!isNull(prior)) {
-      result = prior.getValue();
-    } else if (!isNull(post)) {
-      result = post.getValue();
-    }
+		if (!priorNull && !postNull) {
+			BigDecimal X1minusX = x1.subtract(target);
+			BigDecimal XminusX0 = target.subtract(x0);
+			BigDecimal X1minusX0 = x1.subtract(x0);
 
-    return result;
-  }
+			BigDecimal Y0timesX1minusX = y0.multiply(X1minusX);
+			BigDecimal Y1timesXminusX0 = y1.multiply(XminusX0);
 
-  public static Double interpolateTimeAndDataReductionElement(
-    Map.Entry<TimeCoordinate, DataReductionElement> prior,
-    Map.Entry<TimeCoordinate, DataReductionElement> post, TimeCoordinate x) {
+			BigDecimal top = Y0timesX1minusX.add(Y1timesXminusX0);
 
-    Double result = null;
+			result = top.divide(X1minusX0, MathContext.DECIMAL128);
+		} else if (!priorNull) {
+			result = y0;
+		} else if (!postNull) {
+			result = y1;
+		}
 
-    if (!isNull(prior) && !isNull(post)) {
-      long x0 = DateTimeUtils.dateToLong(prior.getKey());
-      double y0 = prior.getValue().getValue();
-      long x1 = DateTimeUtils.dateToLong(post.getKey());
-      double y1 = post.getValue().getValue();
-      result = Calculators.interpolate(x0, y0, x1, y1,
-        DateTimeUtils.dateToLong(x));
-    } else if (!isNull(prior)) {
-      result = prior.getValue().getValue();
-    } else if (!isNull(post)) {
-      result = post.getValue().getValue();
-    }
+		return result;
+	}
 
-    return result;
-  }
+	/**
+	 * Perform a linear interpolation between two points to produce a value at a
+	 * third target point.
+	 *
+	 * @param prior The first reference x/y value.
+	 * @param post  The second reference x/y value.
+	 * @param x     The target x value for which a value must be calculated.
+	 * @return The interpolated y value at the target x value.
+	 */
+	public static Double interpolate(Map.Entry<Double, Double> prior, Map.Entry<Double, Double> post, Double x) {
 
-  public static Double interpolateTimeAndMeasurementValue(
-    Map.Entry<TimeCoordinate, MeasurementValue> prior,
-    Map.Entry<TimeCoordinate, MeasurementValue> post, TimeCoordinate x) {
+		Double result = null;
 
-    Double result = null;
+		if (!isNull(prior) && !isNull(post)) {
+			double x0 = prior.getKey();
+			double y0 = prior.getValue();
+			double x1 = post.getKey();
+			double y1 = post.getValue();
+			result = Calculators.interpolate(x0, y0, x1, y1, x.doubleValue());
+		} else if (!isNull(prior)) {
+			result = prior.getValue();
+		} else if (!isNull(post)) {
+			result = post.getValue();
+		}
 
-    if (!isNull(prior) && !isNull(post)) {
-      long x0 = DateTimeUtils.dateToLong(prior.getKey());
-      double y0 = prior.getValue().getCalculatedValue();
-      long x1 = DateTimeUtils.dateToLong(post.getKey());
-      double y1 = post.getValue().getCalculatedValue();
-      result = Calculators.interpolate(x0, y0, x1, y1,
-        DateTimeUtils.dateToLong(x));
-    } else if (!isNull(prior)) {
-      result = prior.getValue().getCalculatedValue();
-    } else if (!isNull(post)) {
-      result = post.getValue().getCalculatedValue();
-    }
+		return result;
+	}
 
-    return result;
-  }
+	public static BigDecimal interpolateTimeAndDataReductionElement(
+			Map.Entry<TimeCoordinate, DataReductionElement> prior, Map.Entry<TimeCoordinate, DataReductionElement> post,
+			TimeCoordinate x) {
 
-  /**
-   * Determine whether a {@link Map.Entry} of {@link Double} objects is
-   * {@code null}, or if either the key or value is {@code null} or {@code NaN}.
-   *
-   * @param mapEntry
-   *          The entry to check.
-   * @return {@code true} if any aspect of the entry is {@code null};
-   *         {@code false} otherwise.
-   */
-  private static boolean isNull(Map.Entry<?, ?> mapEntry) {
+		BigDecimal result = null;
 
-    boolean result = false;
+		if (!isNull(prior) && !isNull(post)) {
+			long x0 = DateTimeUtils.dateToLong(prior.getKey());
+			BigDecimal y0 = prior.getValue().getValue();
+			long x1 = DateTimeUtils.dateToLong(post.getKey());
+			BigDecimal y1 = post.getValue().getValue();
+			result = Calculators.interpolate(x0, y0, x1, y1, DateTimeUtils.dateToLong(x));
+		} else if (!isNull(prior)) {
+			result = prior.getValue().getValue();
+		} else if (!isNull(post)) {
+			result = post.getValue().getValue();
+		}
 
-    if (null == mapEntry) {
-      result = true;
-    } else if (null == mapEntry.getKey()) {
-      result = true;
-    } else if (null == mapEntry.getValue()) {
-      result = true;
-    }
+		return result;
+	}
 
-    // Now look at class-specific nullness
-    if (!result) {
-      Object key = mapEntry.getKey();
-      if (key instanceof Double) {
-        if (((Double) key).isNaN()) {
-          result = true;
-        }
-      }
-    }
+	public static Double interpolateTimeAndMeasurementValue(Map.Entry<TimeCoordinate, MeasurementValue> prior,
+			Map.Entry<TimeCoordinate, MeasurementValue> post, TimeCoordinate x) {
 
-    if (!result) {
-      Object value = mapEntry.getValue();
-      if (value instanceof Double) {
-        result = ((Double) value).isNaN();
-      } else if (value instanceof DataReductionElement) {
-        result = ((DataReductionElement) value).getValue().isNaN();
-      }
-    }
+		Double result = null;
 
-    return result;
-  }
+		if (!isNull(prior) && !isNull(post)) {
+			long x0 = DateTimeUtils.dateToLong(prior.getKey());
+			double y0 = prior.getValue().getCalculatedValue();
+			long x1 = DateTimeUtils.dateToLong(post.getKey());
+			double y1 = post.getValue().getCalculatedValue();
+			result = Calculators.interpolate(x0, y0, x1, y1, DateTimeUtils.dateToLong(x));
+		} else if (!isNull(prior)) {
+			result = prior.getValue().getCalculatedValue();
+		} else if (!isNull(post)) {
+			result = post.getValue().getCalculatedValue();
+		}
 
-  /**
-   * Calculates pCO<sub>2</sub> at the water (sea surface) temperature. From
-   * Takahashi et al. (2009),
-   * <a href="https://doi.org/10.1016/j.dsr2.2008.12.009" target="_blank">doi:
-   * 10.1016/j.dsr2.2008.12.009</a>.
-   *
-   * @param co2AtEquilibrator
-   *          The pCO<sub>2</sub> at equilibrator temperature.
-   * @param eqt
-   *          The equilibrator temperature.
-   * @param sst
-   *          The water temperature.
-   * @return The pCO<sub>2</sub> at water temperature.
-   */
-  public static Double calcCO2AtSST(Double co2AtEquilibrator, Double eqt,
-    Double sst) {
-    return co2AtEquilibrator
-      * Math.exp(0.0423 * (Calculators.kelvin(sst) - Calculators.kelvin(eqt)));
-  }
+		return result;
+	}
+
+	/**
+	 * Determine whether a {@link Map.Entry} of {@link Double} objects is
+	 * {@code null}, or if either the key or value is {@code null} or {@code NaN}.
+	 *
+	 * @param mapEntry The entry to check.
+	 * @return {@code true} if any aspect of the entry is {@code null};
+	 *         {@code false} otherwise.
+	 */
+	private static boolean isNull(Map.Entry<?, ?> mapEntry) {
+
+		boolean result = false;
+
+		if (null == mapEntry) {
+			result = true;
+		} else if (null == mapEntry.getKey()) {
+			result = true;
+		} else if (null == mapEntry.getValue()) {
+			result = true;
+		}
+
+		// Now look at class-specific nullness
+		if (!result) {
+			Object key = mapEntry.getKey();
+			if (key instanceof Double) {
+				if (((Double) key).isNaN()) {
+					result = true;
+				}
+			}
+		}
+
+		if (!result) {
+			Object value = mapEntry.getValue();
+			if (value instanceof Double) {
+				result = ((Double) value).isNaN();
+			} else if (value instanceof DataReductionElement) {
+				result = null == ((DataReductionElement) value).getValue();
+			}
+		}
+
+		return result;
+	}
+
+	/**
+	 * Calculates pCO<sub>2</sub> at the water (sea surface) temperature. From
+	 * Takahashi et al. (2009),
+	 * <a href="https://doi.org/10.1016/j.dsr2.2008.12.009" target="_blank">doi:
+	 * 10.1016/j.dsr2.2008.12.009</a>.
+	 *
+	 * @param co2AtEquilibrator The pCO<sub>2</sub> at equilibrator temperature.
+	 * @param eqt               The equilibrator temperature.
+	 * @param sst               The water temperature.
+	 * @return The pCO<sub>2</sub> at water temperature.
+	 */
+	public static Double calcCO2AtSST(Double co2AtEquilibrator, Double eqt, Double sst) {
+		return co2AtEquilibrator * Math.exp(0.0423 * (Calculators.kelvin(sst) - Calculators.kelvin(eqt)));
+	}
 }

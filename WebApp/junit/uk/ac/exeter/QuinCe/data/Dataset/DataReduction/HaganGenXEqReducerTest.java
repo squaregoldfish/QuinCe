@@ -1,15 +1,16 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.math.BigDecimal;
 
-import org.apache.commons.lang3.mutable.MutableDouble;
 import org.junit.jupiter.api.Test;
 
 import uk.ac.exeter.QuinCe.TestBase.BaseTest;
+import uk.ac.exeter.QuinCe.utils.BigDecimalEqualsAssert;
+import uk.ac.exeter.QuinCe.utils.MutableBigDecimal;
 
 /**
  * Tests for the Hagan GenX sensor.
- * 
+ *
  * <p>
  * Individual method tests are based on live debugging of the GenX code from the
  * manufacturer.
@@ -19,40 +20,42 @@ public class HaganGenXEqReducerTest extends BaseTest {
 
   @Test
   public void convergeSpanCalKTest() {
-    double temp = 51.40766666666665D;
-    double pressure = 100.98844999999999D;
-    double raw1 = 4600480.75D;
-    double raw2 = 4975966.1D;
-    double rh = 7.33916666666667D;
-    double rhTemp = 30.406000000000027D;
-    double zeroCalK = 0.98369240100922251D;
-    double spanCalKseed = 0.803046D;
-    double spanRef = 457.4D;
-    double spanSlope = -0.0761287;
+    BigDecimal temp = new BigDecimal(51.40766666666665D);
+    BigDecimal pressure = new BigDecimal(100.98844999999999D);
+    BigDecimal raw1 = new BigDecimal(4600480.75D);
+    BigDecimal raw2 = new BigDecimal(4975966.1D);
+    BigDecimal rh = new BigDecimal(7.33916666666667D);
+    BigDecimal rhTemp = new BigDecimal(30.406000000000027D);
+    BigDecimal zeroCalK = new BigDecimal(0.98369240100922251D);
+    BigDecimal spanCalKseed = new BigDecimal(0.803046D);
+    BigDecimal spanRef = new BigDecimal(457.4D);
+    BigDecimal spanSlope = new BigDecimal(-0.0761287);
 
-    double converged = HaganGenXEqReducer.convergeSpanCalK(temp, pressure, raw1,
-      raw2, rh, rhTemp, zeroCalK, spanCalKseed, spanRef, spanSlope);
+    BigDecimal converged = HaganGenXEqReducer.convergeSpanCalK(temp, pressure,
+      raw1, raw2, rh, rhTemp, zeroCalK, spanCalKseed, spanRef, spanSlope);
 
-    assertEquals(0.80210921D, converged, 0.0000001D);
+    BigDecimalEqualsAssert.assertThat(converged)
+      .matches(new BigDecimal(0.802109D), 6);
   }
 
   @Test
   public void calculatedCO2Test() {
-    double temp = 51.40766666666666D;
-    double pressure = 101.005699999999998D;
-    double raw1 = 4716590.4D;
-    double raw2 = 4975902.55D;
-    double rh = 7.387833333333335D;
-    double rhTemp = 30.521166666666666D;
-    double zeroCalK = 0.983724D;
-    double spanCalK = 0.803046D;
-    MutableDouble r_absp = new MutableDouble(0D);
-    MutableDouble s_absp = new MutableDouble(0D);
-    double spanSlope = -0.0761287;
+    BigDecimal temp = new BigDecimal(51.40766666666666D);
+    BigDecimal pressure = new BigDecimal(101.005699999999998D);
+    BigDecimal raw1 = new BigDecimal(4716590.4D);
+    BigDecimal raw2 = new BigDecimal(4975902.55D);
+    BigDecimal rh = new BigDecimal(7.387833333333335D);
+    BigDecimal rhTemp = new BigDecimal(30.521166666666666D);
+    BigDecimal zeroCalK = new BigDecimal(0.983724D);
+    BigDecimal spanCalK = new BigDecimal(0.803046D);
+    MutableBigDecimal r_absp = new MutableBigDecimal(0D);
+    MutableBigDecimal s_absp = new MutableBigDecimal(0D);
+    BigDecimal spanSlope = new BigDecimal(-0.0761287D);
 
-    double xCO2Wet = HaganGenXEqReducer.calculatedCO2(temp, pressure, raw1,
+    BigDecimal xCO2Wet = HaganGenXEqReducer.calculatedCO2(temp, pressure, raw1,
       raw2, rh, rhTemp, zeroCalK, spanCalK, r_absp, s_absp, spanSlope);
 
-    assertEquals(309.15475554272649D, xCO2Wet, 0.0000001D);
+    BigDecimalEqualsAssert.assertThat(xCO2Wet)
+      .matches(new BigDecimal(309.154755D), 6);
   }
 }

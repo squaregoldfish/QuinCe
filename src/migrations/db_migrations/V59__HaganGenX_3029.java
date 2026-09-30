@@ -26,7 +26,7 @@ public class V59__HaganGenX_3029 extends BaseJavaMigration {
     Connection conn = context.getConnection();
 
     variableStmt = conn.prepareStatement(
-      "INSERT INTO variables (name, allowed_basis, visible) VALUES (?, ?, 0)",
+      "INSERT INTO variables (name, allowed_basis, visible) VALUES (?, ?, 1)",
       Statement.RETURN_GENERATED_KEYS);
 
     runTypesStmt = conn

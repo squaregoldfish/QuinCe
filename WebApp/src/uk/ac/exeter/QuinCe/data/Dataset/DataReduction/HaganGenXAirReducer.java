@@ -1,17 +1,17 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.lang3.mutable.MutableDouble;
-
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.MutableBigDecimal;
 
 /**
  * Reducer for Hagan GenX air measurements.
@@ -37,50 +37,48 @@ public class HaganGenXAirReducer extends HaganGenXEqReducer {
   public void doCalculation(Instrument instrument, Measurement measurement,
     DataReductionRecord record, Connection conn) throws DataReductionException {
 
-    double zeroCalK = getZeroCalK(measurement);
-    record.put("ZeroCalK_air", zeroCalK);
+    BigDecimal zeroCalK = getZeroCalK(measurement);
+    record.put("ZeroCalK_air", zeroCalK.doubleValue());
 
     // Get the spanCalK at the measurement time
-    double spanCalK = getSpanCalK(measurement);
-    record.put("SpanCalK_air", spanCalK);
+    BigDecimal spanCalK = getSpanCalK(measurement);
+    record.put("SpanCalK_air", spanCalK.doubleValue());
 
-    Double temp = measurement.getMeasurementValue(tempSensorType)
-      .getCalculatedValue();
-    Double pressure = measurement.getMeasurementValue(pressureSensorType)
-      .getCalculatedValue();
-    Double co2Raw1 = measurement.getMeasurementValue(co2Raw1SensorType)
-      .getCalculatedValue();
-    Double co2Raw2 = measurement.getMeasurementValue(co2Raw2SensorType)
-      .getCalculatedValue();
-    Double rh = measurement.getMeasurementValue(rhSensorType)
-      .getCalculatedValue();
-    Double rhTemp = measurement.getMeasurementValue(rhTempSensorType)
-      .getCalculatedValue();
-    Double spanSlope = measurement.getMeasurementValue(spanSlopeSensorType)
-      .getCalculatedValue();
+    BigDecimal temp = new BigDecimal(
+      measurement.getMeasurementValue(tempSensorType).getCalculatedValue());
+    BigDecimal pressure = new BigDecimal(
+      measurement.getMeasurementValue(pressureSensorType).getCalculatedValue());
+    BigDecimal co2Raw1 = new BigDecimal(
+      measurement.getMeasurementValue(co2Raw1SensorType).getCalculatedValue());
+    BigDecimal co2Raw2 = new BigDecimal(
+      measurement.getMeasurementValue(co2Raw2SensorType).getCalculatedValue());
+    BigDecimal rh = new BigDecimal(
+      measurement.getMeasurementValue(rhSensorType).getCalculatedValue());
+    BigDecimal rhTemp = new BigDecimal(
+      measurement.getMeasurementValue(rhTempSensorType).getCalculatedValue());
+    BigDecimal spanSlope = new BigDecimal(measurement
+      .getMeasurementValue(spanSlopeSensorType).getCalculatedValue());
 
     // Can these persist across measurements?
-    MutableDouble r_absp = new MutableDouble(0D);
-    MutableDouble s_absp = new MutableDouble(0D);
+    MutableBigDecimal r_absp = new MutableBigDecimal(BigDecimal.ZERO);
+    MutableBigDecimal s_absp = new MutableBigDecimal(BigDecimal.ZERO);
 
-    double xCO2Wet = calculatedCO2(temp, pressure, co2Raw1, co2Raw2, rh, rhTemp,
-      zeroCalK, spanCalK, r_absp, s_absp, spanSlope);
+    BigDecimal xCO2Wet = calculatedCO2(temp, pressure, co2Raw1, co2Raw2, rh,
+      rhTemp, zeroCalK, spanCalK, r_absp, s_absp, spanSlope);
 
-    record.put("xCO2Wet_air", xCO2Wet);
+    record.put("xCO2Wet_air", xCO2Wet.doubleValue());
 
-    double spanRh = getSpanRh(measurement);
-    double spanRhTemp = getSpanRhTemp(measurement);
-    record.put("spanRh_air", spanRh);
-    record.put("spanRhTemp_air", spanRhTemp);
+    BigDecimal spanRh = getSpanRh(measurement);
+    BigDecimal spanRhTemp = getSpanRhTemp(measurement);
+    record.put("spanRh_air", spanRh.doubleValue());
+    record.put("spanRhTemp_air", spanRhTemp.doubleValue());
 
-    double vpSat = 0.61365484
-      * Math.exp(17.502 * spanRhTemp / (240.97 + spanRhTemp));
+    BigDecimal vpSat = calcVpSat(spanRhTemp);
+    BigDecimal co2VPrh = calcCo2VPrh(rh, spanRh, vpSat);
+    BigDecimal xCO2Dry = calcXCO2Dry(xCO2Wet, pressure, co2VPrh);
 
-    double co2VPrh = ((rh - spanRh) * vpSat) / 100;
-    double xCO2Dry = xCO2Wet * pressure / (pressure - co2VPrh);
-
-    record.put("co2VPrh_air", co2VPrh);
-    record.put("xCO2Dry_air", xCO2Dry);
+    record.put("co2VPrh_air", co2VPrh.doubleValue());
+    record.put("xCO2Dry_air", xCO2Dry.doubleValue());
   }
 
   @Override
