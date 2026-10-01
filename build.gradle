@@ -101,14 +101,14 @@ dependencies {
   implementation 'org.flywaydb:flyway-core:7.15.0'
 
   // JUnit resources
-  testImplementation 'org.junit.jupiter:junit-jupiter:5.14.4'
+  implementation 'org.junit.jupiter:junit-jupiter:5.14.4'
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.14.4'
-  testImplementation 'org.mockito:mockito-core:5.8.0'
-  testImplementation 'org.flywaydb.flyway-test-extensions:flyway-test:7.0.0'  
-  testImplementation 'org.flywaydb.flyway-test-extensions:flyway-spring-test:7.0.0'
-  testImplementation 'org.springframework:spring-context:5.2.0.RELEASE'
-  testImplementation 'org.springframework:spring-test:5.2.0.RELEASE'
-  testImplementation 'org.assertj:assertj-core:3.27.7'
+  implementation 'org.mockito:mockito-core:5.13.0'
+  implementation 'org.flywaydb.flyway-test-extensions:flyway-test:7.0.0'  
+  implementation 'org.flywaydb.flyway-test-extensions:flyway-spring-test:7.0.0'
+  implementation 'org.springframework:spring-context:5.2.0.RELEASE'
+  implementation 'org.springframework:spring-test:5.2.0.RELEASE'
+  implementation 'org.assertj:assertj-core:3.27.7'
   testRuntimeOnly 'com.h2database:h2:1.4.197'    
   
   // JavaMelody monitoring
