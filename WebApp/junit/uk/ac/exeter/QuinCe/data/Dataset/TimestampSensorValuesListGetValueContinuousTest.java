@@ -2,7 +2,6 @@ package uk.ac.exeter.QuinCe.data.Dataset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 
@@ -22,6 +21,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.InvalidFlagException;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.SensorValues.AutoQCResult;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentDB;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertaintyAssert;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
@@ -60,7 +60,7 @@ public class TimestampSensorValuesListGetValueContinuousTest
   protected SensorValue makeSensorValue(int minute, char flagChar)
     throws InvalidFlagException, CoordinateException {
     return new SensorValue((long) minute, DATASET_ID, flagScheme, 1L,
-      makeCoordinate(minute), String.valueOf(minute), null,
+      makeCoordinate(minute), String.valueOf(minute), ((float) minute) / 10,
       new AutoQCResult(flagScheme), flagScheme.getFlag(flagChar),
       String.valueOf(flagChar));
   }
@@ -123,10 +123,11 @@ public class TimestampSensorValuesListGetValueContinuousTest
         "Nominal time incorrect");
 
       Double expectedValue = line.getDoubleField(getExpectedValueCol());
-      assertEquals(expectedValue, value.getDoubleValue().value(), 0.004,
-        "Value incorrect");
+      Float expectedUncertainty = line
+        .getFloatField(getExpectedUncertaintyCol());
 
-      assertTrue(false, "Compare uncertainty");
+      DoubleWithUncertaintyAssert.assertThat(value.getDoubleValue())
+        .matches(expectedValue, expectedUncertainty);
 
       Flag expectedFlag = flagScheme
         .getFlag((line.getCharField(getExpectedFlagCol())));
@@ -163,11 +164,11 @@ public class TimestampSensorValuesListGetValueContinuousTest
   }
 
   protected int getExpectedUsedValuesCol() {
-    return 8;
+    return 9;
   }
 
   protected int getExpectedFlagCol() {
-    return 7;
+    return 8;
   }
 
   protected int getExpectedNominalTimeCol() {
@@ -186,12 +187,16 @@ public class TimestampSensorValuesListGetValueContinuousTest
     return 6;
   }
 
+  protected int getExpectedUncertaintyCol() {
+    return 7;
+  }
+
   protected int getRequestedMinuteCol() {
     return 1;
   }
 
   protected int getInterpolatesAroundFlagCol() {
-    return 9;
+    return 10;
   }
 
   protected int getAllowInterpolationCol() {

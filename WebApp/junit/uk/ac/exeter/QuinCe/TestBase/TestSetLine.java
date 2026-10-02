@@ -191,6 +191,24 @@ public class TestSetLine {
   }
 
   /**
+   * Get a field value as a float
+   *
+   * @param fieldNumber
+   *          The zero-based field number
+   * @return The field value
+   */
+  public Float getFloatField(int fieldNumber) {
+    Float result = Float.NaN;
+
+    if (!isFieldEmpty(fieldNumber)
+      && !getStringField(fieldNumber, false).equals("NaN")) {
+      result = Float.parseFloat(fields[fieldNumber]);
+    }
+
+    return result;
+  }
+
+  /**
    * Get a field value as a {@link LocalDateTime}
    *
    * @param fieldNumber

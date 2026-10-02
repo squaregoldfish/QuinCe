@@ -37,12 +37,12 @@ public class TimestampSensorValuesListGetValuePeriodicTest
 
   @Override
   protected int getExpectedUsedValuesCol() {
-    return 9;
+    return 10;
   }
 
   @Override
   protected int getExpectedFlagCol() {
-    return 8;
+    return 9;
   }
 
   @Override
@@ -66,12 +66,17 @@ public class TimestampSensorValuesListGetValuePeriodicTest
   }
 
   @Override
+  protected int getExpectedUncertaintyCol() {
+    return 8;
+  }
+
+  @Override
   protected int getRequestedMinuteCol() {
     return 3;
   }
 
   @Override
   protected int getInterpolatesAroundFlagCol() {
-    return 10;
+    return 11;
   }
 }

@@ -1,8 +1,5 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -15,6 +12,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertaintyAssert;
 
 /**
  * Test for the {@link UnderwayAtmosphericPco2Reducer}.
@@ -49,16 +47,16 @@ public class UnderwayAtmosphericPco2ReducerTest extends DataReducerTest {
       variable, reducerProps, null);
 
     MeasurementValue waterTemp = makeMeasurementValue("Water Temperature",
-      new DoubleWithUncertainty(15.453D));
+      new DoubleWithUncertainty(15.453D, 0.01F));
 
     MeasurementValue salinity = makeMeasurementValue("Salinity",
-      new DoubleWithUncertainty(35.224D));
+      new DoubleWithUncertainty(35.224D, 0.02F));
 
     MeasurementValue atmPressure = makeMeasurementValue("Atmospheric Pressure",
-      new DoubleWithUncertainty(1020.03D));
+      new DoubleWithUncertainty(1020.03D, 0.1F));
 
     MeasurementValue xco2 = makeMeasurementValue("xCO₂ (with standards)",
-      new DoubleWithUncertainty(402.043D));
+      new DoubleWithUncertainty(402.043D, 0.4F));
 
     Measurement measurement = makeMeasurement(waterTemp, salinity, atmPressure,
       xco2);
@@ -70,14 +68,21 @@ public class UnderwayAtmosphericPco2ReducerTest extends DataReducerTest {
     reducer.doCalculation(instrument, measurement, record,
       getDataSource().getConnection());
 
-    assertEquals(1021.236915D,
-      record.getCalculationValue("Sea Level Pressure").value(), 0.0001);
-    assertEquals(0.01698133874D, record.getCalculationValue("pH₂O").value(),
-      0.0001);
-    assertEquals(398.384864382D, record.getCalculationValue("pCO₂").value(),
-      0.0001);
-    assertEquals(396.942602093D, record.getCalculationValue("fCO₂").value(),
-      0.0001);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertaintyAssert
+      .assertThat(record.getCalculationValue("Sea Level Pressure"),
+        "Sea Level Pressure")
+      .matches(1021.236915D, 0.1F);
+
+    DoubleWithUncertaintyAssert
+      .assertThat(record.getCalculationValue("pH₂O"), "pH₂O")
+      .matches(0.01698133874D, 0.00001F);
+
+    DoubleWithUncertaintyAssert
+      .assertThat(record.getCalculationValue("pCO₂"), "pCO₂")
+      .matches(398.384864382D, 0.3984F);
+
+    DoubleWithUncertaintyAssert
+      .assertThat(record.getCalculationValue("fCO₂"), "fCO₂")
+      .matches(396.942602093D, 0.397F);
   }
 }

@@ -72,17 +72,22 @@ public class TimestampSensorValuesListGetValueRangeTest
   }
 
   @Override
-  protected int getExpectedFlagCol() {
+  protected int getExpectedUncertaintyCol() {
     return 9;
   }
 
   @Override
-  protected int getExpectedUsedValuesCol() {
+  protected int getExpectedFlagCol() {
     return 10;
   }
 
   @Override
-  protected int getInterpolatesAroundFlagCol() {
+  protected int getExpectedUsedValuesCol() {
     return 11;
+  }
+
+  @Override
+  protected int getInterpolatesAroundFlagCol() {
+    return 12;
   }
 }
