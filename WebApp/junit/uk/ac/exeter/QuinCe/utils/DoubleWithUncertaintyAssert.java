@@ -66,6 +66,37 @@ public class DoubleWithUncertaintyAssert
     return this;
   }
 
+  /**
+   * Test that a {@link DoubleWithUncertainty} matches the supplied object.
+   *
+   * @param value
+   *          The test value.
+   * @return The assertion.
+   */
+  public DoubleWithUncertaintyAssert matches(DoubleWithUncertainty test) {
+
+    if (test.value().isNaN()) {
+      if (!actual.value().isNaN()) {
+        failWithMessage("Value is incorrect: expected <NaN>, was <%s>",
+          actual.value());
+      }
+    } else if (!Precision.equals(test.value(), actual.value(), 0.0001D)) {
+      failWithMessage("Value is incorrect: expected <%s>, was <%s>",
+        test.value(), actual.value());
+    } else if (test.uncertainty().isNaN()) {
+      if (!actual.uncertainty().isNaN()) {
+        failWithMessage("Uncertainty is incorrect: expected <NaN>, was <%s>",
+          actual.uncertainty());
+      }
+    } else if (!Precision.equals(test.uncertainty(), actual.uncertainty(),
+      0.0001D)) {
+      failWithMessage("Uncertainty is incorrect: expected <%s>, was <%s>",
+        test.uncertainty(), actual.uncertainty());
+    }
+
+    return this;
+  }
+
   public DoubleWithUncertaintyAssert nan() {
     if (!actual.value().isNaN()) {
       failWithMessage("Value is not NaN");

@@ -18,6 +18,8 @@ import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.IcosFlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertaintyAssert;
 
 /**
  * Tests for the {@link DataReductionRecord} class.
@@ -95,8 +97,25 @@ public class DataReductionRecordTest extends BaseTest {
 
     Double value = 23.4D;
     record.put(PARAM_1, value);
-    assertEquals(value, record.getCalculationValue(PARAM_1),
-      "Param not set correctly");
+
+    DoubleWithUncertaintyAssert.assertThat(record.getCalculationValue(PARAM_1))
+      .matches(value, Float.NaN);
+  }
+
+  /**
+   * Test that a parameter can be set and retrieved.
+   *
+   * @throws DataReductionException
+   */
+  @Test
+  public void setParameterWithUncertaintyTest() throws DataReductionException {
+    DataReductionRecord record = makeEmptyRecord();
+
+    DoubleWithUncertainty value = new DoubleWithUncertainty(123D, 0.65F);
+    record.put(PARAM_1, value);
+
+    DoubleWithUncertaintyAssert.assertThat(record.getCalculationValue(PARAM_1))
+      .matches(value);
   }
 
   /**
