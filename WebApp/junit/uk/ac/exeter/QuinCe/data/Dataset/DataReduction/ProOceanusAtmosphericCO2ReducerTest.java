@@ -1,8 +1,5 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -15,6 +12,7 @@ import uk.ac.exeter.QuinCe.data.Dataset.MeasurementValue;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertaintyAssert;
 
 public class ProOceanusAtmosphericCO2ReducerTest extends DataReducerTest {
 
@@ -34,16 +32,16 @@ public class ProOceanusAtmosphericCO2ReducerTest extends DataReducerTest {
       variable, new HashMap<String, Properties>(), null);
 
     MeasurementValue airTemp = makeMeasurementValue("Air Temperature",
-      new DoubleWithUncertainty(14.755D));
+      new DoubleWithUncertainty(14.755D, 0.2F));
 
     MeasurementValue cellGasPressure = makeMeasurementValue("Cell Gas Pressure",
-      new DoubleWithUncertainty(1022.55D));
+      new DoubleWithUncertainty(1022.55D, 0.5F));
 
     MeasurementValue humidityPressure = makeMeasurementValue(
-      "Humidity Pressure", new DoubleWithUncertainty(14.67D));
+      "Humidity Pressure", new DoubleWithUncertainty(14.67D, 0.1F));
 
     MeasurementValue xco2 = makeMeasurementValue("xCO₂ (wet, no standards)",
-      new DoubleWithUncertainty(398.419D));
+      new DoubleWithUncertainty(398.419D, 0.7F));
 
     Measurement measurement = makeMeasurement(airTemp, cellGasPressure,
       humidityPressure, xco2);
@@ -55,13 +53,16 @@ public class ProOceanusAtmosphericCO2ReducerTest extends DataReducerTest {
     reducer.doCalculation(instrument, measurement, record,
       getDataSource().getConnection());
 
-    assertEquals(404.21811D, record.getCalculationValue("xCO₂").value(),
-      0.0001);
-    assertEquals(402.07584D, record.getCalculationValue("pCO₂").value(),
-      0.0001);
-    assertEquals(400.60542D, record.getCalculationValue("fCO₂").value(),
-      0.0001);
-    assertTrue(false, "Uncertainty");
+    DoubleWithUncertaintyAssert
+      .assertThat(record.getCalculationValue("xCO₂"), "xCO₂")
+      .matches(404.21811D, 0.7113F);
 
+    DoubleWithUncertaintyAssert
+      .assertThat(record.getCalculationValue("pCO₂"), "pCO₂")
+      .matches(402.07584D, 0.7333F);
+
+    DoubleWithUncertaintyAssert
+      .assertThat(record.getCalculationValue("fCO₂"), "fCO₂")
+      .matches(400.60542D, 0.7351F);
   }
 }

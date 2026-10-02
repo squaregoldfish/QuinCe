@@ -16,12 +16,10 @@ import uk.ac.exeter.QuinCe.TestBase.BaseTest;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.IcosFlagScheme;
 import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertaintyAssert;
 
 /**
  * Tests for the {@link ReadOnlyDataReductionRecord} class.
- *
- * @author Steve Jones
- *
  */
 public class ReadOnlyDataReductionRecordTest extends BaseTest {
 
@@ -32,15 +30,14 @@ public class ReadOnlyDataReductionRecordTest extends BaseTest {
   private static final String PARAM = "Param1";
 
   private static final DoubleWithUncertainty PARAM_VALUE = new DoubleWithUncertainty(
-    21D);
+    21D, 0.3F);
 
   private static final String BASE_MESSAGE = "Base Message";
 
   private Map<String, DoubleWithUncertainty> makeCalculationValues() {
     Map<String, DoubleWithUncertainty> values = new HashMap<String, DoubleWithUncertainty>();
     values.put(PARAM, PARAM_VALUE);
-    throw new IllegalArgumentException("Uncertainty");
-    // return values;
+    return values;
   }
 
   private ReadOnlyDataReductionRecord makeRecord(Flag qcFlag) {
@@ -62,8 +59,9 @@ public class ReadOnlyDataReductionRecordTest extends BaseTest {
     assertEquals(MEASUREMENT_ID, record.getMeasurementId(),
       "Mismatched measurement ID");
     assertEquals(VARIABLE_ID, record.getVariableId(), "Mismatched variable ID");
-    assertEquals(PARAM_VALUE, record.getCalculationValue(PARAM),
-      "Mismatched parameter value");
+    DoubleWithUncertaintyAssert
+      .assertThat(record.getCalculationValue(PARAM), "PARAM")
+      .matches(PARAM_VALUE);
     assertEquals(flagScheme.getBadFlag(), record.getQCFlag(),
       "Mismatched QC Flag");
     assertEquals(1, record.getQCMessages().size());
