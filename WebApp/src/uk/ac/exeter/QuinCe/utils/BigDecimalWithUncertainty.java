@@ -303,10 +303,23 @@ public record BigDecimalWithUncertainty(BigDecimal value, Float uncertainty)
     } else if (a.uncertainty.isNaN() || b.uncertainty.isNaN()) {
       return Float.NaN;
     } else {
-      BigDecimal aPart = new BigDecimal(a.uncertainty)
-        .divide(a.value, MathContext.DECIMAL128).pow(2);
-      BigDecimal bPart = new BigDecimal(b.uncertainty)
-        .divide(b.value, MathContext.DECIMAL128).pow(2);
+      BigDecimal aPart;
+
+      if (a.value.compareTo(BigDecimal.ZERO) == 0) {
+        aPart = BigDecimal.ZERO;
+      } else {
+        aPart = new BigDecimal(a.uncertainty)
+          .divide(a.value, MathContext.DECIMAL128).pow(2);
+      }
+
+      BigDecimal bPart;
+
+      if (b.value.compareTo(BigDecimal.ZERO) == 0) {
+        bPart = BigDecimal.ZERO;
+      } else {
+        bPart = new BigDecimal(b.uncertainty)
+          .divide(b.value, MathContext.DECIMAL128).pow(2);
+      }
 
       BigDecimal partSum = aPart.add(bPart);
       return partSum.sqrt(MathContext.DECIMAL128).floatValue();

@@ -538,7 +538,7 @@ public abstract class Calibration implements Comparable<Calibration> {
       }
     }
 
-    return new BigDecimalWithUncertainty(result);
+    return new BigDecimalWithUncertainty(result, 0F);
   }
 
   /**

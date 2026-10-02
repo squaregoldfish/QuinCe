@@ -5,16 +5,34 @@ import java.math.BigDecimal;
 import org.apache.commons.math3.util.Precision;
 import org.assertj.core.api.AbstractAssert;
 
+/**
+ * Assertion to test the value and uncertainty of a
+ * {@link BigDecimalWithUncertainty}.
+ */
 public class BigDecimalWithUncertaintyAssert extends
   AbstractAssert<BigDecimalWithUncertaintyAssert, BigDecimalWithUncertainty> {
 
+  private final String name;
+
   public BigDecimalWithUncertaintyAssert(BigDecimalWithUncertainty actual) {
     super(actual, BigDecimalWithUncertaintyAssert.class);
+    this.name = null;
+  }
+
+  public BigDecimalWithUncertaintyAssert(BigDecimalWithUncertainty actual,
+    String name) {
+    super(actual, BigDecimalWithUncertaintyAssert.class);
+    this.name = name;
   }
 
   public static BigDecimalWithUncertaintyAssert assertThat(
     BigDecimalWithUncertainty actual) {
     return new BigDecimalWithUncertaintyAssert(actual);
+  }
+
+  public static BigDecimalWithUncertaintyAssert assertThat(
+    BigDecimalWithUncertainty actual, String name) {
+    return new BigDecimalWithUncertaintyAssert(actual, name);
   }
 
   /**
@@ -45,5 +63,14 @@ public class BigDecimalWithUncertaintyAssert extends
     }
 
     return this;
+  }
+
+  @Override
+  protected void failWithMessage(String errorMessage, Object... arguments) {
+    if (null != name) {
+      throw failure(name + ": " + errorMessage, arguments);
+    } else {
+      throw failure(errorMessage, arguments);
+    }
   }
 }

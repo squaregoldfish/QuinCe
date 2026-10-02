@@ -3,16 +3,34 @@ package uk.ac.exeter.QuinCe.utils;
 import org.apache.commons.math3.util.Precision;
 import org.assertj.core.api.AbstractAssert;
 
+/**
+ * Assertion to test the value and uncertainty of a
+ * {@link DoubleWithUncertainty}.
+ */
 public class DoubleWithUncertaintyAssert
   extends AbstractAssert<DoubleWithUncertaintyAssert, DoubleWithUncertainty> {
 
+  private final String name;
+
   public DoubleWithUncertaintyAssert(DoubleWithUncertainty actual) {
     super(actual, DoubleWithUncertaintyAssert.class);
+    this.name = null;
+  }
+
+  public DoubleWithUncertaintyAssert(DoubleWithUncertainty actual,
+    String name) {
+    super(actual, DoubleWithUncertaintyAssert.class);
+    this.name = name;
   }
 
   public static DoubleWithUncertaintyAssert assertThat(
     DoubleWithUncertainty actual) {
     return new DoubleWithUncertaintyAssert(actual);
+  }
+
+  public static DoubleWithUncertaintyAssert assertThat(
+    DoubleWithUncertainty actual, String name) {
+    return new DoubleWithUncertaintyAssert(actual, name);
   }
 
   /**
@@ -57,5 +75,14 @@ public class DoubleWithUncertaintyAssert
     }
 
     return this;
+  }
+
+  @Override
+  protected void failWithMessage(String errorMessage, Object... arguments) {
+    if (null != name) {
+      throw failure(name + ": " + errorMessage, arguments);
+    } else {
+      throw failure(errorMessage, arguments);
+    }
   }
 }

@@ -389,10 +389,10 @@ public class ControsPco2Reducer extends DataReducer {
     case MODE_CONTINUOUS: {
 
       // The Runtime has no uncertainty so we can extract it here.
-      Double priorX = prior.getKey().value();
-      DoubleWithUncertainty priorY = prior.getValue();
-      Double postX = post.getKey().value();
-      DoubleWithUncertainty postY = post.getValue();
+      Double priorX = null == prior ? null : prior.getKey().value();
+      DoubleWithUncertainty priorY = null == prior ? null : prior.getValue();
+      Double postX = null == post ? null : post.getKey().value();
+      DoubleWithUncertainty postY = null == post ? null : post.getValue();
 
       result = Calculators.interpolate(priorX, priorY, postX, postY,
         runTime.toDoubleWithUncertainty().value());
