@@ -57,7 +57,7 @@ INSERT INTO measurements (id, coordinate_id, measurement_values)
 INSERT INTO measurements (id, coordinate_id, measurement_values)
   VALUES (3, 3, NULL);
 INSERT INTO measurements (id, coordinate_id, measurement_values)
-  VALUES (4, 4, '{"9":{"svids":[7],"suppids":[1, 3, 5, 9, 11],"memberCount":1,"interpolatesOverFlag":false,"value":402.41366693446776,"flag":-2,"qcComments":[],"type":"M","props":{}}}');
+  VALUES (4, 4, '{"9":{"svids":[7],"suppids":[1, 3, 5, 9, 11],"memberCount":1,"interpolatesOverFlag":false,"value":[402.41366693446776,0.1],"flag":-2,"qcComments":[],"type":"M","props":{}}}');
 INSERT INTO measurements (id, coordinate_id, measurement_values)
   VALUES (5, 5, NULL);
 INSERT INTO measurements (id, coordinate_id, measurement_values)

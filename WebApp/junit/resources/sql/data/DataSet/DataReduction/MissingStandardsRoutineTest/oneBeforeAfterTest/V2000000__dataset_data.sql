@@ -32,7 +32,7 @@ INSERT INTO sensor_values(id, coordinate_id, file_column, value, user_qc_flag)
 INSERT INTO measurements (id, coordinate_id, measurement_values)
   VALUES (1, 1, NULL);
 INSERT INTO measurements (id, coordinate_id, measurement_values)
-  VALUES (4, 4, '{"9":{"svids":[7],"suppids":[1, 9],"memberCount":1,"interpolatesOverFlag":false,"value":402.41366693446776,"flag":-2,"qcComments":[],"type":"M","props":{}}}');
+  VALUES (4, 4, '{"9":{"svids":[7],"suppids":[1, 9],"memberCount":1,"interpolatesOverFlag":false,"value":[402.41366693446776,0.1],"flag":-2,"qcComments":[],"type":"M","props":{}}}');
 INSERT INTO measurements (id, coordinate_id, measurement_values)
   VALUES (5, 5, NULL);
 

@@ -45,7 +45,7 @@ INSERT INTO measurements (id, coordinate_id, measurement_values)
 INSERT INTO measurements (id, coordinate_id, measurement_values)
   VALUES (3, 3, NULL);
 INSERT INTO measurements (id, coordinate_id, measurement_values)
-  VALUES (4, 4, '{"9":{"svids":[7],"suppids":[1, 3, 5],"memberCount":1,"interpolatesOverFlag":false,"value":402.41366693446776,"flag":-2,"qcComments":[],"type":"M","props":{}}}');
+  VALUES (4, 4, '{"9":{"svids":[7],"suppids":[1, 3, 5],"memberCount":1,"interpolatesOverFlag":false,"value":[402.41366693446776,0.1],"flag":-2,"qcComments":[],"type":"M","props":{}}}');
 
 -- Measurement run types
 INSERT INTO measurement_run_types (measurement_id, variable_id, run_type)
