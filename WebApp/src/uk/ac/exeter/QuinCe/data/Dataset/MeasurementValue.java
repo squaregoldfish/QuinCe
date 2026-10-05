@@ -619,7 +619,7 @@ public class MeasurementValue implements PlotPageTableValue {
 
   @Override
   public String getValue() {
-    return calculatedValue.toString();
+    return calculatedValue.stringValue();
   }
 
   @Override

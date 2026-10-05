@@ -41,6 +41,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DatabaseException;
 import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertaintySerializer;
 import uk.ac.exeter.QuinCe.utils.MissingParam;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
@@ -1260,6 +1261,13 @@ public class DataSetDataDB {
 
     Map<Long, Map<Variable, ReadOnlyDataReductionRecord>> result = new HashMap<Long, Map<Variable, ReadOnlyDataReductionRecord>>();
 
+    Type mapType = new TypeToken<HashMap<String, DoubleWithUncertainty>>() {
+    }.getType();
+    Gson gson = new GsonBuilder()
+      .registerTypeAdapter(DoubleWithUncertainty.class,
+        new DoubleWithUncertaintySerializer())
+      .create();
+
     try (PreparedStatement stmt = conn
       .prepareStatement(GET_DATA_REDUCTION_QUERY)) {
 
@@ -1274,9 +1282,7 @@ public class DataSetDataDB {
           long variableId = records.getLong(2);
 
           String calculationValuesJson = records.getString(3);
-          Type mapType = new TypeToken<HashMap<String, Double>>() {
-          }.getType();
-          Map<String, DoubleWithUncertainty> calculationValues = new Gson()
+          Map<String, DoubleWithUncertainty> calculationValues = gson
             .fromJson(calculationValuesJson, mapType);
 
           Flag qcFlag = instrument.getFlagScheme().getFlag(records.getInt(4));

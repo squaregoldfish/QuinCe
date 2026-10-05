@@ -1,5 +1,6 @@
 package uk.ac.exeter.QuinCe.data.Dataset.DataReduction;
 
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,16 +9,31 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import uk.ac.exeter.QuinCe.data.Dataset.Measurement;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.FlagScheme;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.Variable;
 import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
-import uk.ac.exeter.QuinCe.utils.MathUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertaintySerializer;
 import uk.ac.exeter.QuinCe.utils.NoEmptyStringSet;
 
 public class DataReductionRecord implements Comparable<DataReductionRecord> {
+
+  private static Type CALCULATION_VALUES_MAP_TYPE = new TypeToken<HashMap<String, DoubleWithUncertainty>>() {
+  }.getType();
+
+  private static Gson GSON;
+
+  static {
+
+    CALCULATION_VALUES_MAP_TYPE = new TypeToken<HashMap<String, DoubleWithUncertainty>>() {
+    }.getType();
+    GSON = new GsonBuilder().registerTypeAdapter(DoubleWithUncertainty.class,
+      new DoubleWithUncertaintySerializer()).create();
+  }
 
   /**
    * The database ID of the measurement
@@ -202,8 +218,7 @@ public class DataReductionRecord implements Comparable<DataReductionRecord> {
    * @return The calculation JSON
    */
   public String getCalculationJson() {
-    Gson gson = new Gson();
-    return gson.toJson(MathUtils.nanToNull(calculationValues));
+    return GSON.toJson(calculationValues, CALCULATION_VALUES_MAP_TYPE);
   }
 
   public DoubleWithUncertainty getCalculationValue(String param) {
