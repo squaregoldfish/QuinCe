@@ -14,9 +14,9 @@ public class DoubleWithUncertaintySerializer
   implements JsonSerializer<DoubleWithUncertainty>,
   JsonDeserializer<DoubleWithUncertainty> {
 
-  private static final Double NAN_DOUBLE = -9999.9D;
+  public static final Double NAN_DOUBLE = -99999.9D;
 
-  private static final Float NAN_FLOAT = -9999.9F;
+  public static final Float NAN_FLOAT = -99999.9F;
 
   @Override
   public JsonElement serialize(DoubleWithUncertainty arg0, Type arg1,
