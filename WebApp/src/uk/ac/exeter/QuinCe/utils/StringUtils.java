@@ -616,11 +616,25 @@ public final class StringUtils extends org.apache.commons.lang3.StringUtils {
    */
   public static String formatNumber(Double value) {
     String result = null;
-
     if (null != value) {
-      result = threeDecimalPoints.format(value);
+      result = value.isNaN() ? "" : threeDecimalPoints.format(value);
     }
+    return result;
+  }
 
+  /**
+   * Format a number to three decimal places.
+   *
+   * @param value
+   *          The number.
+   * @return The formatted number.
+   * @see #threeDecimalPoints
+   */
+  public static String formatNumber(Float value) {
+    String result = null;
+    if (null != value) {
+      result = value.isNaN() ? "" : threeDecimalPoints.format(value);
+    }
     return result;
   }
 

@@ -466,14 +466,15 @@ public class ManualQCData extends PlotPageData {
             positionString
               .append(StringUtils.formatNumber(position.getLatitude()));
 
-            record.addColumn(positionString.toString(),
+            record.addColumn(positionString.toString(), Float.NaN,
               position.getFlag(getAllSensorValues()),
               position.getQcMessage(sensorValues), position.getFlagNeeded(),
               position.getType(), position.getSourceIds());
           } else {
             // Empty position column
-            record.addColumn("", sensorValues.getFlagScheme().getGoodFlag(),
-              null, false, PlotPageTableValue.NAN_TYPE, null);
+            record.addColumn("", Float.NaN,
+              sensorValues.getFlagScheme().getGoodFlag(), null, false,
+              PlotPageTableValue.NAN_TYPE, null);
           }
         }
 
@@ -564,9 +565,12 @@ public class ManualQCData extends PlotPageData {
         for (CalculationParameter param : params) {
           DoubleWithUncertainty value = variableDataReduction
             .getCalculationValue(param.getShortName());
-          String stringValue = null == value ? "" : String.valueOf(value);
+          String stringValue = null == value ? ""
+            : StringUtils.formatNumber((value.value()));
+          Float uncertainty = null == value ? Float.NaN : value.uncertainty();
 
-          record.addColumn(stringValue, variableDataReduction.getQCFlag(),
+          record.addColumn(stringValue, uncertainty,
+            variableDataReduction.getQCFlag(),
             variableDataReduction.getQCMessages().toString(), false,
             PlotPageTableValue.DATA_REDUCTION_TYPE,
             Arrays.asList(variableDataReduction.getMeasurementId()));
@@ -912,8 +916,8 @@ public class ManualQCData extends PlotPageData {
       for (Coordinate coordinate : getCoordinates()) {
         result.put(coordinate,
           new SimplePlotPageTableValue(coordinate.getValue(sensorType),
-            sensorValues.getFlagScheme().getGoodFlag(), null, false, 'C',
-            coordinate.getId()));
+            Float.NaN, sensorValues.getFlagScheme().getGoodFlag(), null, false,
+            'C', coordinate.getId()));
       }
 
     } else if (sensorColumnIds.contains(column.getId())
@@ -1252,7 +1256,7 @@ public class ManualQCData extends PlotPageData {
     if (dataset.fixedDepth()) {
       if (null == fixedDepthValue) {
         fixedDepthValue = new SimplePlotPageTableValue(
-          dataset.getProperty(DataSet.INSTRUMENT_PROPERTIES_KEY, "depth"),
+          dataset.getProperty(DataSet.INSTRUMENT_PROPERTIES_KEY, "depth"), 0F,
           getFlagScheme());
       }
 

@@ -48,11 +48,11 @@ public class DoubleWithUncertaintySerializer
     Double value = array.get(0).getAsDouble();
     Float uncertainty = array.get(1).getAsFloat();
 
-    if (value == NAN_DOUBLE) {
+    if (value.equals(NAN_DOUBLE)) {
       value = Double.NaN;
     }
 
-    if (uncertainty == NAN_FLOAT) {
+    if (uncertainty.equals(NAN_FLOAT)) {
       uncertainty = Float.NaN;
     }
 

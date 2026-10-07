@@ -180,14 +180,15 @@ public class PositionQCData extends ManualQCData {
             sources.addAll(longitude.getSources());
             sources.addAll(latitude.getSources());
 
-            record.addColumn(positionString.toString(),
+            record.addColumn(positionString.toString(), Float.NaN,
               longitude.getQcFlag(getAllSensorValues()),
               longitude.getQcMessage(sensorValues, false),
               longitude.getFlagNeeded(), longitude.getType(), sources);
           } else {
             // Empty position column
-            record.addColumn("", sensorValues.getFlagScheme().getGoodFlag(),
-              null, false, PlotPageTableValue.NAN_TYPE, null);
+            record.addColumn("", Float.NaN,
+              sensorValues.getFlagScheme().getGoodFlag(), null, false,
+              PlotPageTableValue.NAN_TYPE, null);
           }
         }
 

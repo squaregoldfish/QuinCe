@@ -299,7 +299,7 @@ public class ArgoManualQCData extends ManualQCData {
         if (null != profile.getPosition()) {
           records.add(new PlotPageValueMapRecord(null, profile.getPosition(), i,
             new SimplePlotPageTableValue(
-              String.valueOf(profile.getCycleNumber()),
+              String.valueOf(profile.getCycleNumber()), Float.NaN,
               sensorValues.getFlagScheme())));
           usedCycleNumbers.add(profile.getCycleNumber());
         }

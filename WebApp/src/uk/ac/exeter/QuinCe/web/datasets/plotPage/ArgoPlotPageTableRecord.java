@@ -17,11 +17,13 @@ public class ArgoPlotPageTableRecord extends PlotPageTableRecord {
   @Override
   public void addCoordinate(Coordinate coordinate) {
     ArgoCoordinate castCoordinate = (ArgoCoordinate) coordinate;
-    addColumn(new SimplePlotPageTableValue(
-      String.valueOf(castCoordinate.getNLevel()), flagScheme.getGoodFlag(), "",
-      false, PlotPageTableValue.MEASURED_TYPE, -1L));
-    addColumn(new SimplePlotPageTableValue(
-      String.valueOf(castCoordinate.getPres()), flagScheme.getGoodFlag(), "",
-      false, PlotPageTableValue.MEASURED_TYPE, -1L));
+    addColumn(
+      new SimplePlotPageTableValue(String.valueOf(castCoordinate.getNLevel()),
+        Float.NaN, flagScheme.getGoodFlag(), "", false,
+        PlotPageTableValue.MEASURED_TYPE, -1L));
+    addColumn(
+      new SimplePlotPageTableValue(String.valueOf(castCoordinate.getPres()),
+        Float.NaN, flagScheme.getGoodFlag(), "", false,
+        PlotPageTableValue.MEASURED_TYPE, -1L));
   }
 }

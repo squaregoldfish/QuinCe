@@ -39,6 +39,13 @@ public interface PlotPageTableValue {
   public String getValue();
 
   /**
+   * Get the uncertainty string.
+   *
+   * @return The uncertainty.
+   */
+  public String getUncertainty();
+
+  /**
    * Get the raw value.
    *
    * <p>

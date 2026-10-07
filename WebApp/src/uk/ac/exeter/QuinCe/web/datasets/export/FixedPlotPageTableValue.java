@@ -4,14 +4,23 @@ import java.util.Collection;
 
 import uk.ac.exeter.QuinCe.data.Dataset.DatasetSensorValues;
 import uk.ac.exeter.QuinCe.data.Dataset.QC.Flag;
+import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.datasets.plotPage.PlotPageTableValue;
 
 public class FixedPlotPageTableValue implements PlotPageTableValue {
 
-  private String value;
+  private final String value;
+
+  private final Float uncertainty;
 
   protected FixedPlotPageTableValue(String value) {
     this.value = value;
+    this.uncertainty = Float.NaN;
+  }
+
+  protected FixedPlotPageTableValue(String value, Float uncertainty) {
+    this.value = value;
+    this.uncertainty = uncertainty;
   }
 
   @Override
@@ -22,6 +31,11 @@ public class FixedPlotPageTableValue implements PlotPageTableValue {
   @Override
   public String getValue() {
     return value;
+  }
+
+  @Override
+  public String getUncertainty() {
+    return StringUtils.formatNumber(uncertainty);
   }
 
   @Override

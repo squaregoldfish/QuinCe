@@ -17,6 +17,11 @@ public class SimplePlotPageTableValue implements PlotPageTableValue {
   private final String value;
 
   /**
+   * The displayed value.
+   */
+  private final Float uncertainty;
+
+  /**
    * The raw value.
    */
   private final Object rawValue;
@@ -48,9 +53,11 @@ public class SimplePlotPageTableValue implements PlotPageTableValue {
    * @param flagScheme
    *          The current flag scheme.
    */
-  public SimplePlotPageTableValue(String value, FlagScheme flagScheme) {
-    this.value = value;
+  public SimplePlotPageTableValue(String value, Float uncertainty,
+    FlagScheme flagScheme) {
+    this.value = StringUtils.formatNumber(value);
     this.rawValue = value;
+    this.uncertainty = uncertainty;
     this.qcFlag = flagScheme.getGoodFlag();
     this.qcMessage = null;
     this.flagNeeded = false;
@@ -72,10 +79,11 @@ public class SimplePlotPageTableValue implements PlotPageTableValue {
    * @param flagNeeded
    *          Whether or not user QC is required.
    */
-  public SimplePlotPageTableValue(String value, Flag qcFlag, String qcMessage,
-    boolean flagNeeded, char type, Collection<Long> sources) {
+  public SimplePlotPageTableValue(String value, Float uncertainty, Flag qcFlag,
+    String qcMessage, boolean flagNeeded, char type, Collection<Long> sources) {
     this.value = StringUtils.formatNumber(value);
     this.rawValue = value;
+    this.uncertainty = uncertainty;
     this.qcFlag = qcFlag;
     this.qcMessage = qcMessage;
     this.flagNeeded = flagNeeded;
@@ -97,10 +105,11 @@ public class SimplePlotPageTableValue implements PlotPageTableValue {
    * @param flagNeeded
    *          Whether or not user QC is required.
    */
-  public SimplePlotPageTableValue(String value, Flag qcFlag, String qcMessage,
-    boolean flagNeeded, char type, Long source) {
+  public SimplePlotPageTableValue(String value, Float uncertainty, Flag qcFlag,
+    String qcMessage, boolean flagNeeded, char type, Long source) {
     this.value = StringUtils.formatNumber(value);
     this.rawValue = value;
+    this.uncertainty = uncertainty;
     this.qcFlag = qcFlag;
     this.qcMessage = qcMessage;
     this.flagNeeded = flagNeeded;
@@ -118,6 +127,7 @@ public class SimplePlotPageTableValue implements PlotPageTableValue {
     FlagScheme flagScheme) {
     this.rawValue = coordinate;
     this.value = coordinate.toString();
+    this.uncertainty = Float.NaN;
     this.qcFlag = flagScheme.getGoodFlag();
     this.qcMessage = "";
     this.flagNeeded = false;
@@ -125,14 +135,14 @@ public class SimplePlotPageTableValue implements PlotPageTableValue {
     this.sources = null;
   }
 
-  /**
-   * Get the value string.
-   *
-   * @return The value.
-   */
   @Override
   public String getValue() {
     return value;
+  }
+
+  @Override
+  public String getUncertainty() {
+    return StringUtils.formatNumber(uncertainty);
   }
 
   @Override

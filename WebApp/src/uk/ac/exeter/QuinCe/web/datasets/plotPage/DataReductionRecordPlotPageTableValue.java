@@ -40,7 +40,14 @@ public class DataReductionRecordPlotPageTableValue
   @Override
   public String getValue() {
     DoubleWithUncertainty result = record.getCalculationValue(parameterName);
-    return null == result ? null : String.valueOf(result.value());
+    return null == result ? null : StringUtils.formatNumber(result.value());
+  }
+
+  @Override
+  public String getUncertainty() {
+    DoubleWithUncertainty result = record.getCalculationValue(parameterName);
+    return null == result ? null
+      : StringUtils.formatNumber(result.uncertainty());
   }
 
   @Override

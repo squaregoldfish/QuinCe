@@ -619,7 +619,12 @@ public class MeasurementValue implements PlotPageTableValue {
 
   @Override
   public String getValue() {
-    return calculatedValue.stringValue();
+    return StringUtils.formatNumber(calculatedValue.value());
+  }
+
+  @Override
+  public String getUncertainty() {
+    return StringUtils.formatNumber(calculatedValue.uncertainty());
   }
 
   @Override
