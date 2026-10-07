@@ -1497,7 +1497,7 @@ public class DataSetDataDB {
             SensorValue sensorValue = sensorValueFromResultSet(records,
               dataset.getId(), dataset.getFlagScheme(), coordinates);
             result
-              .add(new RunTypeSensorValue(sensorValue, records.getString(8)));
+              .add(new RunTypeSensorValue(sensorValue, records.getString(9)));
           }
         }
       }

@@ -36,6 +36,7 @@ import uk.ac.exeter.QuinCe.data.Instrument.MissingRunTypeException;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignment;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 import uk.ac.exeter.QuinCe.utils.ExceptionUtils;
 import uk.ac.exeter.QuinCe.utils.StringUtils;
 import uk.ac.exeter.QuinCe.web.Progress;
@@ -265,10 +266,9 @@ public abstract class PlotPageData {
 
       initTableDataGson();
 
-      columnHeadingsGson = new GsonBuilder()
-        .registerTypeAdapter(new TreeMap<LocalDateTime, Double>().getClass(),
-          new ReferenceValueSerializer())
-        .serializeNulls().create();
+      columnHeadingsGson = new GsonBuilder().registerTypeAdapter(
+        new TreeMap<LocalDateTime, DoubleWithUncertainty>().getClass(),
+        new ReferenceValueSerializer()).serializeNulls().create();
 
       // Initialise the plots
       createPlot1();

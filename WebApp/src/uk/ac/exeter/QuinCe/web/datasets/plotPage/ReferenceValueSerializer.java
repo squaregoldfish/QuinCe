@@ -12,20 +12,23 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
 import uk.ac.exeter.QuinCe.utils.DateTimeUtils;
+import uk.ac.exeter.QuinCe.utils.DoubleWithUncertainty;
 
 public class ReferenceValueSerializer
-  implements JsonSerializer<TreeMap<LocalDateTime, Double>> {
+  implements JsonSerializer<TreeMap<LocalDateTime, DoubleWithUncertainty>> {
 
   @Override
-  public JsonElement serialize(TreeMap<LocalDateTime, Double> src,
-    Type typeOfSrc, JsonSerializationContext context) {
+  public JsonElement serialize(
+    TreeMap<LocalDateTime, DoubleWithUncertainty> src, Type typeOfSrc,
+    JsonSerializationContext context) {
 
     JsonArray array = new JsonArray();
 
-    for (Map.Entry<LocalDateTime, Double> entry : src.entrySet()) {
+    for (Map.Entry<LocalDateTime, DoubleWithUncertainty> entry : src
+      .entrySet()) {
       JsonObject entryJson = new JsonObject();
       entryJson.addProperty("date", DateTimeUtils.dateToLong(entry.getKey()));
-      entryJson.addProperty("value", entry.getValue());
+      entryJson.addProperty("value", entry.getValue().value());
       array.add(entryJson);
     }
 
