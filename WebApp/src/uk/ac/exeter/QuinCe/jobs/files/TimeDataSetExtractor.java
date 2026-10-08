@@ -222,11 +222,11 @@ public class TimeDataSetExtractor extends DataSetExtractor {
                             uncertainty = uncertaintyDefinition
                               .getFloatCoefficient("Value");
                           } else {
-                            uncertainty = Double
+                            uncertainty = Math.abs(Double
                               .valueOf(fieldValueNumeric.doubleValue()
                                 * (uncertaintyDefinition
                                   .getFloatCoefficient("Value") * 0.01))
-                              .floatValue();
+                              .floatValue());
                           }
                         }
                       }
