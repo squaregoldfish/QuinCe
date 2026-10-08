@@ -339,5 +339,4 @@ public class ExportData extends ManualQCData {
 
     return result;
   }
-
 }

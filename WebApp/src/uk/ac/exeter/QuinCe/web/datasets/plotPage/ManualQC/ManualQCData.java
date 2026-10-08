@@ -41,6 +41,8 @@ import uk.ac.exeter.QuinCe.data.Instrument.FileDefinition;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
 import uk.ac.exeter.QuinCe.data.Instrument.InstrumentException;
 import uk.ac.exeter.QuinCe.data.Instrument.MissingRunTypeException;
+import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
+import uk.ac.exeter.QuinCe.data.Instrument.Calibration.UncertaintyDB;
 import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.PositionException;
 import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategoryException;
 import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
@@ -201,6 +203,12 @@ public class ManualQCData extends PlotPageData {
 
       // Fake value after "initialising" message
       progress.setValue(5F);
+
+      // Work out whether or not we have uncertainties
+      CalibrationSet uncertaintiesSet = UncertaintyDB.getInstance()
+        .getCalibrationSet(conn, dataset);
+
+      hasUncertainty = !uncertaintiesSet.isEmpty();
 
       progress.setName("Loading sensor data");
       sensorValues = DataSetDataDB.getSensorValues(conn, dataset, false, true);

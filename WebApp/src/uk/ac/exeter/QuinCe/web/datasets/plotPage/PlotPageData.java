@@ -70,6 +70,11 @@ public abstract class PlotPageData {
   protected final DataSet dataset;
 
   /**
+   * Indicates whether or not this dataset has uncertainties.
+   */
+  protected boolean hasUncertainty = false;
+
+  /**
    * The instrument that the dataset belongs to.
    */
   protected final Instrument instrument;
@@ -1237,5 +1242,9 @@ public abstract class PlotPageData {
 
   public RunTypePeriods getRunTypePeriods() {
     return runTypePeriods;
+  }
+
+  public boolean hasUncertainty() {
+    return hasUncertainty;
   }
 }

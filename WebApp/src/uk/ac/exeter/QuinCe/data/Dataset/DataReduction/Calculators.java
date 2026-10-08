@@ -410,7 +410,8 @@ public class Calculators {
    * third target point.
    *
    * <p>
-   * Algorithm from DOI 10.1007/s10765-016-2174-6 eq 14.
+   * Algorithm from White (2017) "Propagation of Uncertainty and Comparison of
+   * Interpolation Schemes" (doi: 10.1007/s10765-016-2174-6) eq 14.
    * </p>
    *
    * @param x0
@@ -436,7 +437,8 @@ public class Calculators {
    * third target point.
    *
    * <p>
-   * Algorithm from DOI 10.1007/s10765-016-2174-6 eq 14.
+   * Algorithm from White (2017) "Propagation of Uncertainty and Comparison of
+   * Interpolation Schemes" (doi: 10.1007/s10765-016-2174-6) eq 14.
    * </p>
    *
    * @param x0
@@ -477,7 +479,8 @@ public class Calculators {
    * uncertainties of the values being interpolated.
    *
    * <p>
-   * Algorithm from DOI 10.1007/s10765-016-2174-6 eq 15.
+   * Algorithm from White (2017) "Propagation of Uncertainty and Comparison of
+   * Interpolation Schemes" (doi: 10.1007/s10765-016-2174-6) eq 15.
    * </p>
    *
    * @param x0

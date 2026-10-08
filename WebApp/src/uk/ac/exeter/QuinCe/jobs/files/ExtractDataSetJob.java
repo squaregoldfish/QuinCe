@@ -3,8 +3,6 @@ package uk.ac.exeter.QuinCe.jobs.files;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import uk.ac.exeter.QuinCe.User.User;
 import uk.ac.exeter.QuinCe.data.Dataset.DataSet;
@@ -13,18 +11,6 @@ import uk.ac.exeter.QuinCe.data.Dataset.DataSetDataDB;
 import uk.ac.exeter.QuinCe.data.Dataset.InvalidDataSetStatusException;
 import uk.ac.exeter.QuinCe.data.Dataset.NewSensorValues;
 import uk.ac.exeter.QuinCe.data.Instrument.Instrument;
-import uk.ac.exeter.QuinCe.data.Instrument.MissingRunTypeException;
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Calibration;
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.CalibrationSet;
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.SensorCalibrationDB;
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.Uncertainty;
-import uk.ac.exeter.QuinCe.data.Instrument.Calibration.UncertaintyDB;
-import uk.ac.exeter.QuinCe.data.Instrument.DataFormats.PositionException;
-import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeAssignment;
-import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategory;
-import uk.ac.exeter.QuinCe.data.Instrument.RunTypes.RunTypeCategoryException;
-import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorAssignment;
-import uk.ac.exeter.QuinCe.data.Instrument.SensorDefinition.SensorType;
 import uk.ac.exeter.QuinCe.jobs.InvalidJobParametersException;
 import uk.ac.exeter.QuinCe.jobs.JobException;
 import uk.ac.exeter.QuinCe.jobs.JobFailedException;
@@ -35,9 +21,6 @@ import uk.ac.exeter.QuinCe.utils.DatabaseUtils;
 import uk.ac.exeter.QuinCe.utils.ExceptionUtils;
 import uk.ac.exeter.QuinCe.utils.MissingParamException;
 import uk.ac.exeter.QuinCe.utils.RecordNotFoundException;
-import uk.ac.exeter.QuinCe.utils.StringUtils;
-import uk.ac.exeter.QuinCe.utils.TimeRange;
-import uk.ac.exeter.QuinCe.utils.TimeRangeBuilder;
 import uk.ac.exeter.QuinCe.web.system.ResourceManager;
 
 /**

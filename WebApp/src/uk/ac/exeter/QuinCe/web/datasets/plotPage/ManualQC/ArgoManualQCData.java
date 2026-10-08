@@ -429,6 +429,8 @@ public class ArgoManualQCData extends ManualQCData {
   public void loadDataAction(Progress progress) throws Exception {
     super.loadDataAction(progress);
 
+    hasUncertainty = false;
+
     // Build profile details
     profiles = new ArrayList<ArgoProfile>();
 
@@ -487,5 +489,4 @@ public class ArgoManualQCData extends ManualQCData {
   public QCMap getMap1() {
     return profilesMap;
   }
-
 }

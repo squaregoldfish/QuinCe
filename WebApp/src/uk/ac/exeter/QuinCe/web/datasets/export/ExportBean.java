@@ -282,7 +282,7 @@ public class ExportBean extends BaseManagedBean {
             PlotPageTableValue value = data.getColumnValue(rowId,
               column.getId());
 
-            addValueToOutput(result, exportOption, column.getId(), value,
+            addValueToOutput(result, exportOption, column.getId(), value, false,
               column.hasQC(), column.includeType(), data.getAllSensorValues());
           }
         }
@@ -351,8 +351,8 @@ public class ExportBean extends BaseManagedBean {
 
             result.append(exportOption.getSeparator());
             addValueToOutput(result, exportOption, column.getId(),
-              useValueInThisColumn ? value : null, true, true,
-              data.getAllSensorValues());
+              useValueInThisColumn ? value : null, data.hasUncertainty(), true,
+              true, data.getAllSensorValues());
           }
         }
 
@@ -383,7 +383,8 @@ public class ExportBean extends BaseManagedBean {
                 }
 
                 addValueToOutput(result, exportOption, param.getId(), value,
-                  param.isResult(), false, data.getAllSensorValues());
+                  data.hasUncertainty(), param.isResult(), false,
+                  data.getAllSensorValues());
               }
             }
           }
@@ -400,7 +401,7 @@ public class ExportBean extends BaseManagedBean {
               PlotPageTableValue value = data.getColumnValue(rowId,
                 heading.getId());
               addValueToOutput(result, exportOption, heading.getId(), value,
-                true, false, data.getAllSensorValues());
+                data.hasUncertainty(), true, false, data.getAllSensorValues());
             }
           }
 
@@ -416,7 +417,7 @@ public class ExportBean extends BaseManagedBean {
                 PlotPageTableValue value = data.getColumnValue(rowId,
                   heading.getId());
                 addValueToOutput(result, exportOption, heading.getId(), value,
-                  true, false, data.getAllSensorValues());
+                  false, true, false, data.getAllSensorValues());
               }
             }
           }
@@ -495,7 +496,7 @@ public class ExportBean extends BaseManagedBean {
     // Time and position
     for (PlotPageColumnHeading heading : data.getExtendedColumnHeadings()
       .get(ExportData.ROOT_FIELD_GROUP)) {
-      addHeader(headers, exportOption, heading, allowedColumns);
+      addHeader(headers, exportOption, heading, false, allowedColumns);
     }
 
     // Measurement Sensor Types - these are the calculated sensor values
@@ -504,7 +505,8 @@ public class ExportBean extends BaseManagedBean {
       .getExtendedColumnHeadings()
       .get(ExportData.MEASUREMENTVALUES_FIELD_GROUP)) {
 
-      addHeader(headers, exportOption, measurementValueHeading, allowedColumns);
+      addHeader(headers, exportOption, measurementValueHeading,
+        data.hasUncertainty(), allowedColumns);
     }
 
     // Headers for each variable
@@ -516,7 +518,8 @@ public class ExportBean extends BaseManagedBean {
             exportOption.includeCalculationColumns());
 
         for (CalculationParameter param : params) {
-          addHeader(headers, exportOption, param, allowedColumns);
+          addHeader(headers, exportOption, param, data.hasUncertainty(),
+            allowedColumns);
         }
       }
     }
@@ -529,7 +532,8 @@ public class ExportBean extends BaseManagedBean {
 
       for (PlotPageColumnHeading heading : sensorHeadings) {
         addHeader(headers, exportOption, heading,
-          ExportOption.HEADER_MODE_SHORT, allowedColumns);
+          ExportOption.HEADER_MODE_SHORT, data.hasUncertainty(),
+          allowedColumns);
       }
 
       List<PlotPageColumnHeading> diagnosticHeadings = data
@@ -538,7 +542,7 @@ public class ExportBean extends BaseManagedBean {
       if (null != diagnosticHeadings) {
         for (PlotPageColumnHeading heading : diagnosticHeadings) {
           addHeader(headers, exportOption, heading,
-            ExportOption.HEADER_MODE_SHORT, allowedColumns);
+            ExportOption.HEADER_MODE_SHORT, false, allowedColumns);
         }
       }
     }
@@ -548,13 +552,25 @@ public class ExportBean extends BaseManagedBean {
 
   private static void addValueToOutput(DatasetExport export,
     ExportOption exportOption, long columnId, PlotPageTableValue value,
-    boolean includeQcColumns, boolean includeType,
+    boolean includeUncertainty, boolean includeQcColumns, boolean includeType,
     DatasetSensorValues allSensorValues) {
 
     if (null == value) {
 
       // Value
-      export.append("");
+
+      /*
+       * We don't actually need to add an empty string - this is just to remind
+       * us that theoretically that's what we're doing. The same goes for the
+       * uncertainty below.
+       */
+      // export.append("");
+
+      // Uncertainty
+      if (includeUncertainty) {
+        export.append(exportOption.getSeparator());
+        // export.append("");
+      }
 
       // QC Flag
       if (columnId != FileDefinition.TIME_COLUMN_ID && includeQcColumns) {
@@ -580,6 +596,10 @@ public class ExportBean extends BaseManagedBean {
         // Empty columns
         export.append("");
 
+        if (includeUncertainty) {
+          export.append(exportOption.getSeparator());
+        }
+
         if (includeQcColumns) {
           export.append(exportOption.getSeparator());
 
@@ -594,10 +614,16 @@ public class ExportBean extends BaseManagedBean {
       } else {
 
         // Value
-        if (null == value.getValue()) {
-          export.append("");
-        } else {
+        if (null != value.getValue()) {
           export.append(exportOption.format(value.getValue()));
+        }
+
+        // Uncertainty
+        if (includeUncertainty) {
+          export.append(exportOption.getSeparator());
+          if (null != value.getUncertainty()) {
+            export.append(value.getUncertainty());
+          }
         }
 
         // QC Flag
@@ -621,8 +647,6 @@ public class ExportBean extends BaseManagedBean {
 
               if (exportQcMessage.length() > 0) {
                 export.append('"' + exportQcMessage + '"');
-              } else {
-                export.append("");
               }
             }
           }
@@ -637,14 +661,15 @@ public class ExportBean extends BaseManagedBean {
   }
 
   private static void addHeader(List<String> headers, ExportOption exportOption,
-    ColumnHeading heading, List<ColumnHeading> allowedColumns)
-    throws ExportException {
-    addHeader(headers, exportOption, heading, null, allowedColumns);
+    ColumnHeading heading, boolean hasUncertainty,
+    List<ColumnHeading> allowedColumns) throws ExportException {
+    addHeader(headers, exportOption, heading, null, hasUncertainty,
+      allowedColumns);
   }
 
   private static void addHeader(List<String> headers, ExportOption exportOption,
-    ColumnHeading heading, Integer mode, List<ColumnHeading> allowedColumns)
-    throws ExportException {
+    ColumnHeading heading, Integer mode, boolean hasUncertainty,
+    List<ColumnHeading> allowedColumns) throws ExportException {
 
     if (allowedColumns.contains(heading)) {
 
@@ -679,6 +704,10 @@ public class ExportBean extends BaseManagedBean {
         headers.add(header + " [" + heading.getUnits() + ']');
       } else {
         headers.add(header);
+      }
+
+      if (hasUncertainty) {
+        headers.add(header + " Uncertainty");
       }
 
       if (heading.hasQC()) {

@@ -97,6 +97,8 @@ public class InternalCalibrationData extends PlotPageData {
   @Override
   protected void loadDataAction(Progress progress) throws Exception {
 
+    hasUncertainty = false;
+
     try (Connection conn = dataSource.getConnection()) {
 
       // Fake value after "initialising" message
