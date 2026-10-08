@@ -327,17 +327,20 @@ public class ExportBean extends BaseManagedBean {
 
               } else {
 
-                // If this column is for the Run Type of the measurement, we
-                // populate it. Otherwise we leave it blank - there'll be
-                // another
-                // column for the Run Type somewhere (or perhaps not, if it's a
-                // non-measurement run type eg gas standard run)
+                /*
+                 * If this column is for the Run Type of the measurement, we
+                 * populate it. Otherwise we leave it blank - there'll be
+                 * another column for the Run Type somewhere (or perhaps not, if
+                 * it's a non-measurement run type e.g. gas standard run)
+                 */
                 String runType = measurement
                   .getRunType(Measurement.RUN_TYPE_DEFINES_VARIABLE);
 
-                // Look through all the column headings defined for the run type
-                // to see if it contains our current column. If it does, we add
-                // the value. If not, it'll be blank.
+                /*
+                 * Look through all the column headings defined for the run type
+                 * to see if it contains our current column. If it does, we add
+                 * the value. If not, it'll be blank.
+                 */
                 Set<ColumnHeading> runTypeColumns = instrument
                   .getAllVariableColumnHeadings(runType);
 
@@ -551,7 +554,7 @@ public class ExportBean extends BaseManagedBean {
     if (null == value) {
 
       // Value
-      export.append(exportOption.getMissingValue());
+      export.append("");
 
       // QC Flag
       if (columnId != FileDefinition.TIME_COLUMN_ID && includeQcColumns) {
@@ -575,7 +578,7 @@ public class ExportBean extends BaseManagedBean {
       // Replacing FLUSHING values with empty
       if (value.getQcFlag(allSensorValues).equals(FlagScheme.FLUSHING_FLAG)) {
         // Empty columns
-        export.append(exportOption.getMissingValue());
+        export.append("");
 
         if (includeQcColumns) {
           export.append(exportOption.getSeparator());
@@ -592,7 +595,7 @@ public class ExportBean extends BaseManagedBean {
 
         // Value
         if (null == value.getValue()) {
-          export.append(exportOption.getMissingValue());
+          export.append("");
         } else {
           export.append(exportOption.format(value.getValue()));
         }
@@ -613,9 +616,14 @@ public class ExportBean extends BaseManagedBean {
             // If the value is NULL, the QC flag is empty. So only put in the
             // flag if it's not null.
             if (null != value.getValue()) {
-              export.append('"'
-                + exportOption.format(value.getQcMessage(allSensorValues, true))
-                + '"');
+              String exportQcMessage = exportOption
+                .format(value.getQcMessage(allSensorValues, true));
+
+              if (exportQcMessage.length() > 0) {
+                export.append('"' + exportQcMessage + '"');
+              } else {
+                export.append("");
+              }
             }
           }
         }

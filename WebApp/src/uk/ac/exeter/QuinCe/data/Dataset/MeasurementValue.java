@@ -414,19 +414,17 @@ public class MeasurementValue implements PlotPageTableValue {
 
   /**
    * Get the QC flag for this value. If the {@link #calculatedValue} is
-   * {@link Double#NaN}, the flag is always {@link Flag#BAD}.
+   * {@link Double#NaN}, the flag is always {@link FlagScheme#NO_QC_FLAG}.
    *
    * @return The QC flag.
    */
   public Flag getQcFlag(DatasetSensorValues allSensorValues) {
-    return calculatedValue.isNaN()
-      ? allSensorValues.getFlagScheme().getBadFlag()
-      : flag;
+    return calculatedValue.isNaN() ? FlagScheme.NO_QC_FLAG : flag;
   }
 
   /**
    * Get the QC flag for this value. If the {@link #calculatedValue} is
-   * {@link Double#NaN}, the flag is always {@link Flag#BAD}.
+   * {@link Double#NaN}, the flag is always {@link FlagScheme#NO_QC_FLAG}.
    *
    * <p>
    * This is a special version of {@link #getQcFlag(DatasetSensorValues)} for
@@ -437,7 +435,7 @@ public class MeasurementValue implements PlotPageTableValue {
    * @return The QC flag.
    */
   protected Flag getQcFlag(FlagScheme flagScheme) {
-    return calculatedValue.isNaN() ? flagScheme.getBadFlag() : flag;
+    return calculatedValue.isNaN() ? FlagScheme.NO_QC_FLAG : flag;
   }
 
   /**
@@ -448,14 +446,7 @@ public class MeasurementValue implements PlotPageTableValue {
    * @return The QC messages.
    */
   public Set<String> getQcMessages() {
-    Set<String> result = qcMessage;
-
-    if (calculatedValue.isNaN()) {
-      result = new HashSet<String>();
-      result.add("NaN");
-    }
-
-    return result;
+    return qcMessage;
   }
 
   public SensorType getSensorType() {

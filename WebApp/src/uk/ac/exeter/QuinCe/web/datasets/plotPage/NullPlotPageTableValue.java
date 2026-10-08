@@ -19,17 +19,17 @@ public class NullPlotPageTableValue implements PlotPageTableValue {
 
   @Override
   public String getValue() {
-    return null;
+    return "";
   }
 
   @Override
   public String getUncertainty() {
-    return null;
+    return "";
   }
 
   @Override
   public Object getRawValue() {
-    return null;
+    return "";
   }
 
   @Override

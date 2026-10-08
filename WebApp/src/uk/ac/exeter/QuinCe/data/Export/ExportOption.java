@@ -47,11 +47,6 @@ public class ExportOption {
   private String separator;
 
   /**
-   * The string to put in files where a value is missing
-   */
-  private String missingValue = "NaN";
-
-  /**
    * The string to use for QC flags of missing values
    */
   private String missingQcFlag = "";
@@ -176,10 +171,6 @@ public class ExportOption {
     this.visible = visible;
   }
 
-  protected void setMissingValue(String missingValue) {
-    this.missingValue = missingValue;
-  }
-
   protected void setMissingQCFlag(String missingQCFlag) {
     this.missingQcFlag = missingQCFlag;
   }
@@ -273,10 +264,6 @@ public class ExportOption {
    */
   public String getSeparator() {
     return separator;
-  }
-
-  public String getMissingValue() {
-    return missingValue;
   }
 
   public String getMissingQcFlag() {
@@ -424,14 +411,14 @@ public class ExportOption {
     String result = null;
 
     if (null == fieldValue) {
-      result = fieldValue;
+      result = "";
     } else if (NumberUtils.isCreatable(fieldValue)) {
       result = StringUtils.formatNumber(fieldValue);
     } else {
       String newlinesRemoved = fieldValue.replaceAll("[\\r\\n]", " ");
       String separatorsRemoved = newlinesRemoved.replaceAll(separator, " ");
       String quotesEscaped = separatorsRemoved.replaceAll("\"", "'");
-      return quotesEscaped;
+      result = quotesEscaped;
     }
 
     return result;

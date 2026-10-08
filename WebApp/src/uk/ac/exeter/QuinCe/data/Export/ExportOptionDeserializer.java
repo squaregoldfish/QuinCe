@@ -92,11 +92,6 @@ public class ExportOptionDeserializer
         option.setVisible(jsonObj.get("visible").getAsBoolean());
       }
 
-      if (jsonObj.has("missingValue")) {
-        option
-          .setMissingValue(jsonObj.get("missingValue").getAsString().trim());
-      }
-
       if (jsonObj.has("missingQCFlag")) {
         option
           .setMissingQCFlag(jsonObj.get("missingQCFlag").getAsString().trim());
