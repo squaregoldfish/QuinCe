@@ -69,6 +69,16 @@ public class Calculators {
   /**
    * Converts pCO<sub>2</sub> to fCO<sub>2</sub>.
    *
+   * <p>
+   * Taken from Weiss 1974, doi: 10.1016/0304-4203(74)90015-2.
+   * </p>
+   *
+   * <p>
+   * There is an inherent uncertainty in this calculation, but it is negligible
+   * (on the order of five orders of magnitude smaller than the uncertainty
+   * contributed by the input sensor values) and is thus not included.
+   * </p>
+   *
    * @param pco2
    *          pCO<sub>2</sub> at target temperature.
    * @param xCO2InGas
@@ -137,10 +147,17 @@ public class Calculators {
   }
 
   /**
-   * Calculates the water vapour pressure (pH<sub>2</sub>O). From Weiss and
-   * Price (1980),
-   * <a href="https://doi.org/10.1016/0304-4203(80)90024-9" target=
-   * "_blank">doi: 10.1016/0304-4203(80)90024-9</a>.
+   * Calculates the water vapour pressure (pH<sub>2</sub>O).
+   *
+   * <p>
+   * Taken from Weiss and Price 1980, doi: 10.1016/0304-4203(80)90024-9.
+   * </p>
+   *
+   * <p>
+   * There is an inherent uncertainty in this calculation, but it is negligible
+   * (on the order of 1x10⁻⁶ compared to 1x10⁻⁵ from the contribution of the
+   * input sensor values) and is thus not included.
+   * </p>
    *
    * @param salinity
    *          Salinity.
@@ -503,10 +520,17 @@ public class Calculators {
   }
 
   /**
-   * Calculates pCO<sub>2</sub> at the water (sea surface) temperature. From
-   * Takahashi et al. (2009),
-   * <a href="https://doi.org/10.1016/j.dsr2.2008.12.009" target="_blank">doi:
-   * 10.1016/j.dsr2.2008.12.009</a>.
+   * Calculates pCO<sub>2</sub> at the water (sea surface) temperature.
+   *
+   * <p>
+   * Taken from Takahashi et al. 2009, doi: 10.1016/j.dsr2.2008.12.009.
+   * </p>
+   *
+   * <p>
+   * There is an uncertainty on the temperature conversion factor of 0.0423, but
+   * it is 0.0002 and is thus so small as to be negligible and is thus not
+   * included.
+   * </p>
    *
    * @param co2AtEquilibrator
    *          The pCO<sub>2</sub> at equilibrator temperature.
@@ -520,7 +544,7 @@ public class Calculators {
     DoubleWithUncertainty co2AtEquilibrator, DoubleWithUncertainty eqt,
     DoubleWithUncertainty sst) {
 
-    return kelvin(sst).subtract(kelvin(eqt)).multiply(0.0423).exp()
+    return kelvin(sst).subtract(kelvin(eqt)).multiply(0.0423D).exp()
       .multiply(co2AtEquilibrator);
   }
 }
